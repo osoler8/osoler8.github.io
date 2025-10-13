@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taules de multiplicar · Pràctica</title>
+  <style>
+    :root{
+      --brand:#53b8ac;
+      --brand-dark:#3d8f84;
+      --bg:#f6f8f9;
+      --text:#2a2a2a;
+      --muted:#6b7280;
+      --ok:#15803d;
+      --bad:#b91c1c;
+      --card:#ffffff;
+      --shadow:0 8px 24px rgba(0,0,0,.06);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background:var(--bg); color:var(--text);
+      margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    }
+    .app{width:100%;max-width:720px;flex:1;padding:24px}
+    h1{color:var(--brand);margin:0 0 10px}
+    h2{font-size:1.05rem;margin:10px 0}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+    .muted{color:var(--muted)}
+    .btn{border:0;background:var(--brand);color:#fff;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:600;transition:.15s ease}
+    .btn.secondary{background:#e5eceb;color:#123}
+    .btn:hover{background:var(--brand-dark)}
+    input, select{width:100%;padding:10px 12px;border:2px solid #d6e6e3;border-radius:12px;outline:none;font-size:1rem}
+    input:focus, select:focus{border-color:var(--brand)}
+    .checkbox{display:flex;gap:6px;align-items:center;background:#f2fbfa;border:1px solid #e2f1ef;border-radius:10px;padding:8px 10px;justify-content:center}
+    .question{font-size:clamp(1.8rem,1.5rem + 2.5vw,3rem);text-align:center;margin:16px 0 8px}
+    .timer{font-weight:700;color:#c2410c}
+    .feedback{min-height:28px;text-align:center;font-weight:600}
+    .feedback.ok{color:var(--ok)} .feedback.bad{color:var(--bad)}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:.95rem}
+    .kpi{display:flex;flex-direction:column;align-items:center;background:#fafcfc;border:1px solid #ecf3f1;border-radius:12px;padding:10px 12px;min-width:110px}
+    .kpi b{font-size:1.2rem;color:#111}
+    .divider{height:1px;background:#eef2f1;margin:10px 0 4px}
+    .progress{height:10px;background:#eef2f1;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0%;background:var(--brand);transition:width .25s ease}
+    footer{width:100%;max-width:720px;color:var(--muted);font-size:0.9rem;margin:8px 0 20px;text-align:center;padding:0 24px}
+    footer a{color:inherit}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="screen-name" class="card">
+      <h1>Taules de multiplicar</h1>
+      <p class="muted">Introdueix el teu nom per desar el teu progrés a aquest dispositiu.</p>
+      <div class="row">
+        <input id="studentName" type="text" placeholder="Nom de l'alumne" autocomplete="name" />
+        <button id="saveName" class="btn">Continuar</button>
+      </div>
+      <div id="nameHint" class="muted"></div>
+    </section>
+
+    <section id="screen-setup" class="card" style="display:none">
+      <h1>Configuració</h1>
+      <div>
+        <h2>1) Tria taules</h2>
+        <div id="tables" class="grid"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <h2>2) Mode de joc</h2>
+        <div class="row">
+          <label><input type="radio" name="mode" value="timed" checked> Cronometrat (60 s)</label>
+          <label><input type="radio" name="mode" value="untimed"> Sense temps</label>
+          <label><input type="checkbox" id="mute"> Silenciar sons</label>
+        </div>
+      </div>
+
+      <div id="untimedBlock" style="display:none;margin-top:10px">
+        <h2>3) Nombre de preguntes</h2>
+        <select id="questionCount">
+          <option>10</option>
+<option>15</option>
+<option>20</option>
+<option>25</option>
+<option>30</option>
+<option>35</option>
+<option>40</option>
+<option>45</option>
+<option>50</option>
+<option>55</option>
+<option>60</option>
+<option>65</option>
+<option>70</option>
+<option>75</option>
+<option>80</option>
+<option>85</option>
+<option>90</option>
+<option>95</option>
+<option>100</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+      <button id="start" class="btn">Començar</button>
+    </section>
+
+    <section id="screen-game" class="card" style="display:none">
+      <h1 id="modeTitle"></h1>
+      <div class="timer" id="timerBlock">Temps: <span id="time">60</span>s</div>
+      <div class="question" id="question"></div>
+      <div class="row" style="justify-content:center">
+        <input id="answer" type="number" placeholder="Resposta" style="max-width:140px;text-align:center">
+        <button id="submit" class="btn">Validar</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div class="progress" id="progress" style="display:none"><div id="bar" class="bar"></div></div>
+      <div class="stats">
+        <div class="kpi"><span>Encerts</span><b id="ok">0</b></div>
+        <div class="kpi"><span>Errors</span><b id="bad">0</b></div>
+      </div>
+    </section>
+
+    <section id="screen-results" class="card" style="display:none">
+      <h1>Resultats</h1>
+      <p>Encerts: <b id="rOk">0</b></p>
+      <p>Errors: <b id="rBad">0</b></p>
+      <p>Puntuació: <b id="rScore">0</b></p>
+      <button id="playAgain" class="btn">Tornar a jugar</button>
+    </section>
+  </main>
+
+  <footer>
+    Taules de multiplicar © 2025 Oriol Soler. 
+    Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank">AGPL v3</a>
+  </footer>
+
+  <audio id="s-ok" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="s-bad" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
+  <script>
+    const scrName=document.getElementById('screen-name');
+    const scrSetup=document.getElementById('screen-setup');
+    const scrGame=document.getElementById('screen-game');
+    const scrResults=document.getElementById('screen-results');
+    const studentName=document.getElementById('studentName');
+    const saveName=document.getElementById('saveName');
+    const nameHint=document.getElementById('nameHint');
+    const tablesDiv=document.getElementById('tables');
+    const startBtn=document.getElementById('start');
+    const questionEl=document.getElementById('question');
+    const answerEl=document.getElementById('answer');
+    const submitBtn=document.getElementById('submit');
+    const feedback=document.getElementById('feedback');
+    const okEl=document.getElementById('ok');
+    const badEl=document.getElementById('bad');
+    const rOk=document.getElementById('rOk');
+    const rBad=document.getElementById('rBad');
+    const rScore=document.getElementById('rScore');
+    const playAgain=document.getElementById('playAgain');
+    const timerBlock=document.getElementById('timerBlock');
+    const timeEl=document.getElementById('time');
+    const progress=document.getElementById('progress');
+    const bar=document.getElementById('bar');
+    const modeTitle=document.getElementById('modeTitle');
+    const qCountSel=document.getElementById('questionCount');
+    const sOK=document.getElementById('s-ok');
+    const sBAD=document.getElementById('s-bad');
+
+    let student='';let selectedTables=new Set([1,2,3,4,5,6,7,8,9,10]);
+    let mode='timed';let totalQuestions=10;let timer=60;let tick=null;
+    let a=0,b=0,correct=0,wrong=0,asked=0;let muted=false;
+
+    // Build checkboxes
+    for(let i=1;i<=10;i++){const l=document.createElement('label');l.className='checkbox';
+      const c=document.createElement('input');c.type='checkbox';c.value=i;c.checked=true;
+      const s=document.createElement('span');s.textContent=i;l.append(c,s);tablesDiv.append(l);
+    }
+
+    // Show setup after name
+    saveName.onclick=()=>{const val=studentName.value.trim();
+      if(!val){nameHint.textContent='Escriu el teu nom.';return;}
+      student=val;scrName.style.display='none';scrSetup.style.display='';
+    };
+
+    // Mode toggle
+    document.querySelectorAll('input[name=mode]').forEach(r=>{
+      r.onchange=()=>{mode=r.value;
+        document.getElementById('untimedBlock').style.display=(mode==='untimed')?'':'none';
+      };
+    });
+
+    // Start game
+    startBtn.onclick=()=>{
+      selectedTables.clear();
+      tablesDiv.querySelectorAll('input[type=checkbox]:checked').forEach(cb=>selectedTables.add(+cb.value));
+      if(!selectedTables.size){alert('Selecciona almenys una taula');return;}
+      totalQuestions=+qCountSel.value;
+      scrSetup.style.display='none';scrGame.style.display='';
+      correct=wrong=asked=0;okEl.textContent=0;badEl.textContent=0;
+      feedback.textContent='';progress.style.display=(mode==='untimed')?'':'none';bar.style.width='0%';
+      modeTitle.textContent=(mode==='timed')?'Mode cronometrat (60s)':`Mode sense temps · ${totalQuestions} preguntes`;
+      if(mode==='timed'){timer=60;timeEl.textContent=timer;timerBlock.style.display='';
+        tick=setInterval(()=>{timer--;timeEl.textContent=timer;if(timer<=0){clearInterval(tick);endGame();}},1000);
+      } else timerBlock.style.display='none';
+      nextQuestion();
+    };
+
+    function nextQuestion(){
+      const arr=[...selectedTables];
+      a=arr[Math.floor(Math.random()*arr.length)];
+      b=Math.floor(Math.random()*10)+1;
+      questionEl.textContent=`${a} × ${b} = ?`;
+      answerEl.value='';answerEl.focus();
+    }
+
+    function submitAnswer(){
+      if(!answerEl.value)return;
+      const val=+answerEl.value;
+      if(val===a*b){correct++;okEl.textContent=correct;feedback.textContent='Correcte!';feedback.className='feedback ok';sOK.play();}
+      else{wrong++;badEl.textContent=wrong;feedback.textContent=`Incorrecte (${a*b})`;feedback.className='feedback bad';sBAD.play();}
+      asked++;
+      if(mode==='untimed'){bar.style.width=(asked/totalQuestions*100)+'%';if(asked>=totalQuestions)return endGame();}
+      setTimeout(nextQuestion,500);
+    }
+    submitBtn.onclick=submitAnswer;
+    answerEl.onkeydown=e=>{if(e.key==='Enter')submitAnswer();};
+
+    function endGame(){
+      scrGame.style.display='none';scrResults.style.display='';
+      rOk.textContent=correct;rBad.textContent=wrong;rScore.textContent=correct-wrong;
+    }
+    playAgain.onclick=()=>{scrResults.style.display='none';scrSetup.style.display='';};
+  </script>
+</body>
+</html>
