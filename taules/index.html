@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taules de multiplicar · Pràctica</title>
+  <style>
+    :root{
+      --brand:#53b8ac;
+      --brand-dark:#3d8f84;
+      --bg:#f6f8f9;
+      --text:#2a2a2a;
+      --muted:#6b7280;
+      --ok:#15803d;
+      --bad:#b91c1c;
+      --card:#ffffff;
+      --shadow:0 8px 24px rgba(0,0,0,.06);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background:var(--bg); color:var(--text);
+      margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    }
+    .app{width:100%;max-width:820px;flex:1;padding:24px}
+    h1{color:var(--brand);margin:0 0 10px}
+    h2{font-size:1.05rem;margin:10px 0}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+    .muted{color:var(--muted)}
+    .btn{border:0;background:var(--brand);color:#fff;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:600;transition:.15s ease}
+    .btn.secondary{background:#e5eceb;color:#123}
+    .btn:hover{background:var(--brand-dark)}
+    input, select{width:100%;padding:10px 12px;border:2px solid #d6e6e3;border-radius:12px;outline:none;font-size:1rem}
+    input:focus, select:focus{border-color:var(--brand)}
+    .checkbox{display:flex;gap:6px;align-items:center;background:#f2fbfa;border:1px solid #e2f1ef;border-radius:10px;padding:8px 10px;justify-content:center}
+    .question{font-size:clamp(1.8rem,1.5rem + 2.5vw,3rem);text-align:center;margin:16px 0 8px}
+    .timer{font-weight:700;color:#c2410c}
+    .feedback{min-height:28px;text-align:center;font-weight:600}
+    .feedback.ok{color:var(--ok)} .feedback.bad{color:var(--bad)}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;color:var(--muted);font-size:.95rem}
+    .kpi{display:flex;flex-direction:column;align-items:center;background:#fafcfc;border:1px solid #ecf3f1;border-radius:12px;padding:10px 12px;min-width:110px}
+    .kpi b{font-size:1.2rem;color:#111}
+    .divider{height:1px;background:#eef2f1;margin:10px 0 14px}
+    .progress{height:10px;background:#eef2f1;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0%;background:var(--brand);transition:width .25s ease}
+    footer{width:100%;max-width:820px;color:var(--muted);font-size:0.9rem;margin:8px 0 20px;text-align:center;padding:0 24px}
+    footer a{color:inherit}
+    ul.clean{list-style:none;margin:0;padding:0}
+    li.attempt{display:flex;align-items:center;justify-content:space-between;border:1px solid #ecf3f1;border-radius:12px;padding:8px 12px;margin-bottom:8px;background:#fafcfc}
+    .pill{border-radius:999px;padding:2px 8px;border:1px solid #ecf3f1;background:#f2fbfa;font-size:.85rem}
+    .good{color:var(--ok)} .bad{color:var(--bad)}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="screen-name" class="card">
+      <h1>Taules de multiplicar</h1>
+      <p class="muted">Introdueix el teu nom per desar el teu progrés a aquest dispositiu.</p>
+      <div class="row">
+        <input id="studentName" type="text" placeholder="Nom de l'alumne" autocomplete="name" />
+        <button id="saveName" class="btn">Continuar</button>
+      </div>
+      <div id="nameHint" class="muted"></div>
+    </section>
+
+    <section id="screen-setup" class="card" style="display:none">
+      <h1>Configuració</h1>
+
+      <h2>1) Tria taules</h2>
+      <div id="tables" class="grid"></div>
+
+      <div class="divider"></div>
+
+      <h2>2) Mode de joc</h2>
+      <div class="row">
+        <label><input type="radio" name="mode" value="timed" checked> Cronometrat (60 s)</label>
+        <label><input type="radio" name="mode" value="untimed"> Sense temps</label>
+        <label><input type="checkbox" id="mute"> Silenciar sons</label>
+      </div>
+    </section>
+
+    <!-- New stats card after point 2 -->
+    <section id="screen-stats" class="card" style="display:none">
+      <h2>📊 Millors marques i últims intents</h2>
+      <div class="kpi" style="margin-bottom:10px;align-items:flex-start">
+        <div><b id="bestTimed">—</b><br><span class="muted">Millor cronometrat (60s)</span></div>
+      </div>
+      <div class="kpi" style="margin-bottom:10px;align-items:flex-start">
+        <div><b id="bestUntimed">—</b><br><span class="muted">Millor sense temps (<span id="bestUntimedN">10</span> preg.)</span></div>
+      </div>
+      <div class="divider"></div>
+      <ul id="historyList" class="clean"></ul>
+      <div class="row" style="margin-top:10px">
+        <button id="clearResults" class="btn secondary">Esborra els meus resultats</button>
+      </div>
+    </section>
+
+    <section id="screen-untimed" class="card" style="display:none">
+      <h2>3) Nombre de preguntes</h2>
+      <select id="questionCount">
+        <option>10</option>
+<option>15</option>
+<option>20</option>
+<option>25</option>
+<option>30</option>
+<option>35</option>
+<option>40</option>
+<option>45</option>
+<option>50</option>
+<option>55</option>
+<option>60</option>
+<option>65</option>
+<option>70</option>
+<option>75</option>
+<option>80</option>
+<option>85</option>
+<option>90</option>
+<option>95</option>
+<option>100</option>
+      </select>
+    </section>
+
+    <section id="screen-start" class="card" style="display:none">
+      <button id="start" class="btn">Començar</button>
+    </section>
+
+    <section id="screen-game" class="card" style="display:none">
+      <h1 id="modeTitle"></h1>
+      <div class="timer" id="timerBlock">Temps: <span id="time">60</span>s</div>
+      <div class="question" id="question"></div>
+      <div class="row" style="justify-content:center">
+        <input id="answer" type="number" placeholder="Resposta" style="max-width:140px;text-align:center">
+        <button id="submit" class="btn">Validar</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <div class="progress" id="progress" style="display:none"><div id="bar" class="bar"></div></div>
+      <div class="stats">
+        <div class="kpi"><span>Encerts</span><b id="ok">0</b></div>
+        <div class="kpi"><span>Errors</span><b id="bad">0</b></div>
+        <div class="kpi"><span>Punts</span><b id="score">0</b></div>
+      </div>
+    </section>
+
+    <section id="screen-results" class="card" style="display:none">
+      <h1>Resultats</h1>
+      <p>Encerts: <b id="rOk">0</b></p>
+      <p>Errors: <b id="rBad">0</b></p>
+      <p>Puntuació: <b id="rScore">0</b></p>
+      <p id="recordMsg" class="muted"></p>
+      <button id="playAgain" class="btn">Tornar a jugar</button>
+    </section>
+  </main>
+
+  <footer>
+    Taules de multiplicar © 2025 Oriol Soler.
+    Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank" rel="noopener noreferrer">AGPL v3</a>
+  </footer>
+
+  <audio id="s-ok" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" preload="auto"></audio>
+  <audio id="s-bad" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+
+  <script>
+    // Elements
+    const scrName = document.getElementById('screen-name');
+    const scrSetup = document.getElementById('screen-setup');
+    const scrStats = document.getElementById('screen-stats');
+    const scrUntimed = document.getElementById('screen-untimed');
+    const scrStart = document.getElementById('screen-start');
+    const scrGame = document.getElementById('screen-game');
+    const scrResults = document.getElementById('screen-results');
+
+    const inputName = document.getElementById('studentName');
+    const saveNameBtn = document.getElementById('saveName');
+    const nameHint = document.getElementById('nameHint');
+
+    const tablesDiv = document.getElementById('tables');
+    const startBtn = document.getElementById('start');
+    const clearBtn = document.getElementById('clearResults');
+    const muteCb = document.getElementById('mute');
+
+    const qCountSel = document.getElementById('questionCount');
+
+    const questionEl = document.getElementById('question');
+    const answerEl = document.getElementById('answer');
+    const submitBtn = document.getElementById('submit');
+    const feedbackEl = document.getElementById('feedback');
+    const timerBlock = document.getElementById('timerBlock');
+    const timeEl = document.getElementById('time');
+    const okEl = document.getElementById('ok');
+    const badEl = document.getElementById('bad');
+    const scoreEl = document.getElementById('score');
+    const progressEl = document.getElementById('progress');
+    const barEl = document.getElementById('bar');
+    const modeTitle = document.getElementById('modeTitle');
+
+    const rOk = document.getElementById('rOk');
+    const rBad = document.getElementById('rBad');
+    const rScore = document.getElementById('rScore');
+    const recordMsg = document.getElementById('recordMsg');
+
+    const sOK = document.getElementById('s-ok');
+    const sBAD = document.getElementById('s-bad');
+
+    // Sidebar stats
+    const bestTimedEl = document.getElementById('bestTimed');
+    const bestUntimedEl = document.getElementById('bestUntimed');
+    const bestUntimedNEl = document.getElementById('bestUntimedN');
+    const historyList = document.getElementById('historyList');
+
+    // State
+    let student = '';
+    let selectedTables = new Set([1,2,3,4,5,6,7,8,9,10]);
+    let mode = 'timed'; // 'timed' | 'untimed'
+    let totalQuestions = 10;
+    let timer = 60;
+    let tick = null;
+    let a=0, b=0;
+    let correct=0, wrong=0, asked=0;
+    let muted = false;
+
+    // Storage keys
+    const kName = 'tables:student';
+    const kPrefs = (name)=>`tables:prefs:${name}`;
+    const kBestTimed = (name)=>`tables:bestTimed:${name}`;
+    const kBestUntimed = (name, n)=>`tables:bestUntimedScore:${name}:${n}`;
+    const kHistory = (name)=>`tables:history:${name}`;
+
+    // Helpers
+    function savePrefs(){
+      const prefs = {tables:[...selectedTables], mode, totalQuestions, muted};
+      localStorage.setItem(kPrefs(student), JSON.stringify(prefs));
+    }
+    function loadPrefs(){
+      const raw = localStorage.getItem(kPrefs(student)); if(!raw) return;
+      try{
+        const p = JSON.parse(raw);
+        selectedTables = new Set(p.tables || []);
+        mode = p.mode || 'timed';
+        totalQuestions = p.totalQuestions || 10;
+        muted = !!p.muted;
+      }catch{}
+    }
+    function show(el){el.style.display=''}
+    function hide(el){el.style.display='none'}
+    function fmtDate(ts){
+      try{ return new Date(ts).toLocaleString('ca-ES'); }
+      catch{ return new Date(ts).toLocaleString(); }
+    }
+
+    // Build checkboxes
+    (function(){
+      for(let i=1;i<=10;i++){
+        const l=document.createElement('label'); l.className='checkbox';
+        const c=document.createElement('input'); c.type='checkbox'; c.value=i; c.checked=true;
+        const s=document.createElement('span'); s.textContent=i;
+        l.append(c,s); tablesDiv.append(l);
+      }
+    })();
+
+    function readTables(){
+      selectedTables.clear();
+      tablesDiv.querySelectorAll('input[type=checkbox]:checked').forEach(cb=>selectedTables.add(+cb.value));
+    }
+
+    function renderStatsPanel(){
+      const bestT = Number(localStorage.getItem(kBestTimed(student)) || 0);
+      bestTimedEl.textContent = bestT ? `${bestT} encerts` : '—';
+      const n = Number(qCountSel.value || totalQuestions || 10);
+      bestUntimedNEl.textContent = n;
+      const bestU = Number(localStorage.getItem(kBestUntimed(student, n)) || 0);
+      bestUntimedEl.textContent = `${bestU} punts`;
+      const raw = localStorage.getItem(kHistory(student));
+      let hist = []; try{ hist = JSON.parse(raw)||[] }catch{ hist=[] }
+      historyList.innerHTML='';
+      if(!hist.length){
+        const li=document.createElement('li'); li.className='attempt';
+        li.innerHTML = `<span class="muted">Encara no hi ha intents guardats.</span>`;
+        historyList.appendChild(li);
+      } else {
+        hist.forEach(h=>{
+          const li=document.createElement('li'); li.className='attempt';
+          const modeText = h.mode==='timed' ? 'Cronometrat' : `Sense temps · ${h.n} preg.`;
+          const icon = h.improved ? '🟢' : '🔴';
+          li.innerHTML = `<span>${icon} ${modeText} — <span class="pill">Punts: <b>${h.score}</b></span> <span class="pill">Encerts: ${h.correct}</span> <span class="pill">Errors: ${h.wrong}</span></span>
+                          <span class="muted">${fmtDate(h.ts)}</span>`;
+          historyList.appendChild(li);
+        });
+      }
+    }
+
+    function applyPrefsToUI(){
+      // tables
+      tablesDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        cb.checked = selectedTables.size ? selectedTables.has(+cb.value) : true;
+      });
+      // mode + muted
+      document.querySelectorAll('input[name=mode]').forEach(r=>{ r.checked = r.value===mode; });
+      muteCb.checked = muted;
+      // show/hide cards
+      show(scrStats); show(scrStart);
+      if(mode==='untimed'){ show(scrUntimed); qCountSel.value = String(totalQuestions); }
+      else { hide(scrUntimed); }
+      // refresh stats
+      renderStatsPanel();
+    }
+
+    // Name flow
+    saveNameBtn.addEventListener('click', ()=>{
+      const val = (inputName.value||'').trim();
+      if(!val){ nameHint.textContent='Si us plau, escriu un nom per continuar.'; return; }
+      student = val;
+      localStorage.setItem(kName, student);
+      loadPrefs();
+      hide(scrName); show(scrSetup);
+      applyPrefsToUI();
+    });
+    inputName.addEventListener('keydown', e=>{ if(e.key==='Enter') saveNameBtn.click(); });
+
+    // Restore if name exists
+    (function(){
+      const storedName = localStorage.getItem(kName);
+      if(storedName){
+        student = storedName;
+        inputName.value = student;
+        nameHint.textContent = `Benvingut/da de nou, ${student}!`;
+      }
+    })();
+
+    // Mode toggle
+    document.querySelectorAll('input[name=mode]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        mode = document.querySelector('input[name=mode]:checked').value;
+        if(mode==='untimed'){ show(scrUntimed); } else { hide(scrUntimed); }
+        savePrefs(); renderStatsPanel();
+      });
+    });
+    qCountSel.addEventListener('change', ()=>{
+      totalQuestions = Number(qCountSel.value);
+      savePrefs(); renderStatsPanel();
+    });
+    muteCb.addEventListener('change', ()=>{ muted = muteCb.checked; savePrefs(); });
+
+    // If name exists, jump to setup directly for convenience
+    window.addEventListener('load', ()=>{
+      if(student){
+        hide(scrName); show(scrSetup); show(scrStats); show(scrStart);
+        loadPrefs();
+        applyPrefsToUI();
+      }
+    });
+
+    // Game logic
+    function nextQuestion(){
+      const arr=[...selectedTables];
+      const t = arr[Math.floor(Math.random()*arr.length)];
+      const n = Math.floor(Math.random()*10) + 1;
+      a=t; b=n;
+      questionEl.textContent = `${a} × ${b} = ?`;
+      answerEl.value=''; answerEl.focus();
+      feedbackEl.textContent=''; feedbackEl.className='feedback';
+    }
+
+    function startGame(){
+      readTables();
+      if(selectedTables.size===0){ alert('Selecciona almenys una taula'); return; }
+      totalQuestions = Number(qCountSel.value || totalQuestions);
+      // Reset
+      correct=wrong=asked=0; okEl.textContent=0; badEl.textContent=0; scoreEl.textContent=0;
+      // UI
+      hide(scrSetup); hide(scrStats); hide(scrUntimed); hide(scrStart);
+      show(scrGame); hide(scrResults);
+      modeTitle.textContent = mode==='timed' ? 'Mode cronometrat (60 s)' : `Mode sense temps · ${totalQuestions} preguntes`;
+      if(mode==='timed'){
+        timer=60; timeEl.textContent=timer; show(timerBlock); hide(progressEl);
+        if(tick) clearInterval(tick);
+        tick = setInterval(()=>{ timer--; timeEl.textContent=timer; if(timer<=0){ clearInterval(tick); tick=null; endGame(); } },1000);
+      }else{
+        hide(timerBlock); show(progressEl); barEl.style.width='0%';
+      }
+      savePrefs();
+      nextQuestion();
+    }
+
+    function playSound(ok){
+      if(muted) return;
+      (ok ? sOK : sBAD).currentTime = 0;
+      (ok ? sOK : sBAD).play().catch(()=>{});
+    }
+
+    function submitAnswer(){
+      if(!answerEl.value) return;
+      const val = Number(answerEl.value);
+      const right = (val === a*b);
+      if(right){
+        correct++; okEl.textContent=correct; feedbackEl.textContent='Correcte!'; feedbackEl.className='feedback ok';
+      }else{
+        wrong++; badEl.textContent=wrong; feedbackEl.textContent=`Incorrecte (${a*b})`; feedbackEl.className='feedback bad';
+      }
+      const score = (correct - wrong);
+      scoreEl.textContent = score;
+      playSound(right);
+      asked++;
+      if(mode==='untimed'){
+        const pct = Math.min(100, Math.round((asked/totalQuestions)*100));
+        barEl.style.width = pct + '%';
+        if(asked>=totalQuestions){ setTimeout(endGame, 400); return; }
+      }
+      setTimeout(nextQuestion, 450);
+    }
+
+    function endGame(){
+      if(tick){ clearInterval(tick); tick=null; }
+      const score = (correct - wrong);
+      let improved=false, msg='';
+      if(mode==='timed'){
+        const key = kBestTimed(student);
+        const prev = Number(localStorage.getItem(key) || 0);
+        if(correct > prev){ localStorage.setItem(key, String(correct)); improved=true; msg = `🎉 Nou rècord cronometrat: ${correct} encerts!`; }
+        else msg = `Millor cronometrat: ${prev} encerts.`;
+      }else{
+        const key = kBestUntimed(student, totalQuestions);
+        const prev = Number(localStorage.getItem(key) || 0);
+        if(score > prev){ localStorage.setItem(key, String(score)); improved=true; msg = `🎉 Nou rècord: ${score} punts en ${totalQuestions} preguntes!`; }
+        else msg = `Millor ${totalQuestions} preguntes: ${prev} punts.`;
+      }
+      // History (max 5)
+      const keyH = kHistory(student);
+      let hist=[]; try{ hist = JSON.parse(localStorage.getItem(keyH))||[] }catch{ hist=[] }
+      hist.unshift({ ts: Date.now(), mode, n: mode==='untimed' ? totalQuestions : 60, correct, wrong, score, improved });
+      localStorage.setItem(keyH, JSON.stringify(hist.slice(0,5)));
+
+      // Fill results
+      rOk.textContent = correct; rBad.textContent = wrong; rScore.textContent = score;
+      recordMsg.textContent = msg;
+      hide(scrGame); show(scrResults);
+      renderStatsPanel();
+    }
+
+    // Clear results (keep name & prefs)
+    clearBtn.addEventListener('click', ()=>{
+      if(!confirm('Segur que vols esborrar les teves estadístiques? Aquesta acció no es pot desfer.')) return;
+      // Remove timed best
+      localStorage.removeItem(kBestTimed(student));
+      // Remove all untimed bests (10..100 step 5)
+      for(let n=10;n<=100;n+=5){ localStorage.removeItem(kBestUntimed(student, n)); }
+      // Remove history
+      localStorage.removeItem(kHistory(student));
+      renderStatsPanel();
+    });
+
+    // Events
+    startBtn.addEventListener('click', startGame);
+    submitBtn.addEventListener('click', submitAnswer);
+    answerEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submitAnswer(); });
+    document.getElementById('playAgain').addEventListener('click', ()=>{
+      hide(scrResults); show(scrSetup); show(scrStats); show(scrStart);
+      if(mode==='untimed') show(scrUntimed);
+      renderStatsPanel();
+    });
+  </script>
+</body>
+</html>
