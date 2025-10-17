@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Divisions descomposades · Guia interactiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">÷</div>
+      <div>
+        <h1>Divisions descomposades</h1>
+        <p class="sub">Pissarra interactiva per practicar pas a pas</p>
+      </div>
+    </div>
+    <button id="printBtn" class="ghost">Imprimeix</button>
+  </header>
+
+  <main class="container">
+    <section class="card set-up">
+      <h2>Configura la divisió</h2>
+      <form id="setupForm" class="setup-grid">
+        <label>Dividend
+          <input type="number" id="dividend" min="0" placeholder="427" required />
+        </label>
+        <label>Divisor
+          <input type="number" id="divisor" min="1" placeholder="3" required />
+        </label>
+        <button class="primary" type="submit">Començar</button>
+        <button class="ghost" id="randomBtn" type="button">🎲 Aleatori</button>
+      </form>
+      <p class="hint">Funciona sense internet a GitHub Pages. Escriu una divisió per començar.</p>
+    </section>
+
+    <section id="workArea" class="workspace hidden">
+      <div class="work-grid">
+        <div class="long-division card">
+          <div class="division-simple">
+            <span id="opDividend" class="number">427</span>
+            <span class="sep">|</span>
+            <span id="opDivisor" class="number">3</span>
+          </div>
+
+          <div id="steps" class="steps"></div>
+
+          <div class="totals">
+            <div>Quocient: <span id="quotient">0</span></div>
+            <div>Residú: <span id="remainder">0</span></div>
+          </div>
+        </div>
+
+        <aside class="card side">
+          <h3>Descomposició</h3>
+          <div id="chunksBox" class="chunks"></div>
+
+          <form id="stepForm" class="step-form">
+            <label for="chunk">Quin <strong>número</strong> afegeixes al quocient?</label>
+            <div class="row">
+              <input id="chunk" type="number" min="0" placeholder="ex. 100, 40, 2" />
+              <button class="primary" type="submit">Afegir pas</button>
+            </div>
+            <div class="calc-line"><span id="calcPreview">—</span></div>
+            <div class="actions">
+              <button id="helpBtn" type="button" class="outline">Ajuda</button>
+              <button id="undoBtn" type="button" class="ghost">Desfer</button>
+              <button id="resetBtn" type="button" class="ghost">Reinicia</button>
+            </div>
+            <p id="helpText" class="help"></p>
+          </form>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    © 2025 Oriol Soler · <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">Llicència AGPL v3</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

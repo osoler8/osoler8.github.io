@@ -1,0 +1,22 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,sans-serif;background:#f7fbff;color:#111}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid #e0e8f5;background:#fff}
+.logo{width:42px;height:42px;border-radius:12px;background:#e8f1ff;display:grid;place-items:center;font-size:26px;color:#1b70ff}
+.container{max-width:1100px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #e6edf7;border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.04)}
+.work-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.division-simple{font-family:'Patrick Hand',cursive;font-size:44px;line-height:1.1;margin-bottom:12px}
+.sep{margin:0 10px}
+.steps{min-height:200px}
+.step{font-family:'Patrick Hand',cursive;font-size:42px;line-height:1.1;margin:10px 0;opacity:0;transform:translateY(10px);animation:fadeIn .4s ease forwards}
+@keyframes fadeIn{to{opacity:1;transform:none}}
+.hr{height:1px;background:#d8e7ff;margin:4px 0 6px 18px}
+.res{margin-left:18px}
+.chunks{border:3px solid #22c55e;border-radius:12px;padding:10px 12px;min-height:160px;font-family:'Patrick Hand',cursive;font-size:32px;background:#f6fff9;transition:box-shadow .4s ease}
+.chunks.highlight{box-shadow:0 0 10px 2px rgba(34,197,94,0.4)}
+.totals{margin-top:8px;font-weight:600;font-size:18px}
+.totals span{font-family:'Patrick Hand',cursive;font-size:34px}
+.help{color:#0b5e2b;margin-top:8px;opacity:0;transition:opacity .4s}
+.help.visible{opacity:1}
+.footer{text-align:center;font-size:13px;color:#667;margin:30px 0}
+.footer a{color:inherit;text-decoration:underline}
