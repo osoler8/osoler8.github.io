@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Divisions descompostes</title>
+  <link rel="stylesheet" href="style.css"/>
+  <meta name="description" content="Pissarra interactiva per practicar la descomposició de la divisió pas a pas."/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">÷</div>
+      <div>
+        <h1>Divisions descompostes</h1>
+        <p class="subtitle">Pissarra interactiva per practicar pas a pas</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card config">
+      <h2>Configura la divisió</h2>
+      <div class="row">
+        <label>Dividend
+          <input id="dividend" type="number" min="0" value="427" />
+        </label>
+        <label>Divisor
+          <input id="divisor" type="number" min="1" value="3" />
+        </label>
+        <button id="start" class="btn primary">Començar</button>
+        <button id="random" class="btn">🎲 Aleatori</button>
+      </div>
+      <p class="muted">Funciona a GitHub Pages amb fitxers estàtics. Escriu una divisió per començar.</p>
+    </section>
+
+    <section class="grid two">
+      <div class="card board">
+        <div class="long-div">
+          <span id="dA" class="big"></span>
+          <span class="bar">|</span>
+          <span id="dB" class="big"></span>
+        </div>
+        <div id="work" class="work"></div>
+        <div class="summary">
+          <div>Quocient: <span id="quo" class="big strong">0</span></div>
+          <div>Residu: <span id="rem" class="big strong">0</span></div>
+        </div>
+      </div>
+
+      <aside class="card helper">
+        <h3>Descomposició</h3>
+        <div id="decompBox" class="decomp" aria-live="polite"></div>
+
+        <label class="ask">Quin <strong>número</strong> afegeixes al quocient?</label>
+        <div class="row gap">
+          <input id="step" type="number" step="1" min="1" placeholder="ex. 100, 40, 2" />
+          <button id="add" class="btn primary">Afegir pas</button>
+        </div>
+        <div id="preview" class="muted calc">—</div>
+
+        <div class="row gap mt">
+          <button id="hint" class="btn">Ajuda</button>
+          <button id="undo" class="btn">Desfer</button>
+          <button id="reset" class="btn">Reinicia</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>© 2025 Oriol Soler • Llicència AGPL v3</span>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
