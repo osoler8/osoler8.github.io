@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Càlcul Mental - Joc de Matemàtiques</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧮 Càlcul Mental</h1>
+            <p>Practica les teves habilitats matemàtiques!</p>
+        </header>
+
+        <main>
+            <!-- Selecció d'operacions -->
+            <section class="operation-selector">
+                <h2>Escull què vols practicar:</h2>
+                <div class="operation-buttons">
+                    <button class="operation-btn" data-operation="suma">
+                        ➕ Sumes
+                    </button>
+                    <button class="operation-btn" data-operation="resta">
+                        ➖ Restes
+                    </button>
+                    <button class="operation-btn" data-operation="multiplicacio">
+                        ✖️ Multiplicacions
+                    </button>
+                    <button class="operation-btn" data-operation="divisio">
+                        ➗ Divisions
+                    </button>
+                    <button class="operation-btn" data-operation="mixte">
+                        🔀 Operacions mixtes
+                    </button>
+                </div>
+            </section>
+
+            <!-- Configuració de dificultat -->
+            <section class="difficulty-selector" style="display: none;">
+                <h3>Nivell de dificultat:</h3>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn" data-level="facil">Fàcil</button>
+                    <button class="difficulty-btn" data-level="mitja">Mitjà</button>
+                    <button class="difficulty-btn" data-level="dificil">Difícil</button>
+                </div>
+            </section>
+
+            <!-- Àrea del joc -->
+            <section class="game-area" style="display: none;">
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-label">Puntuació:</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Encerts:</span>
+                        <span class="stat-value" id="correct">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Errors:</span>
+                        <span class="stat-value" id="incorrect">0</span>
+                    </div>
+                </div>
+
+                <div class="question-container">
+                    <div class="question" id="question">
+                        <!-- L'operació apareixerà aquí -->
+                    </div>
+                    <div class="answer-input">
+                        <input type="number" id="answer" placeholder="Escriu la resposta...">
+                        <button id="submit-btn">Comprovar</button>
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback">
+                    <!-- Feedback apareixerà aquí -->
+                </div>
+
+                <div class="controls">
+                    <button id="new-question-btn">Nova pregunta</button>
+                    <button id="restart-btn">Reiniciar joc</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
