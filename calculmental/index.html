@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Càlcul Mental</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="index.html">🧮 Càlcul Mental</a></h1>
+            <p>Entrena la teva ment amb exercicis de matemàtiques</p>
+        </header>
+
+        <main>
+            <!-- Configuració del joc -->
+            <div id="config-panel" class="panel">
+                <h2>Configuració</h2>
+                
+                <div class="config-group">
+                    <label>Mode de joc:</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="gameMode" value="timed" checked>
+                            <span>Cronometrat</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="gameMode" value="free">
+                            <span>Lliure</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="config-group" id="duration-group">
+                    <label>Duració:</label>
+                    <div class="button-group" id="duration-button-group">
+                        <button class="option-button" data-value="30">⚡ 30s</button>
+                        <button class="option-button active" data-value="60">⏱️ 1min</button>
+                        <button class="option-button" data-value="120">⏰ 2min</button>
+                        <button class="option-button" data-value="300">🕐 5min</button>
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <label>Dificultat:</label>
+                    <div class="button-group" id="difficulty-group">
+                        <button class="option-button" data-value="easy">🟢 Fàcil (1-10)</button>
+                        <button class="option-button active" data-value="medium">🟡 Mitjà (1-50)</button>
+                        <button class="option-button" data-value="hard">🔴 Difícil (1-100)</button>
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <label>Operació:</label>
+                    <div class="button-group" id="operation-group">
+                        <button class="option-button" data-value="addition">➕ Suma</button>
+                        <button class="option-button" data-value="subtraction">➖ Resta</button>
+                        <button class="option-button" data-value="multiplication">✖️ Multiplicació</button>
+                        <button class="option-button" data-value="division">➗ Divisió</button>
+                        <button class="option-button active" data-value="mixed">🎲 Barrejat</button>
+                    </div>
+                </div>
+
+                <button id="start-btn" class="btn btn-primary">Començar Joc</button>
+            </div>
+
+            <!-- Joc actiu -->
+            <div id="game-panel" class="panel hidden">
+                <div class="game-header">
+                    <div class="timer-container">
+                        <span id="timer">--:--</span>
+                    </div>
+                    <div class="score-container">
+                        <span>Puntuació: <span id="score">0</span></span>
+                        <div class="combo-indicator" id="combo-indicator">
+                            <span class="combo-text">Combo x<span id="combo-multiplier">1</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-container">
+                    <div class="question-wrapper">
+                        <div id="question" class="question">Carregant...</div>
+                        <div class="question-number">Pregunta <span id="question-counter">1</span></div>
+                    </div>
+                    <input type="number" id="answer-input" placeholder="Resposta" autocomplete="off">
+                    <div class="button-group">
+                        <button id="submit-btn" class="btn btn-primary">
+                            <span class="btn-text">Enviar</span>
+                            <span class="btn-icon">✓</span>
+                        </button>
+                        <button id="skip-btn" class="btn btn-secondary">
+                            <span class="btn-text">Saltar</span>
+                            <span class="btn-icon">⏭</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feedback" id="feedback"></div>
+                
+                <!-- Efectes visuals -->
+                <div id="particles-container" class="particles-container"></div>
+                <div id="floating-points" class="floating-points"></div>
+                
+                <button id="stop-btn" class="btn btn-danger">Aturar Joc</button>
+            </div>
+
+            <!-- Resultats -->
+            <div id="results-panel" class="panel hidden">
+                <h2>🏆 Resultats</h2>
+                <div id="results-content"></div>
+                
+                <!-- Medalles obtingudes -->
+                <div id="earned-medals" class="earned-medals"></div>
+                
+                <!-- Progressió de nivell -->
+                <div id="level-up-notification" class="level-up-notification hidden">
+                    <div class="level-up-content">
+                        <h3>🎉 Felicitats!</h3>
+                        <p>Has pujat de nivell!</p>
+                    </div>
+                </div>
+                
+                <div class="results-actions">
+                    <button id="play-again-btn" class="btn btn-primary">
+                        <span class="btn-text">Jugar de Nou</span>
+                        <span class="btn-icon">🎮</span>
+                    </button>
+                    <button id="share-btn" class="btn btn-secondary">
+                        <span class="btn-text">Compartir</span>
+                        <span class="btn-icon">📤</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <!-- Perfil de l'usuari -->
+            <div id="user-profile" class="user-profile hidden">
+                <div class="level-info">
+                    <span class="level-badge">Nivell <span id="user-level">1</span></span>
+                    <div class="xp-bar">
+                        <div class="xp-fill" id="xp-fill"></div>
+                        <span class="xp-text"><span id="current-xp">0</span> / <span id="next-level-xp">100</span> XP</span>
+                    </div>
+                </div>
+                <div class="achievements">
+                    <div class="achievement-badge" id="streak-badge" title="Ratxa actual">
+                        🔥 <span id="streak-count">0</span>
+                    </div>
+                    <div class="achievement-badge" id="total-score-badge" title="Puntuació total">
+                        ⭐ <span id="total-score">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p>
+                Càlcul mental © 2025 Oriol Soler. 
+                Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank" rel="noopener">AGPL v3</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
