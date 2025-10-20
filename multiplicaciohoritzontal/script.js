@@ -49,6 +49,9 @@ class MultiplicationDecomposer {
         this.decomposition1 = this.decompose(this.num1);
         this.decomposition2 = this.decompose(this.num2);
         
+        // Mostrar el contenidor de la graella
+        document.querySelector('.grid-container').classList.add('visible');
+        
         this.createGrid();
         this.prepareHelpSteps();
         this.updateResultSection();
@@ -297,6 +300,8 @@ class MultiplicationDecomposer {
     reset() {
         document.getElementById('num1').value = '';
         document.getElementById('num2').value = '';
+        // Ocultar el contenidor de la graella
+        document.querySelector('.grid-container').classList.remove('visible');
         this.clearGrid();
     }
 }

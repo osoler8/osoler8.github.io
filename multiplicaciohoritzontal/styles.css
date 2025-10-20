@@ -155,11 +155,15 @@ header p {
 
 /* Contenidor de la graella */
 .grid-container {
-    display: flex;
+    display: none; /* Ocult inicialment */
     gap: 30px;
     align-items: flex-start;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+.grid-container.visible {
+    display: flex; /* Mostrar quan té la classe 'visible' */
 }
 
 .grid {
@@ -384,18 +388,15 @@ header p {
 
 /* Footer */
 .footer {
-    background: white;
+    background: transparent;
     padding: 20px;
-    margin-top: 40px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     text-align: center;
-    border-top: 3px solid #667eea;
+    margin-top: 40px;
 }
 
 .footer p {
     margin: 0;
-    color: #666;
+    color: #333;
     font-size: 0.9rem;
     font-weight: 500;
 }
