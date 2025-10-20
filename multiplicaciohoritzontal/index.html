@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descomposició de Multiplicacions - Mètode de la Caixa</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Descomposició de Multiplicacions</h1>
+            <p>Aprèn a multiplicar amb el mètode horitzontal</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="num1">Primer número:</label>
+                    <input type="number" id="num1" placeholder="Introdueix un número" min="1" max="999">
+                </div>
+                <div class="input-group">
+                    <label for="num2">Segon número:</label>
+                    <input type="number" id="num2" placeholder="Introdueix un número" min="1" max="999">
+                </div>
+                <button id="generateBtn" class="btn btn-primary">Generar Graella</button>
+            </section>
+
+            <section class="controls">
+                <button id="helpBtn" class="btn btn-help">🔍 Ajuda pas a pas</button>
+                <button id="resetBtn" class="btn btn-secondary">🔄 Reiniciar</button>
+                <button id="solveBtn" class="btn btn-success">✅ Mostrar Solució</button>
+            </section>
+
+            <div id="helpInstructions" class="help-instructions" style="display: none;">
+                <div id="stepInfo" class="step-info"></div>
+            </div>
+
+            <section class="grid-container">
+                <div id="decomposition-grid" class="grid"></div>
+                <div id="result-section" class="result-section"></div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <p>Descomposició de multiplicacions © 2025 Oriol Soler. Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank" rel="noopener noreferrer">AGPL v3</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
