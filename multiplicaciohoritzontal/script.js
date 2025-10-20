@@ -109,8 +109,13 @@ class MultiplicationDecomposer {
     }
 
     validateInput(cell) {
-        const value = cell.textContent.replace(/\D/g, ''); // Només números
-        cell.textContent = value;
+        // Només permetre números, eliminant qualsevol caràcter no numèric
+        const cleanedValue = cell.textContent.replace(/\D/g, '');
+        
+        // Actualitzar només si cal
+        if (cell.textContent !== cleanedValue) {
+            cell.textContent = cleanedValue;
+        }
     }
 
     checkAnswer(cell) {
