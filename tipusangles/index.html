@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tipus d'angles</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+        <h1>🔺 Tipus d'angles</h1>
+        <p>Amb aquest joc aprendràs a diferenciar-los!</p>
+    </header>
+
+        <div id="setup-screen" class="screen active">
+            <div class="angle-selection">
+                <h2>Selecciona els tipus d'angles:</h2>
+                
+                <div class="angle-options">
+                    <div class="angle-group obligatory">
+                        <h3>Obligatoris:</h3>
+                        <label class="angle-option">
+                            <input type="checkbox" id="agut" value="agut" checked disabled>
+                            <span class="checkmark"></span>
+                            <span class="angle-name">Angle Agut (0° - 90°)</span>
+                        </label>
+                        
+                        <label class="angle-option">
+                            <input type="checkbox" id="recte" value="recte" checked disabled>
+                            <span class="checkmark"></span>
+                            <span class="angle-name">Angle Recte (90°)</span>
+                        </label>
+                        
+                        <label class="angle-option">
+                            <input type="checkbox" id="obtus" value="obtus" checked disabled>
+                            <span class="checkmark"></span>
+                            <span class="angle-name">Angle Obtús (90° - 180°)</span>
+                        </label>
+                    </div>
+
+                    <div class="angle-group optional">
+                        <h3>Addicionals:</h3>
+                        <label class="angle-option">
+                            <input type="checkbox" id="pla" value="pla">
+                            <span class="checkmark"></span>
+                            <span class="angle-name">Angle Pla (180°)</span>
+                        </label>
+                        
+                        <label class="angle-option">
+                            <input type="checkbox" id="complet" value="complet">
+                            <span class="checkmark"></span>
+                            <span class="angle-name">Angle Complet (360°)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="start-game" class="btn-primary">Començar Joc</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="score-section">
+                    <div class="main-score">
+                        <span class="score-label">Puntuació:</span>
+                        <span id="total-score" class="score-value">0</span>
+                    </div>
+                    <div class="stats">
+                        <span class="stat-item correct">✅ <span id="correct-count">0</span></span>
+                        <span class="stat-item incorrect">❌ <span id="incorrect-count">0</span></span>
+                        <span class="stat-item streak">🔥 <span id="streak-count">0</span></span>
+                    </div>
+                </div>
+                <button id="back-to-setup" class="btn-secondary">Tornar a Configuració</button>
+            </div>
+
+            <div class="card-container">
+                <div id="angle-card" class="angle-card">
+                    <div class="angle-display">
+                        <svg id="angle-svg" width="300" height="300" viewBox="0 0 300 300">
+                            <!-- L'angle es dibuixarà aquí -->
+                        </svg>
+                    </div>
+                    
+                    <div class="angle-info">
+                        <p id="angle-degrees"></p>
+                    </div>
+
+                    <div class="answer-options">
+                        <h3>Quin tipus d'angle és?</h3>
+                        <div class="options-grid">
+                            <button class="option-btn" data-type="agut">Agut</button>
+                            <button class="option-btn" data-type="recte">Recte</button>
+                            <button class="option-btn" data-type="obtus">Obtús</button>
+                            <button class="option-btn" data-type="pla">Pla</button>
+                            <button class="option-btn" data-type="complet">Complet</button>
+                        </div>
+                    </div>
+
+                    <div id="feedback" class="feedback hidden">
+                        <p id="feedback-text"></p>
+                        <button id="next-angle" class="btn-primary">Següent Angle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Tipus d'angles © 2025 Oriol Soler. Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank">AGPL v3</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
