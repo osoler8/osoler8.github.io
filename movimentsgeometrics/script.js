@@ -7,7 +7,7 @@ class GeometricTransformations {
         this.centerY = this.canvas.height / 2;
         
         // Current shape and position
-        this.currentShape = 'figura-a';
+        this.currentShape = 'triangle-equilater';
         this.shapePosition = { x: 0, y: 0 };
         this.shapeRotation = 0;
         this.shapeReflectionH = false;
@@ -21,21 +21,38 @@ class GeometricTransformations {
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
         
-        // Shape definitions (relative to center)
+        // Shape definitions (vertices of geometric shapes, relative to center)
         this.shapes = {
-            'figura-a': [
-                { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 }
+            'triangle-equilater': [
+                { x: 0, y: -1.5 },          // Top vertex
+                { x: -1.299, y: 0.75 },     // Bottom left (√3 ≈ 1.732, so 1.5 * √3/2 ≈ 1.299)
+                { x: 1.299, y: 0.75 }       // Bottom right
             ],
-            'figura-b': [
-                { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }
+            'triangle-rectangle': [
+                { x: -1, y: -1 },           // Top left
+                { x: 1, y: -1 },            // Top right
+                { x: -1, y: 1 }             // Bottom left (right angle)
             ],
-            'figura-c': [
-                { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 1 }
+            'quadrat': [
+                { x: -1, y: -1 },           // Top left
+                { x: 1, y: -1 },            // Top right
+                { x: 1, y: 1 },             // Bottom right
+                { x: -1, y: 1 }             // Bottom left
             ],
-            'figura-d': [
-                { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 },
-                { x: 0, y: 1 }, { x: 1, y: 1 },
-                { x: 0, y: 2 }
+            'pentagon': [
+                { x: 0, y: -1.5 },          // Top
+                { x: 1.427, y: -0.464 },    // Top right
+                { x: 0.882, y: 1.214 },     // Bottom right
+                { x: -0.882, y: 1.214 },    // Bottom left
+                { x: -1.427, y: -0.464 }    // Top left
+            ],
+            'hexagon': [
+                { x: 0, y: -1.5 },          // Top
+                { x: 1.299, y: -0.75 },     // Top right
+                { x: 1.299, y: 0.75 },      // Bottom right
+                { x: 0, y: 1.5 },           // Bottom
+                { x: -1.299, y: 0.75 },     // Bottom left
+                { x: -1.299, y: -0.75 }     // Top left
             ]
         };
         
@@ -73,6 +90,11 @@ class GeometricTransformations {
             this.resetShape();
         });
         
+        // Initial position button
+        document.querySelector('.initial-position-btn').addEventListener('click', () => {
+            this.setInitialPosition();
+        });
+        
 
         
         // Canvas mouse events
@@ -99,6 +121,16 @@ class GeometricTransformations {
         this.updateInfo('Reiniciat');
     }
     
+    setInitialPosition() {
+        this.clearShadow();
+        this.shapePosition = { x: 0, y: 0 };
+        this.shapeRotation = 0;
+        this.shapeReflectionH = false;
+        this.shapeReflectionV = false;
+        this.redraw();
+        this.updateInfo('Posició i orientació inicials');
+    }
+    
     applyTransformation(type) {
         switch(type) {
             case 'rotate-45':
@@ -121,10 +153,10 @@ class GeometricTransformations {
                 break;
             case 'reflect-v':
                 this.reflectVertical();
-                break;
+                return; // Exit early for reflections as they handle their own redraw
             case 'reflect-h':
                 this.reflectHorizontal();
-                break;
+                return; // Exit early for reflections as they handle their own redraw
         }
         this.redraw();
         this.updateInfo(`Transformació aplicada: ${this.getTransformationName(type)}`);
@@ -136,10 +168,15 @@ class GeometricTransformations {
         this.clearShadow();
         const rotationDirection = document.getElementById('rotation-direction').value;
         const actualDegrees = rotationDirection === 'clockwise' ? -degrees : degrees;
+        
+        // Add the rotation and normalize to 0-360 range
         this.shapeRotation = (this.shapeRotation + actualDegrees) % 360;
         if (this.shapeRotation < 0) {
             this.shapeRotation += 360;
         }
+        
+        // Round to avoid floating point precision errors
+        this.shapeRotation = Math.round(this.shapeRotation * 100) / 100;
     }
 
     translateShape() {
@@ -180,6 +217,7 @@ class GeometricTransformations {
         setTimeout(() => {
             this.shapeReflectionV = !this.shapeReflectionV;
             this.redraw();
+            this.updateInfo(`Transformació aplicada: ${this.getTransformationName('reflect-v')}`);
         }, 100);
     }
 
@@ -193,6 +231,7 @@ class GeometricTransformations {
         setTimeout(() => {
             this.shapeReflectionH = !this.shapeReflectionH;
             this.redraw();
+            this.updateInfo(`Transformació aplicada: ${this.getTransformationName('reflect-h')}`);
         }, 100);
     }
 
@@ -242,12 +281,29 @@ class GeometricTransformations {
     }
     
     isPointInShape(mouseX, mouseY) {
-        const gridPos = this.screenToGrid(mouseX, mouseY);
         const transformedShape = this.getTransformedShape();
         
-        return transformedShape.some(point => 
-            Math.abs(point.x - gridPos.x) < 0.5 && Math.abs(point.y - gridPos.y) < 0.5
-        );
+        // Convert mouse position to grid coordinates (but keep as float for precision)
+        const testX = (mouseX - this.centerX) / this.gridSize;
+        const testY = (this.centerY - mouseY) / this.gridSize;
+        
+        // Ray casting algorithm (point-in-polygon test)
+        let inside = false;
+        const vertices = transformedShape;
+        
+        for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+            const xi = vertices[i].x;
+            const yi = vertices[i].y;
+            const xj = vertices[j].x;
+            const yj = vertices[j].y;
+            
+            if (((yi > testY) !== (yj > testY)) && 
+                (testX < (xj - xi) * (testY - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+        
+        return inside;
     }
     
     handleMouseDown(e) {
@@ -313,13 +369,19 @@ class GeometricTransformations {
             const cos = Math.cos(angle);
             const sin = Math.sin(angle);
             
-            shape = shape.map(point => ({
-                x: Math.round(point.x * cos - point.y * sin),
-                y: Math.round(point.x * sin + point.y * cos)
-            }));
+            shape = shape.map(point => {
+                const newX = point.x * cos - point.y * sin;
+                const newY = point.x * sin + point.y * cos;
+                
+                // Round to avoid floating point precision errors
+                return {
+                    x: Math.round(newX * 1000) / 1000,
+                    y: Math.round(newY * 1000) / 1000
+                };
+            });
         }
         
-        // Apply reflections
+        // Apply reflections relative to shape center
         if (reflectionH) {
             shape = shape.map(point => ({ x: -point.x, y: point.y }));
         }
@@ -426,15 +488,27 @@ class GeometricTransformations {
         this.ctx.strokeStyle = '#2c5282';
         this.ctx.lineWidth = 2;
         
-        transformedShape.forEach(point => {
-            const screenPos = this.gridToScreen(point.x, point.y);
-            const x = screenPos.x - this.gridSize / 2;
-            const y = screenPos.y - this.gridSize / 2;
+        // Draw polygon
+        if (transformedShape.length > 0) {
+            this.ctx.beginPath();
             
-            // Draw filled square
-            this.ctx.fillRect(x, y, this.gridSize, this.gridSize);
-            this.ctx.strokeRect(x, y, this.gridSize, this.gridSize);
-        });
+            // Move to first vertex
+            const firstPoint = this.gridToScreen(transformedShape[0].x, transformedShape[0].y);
+            this.ctx.moveTo(firstPoint.x, firstPoint.y);
+            
+            // Draw lines to all other vertices
+            for (let i = 1; i < transformedShape.length; i++) {
+                const point = this.gridToScreen(transformedShape[i].x, transformedShape[i].y);
+                this.ctx.lineTo(point.x, point.y);
+            }
+            
+            // Close the polygon
+            this.ctx.closePath();
+            
+            // Fill and stroke the polygon
+            this.ctx.fill();
+            this.ctx.stroke();
+        }
         
         // Draw center point
         const centerScreen = this.gridToScreen(this.shapePosition.x, this.shapePosition.y);
@@ -445,33 +519,60 @@ class GeometricTransformations {
     }
 
     drawShadowShape() {
-        // Calculate shadow position based on reflection type
-        let shadowReflectionH = this.shapeReflectionH;
-        let shadowReflectionV = this.shapeReflectionV;
+        // Get the current transformed shape (with rotation and translation)
+        let originalShape = this.getTransformedShape(false, false); // No reflections applied
+        
+        // Create the mathematically correct reflection
+        let reflectedShape;
         
         if (this.shadowType === 'horizontal') {
-            shadowReflectionH = !shadowReflectionH;
+            // Horizontal reflection: reflect across the Y-axis (x = 0)
+            // Each point (x, y) becomes (-x, y)
+            reflectedShape = originalShape.map(point => ({
+                x: -point.x,
+                y: point.y
+            }));
         } else if (this.shadowType === 'vertical') {
-            shadowReflectionV = !shadowReflectionV;
+            // Vertical reflection: reflect across the X-axis (y = 0)
+            // Each point (x, y) becomes (x, -y)
+            reflectedShape = originalShape.map(point => ({
+                x: point.x,
+                y: -point.y
+            }));
+        } else {
+            return; // No reflection type set
         }
         
-        // Get shadow shape with reflection applied
-        const shadowShape = this.getTransformedShape(shadowReflectionH, shadowReflectionV);
+        // Set reflection style (semi-transparent with different color to distinguish)
+        this.ctx.fillStyle = 'rgba(255, 100, 100, 0.5)'; // Light red for reflection
+        this.ctx.strokeStyle = 'rgba(200, 50, 50, 0.8)'; // Darker red border
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]); // Dashed line for reflection
         
-        // Set shadow style (semi-transparent)
-        this.ctx.fillStyle = 'rgba(66, 153, 225, 0.3)';
-        this.ctx.strokeStyle = 'rgba(44, 82, 130, 0.5)';
-        this.ctx.lineWidth = 1;
-        
-        shadowShape.forEach(point => {
-            const screenPos = this.gridToScreen(point.x, point.y);
-            const x = screenPos.x - this.gridSize / 2;
-            const y = screenPos.y - this.gridSize / 2;
+        // Draw reflected polygon
+        if (reflectedShape.length > 0) {
+            this.ctx.beginPath();
             
-            // Draw shadow square
-            this.ctx.fillRect(x, y, this.gridSize, this.gridSize);
-            this.ctx.strokeRect(x, y, this.gridSize, this.gridSize);
-        });
+            // Move to first vertex
+            const firstPoint = this.gridToScreen(reflectedShape[0].x, reflectedShape[0].y);
+            this.ctx.moveTo(firstPoint.x, firstPoint.y);
+            
+            // Draw lines to all other vertices
+            for (let i = 1; i < reflectedShape.length; i++) {
+                const point = this.gridToScreen(reflectedShape[i].x, reflectedShape[i].y);
+                this.ctx.lineTo(point.x, point.y);
+            }
+            
+            // Close the polygon
+            this.ctx.closePath();
+            
+            // Fill and stroke the reflected polygon
+            this.ctx.fill();
+            this.ctx.stroke();
+        }
+        
+        // Reset line dash for normal drawing
+        this.ctx.setLineDash([]);
     }
 
     clearShadow() {
