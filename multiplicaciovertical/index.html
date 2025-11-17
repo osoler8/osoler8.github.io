@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Descomposició de multiplicacions — Mètode vertical</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Descomposició de multiplicacions</h1>
+      <p class="subtitle">Aprèn a multiplicar amb el mètode vertical</p>
+    </header>
+
+    <main class="container">
+      <section class="controls">
+        <label>
+          Primer número:
+          <input id="multiplicand" type="number" min="0" max="9999999" step="1" inputmode="numeric" placeholder="Ex: 137" />
+        </label>
+        <label>
+          Segon número:
+          <input id="multiplier" type="number" min="1" max="9" step="1" inputmode="numeric" placeholder="Ex: 6" />
+        </label>
+        <button id="generate">Genera la descomposició</button>
+        <button id="toggle-solution-btn" disabled>Mostra solució calculada</button>
+      </section>
+
+      <section class="panels">
+        <!-- Panel esquerre: descomposició guiada -->
+        <div class="panel panel-left">
+          <div class="decomp-line" id="decomp-line-left"></div>
+          <div class="stack">
+            <div class="pill">
+              <div class="number" id="pill-multiplicand-left"></div>
+              <div class="underline"></div>
+            </div>
+            <div class="pill">
+              <div class="number" id="pill-multiplier-left"></div>
+              <div class="underline"></div>
+            </div>
+          </div>
+
+          <div class="green-box" id="decomposition-box">
+            <!-- Passos de descomposició generats aquí -->
+          </div>
+
+          <div class="sum-box">
+            <div>Resultat final (suma dels passos)</div>
+            <div class="sum-row">
+              <input id="student-total" type="number" inputmode="numeric" placeholder="Escriu el total" />
+              <span id="total-feedback" class="feedback"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel dret: multiplicació normal -->
+        <div class="panel panel-right">
+          <div class="decomp-line" id="decomp-line-right"></div>
+          <div class="stack">
+            <div class="pill">
+              <div class="number" id="pill-multiplicand-right"></div>
+              <div class="underline"></div>
+            </div>
+            <div class="pill">
+              <div class="number" id="pill-multiplier-right"></div>
+              <div class="underline"></div>
+            </div>
+          </div>
+
+          <div class="result-pill">
+            <div class="number" id="final-result"></div>
+            <div class="underline"></div>
+          </div>
+
+          <div id="normal-steps" class="normal-steps">
+            <!-- Línies de 7×6, 30×6, 100×6 mostrades si es marca la casella -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Eliminat el bloc d'explicació al peu -->
+      <!-- <section class="explain">
+        <p>
+          137 = <strong>100</strong> + <strong>30</strong> + <strong>7</strong>
+        </p>
+        <p>
+          Calcula cada pas: 7×m, 30×m, 100×m i després suma'ls. Pots escriure
+          les respostes i el sistema et dirà si són correctes.
+        </p>
+      </section> -->
+    </main>
+
+    <footer class="footer">
+      Descomposició de multiplicacions © 2025 Oriol Soler. Llicència del codi:
+      <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank" rel="noopener">AGPL v3</a>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
