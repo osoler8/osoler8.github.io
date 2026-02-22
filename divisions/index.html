@@ -2,95 +2,115 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>Tutor de Divisions per Paquets</title>
+    <title>Tutor de Divisions per Productes Parcials</title>
     <style>
         :root { --p: #2563eb; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 650px; }
         
-        .division-table { display: flex; justify-content: center; gap: 0; font-family: 'Courier New', monospace; font-size: 2rem; margin: 20px 0; }
-        .left-side { text-align: right; border-right: 4px solid #333; padding-right: 20px; min-width: 150px; }
-        .right-side { padding-left: 20px; color: var(--p); text-align: left; }
+        /* Disseny de la caixa de divisió */
+        .division-interface { display: flex; justify-content: center; margin: 30px 0; font-family: 'Courier New', monospace; font-size: 2.2rem; font-weight: bold; }
+        .column-left { text-align: right; padding-right: 20px; min-width: 180px; }
+        .column-right { border-left: 5px solid #333; padding-left: 20px; min-width: 120px; text-align: left; }
         
-        .sub-val { color: var(--e); font-size: 1.5rem; }
-        .rem-val { color: #333; font-weight: bold; border-top: 2px solid #333; margin-bottom: 10px; }
-        .q-part { color: var(--s); display: block; }
+        .divisor-box { border-bottom: 5px solid #333; margin-bottom: 10px; color: var(--p); display: inline-block; width: 100%; }
+        .sub-item { color: var(--e); font-size: 1.8rem; }
+        .res-item { color: #333; border-top: 2px solid #999; margin-bottom: 15px; }
+        .q-item { color: var(--s); display: block; height: 1.2em; }
+
+        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; border: 2px solid var(--p); }
+        .level-selector { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; }
+        .input-group { display: flex; gap: 15px; justify-content: center; align-items: center; }
+        input { font-size: 1.5rem; width: 120px; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; text-align: center; }
         
-        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 20px; }
-        .input-group { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-        input { font-size: 1.2rem; width: 100px; padding: 8px; border-radius: 8px; border: 2px solid #cbd5e1; }
-        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .total-box { margin-top: 20px; padding: 10px; background: #dcfce7; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
+        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { transform: scale(1.05); }
+        .btn-level { background: #64748b; font-size: 0.9rem; }
+        
+        .instruction { text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; min-height: 2.5em; }
+        .final-msg { margin-top: 20px; padding: 15px; background: #dcfce7; border-radius: 10px; text-align: center; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center">Mètode de Restes Successives</h2>
-    
-    <div class="division-table">
-        <div class="left-side">
-            <div id="current-dividend" style="margin-bottom: 10px;">682</div>
-            <div id="history-area"></div>
+    <div class="level-selector">
+        <button class="btn-level" onclick="init(1)">Nivell 1 (1 xifra)</button>
+        <button class="btn-level" onclick="init(2)">Nivell 2 (2 xifres)</button>
+        <button class="btn-level" onclick="init(3)">Nivell 3 (Difícil)</button>
+    </div>
+
+    <div class="division-interface">
+        <div class="column-left">
+            <div id="dnd-display">0</div>
+            <div id="history-left"></div>
         </div>
-        <div class="right-side">
-            <div id="divisor-val" style="border-bottom: 4px solid #333; margin-bottom: 10px;">8</div>
-            <div id="quotients-history"></div>
+        <div class="column-right">
+            <div class="divisor-box" id="dsr-display">0</div>
+            <div id="history-right"></div>
         </div>
     </div>
 
-    <div class="controls">
-        <div id="instruction" style="text-align:center; font-weight:bold;">Quin paquet vols treure ara?</div>
+    <div class="controls" id="controls-ui" style="display:none;">
+        <div class="instruction" id="msg">Per quin nombre multipliquem al divisor?</div>
         <div class="input-group">
-            <input type="number" id="user-q" placeholder="Quocient">
-            <span style="font-size: 1.5rem; align-self: center;">x <span id="hint-dsr">8</span></span>
-            <button onclick="processPackage()">Resta aquest paquet</button>
+            <span style="font-size: 1.5rem;"><span id="hint-dsr">4</span> x </span>
+            <input type="number" id="user-q" placeholder="?">
+            <button onclick="applyStep()">Apropa't!</button>
         </div>
     </div>
 
-    <div id="final-result" class="total-box"></div>
-    <button onclick="start()" style="margin-top:20px; background:#64748b; width:100%;">Nova Divisió</button>
+    <div id="final-result" class="final-msg"></div>
 </div>
 
 <script>
-    let dnd, dsr, rem;
-    let total_q = 0;
+    let dnd, dsr, rem, total_q;
 
-    function start() {
-        dnd = Math.floor(Math.random() * 800) + 100;
-        dsr = Math.floor(Math.random() * 8) + 2;
+    function init(lv) {
+        if(lv === 1) { dnd = rand(100, 500); dsr = rand(2, 9); }
+        else if(lv === 2) { dnd = rand(500, 2000); dsr = rand(11, 25); }
+        else { dnd = rand(2000, 9999); dsr = rand(26, 99); }
+
         rem = dnd;
         total_q = 0;
         
-        document.getElementById('current-dividend').innerText = dnd;
-        document.getElementById('divisor-val').innerText = dsr;
+        document.getElementById('dnd-display').innerText = dnd;
+        document.getElementById('dsr-display').innerText = dsr;
         document.getElementById('hint-dsr').innerText = dsr;
-        document.getElementById('history-area').innerHTML = "";
-        document.getElementById('quotients-history').innerHTML = "";
+        document.getElementById('history-left').innerHTML = "";
+        document.getElementById('history-right').innerHTML = "";
         document.getElementById('final-result').style.display = "none";
-        document.getElementById('instruction').innerText = `Tinc ${rem}. Quin paquet del ${dsr} vols treure?`;
+        document.getElementById('controls-ui').style.display = "block";
+        
+        updateInstruction();
     }
 
-    function processPackage() {
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function updateInstruction() {
+        document.getElementById('msg').innerText = `T'en falten ${rem}. Per quin nombre multipliquem el ${dsr} per acostar-nos-hi?`;
+    }
+
+    function applyStep() {
         const q_part = parseInt(document.getElementById('user-q').value);
         if (isNaN(q_part) || q_part <= 0) return;
 
-        const multiply = q_part * dsr;
+        const sub = q_part * dsr;
 
-        if (multiply > rem) {
-            alert("No pots treure tant! Aquest paquet és massa gran.");
+        if (sub > rem) {
+            alert("T'has passat! Aquest producte és més gran que el que et queda.");
             return;
         }
 
-        // Afegir a la part visual esquerra (resta)
-        const history = document.getElementById('history-area');
-        history.innerHTML += `<div class="sub-val">-${multiply}</div>`;
-        rem -= multiply;
-        history.innerHTML += `<div class="rem-val">${rem}</div>`;
+        // Resta a l'esquerra
+        const hLeft = document.getElementById('history-left');
+        hLeft.innerHTML += `<div class="sub-item">-${sub}</div>`;
+        rem -= sub;
+        hLeft.innerHTML += `<div class="res-item">${rem}</div>`;
 
-        // Afegir a la part visual dreta (quocients)
-        const qHistory = document.getElementById('quotients-history');
-        qHistory.innerHTML += `<span class="q-part">${q_part}</span>`;
+        // Quocient a la dreta
+        const hRight = document.getElementById('history-right');
+        hRight.innerHTML += `<div class="q-item">${q_part}</div>`;
         total_q += q_part;
 
         document.getElementById('user-q').value = "";
@@ -98,18 +118,16 @@
         if (rem < dsr) {
             finish();
         } else {
-            document.getElementById('instruction').innerText = `Ara et queden ${rem}. Continua!`;
+            updateInstruction();
         }
     }
 
     function finish() {
         const resBox = document.getElementById('final-result');
         resBox.style.display = "block";
-        resBox.innerHTML = `DIVISIÓ ACABADA!<br>Quocient total: ${total_q}<br>Residu final: ${rem}`;
-        document.getElementById('instruction').innerText = "Ja no en pots treure més.";
+        resBox.innerHTML = `Molt bé! Ja no pots repartir més.<br>EL QUOCIENT ÉS: ${total_q}<br>EL RESIDU ÉS: ${rem}`;
+        document.getElementById('controls-ui').style.display = "none";
     }
-
-    start();
 </script>
 </body>
 </html>
