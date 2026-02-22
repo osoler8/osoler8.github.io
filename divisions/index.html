@@ -2,132 +2,129 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>Tutor de Divisions per Productes Parcials</title>
+    <title>Tutor de Divisió - Mètode de Restes</title>
     <style>
-        :root { --p: #2563eb; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 650px; }
+        :root { --p: #3b82f6; --bg: #ffffff; --correct: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; background: #f9fafb; }
         
-        /* Disseny de la caixa de divisió */
-        .division-interface { display: flex; justify-content: center; margin: 30px 0; font-family: 'Courier New', monospace; font-size: 2.2rem; font-weight: bold; }
-        .column-left { text-align: right; padding-right: 20px; min-width: 180px; }
-        .column-right { border-left: 5px solid #333; padding-left: 20px; min-width: 120px; text-align: left; }
+        /* LA CAIXA DE DIVISIÓ EXACTA */
+        .division-grid { display: grid; grid-template-columns: auto auto; gap: 0; font-family: sans-serif; margin-bottom: 30px; }
+        .dividend-side { text-align: right; padding-right: 20px; font-size: 3.5rem; font-weight: bold; }
+        .divisor-side { border-left: 6px solid #000; padding-left: 20px; min-width: 140px; }
+        .divisor-line { border-bottom: 6px solid #000; padding-bottom: 5px; font-size: 3.5rem; font-weight: bold; color: var(--p); display: block; }
         
-        .divisor-box { border-bottom: 5px solid #333; margin-bottom: 10px; color: var(--p); display: inline-block; width: 100%; }
-        .sub-item { color: var(--e); font-size: 1.8rem; }
-        .res-item { color: #333; border-top: 2px solid #999; margin-bottom: 15px; }
-        .q-item { color: var(--s); display: block; height: 1.2em; }
+        /* ESTILS DE LES CAIXETES (INPUTS) */
+        .caixeta { border: 2px solid #9ca3af; border-radius: 12px; width: 140px; height: 60px; font-size: 2rem; text-align: center; margin: 10px 0; outline: none; }
+        .caixeta:focus { border-color: var(--p); background: #eff6ff; }
+        .caixeta-petita { width: 80px; }
 
-        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; border: 2px solid var(--p); }
-        .level-selector { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; }
-        .input-group { display: flex; gap: 15px; justify-content: center; align-items: center; }
-        input { font-size: 1.5rem; width: 120px; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; text-align: center; }
+        .resta-simbol { font-size: 2.5rem; vertical-align: middle; margin-right: 10px; font-weight: bold; }
+        .linia-resta { border-bottom: 4px solid #000; width: 100%; margin: 10px 0; }
         
-        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { transform: scale(1.05); }
-        .btn-level { background: #64748b; font-size: 0.9rem; }
-        
-        .instruction { text-align: center; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem; min-height: 2.5em; }
-        .final-msg { margin-top: 20px; padding: 15px; background: #dcfce7; border-radius: 10px; text-align: center; font-weight: bold; display: none; }
+        .instruccions { background: #1e293b; color: white; padding: 20px; border-radius: 15px; width: 100%; max-width: 500px; text-align: center; font-size: 1.2rem; }
+        .controls-nivell { margin-bottom: 20px; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 0 5px; }
+        .total-acumulat { color: var(--correct); font-size: 2rem; font-weight: bold; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="level-selector">
-        <button class="btn-level" onclick="init(1)">Nivell 1 (1 xifra)</button>
-        <button class="btn-level" onclick="init(2)">Nivell 2 (2 xifres)</button>
-        <button class="btn-level" onclick="init(3)">Nivell 3 (Difícil)</button>
+    <div class="controls-nivell">
+        <button onclick="nouJoc(1)">Fàcil (1 xifra)</button>
+        <button onclick="nouJoc(2)" style="background:#475569">Difícil (2 xifres)</button>
     </div>
 
-    <div class="division-interface">
-        <div class="column-left">
-            <div id="dnd-display">0</div>
-            <div id="history-left"></div>
+    <div class="division-grid">
+        <div class="dividend-side">
+            <div id="display-dividend">3508</div>
+            <div id="zona-treball" style="display: flex; flex-direction: column; align-items: flex-end;">
+                <div id="fila-input-resta">
+                    <span class="resta-simbol">-</span>
+                    <input type="number" id="input-multiplicacio" class="caixeta" placeholder="...">
+                </div>
+                <div class="linia-resta"></div>
+                <input type="number" id="input-resta" class="caixeta" placeholder="...">
+            </div>
         </div>
-        <div class="column-right">
-            <div class="divisor-box" id="dsr-display">0</div>
-            <div id="history-right"></div>
-        </div>
-    </div>
 
-    <div class="controls" id="controls-ui" style="display:none;">
-        <div class="instruction" id="msg">Per quin nombre multipliquem al divisor?</div>
-        <div class="input-group">
-            <span style="font-size: 1.5rem;"><span id="hint-dsr">4</span> x </span>
-            <input type="number" id="user-q" placeholder="?">
-            <button onclick="applyStep()">Apropa't!</button>
+        <div class="divisor-side">
+            <span class="divisor-line" id="display-divisor">53</span>
+            <input type="number" id="input-quocient" class="caixeta caixeta-petita" placeholder="...">
+            <div id="llista-quocients" class="total-acumulat"></div>
         </div>
     </div>
 
-    <div id="final-result" class="final-msg"></div>
-</div>
+    <div class="instruccions" id="guia">
+        Per quin nombre vols multiplicar el <span id="hint-dsr">53</span>?
+    </div>
+
+    <button onclick="validarPas()" style="margin-top: 25px; padding: 15px 40px; font-size: 1.2rem; background: #10b981;">Comprova aquest pas</button>
 
 <script>
-    let dnd, dsr, rem, total_q;
+    let dnd, dsr, rem;
+    let sumaQ = 0;
 
-    function init(lv) {
-        if(lv === 1) { dnd = rand(100, 500); dsr = rand(2, 9); }
-        else if(lv === 2) { dnd = rand(500, 2000); dsr = rand(11, 25); }
-        else { dnd = rand(2000, 9999); dsr = rand(26, 99); }
-
+    function nouJoc(lv) {
+        if(lv === 1) { dnd = 456; dsr = 6; }
+        else { dnd = 3508; dsr = 53; }
+        
         rem = dnd;
-        total_q = 0;
+        sumaQ = 0;
         
-        document.getElementById('dnd-display').innerText = dnd;
-        document.getElementById('dsr-display').innerText = dsr;
+        document.getElementById('display-dividend').innerText = dnd;
+        document.getElementById('display-divisor').innerText = dsr;
         document.getElementById('hint-dsr').innerText = dsr;
-        document.getElementById('history-left').innerHTML = "";
-        document.getElementById('history-right').innerHTML = "";
-        document.getElementById('final-result').style.display = "none";
-        document.getElementById('controls-ui').style.display = "block";
-        
-        updateInstruction();
+        document.getElementById('llista-quocients').innerText = "";
+        netejaInputs();
+        document.getElementById('guia').innerText = `Busca un número per multiplicar el ${dsr} i acostar-te a ${rem}.`;
     }
 
-    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-    function updateInstruction() {
-        document.getElementById('msg').innerText = `T'en falten ${rem}. Per quin nombre multipliquem el ${dsr} per acostar-nos-hi?`;
+    function netejaInputs() {
+        document.getElementById('input-multiplicacio').value = "";
+        document.getElementById('input-quocient').value = "";
+        document.getElementById('input-resta').value = "";
     }
 
-    function applyStep() {
-        const q_part = parseInt(document.getElementById('user-q').value);
-        if (isNaN(q_part) || q_part <= 0) return;
+    function validarPas() {
+        const q = parseInt(document.getElementById('input-quocient').value);
+        const mult = parseInt(document.getElementById('input-multiplicacio').value);
+        const restaUser = parseInt(document.getElementById('input-resta').value);
 
-        const sub = q_part * dsr;
-
-        if (sub > rem) {
-            alert("T'has passat! Aquest producte és més gran que el que et queda.");
+        // 1. Validar la multiplicació
+        if (mult !== q * dsr) {
+            alert("La multiplicació no és correcta: " + q + " x " + dsr + " no és " + mult);
             return;
         }
 
-        // Resta a l'esquerra
-        const hLeft = document.getElementById('history-left');
-        hLeft.innerHTML += `<div class="sub-item">-${sub}</div>`;
-        rem -= sub;
-        hLeft.innerHTML += `<div class="res-item">${rem}</div>`;
+        // 2. Validar que no es passi del que tenim
+        if (mult > rem) {
+            alert("No pots restar " + mult + " perquè només en tens " + rem);
+            return;
+        }
 
-        // Quocient a la dreta
-        const hRight = document.getElementById('history-right');
-        hRight.innerHTML += `<div class="q-item">${q_part}</div>`;
-        total_q += q_part;
+        // 3. Validar el resultat de la resta
+        if (restaUser !== rem - mult) {
+            alert("La resta no és correcta.");
+            return;
+        }
 
-        document.getElementById('user-q').value = "";
+        // SI TOT ÉS CORRECTE:
+        rem = restaUser;
+        sumaQ += q;
         
+        // Actualitzem visualment
+        document.getElementById('display-dividend').innerText = rem;
+        document.getElementById('llista-quocients').innerText = "Total: " + sumaQ;
+        netejaInputs();
+
         if (rem < dsr) {
-            finish();
+            document.getElementById('guia').innerHTML = "✨ **Molt bé!** Divisió acabada. Quocient: " + sumaQ + " | Residu: " + rem;
         } else {
-            updateInstruction();
+            document.getElementById('guia').innerText = "Correcte! Ara et queden " + rem + ". Continua!";
         }
     }
 
-    function finish() {
-        const resBox = document.getElementById('final-result');
-        resBox.style.display = "block";
-        resBox.innerHTML = `Molt bé! Ja no pots repartir més.<br>EL QUOCIENT ÉS: ${total_q}<br>EL RESIDU ÉS: ${rem}`;
-        document.getElementById('controls-ui').style.display = "none";
-    }
+    nouJoc(2);
 </script>
 </body>
 </html>
