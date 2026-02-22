@@ -1,37 +1,37 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador de Divisió - Aleatori</title>
+    <title>Tutor de Divisió - Mètode ABN Aleatori</title>
     <style>
-        :root { --p: #3b82f6; --correct: #10b981; --error: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f9fafb; color: #1f2937; }
+        :root { --p: #3b82f6; --correct: #10b981; --bg: #f9fafb; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg); }
         
-        .main-container { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 700px; display: flex; flex-direction: column; align-items: center; }
+        .main-container { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 650px; }
 
-        .controls-top { margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-        button.nav { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        /* BOTONS SUPERIORS */
+        .controls-top { margin-bottom: 30px; display: flex; gap: 10px; justify-content: center; }
+        button.nav { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         button.nav.active { background: var(--p); transform: scale(1.05); }
-        button.refresh { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; }
+        button.refresh { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        .caixa-divisio { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; width: 100%; max-width: 500px; }
+        /* LA CAIXA EXACTA */
+        .caixa-divisio { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; }
         .dividend-area { text-align: right; padding-right: 25px; font-size: 3.5rem; font-weight: bold; display: flex; flex-direction: column; align-items: flex-end; }
-        .divisor-area { border-left: 6px solid #000; padding-left: 25px; min-height: 150px; }
+        .divisor-area { border-left: 6px solid #000; padding-left: 25px; min-height: 180px; }
         .divisor-top { border-bottom: 6px solid #000; padding-bottom: 10px; font-size: 3.5rem; font-weight: bold; color: var(--p); display: block; min-width: 120px; }
 
+        /* CAIXETES I HISTORIAL */
         .fila-operacio { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-        .simbol { font-size: 2.5rem; font-weight: bold; }
-        .caixeta { border: 3px solid #d1d5db; border-radius: 14px; width: 130px; height: 65px; font-size: 2rem; text-align: center; font-weight: bold; outline: none; transition: 0.3s; }
-        .caixeta:focus { border-color: var(--p); background: #f0f7ff; }
-        .caixeta.small { width: 90px; }
+        .caixeta { border: 3px solid #d1d5db; border-radius: 14px; width: 140px; height: 65px; font-size: 2rem; text-align: center; font-weight: bold; background: #fff; }
+        .caixeta.small { width: 100px; border-color: var(--p); }
         .linia { border-bottom: 4px solid #000; width: 100%; margin: 5px 0; }
+        .historial { font-size: 2rem; color: #64748b; margin-bottom: 5px; font-weight: bold; }
+        .quocient-acumulat { color: var(--correct); font-size: 2.2rem; font-weight: bold; margin-top: 10px; }
 
-        .historial { font-size: 2rem; color: #64748b; margin-bottom: 5px; }
-        .quocient-llista { color: var(--correct); font-size: 2.2rem; font-weight: bold; margin-top: 10px; }
-
-        .guia-box { background: #1e293b; color: white; padding: 20px; border-radius: 16px; width: 90%; text-align: center; font-size: 1.3rem; margin: 20px 0; min-height: 60px; display: flex; align-items: center; justify-content: center; }
-        .btn-check { background: var(--correct); color: white; border: none; padding: 18px 45px; border-radius: 14px; cursor: pointer; font-size: 1.4rem; font-weight: bold; box-shadow: 0 4px 0 #059669; }
-        .btn-check:active { transform: translateY(3px); box-shadow: none; }
+        /* GUIES */
+        .guia-box { background: #1e293b; color: white; padding: 20px; border-radius: 16px; width: 100%; text-align: center; font-size: 1.3rem; margin: 20px 0; box-sizing: border-box; }
+        .btn-check { background: var(--correct); color: white; border: none; padding: 18px 45px; border-radius: 14px; cursor: pointer; font-size: 1.4rem; font-weight: bold; width: 100%; }
     </style>
 </head>
 <body>
@@ -50,25 +50,24 @@
                 
                 <div id="zona-activa" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
                     <div class="fila-operacio">
-                        <span class="simbol">-</span>
-                        <input type="number" id="in-mult" class="caixeta" placeholder="...">
+                        <span style="font-size: 2.5rem; font-weight: bold;">-</span>
+                        <div id="preview-mult" class="caixeta" style="display: flex; align-items: center; justify-content: center; color: #94a3b8;">...</div>
                     </div>
                     <div class="linia"></div>
-                    <input type="number" id="in-res" class="caixeta" placeholder="...">
+                    <div id="preview-res" class="caixeta" style="display: flex; align-items: center; justify-content: center; color: #94a3b8;">...</div>
                 </div>
             </div>
 
             <div class="divisor-area">
                 <span class="divisor-top" id="valor-divisor">0</span>
                 <div style="margin-top: 15px;">
-                    <input type="number" id="in-quo" class="caixeta small" placeholder="...">
+                    <input type="number" id="in-quo" class="caixeta small" placeholder="..." oninput="actualitzarPreviews()">
                 </div>
-                <div id="llista-q" class="quocient-llista"></div>
+                <div id="llista-q" class="quocient-acumulat"></div>
             </div>
         </div>
 
         <div class="guia-box" id="text-guia"></div>
-
         <button id="btn-validar" class="btn-check" onclick="validar()">Comprova aquest pas</button>
     </div>
 
@@ -81,24 +80,13 @@
     }
 
     function generarNova() {
-        // Estètica botons
-        document.getElementById('btn-lv1').classList.remove('active');
-        document.getElementById('btn-lv2').classList.remove('active');
-        document.getElementById(`btn-lv${nivellActual}`).classList.add('active');
+        document.getElementById('btn-lv1').classList.toggle('active', nivellActual === 1);
+        document.getElementById('btn-lv2').classList.toggle('active', nivellActual === 2);
 
-        // Generació aleatòria segons nivell
-        if(nivellActual === 1) {
-            s = Math.floor(Math.random() * 8) + 2; // Divisor de 2 a 9
-            d = Math.floor(Math.random() * 900) + 100; // Dividend de 100 a 999
-        } else {
-            s = Math.floor(Math.random() * 89) + 11; // Divisor d'11 a 99
-            d = Math.floor(Math.random() * 9000) + 1000; // Dividend de 1000 a 9999
-        }
+        s = nivellActual === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
+        d = nivellActual === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
         
-        r = d;
-        totalQ = 0;
-        
-        // Reset Visual
+        r = d; totalQ = 0;
         document.getElementById('valor-dividend').innerText = d;
         document.getElementById('valor-dividend').style.display = "block";
         document.getElementById('valor-divisor').innerText = s;
@@ -111,46 +99,54 @@
         actualitzarGuia();
     }
 
-    function actualitzarGuia() {
-        document.getElementById('text-guia').innerText = `Busca un número per multiplicar el ${s} i acostar-te a ${r}.`;
+    function actualitzarPreviews() {
+        const q = parseInt(document.getElementById('in-quo').value);
+        const pMult = document.getElementById('preview-mult');
+        const pRes = document.getElementById('preview-res');
+
+        if (!isNaN(q) && q > 0) {
+            const mult = q * s;
+            if (mult <= r) {
+                pMult.innerText = mult;
+                pMult.style.color = "#ef4444";
+                pRes.innerText = r - mult;
+                pRes.style.color = "#1f2937";
+            } else {
+                pMult.innerText = "Massa!";
+                pRes.innerText = "...";
+            }
+        } else {
+            pMult.innerText = "..."; pRes.innerText = "...";
+            pMult.style.color = "#94a3b8";
+        }
     }
 
     function netejaInputs() {
-        document.getElementById('in-mult').value = "";
         document.getElementById('in-quo').value = "";
-        document.getElementById('in-res').value = "";
+        document.getElementById('preview-mult').innerText = "...";
+        document.getElementById('preview-res').innerText = "...";
         document.getElementById('in-quo').focus();
+    }
+
+    function actualitzarGuia() {
+        document.getElementById('text-guia').innerText = `Per quin nombre multipliquem el ${s} per acostar-nos a ${r}?`;
     }
 
     function validar() {
         const q = parseInt(document.getElementById('in-quo').value);
-        const m = parseInt(document.getElementById('in-mult').value);
-        const resUser = parseInt(document.getElementById('in-res').value);
+        if (isNaN(q) || q <= 0 || (q * s) > r) return;
 
-        if (isNaN(q) || isNaN(m) || isNaN(resUser)) return;
+        const mult = q * s;
+        const nouResidu = r - mult;
 
-        if (m !== q * s) {
-            alert(`Compte! ${q} x ${s} no fa ${m}.`);
-            return;
-        }
-        if (m > r) {
-            alert(`No pots treure ${m} perquè només en tens ${r}.`);
-            return;
-        }
-        if (resUser !== r - m) {
-            alert("La resta no és correcta. Revisa-la!");
-            return;
-        }
-
-        // Historial
         const historial = document.getElementById('historial-restes');
         historial.innerHTML += `
-            <div class="historial" style="color:#ef4444">-${m}</div>
+            <div class="historial" style="color:#ef4444">-${mult}</div>
             <div class="linia" style="border-color:#cbd5e1"></div>
-            <div class="historial" style="margin-bottom:15px; color:#1f2937">${resUser}</div>
+            <div class="historial" style="margin-bottom:15px; color:#1f2937">${nouResidu}</div>
         `;
 
-        r = resUser;
+        r = nouResidu;
         totalQ += q;
         document.getElementById('llista-q').innerText = `Total: ${totalQ}`;
         document.getElementById('valor-dividend').style.display = "none";
@@ -158,14 +154,13 @@
         if (r < s) {
             document.getElementById('zona-activa').style.display = "none";
             document.getElementById('btn-validar').style.display = "none";
-            document.getElementById('text-guia').innerHTML = `✨ **MOLT BÉ!** <br> Quocient: ${totalQ} | Residu: ${r}`;
+            document.getElementById('text-guia').innerHTML = `✨ **FINALITZADA!** <br> Quocient: ${totalQ} | Residu: ${r}`;
         } else {
             netejaInputs();
             actualitzarGuia();
         }
     }
 
-    // Inici automàtic
     generarNova();
 </script>
 </body>
