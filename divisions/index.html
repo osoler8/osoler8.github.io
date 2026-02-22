@@ -2,118 +2,114 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>Tutor de Divisió amb Restes Visuals</title>
+    <title>Tutor de Divisions per Paquets</title>
     <style>
         :root { --p: #2563eb; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Courier New', Courier, monospace; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 650px; }
         
-        /* Estructura de la divisió */
-        .division-grid { display: grid; grid-template-columns: 180px 120px; justify-content: center; font-size: 2.2rem; font-weight: bold; margin-bottom: 20px; }
-        .dividend-column { text-align: right; padding-right: 15px; position: relative; }
-        .divisor-column { border-left: 5px solid #333; border-bottom: 5px solid #333; padding-left: 15px; color: var(--p); }
-        .quotient-column { padding-left: 15px; color: var(--s); }
+        .division-table { display: flex; justify-content: center; gap: 0; font-family: 'Courier New', monospace; font-size: 2rem; margin: 20px 0; }
+        .left-side { text-align: right; border-right: 4px solid #333; padding-right: 20px; min-width: 150px; }
+        .right-side { padding-left: 20px; color: var(--p); text-align: left; }
         
-        .subtraction-step { color: #64748b; font-size: 1.8rem; border-bottom: 2px solid #cbd5e1; display: inline-block; width: 100%; }
-        .remainder-step { color: #334155; font-size: 1.8rem; }
-
-        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid var(--p); }
-        input { font-size: 1.5rem; width: 80px; text-align: center; border-radius: 8px; border: 2px solid #cbd5e1; margin: 10px; }
-        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: sans-serif; }
-        .instruction { font-family: sans-serif; margin-bottom: 10px; font-weight: bold; color: #1e293b; }
+        .sub-val { color: var(--e); font-size: 1.5rem; }
+        .rem-val { color: #333; font-weight: bold; border-top: 2px solid #333; margin-bottom: 10px; }
+        .q-part { color: var(--s); display: block; }
+        
+        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .input-group { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        input { font-size: 1.2rem; width: 100px; padding: 8px; border-radius: 8px; border: 2px solid #cbd5e1; }
+        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .total-box { margin-top: 20px; padding: 10px; background: #dcfce7; border-radius: 8px; font-weight: bold; text-align: center; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align:center; font-family:sans-serif;">Simulador de Restes Reals</h2>
+    <h2 style="text-align:center">Mètode de Restes Successives</h2>
     
-    <div class="division-grid">
-        <div class="dividend-column">
-            <div id="display-dividend">000</div>
-            <div id="restes-log" style="line-height: 1;"></div>
+    <div class="division-table">
+        <div class="left-side">
+            <div id="current-dividend" style="margin-bottom: 10px;">682</div>
+            <div id="history-area"></div>
         </div>
-        <div class="divisor-column" id="display-divisor">00</div>
-        <div></div>
-        <div class="quotient-column" id="display-quotient"></div>
+        <div class="right-side">
+            <div id="divisor-val" style="border-bottom: 4px solid #333; margin-bottom: 10px;">8</div>
+            <div id="quotients-history"></div>
+        </div>
     </div>
 
     <div class="controls">
-        <div id="msg" class="instruction">Tria un nivell:</div>
-        <div id="input-area" style="display:none;">
-            <input type="number" id="user-input" placeholder="?">
-            <button onclick="checkStep()">Validar pas</button>
-        </div>
-        <div id="setup-buttons">
-            <button onclick="start(1)">Nivell 1</button>
-            <button onclick="start(2)" style="background:#475569">Nivell 2</button>
+        <div id="instruction" style="text-align:center; font-weight:bold;">Quin paquet vols treure ara?</div>
+        <div class="input-group">
+            <input type="number" id="user-q" placeholder="Quocient">
+            <span style="font-size: 1.5rem; align-self: center;">x <span id="hint-dsr">8</span></span>
+            <button onclick="processPackage()">Resta aquest paquet</button>
         </div>
     </div>
+
+    <div id="final-result" class="total-box"></div>
+    <button onclick="start()" style="margin-top:20px; background:#64748b; width:100%;">Nova Divisió</button>
 </div>
 
 <script>
-    let dnd, dsr, current_remainder, full_q, q_index;
+    let dnd, dsr, rem;
+    let total_q = 0;
 
-    function start(lv) {
-        dsr = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
-        dnd = Math.floor(Math.random()*800)+100;
-        full_q = Math.floor(dnd / dsr).toString();
+    function start() {
+        dnd = Math.floor(Math.random() * 800) + 100;
+        dsr = Math.floor(Math.random() * 8) + 2;
+        rem = dnd;
+        total_q = 0;
         
-        q_index = 0;
-        current_remainder = 0;
-        
-        document.getElementById('display-dividend').innerText = dnd;
-        document.getElementById('display-divisor').innerText = dsr;
-        document.getElementById('display-quotient').innerText = "";
-        document.getElementById('restes-log').innerHTML = "";
-        document.getElementById('input-area').style.display = "block";
-        document.getElementById('setup-buttons').style.display = "none";
-        
-        nextInstruction();
+        document.getElementById('current-dividend').innerText = dnd;
+        document.getElementById('divisor-val').innerText = dsr;
+        document.getElementById('hint-dsr').innerText = dsr;
+        document.getElementById('history-area').innerHTML = "";
+        document.getElementById('quotients-history').innerHTML = "";
+        document.getElementById('final-result').style.display = "none";
+        document.getElementById('instruction').innerText = `Tinc ${rem}. Quin paquet del ${dsr} vols treure?`;
     }
 
-    function nextInstruction() {
-        document.getElementById('msg').innerText = `Pas ${q_index + 1}: Quants cops cap el ${dsr}?`;
-    }
+    function processPackage() {
+        const q_part = parseInt(document.getElementById('user-q').value);
+        if (isNaN(q_part) || q_part <= 0) return;
 
-    function checkStep() {
-        const val = document.getElementById('user-input').value;
-        const target = full_q[q_index];
+        const multiply = q_part * dsr;
 
-        if (val === target) {
-            // Càlcul de la resta visual
-            let q_so_far = parseInt(full_q.substring(0, q_index + 1));
-            let portion_length = (q_index === 0) ? (dnd.toString().length - full_q.length + 1) : 1;
-            
-            // Simulem el procés de resta a la pissarra
-            const partial_dnd = Math.floor(dnd / Math.pow(10, full_q.length - 1 - q_index));
-            const subtract_val = parseInt(val) * dsr;
-            const sub_res = partial_dnd - subtract_val;
-
-            addVisualStep(subtract_val, sub_res);
-            
-            document.getElementById('display-quotient').innerText += val;
-            q_index++;
-
-            if (q_index >= full_q.length) {
-                document.getElementById('msg').innerText = "✨ Divisió acabada!";
-                document.getElementById('input-area').style.display = "none";
-                document.getElementById('setup-buttons').style.display = "block";
-            } else {
-                nextInstruction();
-            }
-        } else {
-            document.getElementById('msg').innerText = "❌ No és correcte. Revisa la taula!";
+        if (multiply > rem) {
+            alert("No pots treure tant! Aquest paquet és massa gran.");
+            return;
         }
-        document.getElementById('user-input').value = "";
+
+        // Afegir a la part visual esquerra (resta)
+        const history = document.getElementById('history-area');
+        history.innerHTML += `<div class="sub-val">-${multiply}</div>`;
+        rem -= multiply;
+        history.innerHTML += `<div class="rem-val">${rem}</div>`;
+
+        // Afegir a la part visual dreta (quocients)
+        const qHistory = document.getElementById('quotients-history');
+        qHistory.innerHTML += `<span class="q-part">${q_part}</span>`;
+        total_q += q_part;
+
+        document.getElementById('user-q').value = "";
+        
+        if (rem < dsr) {
+            finish();
+        } else {
+            document.getElementById('instruction').innerText = `Ara et queden ${rem}. Continua!`;
+        }
     }
 
-    function addVisualStep(sub, res) {
-        const log = document.getElementById('restes-log');
-        log.innerHTML += `<div class="subtraction-step">-${sub}</div>`;
-        log.innerHTML += `<div class="remainder-step">${res}</div>`;
+    function finish() {
+        const resBox = document.getElementById('final-result');
+        resBox.style.display = "block";
+        resBox.innerHTML = `DIVISIÓ ACABADA!<br>Quocient total: ${total_q}<br>Residu final: ${rem}`;
+        document.getElementById('instruction').innerText = "Ja no en pots treure més.";
     }
+
+    start();
 </script>
-
 </body>
 </html>
