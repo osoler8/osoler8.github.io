@@ -1,37 +1,43 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
     <title>Tutor de Divisió - Mètode ABN Aleatori</title>
     <style>
         :root { --p: #3b82f6; --correct: #10b981; --bg: #f9fafb; }
-        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg); }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #e5e7eb; }
         
-        .main-container { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 650px; }
+        .main-container { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; position: relative; }
 
-        /* BOTONS SUPERIORS */
+        /* BOTONS */
         .controls-top { margin-bottom: 30px; display: flex; gap: 10px; justify-content: center; }
-        button.nav { background: #475569; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button.nav.active { background: var(--p); transform: scale(1.05); }
-        button.refresh { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        button.nav { background: #475569; color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        button.nav.active { background: var(--p); }
+        button.refresh { background: #f59e0b; color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        /* LA CAIXA EXACTA */
-        .caixa-divisio { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 20px; }
-        .dividend-area { text-align: right; padding-right: 25px; font-size: 3.5rem; font-weight: bold; display: flex; flex-direction: column; align-items: flex-end; }
-        .divisor-area { border-left: 6px solid #000; padding-left: 25px; min-height: 180px; }
-        .divisor-top { border-bottom: 6px solid #000; padding-bottom: 10px; font-size: 3.5rem; font-weight: bold; color: var(--p); display: block; min-width: 120px; }
+        /* CAIXA DE DIVISIÓ */
+        .caixa-divisio { display: grid; grid-template-columns: 1fr 10px 1fr; gap: 0; margin-bottom: 20px; }
+        .col-dividend { text-align: right; padding-right: 25px; display: flex; flex-direction: column; align-items: flex-end; }
+        .col-separator { background: #000; width: 6px; height: 100%; min-height: 300px; border-radius: 3px; }
+        .col-divisor { padding-left: 25px; }
 
-        /* CAIXETES I HISTORIAL */
-        .fila-operacio { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
-        .caixeta { border: 3px solid #d1d5db; border-radius: 14px; width: 140px; height: 65px; font-size: 2rem; text-align: center; font-weight: bold; background: #fff; }
-        .caixeta.small { width: 100px; border-color: var(--p); }
-        .linia { border-bottom: 4px solid #000; width: 100%; margin: 5px 0; }
-        .historial { font-size: 2rem; color: #64748b; margin-bottom: 5px; font-weight: bold; }
-        .quocient-acumulat { color: var(--correct); font-size: 2.2rem; font-weight: bold; margin-top: 10px; }
+        /* NÚMEROS I CAIXETES */
+        .num-gran { font-size: 3.5rem; font-weight: bold; line-height: 1.1; margin-bottom: 10px; }
+        .divisor-line { border-bottom: 6px solid #000; padding-bottom: 10px; font-size: 3.5rem; font-weight: bold; color: var(--p); display: block; min-width: 150px; }
+        
+        .fila-operacio { display: flex; align-items: center; gap: 10px; margin: 10px 0; width: 100%; justify-content: flex-end; }
+        .caixeta { border: 3px solid #d1d5db; border-radius: 18px; width: 150px; height: 75px; font-size: 2.2rem; text-align: center; font-weight: bold; background: #fff; display: flex; align-items: center; justify-content: center; }
+        .caixeta.input-quo { border-color: var(--p); color: #1f2937; }
+        .linia-negra { border-bottom: 5px solid #000; width: 160px; margin: 5px 0; }
+
+        .historial-item { font-size: 2.2rem; font-weight: bold; margin: 5px 0; }
+        .text-resta { color: #ef4444; }
+        .total-text { color: var(--correct); font-size: 2.5rem; font-weight: bold; margin-top: 15px; }
 
         /* GUIES */
-        .guia-box { background: #1e293b; color: white; padding: 20px; border-radius: 16px; width: 100%; text-align: center; font-size: 1.3rem; margin: 20px 0; box-sizing: border-box; }
-        .btn-check { background: var(--correct); color: white; border: none; padding: 18px 45px; border-radius: 14px; cursor: pointer; font-size: 1.4rem; font-weight: bold; width: 100%; }
+        .guia-box { background: #1e293b; color: white; padding: 25px; border-radius: 20px; text-align: center; font-size: 1.4rem; margin: 30px 0; width: 100%; box-sizing: border-box; font-weight: 500; }
+        .btn-validar { background: var(--correct); color: white; border: none; padding: 20px; border-radius: 15px; cursor: pointer; font-size: 1.6rem; font-weight: bold; width: 100%; transition: 0.2s; }
+        .btn-validar:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -44,31 +50,33 @@
         </div>
 
         <div class="caixa-divisio">
-            <div class="dividend-area">
-                <div id="valor-dividend">0</div>
-                <div id="historial-restes" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;"></div>
+            <div class="col-dividend">
+                <div id="valor-inicial" class="num-gran">0</div>
+                <div id="historial-container" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;"></div>
                 
                 <div id="zona-activa" style="display: flex; flex-direction: column; align-items: flex-end; width: 100%;">
                     <div class="fila-operacio">
-                        <span style="font-size: 2.5rem; font-weight: bold;">-</span>
-                        <div id="preview-mult" class="caixeta" style="display: flex; align-items: center; justify-content: center; color: #94a3b8;">...</div>
+                        <span style="font-size: 3rem; font-weight: bold; margin-right: 5px;">-</span>
+                        <div id="preview-mult" class="caixeta" style="color: #94a3b8;">...</div>
                     </div>
-                    <div class="linia"></div>
-                    <div id="preview-res" class="caixeta" style="display: flex; align-items: center; justify-content: center; color: #94a3b8;">...</div>
+                    <div class="linia-negra"></div>
+                    <div id="preview-res" class="caixeta" style="color: #94a3b8;">...</div>
                 </div>
             </div>
 
-            <div class="divisor-area">
-                <span class="divisor-top" id="valor-divisor">0</span>
-                <div style="margin-top: 15px;">
-                    <input type="number" id="in-quo" class="caixeta small" placeholder="..." oninput="actualitzarPreviews()">
+            <div class="col-separator"></div>
+
+            <div class="col-divisor">
+                <span class="divisor-line" id="valor-divisor">0</span>
+                <div style="margin-top: 20px;">
+                    <input type="number" id="in-quo" class="caixeta input-quo" placeholder="..." oninput="actualitzarPreviews()">
                 </div>
-                <div id="llista-q" class="quocient-acumulat"></div>
+                <div id="total-acumulat" class="total-text"></div>
             </div>
         </div>
 
         <div class="guia-box" id="text-guia"></div>
-        <button id="btn-validar" class="btn-check" onclick="validar()">Comprova aquest pas</button>
+        <button id="btn-validar" class="btn-validar" onclick="validar()">Comprova aquest pas</button>
     </div>
 
 <script>
@@ -87,11 +95,10 @@
         d = nivellActual === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
         
         r = d; totalQ = 0;
-        document.getElementById('valor-dividend').innerText = d;
-        document.getElementById('valor-dividend').style.display = "block";
+        document.getElementById('valor-inicial').innerText = d;
         document.getElementById('valor-divisor').innerText = s;
-        document.getElementById('historial-restes').innerHTML = "";
-        document.getElementById('llista-q').innerText = "";
+        document.getElementById('historial-container').innerHTML = "";
+        document.getElementById('total-acumulat').innerText = "";
         document.getElementById('zona-activa').style.display = "flex";
         document.getElementById('btn-validar').style.display = "block";
         
@@ -139,22 +146,21 @@
         const mult = q * s;
         const nouResidu = r - mult;
 
-        const historial = document.getElementById('historial-restes');
+        const historial = document.getElementById('historial-container');
         historial.innerHTML += `
-            <div class="historial" style="color:#ef4444">-${mult}</div>
-            <div class="linia" style="border-color:#cbd5e1"></div>
-            <div class="historial" style="margin-bottom:15px; color:#1f2937">${nouResidu}</div>
+            <div class="fila-operacio"><span style="font-size: 2.2rem; font-weight: bold; margin-right: 5px;">-</span><div class="historial-item text-resta">${mult}</div></div>
+            <div class="linia-negra" style="border-color: #94a3b8;"></div>
+            <div class="historial-item">${nouResidu}</div>
         `;
 
         r = nouResidu;
         totalQ += q;
-        document.getElementById('llista-q').innerText = `Total: ${totalQ}`;
-        document.getElementById('valor-dividend').style.display = "none";
+        document.getElementById('total-acumulat').innerText = `Total: ${totalQ}`;
 
         if (r < s) {
             document.getElementById('zona-activa').style.display = "none";
             document.getElementById('btn-validar').style.display = "none";
-            document.getElementById('text-guia').innerHTML = `✨ **FINALITZADA!** <br> Quocient: ${totalQ} | Residu: ${r}`;
+            document.getElementById('text-guia').innerHTML = `✨ **DIVISIÓ ACABADA!** <br> Quocient: ${totalQ} | Residu: ${r}`;
         } else {
             netejaInputs();
             actualitzarGuia();
