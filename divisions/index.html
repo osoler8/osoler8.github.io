@@ -2,108 +2,116 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutor de Divisió Interactiva</title>
+    <title>Tutor de Divisió amb Restes Visuals</title>
     <style>
         :root { --p: #2563eb; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }
+        body { font-family: 'Courier New', Courier, monospace; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
         
-        .setup-zone { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        /* Estructura de la divisió */
+        .division-grid { display: grid; grid-template-columns: 180px 120px; justify-content: center; font-size: 2.2rem; font-weight: bold; margin-bottom: 20px; }
+        .dividend-column { text-align: right; padding-right: 15px; position: relative; }
+        .divisor-column { border-left: 5px solid #333; border-bottom: 5px solid #333; padding-left: 15px; color: var(--p); }
+        .quotient-column { padding-left: 15px; color: var(--s); }
         
-        /* Graella de la Divisió */
-        .division-box { display: grid; grid-template-columns: 200px 150px; justify-content: center; font-family: 'Courier New', monospace; font-size: 2.2rem; }
-        .dividend-container { text-align: right; padding-right: 15px; position: relative; line-height: 1.2; }
-        .divisor-container { border-left: 4px solid #333; border-bottom: 4px solid #333; padding-left: 15px; min-height: 50px; color: var(--p); }
-        .quotient-container { padding-left: 15px; color: var(--s); letter-spacing: 5px; }
-        
-        /* Inputs dinàmics */
-        .step-input { width: 40px; border: none; border-bottom: 2px solid #ccc; text-align: center; font-family: inherit; font-size: inherit; outline: none; transition: 0.3s; }
-        .step-input:focus { border-bottom-color: var(--p); background: #f0f7ff; }
-        .correct { color: var(--s); border-bottom-color: var(--s); }
-        .wrong { color: var(--e); border-bottom-color: var(--e); }
+        .subtraction-step { color: #64748b; font-size: 1.8rem; border-bottom: 2px solid #cbd5e1; display: inline-block; width: 100%; }
+        .remainder-step { color: #334155; font-size: 1.8rem; }
 
-        .instruction { background: #f1f5f9; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; font-weight: 500; border-left: 4px solid var(--p); }
-        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .history-row { display: block; text-align: right; padding-right: 15px; color: #64748b; font-size: 1.8rem; }
+        .controls { background: #f1f5f9; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid var(--p); }
+        input { font-size: 1.5rem; width: 80px; text-align: center; border-radius: 8px; border: 2px solid #cbd5e1; margin: 10px; }
+        button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: sans-serif; }
+        .instruction { font-family: sans-serif; margin-bottom: 10px; font-weight: bold; color: #1e293b; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="setup-zone">
-        <button onclick="newGame(1)">Nivell 1 (1 xifra)</button>
-        <button onclick="newGame(2)" style="background:#475569">Nivell 2 (2 xifres)</button>
-    </div>
-
-    <div class="division-box">
-        <div class="dividend-container" id="dividend-area">
-            <span id="d-val">000</span>
-            <div id="restes-area"></div>
-        </div>
-        <div class="divisor-container" id="divisor-val">00</div>
-        <div></div>
-        <div class="quotient-container" id="quotient-area">_</div>
-    </div>
-
-    <div id="msg" class="instruction">Tria un nivell per començar a practicar.</div>
+    <h2 style="text-align:center; font-family:sans-serif;">Simulador de Restes Reals</h2>
     
-    <div id="input-zone" style="text-align: center; display:none;">
-        <input type="number" id="user-val" placeholder="?">
-        <button onclick="validateStep()">Comprova pas</button>
+    <div class="division-grid">
+        <div class="dividend-column">
+            <div id="display-dividend">000</div>
+            <div id="restes-log" style="line-height: 1;"></div>
+        </div>
+        <div class="divisor-column" id="display-divisor">00</div>
+        <div></div>
+        <div class="quotient-column" id="display-quotient"></div>
+    </div>
+
+    <div class="controls">
+        <div id="msg" class="instruction">Tria un nivell:</div>
+        <div id="input-area" style="display:none;">
+            <input type="number" id="user-input" placeholder="?">
+            <button onclick="checkStep()">Validar pas</button>
+        </div>
+        <div id="setup-buttons">
+            <button onclick="start(1)">Nivell 1</button>
+            <button onclick="start(2)" style="background:#475569">Nivell 2</button>
+        </div>
     </div>
 </div>
 
 <script>
-    let dnd, dsr, qtn_final, current_qtn = "";
-    let step = "QUOTIENT"; // QUOTIENT, MULTIPLY, SUBTRACT, DOWN
-    let pointer = 0; // Quants números del dividend hem agafat
+    let dnd, dsr, current_remainder, full_q, q_index;
 
-    function newGame(lv) {
+    function start(lv) {
         dsr = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
         dnd = Math.floor(Math.random()*800)+100;
-        qtn_final = Math.floor(dnd / dsr).toString();
-        current_qtn = "";
+        full_q = Math.floor(dnd / dsr).toString();
         
-        document.getElementById('d-val').innerText = dnd;
-        document.getElementById('divisor-val').innerText = dsr;
-        document.getElementById('quotient-area').innerText = "";
-        document.getElementById('restes-area').innerHTML = "";
-        document.getElementById('input-zone').style.display = "block";
+        q_index = 0;
+        current_remainder = 0;
         
-        step = "QUOTIENT";
-        updateMsg(`Quants cops cap ${dsr} en la primera part del número?`);
+        document.getElementById('display-dividend').innerText = dnd;
+        document.getElementById('display-divisor').innerText = dsr;
+        document.getElementById('display-quotient').innerText = "";
+        document.getElementById('restes-log').innerHTML = "";
+        document.getElementById('input-area').style.display = "block";
+        document.getElementById('setup-buttons').style.display = "none";
+        
+        nextInstruction();
     }
 
-    function updateMsg(m) { document.getElementById('msg').innerText = m; }
+    function nextInstruction() {
+        document.getElementById('msg').innerText = `Pas ${q_index + 1}: Quants cops cap el ${dsr}?`;
+    }
 
-    function validateStep() {
-        const val = document.getElementById('user-val').value;
-        const targetDigit = qtn_final[current_qtn.length];
+    function checkStep() {
+        const val = document.getElementById('user-input').value;
+        const target = full_q[q_index];
 
-        if (val === targetDigit) {
-            current_qtn += val;
-            document.getElementById('quotient-area').innerText = current_qtn;
+        if (val === target) {
+            // Càlcul de la resta visual
+            let q_so_far = parseInt(full_q.substring(0, q_index + 1));
+            let portion_length = (q_index === 0) ? (dnd.toString().length - full_q.length + 1) : 1;
             
-            if (current_qtn === qtn_final) {
-                const residu = dnd % dsr;
-                addRestRow(residu);
-                updateMsg("¡Molt bé! Divisió completada. El residu és " + residu);
-                document.getElementById('input-zone').style.display = "none";
+            // Simulem el procés de resta a la pissarra
+            const partial_dnd = Math.floor(dnd / Math.pow(10, full_q.length - 1 - q_index));
+            const subtract_val = parseInt(val) * dsr;
+            const sub_res = partial_dnd - subtract_val;
+
+            addVisualStep(subtract_val, sub_res);
+            
+            document.getElementById('display-quotient').innerText += val;
+            q_index++;
+
+            if (q_index >= full_q.length) {
+                document.getElementById('msg').innerText = "✨ Divisió acabada!";
+                document.getElementById('input-area').style.display = "none";
+                document.getElementById('setup-buttons').style.display = "block";
             } else {
-                updateMsg("Correcte! Ara continua amb la següent xifra.");
+                nextInstruction();
             }
         } else {
-            updateMsg("❌ Revisa el càlcul, aquest número no és correcte.");
+            document.getElementById('msg').innerText = "❌ No és correcte. Revisa la taula!";
         }
-        document.getElementById('user-val').value = "";
+        document.getElementById('user-input').value = "";
     }
 
-    function addRestRow(val) {
-        const div = document.createElement('div');
-        div.className = "history-row";
-        div.innerText = val;
-        document.getElementById('restes-area').appendChild(div);
+    function addVisualStep(sub, res) {
+        const log = document.getElementById('restes-log');
+        log.innerHTML += `<div class="subtraction-step">-${sub}</div>`;
+        log.innerHTML += `<div class="remainder-step">${res}</div>`;
     }
 </script>
 
