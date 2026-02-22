@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.3">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="ca"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Tutor de Divisió Interactiva&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>:root { --p: #2563eb; --s: #10b981; --e: #ef4444; --bg: #f8fafc; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 20px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 700px; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.setup-zone { display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Graella de la Divisió */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.division-box { display: grid; grid-template-columns: 200px 150px; justify-content: center; font-family: 'Courier New', monospace; font-size: 2.2rem; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dividend-container { text-align: right; padding-right: 15px; position: relative; line-height: 1.2; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.divisor-container { border-left: 4px solid #333; border-bottom: 4px solid #333; padding-left: 15px; min-height: 50px; color: var(--p); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.quotient-container { padding-left: 15px; color: var(--s); letter-spacing: 5px; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Inputs dinàmics */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.step-input { width: 40px; border: none; border-bottom: 2px solid #ccc; text-align: center; font-family: inherit; font-size: inherit; outline: none; transition: 0.3s; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.step-input:focus { border-bottom-color: var(--p); background: #f0f7ff; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.correct { color: var(--s); border-bottom-color: var(--s); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.wrong { color: var(--e); border-bottom-color: var(--e); }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.instruction { background: #f1f5f9; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; font-weight: 500; border-left: 4px solid var(--p); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>button { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.history-row { display: block; text-align: right; padding-right: 15px; color: #64748b; font-size: 1.8rem; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div class="container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="setup-zone"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="newGame(1)"&gt;Nivell 1 (1 xifra)&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="newGame(2)" style="background:#475569"&gt;Nivell 2 (2 xifres)&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="division-box"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="dividend-container" id="dividend-area"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;span id="d-val"&gt;000&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="restes-area"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="divisor-container" id="divisor-val"&gt;00&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="quotient-container" id="quotient-area"&gt;_&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="msg" class="instruction"&gt;Tria un nivell per començar a practicar.&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="input-zone" style="text-align: center; display:none;"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;input type="number" id="user-val" placeholder="?"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="validateStep()"&gt;Comprova pas&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let dnd, dsr, qtn_final, current_qtn = "";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let step = "QUOTIENT"; // QUOTIENT, MULTIPLY, SUBTRACT, DOWN</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let pointer = 0; // Quants números del dividend hem agafat</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function newGame(lv) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dsr = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dnd = Math.floor(Math.random()*800)+100;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>qtn_final = Math.floor(dnd / dsr).toString();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>current_qtn = "";</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('d-val').innerText = dnd;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('divisor-val').innerText = dsr;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('quotient-area').innerText = "";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('restes-area').innerHTML = "";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('input-zone').style.display = "block";</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>step = "QUOTIENT";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateMsg(`Quants cops cap ${dsr} en la primera part del número?`);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function updateMsg(m) { document.getElementById('msg').innerText = m; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function validateStep() {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const val = document.getElementById('user-val').value;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const targetDigit = qtn_final[current_qtn.length];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (val === targetDigit) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>current_qtn += val;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('quotient-area').innerText = current_qtn;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (current_qtn === qtn_final) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const residu = dnd % dsr;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>addRestRow(residu);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>updateMsg("¡Molt bé! Divisió completada. El residu és " + residu);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>document.getElementById('input-zone').style.display = "none";</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>updateMsg("Correcte! Ara continua amb la següent xifra.");</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>updateMsg("❌ Revisa el càlcul, aquest número no és correcte.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('user-val').value = "";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function addRestRow(val) {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const div = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>div.className = "history-row";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>div.innerText = val;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('restes-area').appendChild(div);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
