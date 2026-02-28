@@ -2,7 +2,7 @@ name: Generate Pro Portfolio Index
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, master-branch ]
 
 jobs:
   build:
@@ -14,11 +14,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate Professional HTML
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Obtenim TOTS els repositoris públics (sense filtres que fallin)
-          curl -s "https://api.github.com/users/${{ github.repository_owner }}/repos?sort=updated&per_page=100" > repos.json
+          # 1. Agafem els repositoris amb el token oficial per evitar llistes buides
+          curl -H "Authorization: token $GH_TOKEN" -s "https://api.github.com/users/${{ github.repository_owner }}/repos?sort=updated&per_page=100" > repos.json
           
-          # Inici de l'HTML (Disseny Top)
+          # 2. Inici de l'HTML
           cat <<EOF > index.html
           <!DOCTYPE html>
           <html lang="ca">
@@ -28,50 +30,50 @@ jobs:
               <title>El meu Portafoli</title>
               <script src="https://cdn.tailwindcss.com"></script>
               <style>
-                  body { background-color: #0f172a; color: white; font-family: ui-sans-serif, system-ui; }
-                  .glass { 
-                      background: rgba(30, 41, 59, 0.7);
-                      backdrop-filter: blur(12px);
-                      border: 1px solid rgba(255, 255, 255, 0.1);
-                      transition: all 0.3s ease;
-                  }
-                  .glass:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3); }
+                  body { background-color: #0f172a; color: white; font-family: sans-serif; }
+                  .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+                  .glass:hover { transform: translateY(-5px); border-color: #38bdf8; }
                   .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
               </style>
           </head>
           <body class="min-h-screen py-12 px-4">
               <div class="max-w-5xl mx-auto">
                   <header class="text-center mb-16">
-                      <h1 class="text-5xl font-extrabold mb-4 tracking-tight uppercase">El meu <span class="gradient-text">Portafoli</span></h1>
-                      <p class="text-slate-400 text-lg">Projectes actualitzats automàticament des de GitHub</p>
+                      <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">El meu <span class="gradient-text">Portafoli</span></h1>
+                      <p class="text-slate-400 text-lg">Projectes actualitzats automàticament</p>
                   </header>
                   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           EOF
 
-          # Generació de targetes: FILTRE SIMPLIFICAT (només ignora el repo de l'índex)
-          jq -c '.[] | select(.name != "${{ github.repository_owner }}.github.io" and .fork == false)' repos.json | while read i; do
-            NAME=$(echo $i | jq -r '.name')
-            DESC=$(echo $i | jq -r '.description // "Explora el codi d’aquest projecte al meu GitHub."')
-            LANG=$(echo $i | jq -r '.language // "Projecte"')
-            # Prioritzem la URL de la web, si no, anem al repositori
-            URL=$(echo $i | jq -r '.homepage // .html_url')
-            
-            echo "          <a href='$URL' target='_blank' class='glass p-6 rounded-2xl flex flex-col justify-between'>" >> index.html
-            echo "              <div>" >> index.html
-            echo "                  <div class='flex justify-between items-start mb-4'>" >> index.html
-            echo "                      <span class='text-sky-400 text-xs font-bold uppercase tracking-widest'>$LANG</span>" >> index.html
-            echo "                      <svg class='w-5 h-5 text-slate-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>" >> index.html
-            echo "                  </div>" >> index.html
-            echo "                  <h3 class='text-xl font-bold mb-2 text-white'>$NAME</h3>" >> index.html
-            echo "                  <p class='text-slate-400 text-sm leading-relaxed'>$DESC</p>" >> index.html
-            echo "              </div>" >> index.html
-            echo "          </a>" >> index.html
-          done
+          # 3. FILTRE ULTRA-SIMPLE: Mostra tot el que no sigui un "fork"
+          # Hem tret el filtre del nom del repo per si de cas
+          count=$(jq '. | length' repos.json)
+          
+          if [ "$count" -eq "0" ] || [ "$count" == "null" ]; then
+            echo "<div class='glass p-6 rounded-2xl col-span-full text-center text-red-400'>No s'han trobat repositoris. Revisa els permisos de l'API.</div>" >> index.html
+          else
+            jq -c '.[] | select(.fork == false)' repos.json | while read i; do
+              NAME=$(echo $i | jq -r '.name')
+              DESC=$(echo $i | jq -r '.description // "Explora el meu codi a GitHub."')
+              LANG=$(echo $i | jq -r '.language // "Codi"')
+              URL=$(echo $i | jq -r '.homepage // .html_url')
+              
+              echo "          <a href='$URL' target='_blank' class='glass p-6 rounded-2xl flex flex-col justify-between'>" >> index.html
+              echo "              <div>" >> index.html
+              echo "                  <div class='flex justify-between items-start mb-4'>" >> index.html
+              echo "                      <span class='text-sky-400 text-xs font-bold uppercase tracking-widest'>$LANG</span>" >> index.html
+              echo "                  </div>" >> index.html
+              echo "                  <h3 class='text-xl font-bold mb-2'>$NAME</h3>" >> index.html
+              echo "                  <p class='text-slate-400 text-sm'>$DESC</p>" >> index.html
+              echo "              </div>" >> index.html
+              echo "          </a>" >> index.html
+            done
+          fi
 
           cat <<EOF >> index.html
                   </div>
-                  <footer class="mt-20 text-center text-slate-500 text-sm italic">
-                      Generat per GitHub Actions • $(date +'%Y')
+                  <footer class="mt-20 text-center text-slate-500 text-sm">
+                      Actualitzat: $(date +'%d/%m/%Y') • GitHub Actions
                   </footer>
               </div>
           </body>
