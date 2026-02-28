@@ -15,14 +15,13 @@ jobs:
 
       - name: Generate Folder-based HTML
         run: |
-          # Inici de l'HTML amb el disseny Top
           cat <<EOF > index.html
           <!DOCTYPE html>
           <html lang="ca">
           <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Els meus Projectes</title>
+              <title>El meu Portafoli</title>
               <script src="https://cdn.tailwindcss.com"></script>
               <style>
                   body { background-color: #0f172a; color: white; font-family: sans-serif; }
@@ -34,35 +33,45 @@ jobs:
           <body class="min-h-screen py-12 px-4">
               <div class="max-w-5xl mx-auto">
                   <header class="text-center mb-16">
-                      <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">Índex de <span class="gradient-text">Projectes</span></h1>
-                      <p class="text-slate-400 text-lg">Accedeix a cada carpeta del repositori</p>
+                      <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">El meu <span class="gradient-text">Portafoli</span></h1>
+                      <p class="text-slate-400 text-lg">Projectes personals en subcarpetes</p>
                   </header>
                   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           EOF
 
-          # Busquem totes les carpetes, ignorant les ocultes (.github, .git)
           for dir in */; do
-              # Traiem la barra final del nom
               folder_name=${dir%/}
               
-              # Ignorem carpetes de sistema
               if [[ "$folder_name" != ".github" && "$folder_name" != ".git" && "$folder_name" != "node_modules" ]]; then
-                  echo "Generating card for: $folder_name"
                   
-                  echo "          <a href='./$folder_name/' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>" >> index.html
+                  # --- LÒGICA PER AGAFAR EL TÍTOL ---
+                  # Busquem el fitxer index.html dins de la carpeta
+                  index_file="./$folder_name/index.html"
+                  display_name="$folder_name" # Valor per defecte si no troba títol
+                  
+                  if [[ -f "$index_file" ]]; then
+                      # Busquem el contingut entre <title> i </title> (ignorant majúscules/minúscules)
+                      extracted_title=$(grep -iPo '(?<=<title>)(.*)(?=</title>)' "$index_file" | head -1)
+                      if [[ ! -z "$extracted_title" ]]; then
+                          display_name="$extracted_title"
+                      fi
+                  fi
+                  # ----------------------------------
+
+                  echo "          <a href='./$folder_name/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>" >> index.html
                   echo "              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>" >> index.html
-                  echo "                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z'></path></svg>" >> index.html
+                  echo "                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>" >> index.html
                   echo "              </div>" >> index.html
-                  echo "              <h3 class='text-xl font-bold text-white'>$folder_name</h3>" >> index.html
-                  echo "              <p class='text-slate-400 text-sm mt-2 font-mono'>./$folder_name/</p>" >> index.html
+                  echo "              <h3 class='text-xl font-bold text-white'>$display_name</h3>" >> index.html
+                  echo "              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>$folder_name</p>" >> index.html
                   echo "          </a>" >> index.html
               fi
           done
 
           cat <<EOF >> index.html
                   </div>
-                  <footer class="mt-20 text-center text-slate-500 text-sm italic">
-                      Actualitzat automàticament • $(date +'%Y')
+                  <footer class="mt-20 text-center text-slate-500 text-sm">
+                      Actualitzat: $(date +'%d/%m/%Y') • GitHub Actions
                   </footer>
               </div>
           </body>
@@ -74,5 +83,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "🚀 Índex de carpetes actualitzat" || exit 0
+          git commit -m "🚀 Índex amb títols reals i target='_blank'" || exit 0
           git push
