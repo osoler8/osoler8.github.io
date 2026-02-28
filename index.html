@@ -6,27 +6,31 @@
     <title>El meu Portafoli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: ui-sans-serif, system-ui; }
-        .glass { 
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-        .glass:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3); }
+        body { background-color: #0f172a; color: white; font-family: sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
+        .glass:hover { transform: translateY(-5px); border-color: #38bdf8; }
         .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body class="min-h-screen py-12 px-4">
     <div class="max-w-5xl mx-auto">
         <header class="text-center mb-16">
-            <h1 class="text-5xl font-extrabold mb-4 tracking-tight uppercase">El meu <span class="gradient-text">Portafoli</span></h1>
-            <p class="text-slate-400 text-lg">Projectes actualitzats automàticament des de GitHub</p>
+            <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">El meu <span class="gradient-text">Portafoli</span></h1>
+            <p class="text-slate-400 text-lg">Projectes actualitzats automàticament</p>
         </header>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <a href='https://osoler8.github.io/' target='_blank' class='glass p-6 rounded-2xl flex flex-col justify-between'>
+              <div>
+                  <div class='flex justify-between items-start mb-4'>
+                      <span class='text-sky-400 text-xs font-bold uppercase tracking-widest'>HTML</span>
+                  </div>
+                  <h3 class='text-xl font-bold mb-2'>osoler8.github.io</h3>
+                  <p class='text-slate-400 text-sm'>Explora el meu codi a GitHub.</p>
+              </div>
+          </a>
         </div>
-        <footer class="mt-20 text-center text-slate-500 text-sm italic">
-            Generat per GitHub Actions • 2026
+        <footer class="mt-20 text-center text-slate-500 text-sm">
+            Actualitzat: 28/02/2026 • GitHub Actions
         </footer>
     </div>
 </body>
