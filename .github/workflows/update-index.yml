@@ -1,8 +1,8 @@
-name: Generate Pro Portfolio Index
+name: Generate Folders Index
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master, master-branch ]
+    branches: [ main, master ]
 
 jobs:
   build:
@@ -13,67 +13,56 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate Professional HTML
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate Folder-based HTML
         run: |
-          # 1. Agafem els repositoris amb el token oficial per evitar llistes buides
-          curl -H "Authorization: token $GH_TOKEN" -s "https://api.github.com/users/${{ github.repository_owner }}/repos?sort=updated&per_page=100" > repos.json
-          
-          # 2. Inici de l'HTML
+          # Inici de l'HTML amb el disseny Top
           cat <<EOF > index.html
           <!DOCTYPE html>
           <html lang="ca">
           <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>El meu Portafoli</title>
+              <title>Els meus Projectes</title>
               <script src="https://cdn.tailwindcss.com"></script>
               <style>
                   body { background-color: #0f172a; color: white; font-family: sans-serif; }
                   .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-                  .glass:hover { transform: translateY(-5px); border-color: #38bdf8; }
+                  .glass:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3); }
                   .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
               </style>
           </head>
           <body class="min-h-screen py-12 px-4">
               <div class="max-w-5xl mx-auto">
                   <header class="text-center mb-16">
-                      <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">El meu <span class="gradient-text">Portafoli</span></h1>
-                      <p class="text-slate-400 text-lg">Projectes actualitzats automàticament</p>
+                      <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">Índex de <span class="gradient-text">Projectes</span></h1>
+                      <p class="text-slate-400 text-lg">Accedeix a cada carpeta del repositori</p>
                   </header>
                   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           EOF
 
-          # 3. FILTRE ULTRA-SIMPLE: Mostra tot el que no sigui un "fork"
-          # Hem tret el filtre del nom del repo per si de cas
-          count=$(jq '. | length' repos.json)
-          
-          if [ "$count" -eq "0" ] || [ "$count" == "null" ]; then
-            echo "<div class='glass p-6 rounded-2xl col-span-full text-center text-red-400'>No s'han trobat repositoris. Revisa els permisos de l'API.</div>" >> index.html
-          else
-            jq -c '.[] | select(.fork == false)' repos.json | while read i; do
-              NAME=$(echo $i | jq -r '.name')
-              DESC=$(echo $i | jq -r '.description // "Explora el meu codi a GitHub."')
-              LANG=$(echo $i | jq -r '.language // "Codi"')
-              URL=$(echo $i | jq -r '.homepage // .html_url')
+          # Busquem totes les carpetes, ignorant les ocultes (.github, .git)
+          for dir in */; do
+              # Traiem la barra final del nom
+              folder_name=${dir%/}
               
-              echo "          <a href='$URL' target='_blank' class='glass p-6 rounded-2xl flex flex-col justify-between'>" >> index.html
-              echo "              <div>" >> index.html
-              echo "                  <div class='flex justify-between items-start mb-4'>" >> index.html
-              echo "                      <span class='text-sky-400 text-xs font-bold uppercase tracking-widest'>$LANG</span>" >> index.html
-              echo "                  </div>" >> index.html
-              echo "                  <h3 class='text-xl font-bold mb-2'>$NAME</h3>" >> index.html
-              echo "                  <p class='text-slate-400 text-sm'>$DESC</p>" >> index.html
-              echo "              </div>" >> index.html
-              echo "          </a>" >> index.html
-            done
-          fi
+              # Ignorem carpetes de sistema
+              if [[ "$folder_name" != ".github" && "$folder_name" != ".git" && "$folder_name" != "node_modules" ]]; then
+                  echo "Generating card for: $folder_name"
+                  
+                  echo "          <a href='./$folder_name/' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>" >> index.html
+                  echo "              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>" >> index.html
+                  echo "                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z'></path></svg>" >> index.html
+                  echo "              </div>" >> index.html
+                  echo "              <h3 class='text-xl font-bold text-white'>$folder_name</h3>" >> index.html
+                  echo "              <p class='text-slate-400 text-sm mt-2 font-mono'>./$folder_name/</p>" >> index.html
+                  echo "          </a>" >> index.html
+              fi
+          done
 
           cat <<EOF >> index.html
                   </div>
-                  <footer class="mt-20 text-center text-slate-500 text-sm">
-                      Actualitzat: $(date +'%d/%m/%Y') • GitHub Actions
+                  <footer class="mt-20 text-center text-slate-500 text-sm italic">
+                      Actualitzat automàticament • $(date +'%Y')
                   </footer>
               </div>
           </body>
@@ -85,5 +74,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "🚀 Portafoli Top actualitzat" || exit 0
+          git commit -m "🚀 Índex de carpetes actualitzat" || exit 0
           git push
