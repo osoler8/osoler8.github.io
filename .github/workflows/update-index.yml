@@ -1,31 +1,87 @@
-name: Debug Index
+name: Generate Pro Portfolio Index
 on:
   workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
 jobs:
-  debug:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Fetch and Show
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Professional HTML
         run: |
-          # 1. Agafem les dades
-          curl -s "https://api.github.com/users/${{ github.repository_owner }}/repos?per_page=100" > repos.json
+          # Obtenim TOTS els repositoris públics (sense filtres que fallin)
+          curl -s "https://api.github.com/users/${{ github.repository_owner }}/repos?sort=updated&per_page=100" > repos.json
           
-          # 2. DEBUG: Això ens mostrarà a la consola de GitHub si realment hi ha dades
-          echo "Repositoris trobats:"
-          jq -r '.[] | .name' repos.json
-          
-          # 3. Generem un HTML minimalista sense cap filtre
-          echo "<html><body><h1>Llista de Repos</h1><ul>" > index.html
-          jq -r '.[] | "<li>\(.name)</li>"' repos.json >> index.html
-          echo "</ul></body></html>" >> index.html
-          
-      - name: Commit
+          # Inici de l'HTML (Disseny Top)
+          cat <<EOF > index.html
+          <!DOCTYPE html>
+          <html lang="ca">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>El meu Portafoli</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <style>
+                  body { background-color: #0f172a; color: white; font-family: ui-sans-serif, system-ui; }
+                  .glass { 
+                      background: rgba(30, 41, 59, 0.7);
+                      backdrop-filter: blur(12px);
+                      border: 1px solid rgba(255, 255, 255, 0.1);
+                      transition: all 0.3s ease;
+                  }
+                  .glass:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3); }
+                  .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+              </style>
+          </head>
+          <body class="min-h-screen py-12 px-4">
+              <div class="max-w-5xl mx-auto">
+                  <header class="text-center mb-16">
+                      <h1 class="text-5xl font-extrabold mb-4 tracking-tight uppercase">El meu <span class="gradient-text">Portafoli</span></h1>
+                      <p class="text-slate-400 text-lg">Projectes actualitzats automàticament des de GitHub</p>
+                  </header>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          EOF
+
+          # Generació de targetes: FILTRE SIMPLIFICAT (només ignora el repo de l'índex)
+          jq -c '.[] | select(.name != "${{ github.repository_owner }}.github.io" and .fork == false)' repos.json | while read i; do
+            NAME=$(echo $i | jq -r '.name')
+            DESC=$(echo $i | jq -r '.description // "Explora el codi d’aquest projecte al meu GitHub."')
+            LANG=$(echo $i | jq -r '.language // "Projecte"')
+            # Prioritzem la URL de la web, si no, anem al repositori
+            URL=$(echo $i | jq -r '.homepage // .html_url')
+            
+            echo "          <a href='$URL' target='_blank' class='glass p-6 rounded-2xl flex flex-col justify-between'>" >> index.html
+            echo "              <div>" >> index.html
+            echo "                  <div class='flex justify-between items-start mb-4'>" >> index.html
+            echo "                      <span class='text-sky-400 text-xs font-bold uppercase tracking-widest'>$LANG</span>" >> index.html
+            echo "                      <svg class='w-5 h-5 text-slate-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>" >> index.html
+            echo "                  </div>" >> index.html
+            echo "                  <h3 class='text-xl font-bold mb-2 text-white'>$NAME</h3>" >> index.html
+            echo "                  <p class='text-slate-400 text-sm leading-relaxed'>$DESC</p>" >> index.html
+            echo "              </div>" >> index.html
+            echo "          </a>" >> index.html
+          done
+
+          cat <<EOF >> index.html
+                  </div>
+                  <footer class="mt-20 text-center text-slate-500 text-sm italic">
+                      Generat per GitHub Actions • $(date +'%Y')
+                  </footer>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Debug update" || exit 0
+          git commit -m "🚀 Portafoli Top actualitzat" || exit 0
           git push
