@@ -1,31 +1,31 @@
-name: Pro Index Fix
+name: Debug Index
 on:
   workflow_dispatch:
-  push:
-    branches: [ main, master ]
-
 jobs:
-  generate:
+  debug:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Create Index
+      - name: Fetch and Show
         run: |
-          echo "<!DOCTYPE html><html><body style='background:#111;color:white;font-family:sans-serif;padding:50px;'>" > index.html
-          echo "<h1>El meu Portafoli</h1><ul>" >> index.html
+          # 1. Agafem les dades
+          curl -s "https://api.github.com/users/${{ github.repository_owner }}/repos?per_page=100" > repos.json
           
-          # Aquesta línia és màgica: busca tots els teus repositoris públics
-          curl -s "https://api.github.com/users/${{ github.repository_owner }}/repos?per_page=100" | jq -r '.[] | "<li><a style='color:cyan' href=\(.html_url)>\(.name)</a> - \(.description // "Sense descripció")</li>"' >> index.html
+          # 2. DEBUG: Això ens mostrarà a la consola de GitHub si realment hi ha dades
+          echo "Repositoris trobats:"
+          jq -r '.[] | .name' repos.json
           
+          # 3. Generem un HTML minimalista sense cap filtre
+          echo "<html><body><h1>Llista de Repos</h1><ul>" > index.html
+          jq -r '.[] | "<li>\(.name)</li>"' repos.json >> index.html
           echo "</ul></body></html>" >> index.html
-
-      - name: Commit and Push
+          
+      - name: Commit
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "🚀 Forçant actualització" || exit 0
+          git commit -m "Debug update" || exit 0
           git push
