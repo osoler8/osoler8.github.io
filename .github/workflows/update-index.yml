@@ -60,7 +60,7 @@ jobs:
           EOF
 
           # Generació de les targetes dinàmicament
-          jq -c '.[] | select(.has_pages == true and .name != "${{ github.repository_owner }}.github.io")' repos.json | while read i; do
+          jq -c '.[] | select(.name != "${{ github.repository_owner }}.github.io")' repos.json | while read i; do
             NAME=$(echo $i | jq -r '.name')
             DESC=$(echo $i | jq -r '.description // "Sense descripció disponible."')
             LANG=$(echo $i | jq -r '.language // "Codi"')
