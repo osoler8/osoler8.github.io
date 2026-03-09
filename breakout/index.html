@@ -20,26 +20,27 @@
         .topic-card input { transform: scale(1.3); margin-right: 12px; }
 
         /* DISPLAY MATEMÀTIC */
-        .math-display { background: #000; padding: 30px; border-radius: 20px; font-size: 4.5em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 2px solid var(--accent); display: flex; justify-content: center; align-items: center; min-height: 140px; overflow: hidden; }
+        .math-display { background: #000; padding: 30px; border-radius: 20px; font-size: 4.5em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 2px solid var(--accent); display: flex; justify-content: center; align-items: center; min-height: 140px; }
         sup { font-size: 0.5em; vertical-align: super; color: var(--gold); font-weight: bold; margin-left: 5px; }
         
-        /* JERARQUIA VISUAL */
-        .hierarchy-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; margin: 15px auto; width: 100%; max-width: 500px; border: 1px dashed var(--accent); box-sizing: border-box; }
-        .h-step { padding: 12px 20px; margin: 8px 0; border-radius: 12px; font-weight: 900; color: #000; text-align: left; display: flex; justify-content: space-between; font-size: 1.2em; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        /* JERARQUIA VISUAL MILLORADA */
+        .hierarchy-box { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 15px auto; width: 100%; max-width: 550px; border: 2px dashed var(--accent); box-sizing: border-box; }
+        .h-step { padding: 12px 25px; margin: 10px 0; border-radius: 12px; font-weight: 900; color: #111; display: flex; align-items: center; justify-content: space-between; font-size: 1.3em; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .h-left { text-align: left; flex: 1; }
+        .h-right { text-align: right; flex: 1; }
+        
         .h1 { background: #ff7f50; } 
         .h2 { background: #ffcc00; } 
         .h3 { background: #00d4ff; } 
         .h4 { background: #2ecc71; } 
 
         .btn-diff { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9em; text-transform: uppercase; }
-        .btn-diff:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         
-        /* AJUST DE RESPOSTA */
-        .input-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
-        input[type="number"] { background: #000; border: 4px solid var(--accent); color: white; padding: 15px; font-size: 2.5em; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: 0 0 15px rgba(0, 212, 255, 0.3); }
+        /* AJUST INPUT CENTRAT */
+        .input-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 10px; }
+        input[type="number"] { background: #000; border: 4px solid var(--accent); color: white; padding: 15px 0; font-size: 2.5em; border-radius: 20px; width: 100%; max-width: 450px; text-align: center; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); display: block; }
         
-        .btn-main { background: var(--accent); color: #0b0e14; border: none; padding: 20px; border-radius: 15px; font-weight: bold; font-size: 1.3em; cursor: pointer; width: 100%; max-width: 400px; transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-main { background: var(--accent); color: #0b0e14; border: none; padding: 20px; border-radius: 15px; font-weight: bold; font-size: 1.4em; cursor: pointer; width: 100%; max-width: 450px; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
         
         .progress-bar { width: 100%; height: 12px; background: #334155; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); width: 0%; transition: 0.4s; }
@@ -78,10 +79,10 @@
         <div class="math-display" id="problem"></div>
 
         <div class="hierarchy-box">
-            <div class="h-step h1"><span>1. ( )</span> <span>Parèntesis</span></div>
-            <div class="h-step h2"><span>2. Potència / √</span> <span>Arrel</span></div>
-            <div class="h-step h3"><span>3. × / ÷</span> <span>Multiplicació / Divisió</span></div>
-            <div class="h-step h4"><span>4. + / -</span> <span>Suma / Resta</span></div>
+            <div class="h-step h1"><span class="h-left">1. ( )</span> <span class="h-right">Parèntesis</span></div>
+            <div class="h-step h2"><span class="h-left">2. Potència / √</span> <span class="h-right">Arrel</span></div>
+            <div class="h-step h3"><span class="h-left">3. × / ÷</span> <span class="h-right">Multiplicació / Divisió</span></div>
+            <div class="h-step h4"><span class="h-left">4. + / -</span> <span class="h-right">Suma / Resta</span></div>
         </div>
 
         <div class="input-container">
@@ -95,8 +96,8 @@
         <h1 style="color:var(--gold)">🏆 MISSIÓ COMPLETADA!</h1>
         <p id="stats" style="font-size: 1.4em;"></p>
         <div style="font-size: 100px; margin: 20px;">👨‍🚀</div>
-        <h2>Enhorabona de part del Comandant Mr. Math!</h2>
-        <button class="btn-main" onclick="location.reload()" style="background:#444; color:white; max-width: 300px;">NOVA MISSIÓ</button>
+        <h2>Enhorabona d'es part del Comandant Mr. Math!</h2>
+        <button class="btn-main" onclick="location.reload()" style="background:#444; color:white; max-width: 450px;">NOVA MISSIÓ</button>
     </div>
 </div>
 
