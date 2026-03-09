@@ -6,106 +6,134 @@
     <title>🚀 Missió Espacial - Oriol Soler</title>
     <style>
         :root { --main-bg: #0b0e14; --panel: #1c2531; --text: #e0e6ed; --accent: #00d4ff; --gold: #ffcc00; --error: #ff4757; --success: #2ecc71; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; flex-grow: 1; position: relative; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 25px; padding: 35px; box-shadow: 0 0 40px rgba(0, 212, 255, 0.2); text-align: center; flex-grow: 1; }
+        
         .screen { display: none; animation: fadeIn 0.4s; }
         .active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* CORRECCIÓ VISUAL POTÈNCIES */
-        sup { font-size: 0.6em; vertical-align: super; color: var(--gold); margin-left: 2px; }
-        
-        .math-display { background: #000; padding: 30px; border-radius: 15px; font-size: 3.5em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 2px solid #00d4ff; display: flex; align-items: center; justify-content: center; min-height: 120px; }
-        
-        /* PEMDAS */
-        .pemdas-pyramid { margin: 15px auto; width: fit-content; font-size: 0.8em; }
-        .p-row { padding: 5px 15px; margin: 2px; border-radius: 4px; font-weight: bold; color: #000; }
-        .p1 { background: #ff7f50; width: 120px; margin: auto; }
-        .p2 { background: #ffcc00; width: 170px; margin: auto; }
-        .p3 { background: #00d4ff; width: 220px; margin: auto; }
-        .p4 { background: #2ecc71; width: 270px; margin: auto; }
+        /* ESTIL SELECTOR VISUAL */
+        .selector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0; text-align: left; }
+        .topic-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; border: 2px solid #334155; display: flex; align-items: center; cursor: pointer; transition: 0.3s; }
+        .topic-card:hover { border-color: var(--accent); background: rgba(0, 212, 255, 0.1); }
+        .topic-card input { transform: scale(1.5); margin-right: 15px; cursor: pointer; }
+        .topic-icon { font-size: 1.5em; margin-right: 10px; }
 
-        .btn-diff { padding: 15px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; margin: 5px; flex: 1; min-width: 120px; transition: 0.3s; }
-        .btn-check { background: var(--accent); color: #0b0e14; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.2em; margin-top: 10px; }
+        /* POTÈNCIES I ARRELS */
+        .math-display { background: #000; padding: 40px; border-radius: 20px; font-size: 4em; color: #00ff00; font-family: 'Courier New', monospace; margin: 25px 0; border: 2px solid var(--accent); box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1); display: flex; justify-content: center; align-items: center; }
+        sup { font-size: 0.5em; vertical-align: super; color: var(--gold); font-weight: bold; margin-left: 4px; }
         
-        input[type="number"] { background: #000; border: 2px solid var(--accent); color: white; padding: 15px; font-size: 1.8em; border-radius: 10px; width: 200px; text-align: center; }
-        .progress-bar { width: 100%; height: 12px; background: #334155; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(to right, var(--accent), var(--success)); width: 0%; transition: 0.4s; }
-        
-        /* CERTIFICAT */
-        #certificate { background: white; color: black; padding: 40px; border: 10px double var(--gold); border-radius: 10px; margin-top: 20px; display: none; }
-        @media print { body * { display: none; } #certificate, #certificate * { display: block; } }
+        /* BOTONS DIFICULTAT */
+        .diff-grid { display: flex; gap: 15px; margin-top: 25px; }
+        .btn-diff { flex: 1; padding: 18px; border-radius: 12px; border: none; font-weight: bold; font-size: 1em; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-diff:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-        footer { margin-top: 20px; color: #64748b; font-size: 0.9em; }
+        /* PEMDAS VISUAL */
+        .pyramid { margin: 20px auto; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .step { padding: 6px 20px; border-radius: 6px; font-weight: bold; color: #000; font-size: 0.9em; width: 100%; max-width: 300px; }
+
+        input[type="number"] { background: #000; border: 2px solid var(--accent); color: white; padding: 15px; font-size: 2em; border-radius: 12px; width: 180px; text-align: center; margin-bottom: 20px; }
+        .btn-main { background: var(--accent); color: #0b0e14; border: none; padding: 18px 40px; border-radius: 12px; font-weight: bold; font-size: 1.2em; cursor: pointer; width: 100%; }
+        
+        .progress-bar { width: 100%; height: 14px; background: #334155; border-radius: 7px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); width: 0%; transition: 0.4s; }
+
+        footer { margin-top: 30px; color: #64748b; font-size: 0.9em; border-top: 1px solid #334155; padding-top: 15px; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
-    <div id="timer" style="color:var(--gold); font-weight:bold; margin-bottom:10px;">Temps: 0s</div>
+    <div id="timer" style="color:var(--gold); font-weight:bold; margin-bottom:15px; font-size: 1.2em;">🛸 TEMPS: 0s</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
     <div id="s-start" class="screen active">
-        <h1>🚀 Missió Espacial: 6è de Primària</h1>
-        <p>Configura la teva nau per a l'exploració:</p>
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin:15px 0;">
-            <label style="margin:10px; display:block;"><input type="checkbox" class="topic" value="p" checked> Potències</label>
-            <label style="margin:10px; display:block;"><input type="checkbox" class="topic" value="a" checked> Arrels Quadrades</label>
-            <label style="margin:10px; display:block;"><input type="checkbox" class="topic" value="b"> Base 10</label>
-            <label style="margin:10px; display:block;"><input type="checkbox" class="topic" value="c" checked> Combinades</label>
+        <h1>🌌 MISSÍO ESPACIAL 6è</h1>
+        <p>Prepara els sistemes de bord seleccionant les teves especialitats:</p>
+        
+        <div class="selector-grid">
+            <div class="topic-card" onclick="toggle('p')">
+                <input type="checkbox" class="topic" id="p" value="p" checked>
+                <span class="topic-icon">🔋</span> <b>Potències</b>
+            </div>
+            <div class="topic-card" onclick="toggle('a')">
+                <input type="checkbox" class="topic" id="a" value="a" checked>
+                <span class="topic-icon">📐</span> <b>Arrels</b>
+            </div>
+            <div class="topic-card" onclick="toggle('b')">
+                <input type="checkbox" class="topic" id="b" value="b">
+                <span class="topic-icon">🚀</span> <b>Base 10</b>
+            </div>
+            <div class="topic-card" onclick="toggle('c')">
+                <input type="checkbox" class="topic" id="c" value="c" checked>
+                <span class="topic-icon">⚙️</span> <b>Combinades</b>
+            </div>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn-diff" style="background:var(--success)" onclick="init('easy')">CADET</button>
-            <button class="btn-diff" style="background:var(--gold)" onclick="init('medium')">PILOT</button>
+
+        <p>Selecciona el nivell de la teva llicència:</p>
+        <div class="diff-grid">
+            <button class="btn-diff" style="background:var(--success); color:white" onclick="init('easy')">CADET</button>
+            <button class="btn-diff" style="background:var(--gold); color:black" onclick="init('medium')">PILOT</button>
             <button class="btn-diff" style="background:var(--error); color:white" onclick="init('hard')">COMANDANT</button>
         </div>
     </div>
 
     <div id="s-game" class="screen">
-        <h2 id="info">Reptes: 0/10</h2>
+        <h2 id="info">REPTES: 0 / 10</h2>
+        
+                
         <div class="math-display" id="problem"></div>
         
-        <div class="pemdas-pyramid">
-            <div class="p-row p1">1. ( ) Parèntesis</div>
-            <div class="p-row p2">2. x<sup>y</sup> / √ Potències i Arrels</div>
-            <div class="p-row p3">3. × / ÷ Mult. i Div.</div>
-            <div class="p-row p4">4. + / - Suma i Resta</div>
+        <div class="pyramid">
+            <div class="step" style="background:#ff7f50; width: 140px;">1. ( ) Parèntesis</div>
+            <div class="step" style="background:#ffcc00; width: 200px;">2. x<sup>y</sup> / √ Arrels</div>
+            <div class="step" style="background:#00d4ff; width: 260px;">3. × / ÷ Mult/Div</div>
+            <div class="step" style="background:#2ecc71; width: 320px;">4. + / - Suma/Rest</div>
         </div>
 
         <input type="number" id="ans-input" placeholder="Codi">
-        <button class="btn-check" onclick="check()">VALIDAR SISTEMA</button>
-        <p id="msg" style="margin-top:10px; font-weight:bold;"></p>
+        <button class="btn-main" onclick="check()">VERIFICAR SISTEMA</button>
+        <p id="msg" style="margin-top:15px; font-weight:bold; height: 20px;"></p>
     </div>
 
     <div id="s-win" class="screen">
         <h1 style="color:var(--gold)">🏆 MISSIÓ COMPLETADA!</h1>
-        <p id="stats"></p>
-        <button class="btn-check" onclick="window.print()" style="background:var(--success); color:white; margin-bottom:10px;">IMPRIMIR DIPLOMA</button>
-        <button class="btn-check" onclick="location.reload()">REINTENTAR</button>
+        <p id="stats" style="font-size: 1.2em;"></p>
+        <div style="font-size: 80px; margin: 20px;">👨‍🚀 ✨ 🌏</div>
+        <button class="btn-main" onclick="window.print()" style="background:var(--success); color:white; margin-bottom:15px;">IMPRIMIR CERTIFICAT</button>
+        <button class="btn-main" onclick="location.reload()" style="background:#444; color:white;">NOVA MISSIÓ</button>
         
-        <div id="certificate">
+        <div id="certificate" style="display:none; background:white; color:black; padding:50px; border:15px double var(--gold); margin-top:30px; text-align:center; font-family: 'Times New Roman', serif;">
             <h1>DIPLOMA D'EXCEL·LÈNCIA MATEMÀTICA</h1>
-            <p>Es certifica que l'alumne/a ha completat la missió de 6è en el nivell <b id="cert-diff"></b>.</p>
-            <p>Temps total: <b id="cert-time"></b> segons.</p>
+            <p style="font-size: 1.4em;">Atorgat per la superació de la Missió 6è</p>
+            <h2 id="cert-diff" style="text-decoration: underline;"></h2>
+            <p>Temps de vol: <b id="cert-time"></b> segons</p>
             <br><br>
-            <p>__________________________</p>
-            <p>Signatura del Comandant Oriol Soler</p>
+            <p>_____________________________________</p>
+            <p>Signat: Comandant Oriol Soler</p>
         </div>
     </div>
 </div>
 
-<footer>Desenvolupat per Oriol Soler</footer>
+<footer>Desenvolupat per <b>Oriol Soler</b> | Matemàtiques 6è de Primària</footer>
 
 <script>
     let curA = 0, step = 0, total = 10, sec = 0, timer, topics = [], diff = '';
 
+    function toggle(id) {
+        const cb = document.getElementById(id);
+        cb.checked = !cb.checked;
+    }
+
     function init(d) {
         diff = d;
         topics = Array.from(document.querySelectorAll('.topic:checked')).map(t => t.value);
-        if(!topics.length) return alert("Tria temes!");
+        if(!topics.length) { alert("Has de triar almenys una activitat!"); return; }
+        
         document.getElementById('s-start').classList.remove('active');
         document.getElementById('s-game').classList.add('active');
-        timer = setInterval(() => { sec++; document.getElementById('timer').innerText = `Temps: ${sec}s`; }, 1000);
+        timer = setInterval(() => { sec++; document.getElementById('timer').innerText = `🛸 TEMPS: ${sec}s`; }, 1000);
         gen();
     }
 
@@ -114,44 +142,50 @@
         const r = (m, n=1) => Math.floor(Math.random()*(m-n+1))+n;
 
         if(t==='p') {
-            let b = diff==='hard'?r(12,2):r(9,2), e = r(3,2);
+            let b = diff==='hard'?r(13,2):r(9,2), e = r(3,2);
             p = `${b}<sup>${e}</sup>`; a = Math.pow(b,e);
         } else if(t==='a') {
-            let x = diff==='hard'?r(15,2):r(12,2);
+            let x = diff==='hard'?r(15,3):r(12,2);
             p = `√${x*x}`; a = x;
         } else if(t==='b') {
             let n = r(99), e = r(4,2);
             p = `${n} &times; 10<sup>${e}</sup>`; a = n*Math.pow(10,e);
         } else {
-            let n1 = r(10,2), n2 = r(5,2), n3 = r(10,2);
+            let n1 = r(15,2), n2 = r(6,2), n3 = r(9,2);
             if(diff==='easy') { p = `${n1} + ${n2} &times; ${n3}`; a = n1+(n2*n3); }
-            else { p = `(${n1} + ${n2}) &times; ${n3}`; a = (n1+n2)*n3; }
+            else if(diff==='medium') { p = `(${n1} + ${n2}) &times; ${n3}`; a = (n1+n2)*n3; }
+            else { p = `${n1} &times; ${n2} - ${r(5,2)}<sup>2</sup>`; a = (n1*n2) - Math.pow(parseInt(p.split('<sup>')[1].split('</sup>')[0]), 2); 
+                   p = `${n1} &times; ${n2} - ${p.split('<sup>')[0].split(' - ')[1]}<sup>2</sup>`;
+                   a = (n1*n2) - Math.pow(parseInt(p.split(' - ')[1].split('<sup>')[0]), 2);
+            }
         }
         document.getElementById('problem').innerHTML = p;
         curA = a;
-        document.getElementById('info').innerText = `Reptes: ${step}/${total}`;
+        document.getElementById('info').innerText = `REPTES: ${step} / ${total}`;
         document.getElementById('progressFill').style.width = (step/total*100)+"%";
         document.getElementById('ans-input').value = "";
+        document.getElementById('ans-input').focus();
     }
 
     function check() {
         let v = parseFloat(document.getElementById('ans-input').value);
+        let m = document.getElementById('msg');
         if(v === curA) {
             step++;
-            document.getElementById('msg').innerText = "✅ CORRECTE!";
-            document.getElementById('msg').style.color = "var(--success)";
-            if(step < total) setTimeout(gen, 600);
+            m.innerText = "🚀 CODI CORRECTE! AVANÇANT...";
+            m.style.color = "var(--success)";
+            if(step < total) setTimeout(gen, 800);
             else {
                 clearInterval(timer);
                 document.getElementById('s-game').classList.remove('active');
                 document.getElementById('s-win').classList.add('active');
-                document.getElementById('stats').innerText = `Completat en ${sec} segons.`;
-                document.getElementById('cert-diff').innerText = diff.toUpperCase();
+                document.getElementById('stats').innerText = `Missió completada en ${sec} segons. Nivell: ${diff.toUpperCase()}`;
+                document.getElementById('cert-diff').innerText = "NIVELL " + diff.toUpperCase();
                 document.getElementById('cert-time').innerText = sec;
             }
         } else {
-            document.getElementById('msg').innerText = "⚠️ Revisa el resultat de l'operació.";
-            document.getElementById('msg').style.color = "var(--error)";
+            m.innerText = "⚠️ REVISA EL RESULTAT DE L'OPERACIÓ";
+            m.style.color = "var(--error)";
         }
     }
 </script>
