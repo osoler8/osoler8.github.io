@@ -23,11 +23,11 @@
         .math-display { background: #000; padding: 30px; border-radius: 20px; font-size: 4.5em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 2px solid var(--accent); display: flex; justify-content: center; align-items: center; min-height: 140px; }
         sup { font-size: 0.5em; vertical-align: super; color: var(--gold); font-weight: bold; margin-left: 5px; }
         
-        /* JERARQUIA VISUAL MILLORADA */
+        /* JERARQUIA VISUAL - CORREGIDA PER ALINEACIÓ DRETA */
         .hierarchy-box { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; margin: 15px auto; width: 100%; max-width: 550px; border: 2px dashed var(--accent); box-sizing: border-box; }
-        .h-step { padding: 12px 25px; margin: 10px 0; border-radius: 12px; font-weight: 900; color: #111; display: flex; align-items: center; justify-content: space-between; font-size: 1.3em; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
-        .h-left { text-align: left; flex: 1; }
-        .h-right { text-align: right; flex: 1; }
+        .h-step { padding: 12px 25px; margin: 10px 0; border-radius: 15px; font-weight: 900; color: #111; display: flex; justify-content: space-between; align-items: center; font-size: 1.3em; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        .h-label { text-align: left; }
+        .h-name { text-align: right; }
         
         .h1 { background: #ff7f50; } 
         .h2 { background: #ffcc00; } 
@@ -36,11 +36,26 @@
 
         .btn-diff { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9em; text-transform: uppercase; }
         
-        /* AJUST INPUT CENTRAT */
+        /* AJUST INPUT - TOTALMENT CENTRAT */
         .input-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 10px; }
-        input[type="number"] { background: #000; border: 4px solid var(--accent); color: white; padding: 15px 0; font-size: 2.5em; border-radius: 20px; width: 100%; max-width: 450px; text-align: center; margin-bottom: 20px; font-family: 'Courier New', monospace; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); display: block; }
+        input[type="number"] { 
+            background: #000; 
+            border: 4px solid var(--accent); 
+            color: white; 
+            padding: 20px 0; /* Padding vertical, 0 horitzontal per centrar bé */
+            font-size: 2.8em; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 480px; 
+            text-align: center; 
+            margin-bottom: 20px; 
+            font-family: 'Courier New', monospace; 
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.4); 
+            display: block;
+            outline: none;
+        }
         
-        .btn-main { background: var(--accent); color: #0b0e14; border: none; padding: 20px; border-radius: 15px; font-weight: bold; font-size: 1.4em; cursor: pointer; width: 100%; max-width: 450px; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-main { background: var(--accent); color: #0b0e14; border: none; padding: 22px; border-radius: 15px; font-weight: bold; font-size: 1.4em; cursor: pointer; width: 100%; max-width: 480px; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px; }
         
         .progress-bar { width: 100%; height: 12px; background: #334155; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); width: 0%; transition: 0.4s; }
@@ -79,10 +94,10 @@
         <div class="math-display" id="problem"></div>
 
         <div class="hierarchy-box">
-            <div class="h-step h1"><span class="h-left">1. ( )</span> <span class="h-right">Parèntesis</span></div>
-            <div class="h-step h2"><span class="h-left">2. Potència / √</span> <span class="h-right">Arrel</span></div>
-            <div class="h-step h3"><span class="h-left">3. × / ÷</span> <span class="h-right">Multiplicació / Divisió</span></div>
-            <div class="h-step h4"><span class="h-left">4. + / -</span> <span class="h-right">Suma / Resta</span></div>
+            <div class="h-step h1"><span class="h-label">1. ( )</span> <span class="h-name">Parèntesis</span></div>
+            <div class="h-step h2"><span class="h-label">2. Potència / √</span> <span class="h-name">Arrel</span></div>
+            <div class="h-step h3"><span class="h-label">3. × / ÷</span> <span class="h-name">Multiplicació / Divisió</span></div>
+            <div class="h-step h4"><span class="h-label">4. + / -</span> <span class="h-name">Suma / Resta</span></div>
         </div>
 
         <div class="input-container">
