@@ -4,23 +4,20 @@
     <meta charset="UTF-8">
     <title>Divisions pas a pas</title>
     <style>
-        :root { --p: #3b82f6; --correct: #10b981; --bg: #f3f4f6; }
+        :root { --p: #3b82f6; --correct: #10b981; --bg: #f3f4f6; --print: #06b6d4; }
         body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg); min-height: 100vh; margin: 0; }
         
-        /* CONTENIDOR AJUSTAT */
         .main-container { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 750px; margin-bottom: 20px; }
-
         h1 { text-align: center; color: #1e293b; margin-top: 0; }
 
-        .controls-top { margin-bottom: 30px; display: flex; gap: 10px; justify-content: center; }
+        .controls-top { margin-bottom: 30px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         button.nav { background: #475569; color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
         button.nav.active { background: var(--p); }
         button.refresh { background: #f59e0b; color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        button.pdf { background: var(--print); color: white; border: none; padding: 12px 25px; border-radius: 12px; cursor: pointer; font-weight: bold; }
 
-        /* LA CAIXA CLÀSSICA */
         .caixa-v1 { display: flex; justify-content: center; align-items: flex-start; margin-top: 20px; }
         .col-esquerra { text-align: right; padding-right: 20px; }
-        
         .col-dreta { border-left: 6px solid #000; display: flex; flex-direction: column; align-items: flex-start; }
         .divisor-area { border-bottom: 6px solid #000; padding: 0 20px 10px 20px; font-size: 3.5rem; font-weight: bold; color: var(--p); min-width: 150px; }
         .quocients-area { padding: 15px 20px; display: flex; flex-direction: column; align-items: flex-start; width: 100%; }
@@ -54,13 +51,13 @@
             <button id="btn-lv1" class="nav" onclick="canviarNivell(1)">1 xifra</button>
             <button id="btn-lv2" class="nav" onclick="canviarNivell(2)">2 xifres</button>
             <button class="refresh" onclick="generarNova()">🔄 Nova divisió</button>
+            <button class="pdf" onclick="generarFullPDF()">📄 Generar full PDF</button>
         </div>
 
         <div class="caixa-v1">
             <div class="col-esquerra">
                 <div id="div-original" class="num-v1">0</div>
                 <div id="historial-v1-container" style="display: flex; flex-direction: column; align-items: flex-end;"></div>
-                
                 <div id="zona-activa-v1" style="display: flex; flex-direction: column; align-items: flex-end;">
                     <div class="fila-resta">
                         <span style="font-size: 3rem; font-weight: bold;">-</span>
@@ -76,7 +73,6 @@
                 <div class="quocients-area">
                     <div id="llista-q-v1" style="display: flex; flex-direction: column;"></div>
                     <input type="number" id="in-q-v1" class="caixeta input-final" placeholder="..." oninput="updateV1()">
-                    
                     <div id="final-suma-v1" style="display:none; flex-direction: column;">
                         <div class="linia-suma"></div>
                         <div id="res-total-v1" class="total-final">0</div>
@@ -102,10 +98,8 @@
     function generarNova() {
         document.getElementById('btn-lv1').classList.toggle('active', lv === 1);
         document.getElementById('btn-lv2').classList.toggle('active', lv === 2);
-
         s = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
         d = lv === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
-        
         r = d; tQ = 0;
         document.getElementById('div-original').innerText = d;
         document.getElementById('disp-s').innerText = s;
@@ -115,7 +109,6 @@
         document.getElementById('in-q-v1').style.display = "block";
         document.getElementById('zona-activa-v1').style.display = "flex";
         document.getElementById('btn-v1').style.display = "block";
-        
         resetInputs();
         updGuia();
     }
@@ -147,33 +140,54 @@
     function validarV1() {
         const q = parseInt(document.getElementById('in-q-v1').value);
         if (isNaN(q) || q <= 0 || (q * s) > r) return;
-
         const prod = q * s;
         const nouR = r - prod;
-
         document.getElementById('historial-v1-container').innerHTML += `
             <div class="fila-resta"><span style="font-size: 2rem; font-weight: bold;">-</span><div class="historial-v1 text-vermell">${prod}</div></div>
             <div class="linia-v1" style="border-color: #cbd5e1;"></div>
             <div class="historial-v1">${nouR}</div>
         `;
-
         document.getElementById('llista-q-v1').innerHTML += `<div class="q-part">${q}</div>`;
-
         r = nouR; tQ += q;
-
         if (r < s) {
             document.getElementById('zona-activa-v1').style.display = "none";
             document.getElementById('in-q-v1').style.display = "none";
             document.getElementById('btn-v1').style.display = "none";
             document.getElementById('final-suma-v1').style.display = "flex";
             document.getElementById('res-total-v1').innerText = tQ;
-            
             const tipus = (r === 0) ? "Exacta" : "Entera";
             document.getElementById('msg-guia').innerHTML = `✨ **HO HAS ACONSEGUIT!** <br> Divisió ${tipus} | Quocient: ${tQ} | Residu: ${r}`;
         } else {
             resetInputs();
             updGuia();
         }
+    }
+
+    function generarFullPDF() {
+        const win = window.open('', '_blank');
+        let html = `<html><head><title>Full de Pràctica</title><style>
+            body { font-family: sans-serif; padding: 40px; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 40px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px 40px; }
+            .item { display: flex; align-items: flex-start; font-size: 2.5rem; font-weight: bold; height: 300px; }
+            .box { border-left: 4px solid #000; padding-left: 15px; min-width: 100px; height: 50px; border-bottom: 4px solid #000; }
+            .footer-print { margin-top: 50px; font-size: 0.8rem; text-align: center; color: #666; }
+        </style></head><body>`;
+        
+        html += `<div class="header"><h1>Divisions pas a pas - Full de Pràctica</h1><p>Nom: _________________________________ Data: ___/___/2026</p></div>`;
+        html += `<div class="grid">`;
+        
+        for(let i=0; i<6; i++) {
+            let pr_s = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
+            let pr_d = lv === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
+            html += `<div class="item"><div>${pr_d}</div><div class="box">${pr_s}</div></div>`;
+        }
+        
+        html += `</div><div class="footer-print">Generat per Oriol Soler - Llicència AGPL v3</div></body></html>`;
+        
+        win.document.write(html);
+        win.document.close();
+        win.print();
     }
 
     generarNova();
