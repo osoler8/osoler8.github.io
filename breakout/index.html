@@ -3,151 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Missió Espacial: El Codi de la Nau</title>
+    <title>🚀 Missió Espacial: Generador de Reptes</title>
     <style>
         :root { --main-bg: #0b0e14; --panel: #1c2531; --text: #e0e6ed; --accent: #00d4ff; --gold: #ffcc00; --error: #ff4757; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 20px; padding: 30px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; }
-        .screen { display: none; animation: fadeIn 0.5s; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; }
+        .screen { display: none; animation: fadeIn 0.4s; }
         .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Piràmide PEMDAS Visual */
-        .pemdas-pyramid { margin: 20px auto; width: fit-content; font-size: 0.8em; }
-        .p-row { padding: 5px 15px; margin: 2px; border-radius: 5px; font-weight: bold; color: #000; }
-        .p1 { background: #ff7f50; width: 100px; margin: auto; } /* Parèntesis */
-        .p2 { background: #ffcc00; width: 150px; margin: auto; } /* Exponents */
-        .p3 { background: #00d4ff; width: 200px; margin: auto; } /* Mult/Div */
-        .p4 { background: #2ecc71; width: 250px; margin: auto; } /* Suma/Resta */
+        /* Piràmide PEMDAS */
+        .pemdas-pyramid { margin: 15px auto; width: fit-content; font-size: 0.8em; }
+        .p-row { padding: 4px 12px; margin: 2px; border-radius: 4px; font-weight: bold; color: #000; }
+        .p1 { background: #ff7f50; width: 100px; margin: auto; }
+        .p2 { background: #ffcc00; width: 150px; margin: auto; }
+        .p3 { background: #00d4ff; width: 200px; margin: auto; }
+        .p4 { background: #2ecc71; width: 250px; margin: auto; }
 
-        .math-display { background: #000; padding: 20px; border-radius: 15px; font-size: 2.5em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 1px solid #00d4ff; }
-        input { background: #0b0e14; border: 2px solid var(--accent); color: white; padding: 10px; font-size: 1.5em; border-radius: 10px; width: 150px; text-align: center; }
-        .btn { background: var(--accent); color: #0b0e14; border: none; padding: 15px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-diff { margin: 5px; padding: 15px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
-        .progress-bar { width: 100%; height: 10px; background: #334155; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.5s; }
-        #timer { font-size: 1.2em; color: var(--gold); margin-bottom: 10px; }
+        .selector-box { background: #2a3441; padding: 20px; border-radius: 15px; margin: 20px 0; border: 1px solid #444; }
+        .option { display: block; margin: 10px; text-align: left; font-size: 1.1em; cursor: pointer; }
+        .option input { width: auto; margin-right: 15px; transform: scale(1.5); }
+
+        .math-display { background: #000; padding: 25px; border-radius: 15px; font-size: 2.8em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 1px solid #00d4ff; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        
+        input[type="number"] { background: #0b0e14; border: 2px solid var(--accent); color: white; padding: 12px; font-size: 1.6em; border-radius: 10px; width: 160px; text-align: center; }
+        .btn { background: var(--accent); color: #0b0e14; border: none; padding: 15px 35px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1em; }
+        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .progress-bar { width: 100%; height: 12px; background: #334155; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.4s; }
+        #timer { font-size: 1.1em; color: var(--gold); margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
-    <div id="timer">Temps: 0s</div>
+    <div id="timer">Missió No Iniciada</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
     <div id="s-start" class="screen active">
-        <h1>🌌 Missió: Tornada a la Terra</h1>
-        <p>Ets l'últim enginyer/a a bord. Resol els sistemes per activar el salt a la velocitat de la llum.</p>
+        <h1>🛠️ CONFIGURADOR DE MISSIÓ</h1>
+        <p>Prepara el teu entrenament personalitzat per a 6è.</p>
         
-        <div class="pemdas-pyramid">
-            <div class="p-row p1">( ) Parèntesis</div>
-            <div class="p-row p2">x² / √ Arrels</div>
-            <div class="p-row p3">× / ÷ Mult/Div</div>
-            <div class="p-row p4">+ / - Suma/Rest</div>
+        <div class="selector-box">
+            <p><b>1. Què vols practicar?</b></p>
+            <label class="option"><input type="checkbox" class="topic" value="p"> 🔋 Potències</label>
+            <label class="option"><input type="checkbox" class="topic" value="a"> 📐 Arrels Quadrades</label>
+            <label class="option"><input type="checkbox" class="topic" value="b"> 🚀 Base 10</label>
+            <label class="option"><input type="checkbox" class="topic" value="c" checked> ⚙️ Operacions Combinades</label>
+            
+            <p style="margin-top:20px"><b>2. Rang de dificultat:</b></p>
+            <select id="diff-select" style="padding:10px; border-radius:5px; width:100%">
+                <option value="easy">CADET (Números petits)</option>
+                <option value="medium" selected>PILOT (Números fins al 150)</option>
+                <option value="hard">COMANDANT (Reptes complexos)</option>
+            </select>
         </div>
 
-        <p>Tria el teu rang de dificultat:</p>
-        <button class="btn-diff" style="background:#2ecc71" onclick="startGame('easy')">CADET (Fàcil)</button>
-        <button class="btn-diff" style="background:#f1c40f" onclick="startGame('medium')">PILOT (Moderat)</button>
-        <button class="btn-diff" style="background:#e74c3c; color:white" onclick="startGame('hard')">COMANDANT (Difícil)</button>
+        <button class="btn" onclick="initMission()">GENERAR MISSIÓ (10 REPTES) 🚀</button>
     </div>
 
     <div id="s-game" class="screen">
-        <h2 id="level-title">Fase 1</h2>
-        <p id="level-story" style="font-style: italic; color: #94a3b8;"></p>
+        <h2 id="lvl-info">Reptes: 0/10</h2>
+        <div class="math-display" id="problem"></div>
         
-        <div class="math-display" id="problem-text"></div>
-
-        <div class="pemdas-pyramid" style="font-size: 0.6em; opacity: 0.8;">
+        <div class="pemdas-pyramid" id="mini-manual">
             <div class="p-row p1">1. ( )</div>
             <div class="p-row p2">2. x² / √</div>
             <div class="p-row p3">3. × / ÷</div>
             <div class="p-row p4">4. + / -</div>
         </div>
 
-        <input type="number" id="user-input" placeholder="Codi">
+        <input type="number" id="user-input" placeholder="Resultat">
         <br>
-        <button class="btn" onclick="checkAnswer()">INTRODUIR CODI</button>
-        <p id="feedback" style="margin-top:10px"></p>
+        <button class="btn" onclick="checkAnswer()">VERIFICAR CODI</button>
+        <p id="feedback" style="margin-top:15px; min-height: 25px;"></p>
     </div>
 
     <div id="s-win" class="screen">
-        <h1 style="color: var(--gold);">🏅 MISSIÓ COMPLETADA!</h1>
+        <h1 style="color: var(--gold);">🏆 MISSIÓ COMPLETADA!</h1>
         <p id="final-stats"></p>
-        <div style="font-size: 60px;">🚀 ✨ 🌍</div>
-        <button class="btn" onclick="location.reload()">REINTENTAR</button>
+        <div style="font-size: 60px;">🛰️ ✨ 🌏</div>
+        <button class="btn" onclick="location.reload()">NOVA CONFIGURACIÓ</button>
     </div>
 </div>
 
 <script>
-    const levels = {
-        easy: [
-            { s: "Activa els tancs d'oxigen.", p: "3²", a: 9, t: "Potència" },
-            { s: "Calcula el costat del mòdul.", p: "√49", a: 7, t: "Arrel" },
-            { s: "Distància en base 10.", p: "5 x 10²", a: 500, t: "Base 10" },
-            { s: "Reinicia el sistema (Mult. primer!).", p: "10 + 5 x 2", a: 20, t: "Combinada" }
-        ],
-        medium: [
-            { s: "Potència dels motors.", p: "2⁴ + 4", a: 20, t: "Potències" },
-            { s: "Estabilitza la pressió.", p: "√100 - 3", a: 7, t: "Arrel i Resta" },
-            { s: "Codi de comunicació.", p: "12 x 10³", a: 12000, t: "Base 10" },
-            { s: "Càlcul de trajectòria.", p: "(10 + 5) x 2", a: 30, t: "Parèntesis" }
-        ],
-        hard: [
-            { s: "Energia nuclear crítica.", p: "5² - 2³", a: 17, t: "Potències" },
-            { s: "Xifratge de seguretat.", p: "√144 + √64", a: 20, t: "Arrels" },
-            { s: "Distància a la Terra (Base 10).", p: "8,2 x 10³", a: 8200, t: "Base 10" },
-            { s: "REENTRADA Atmosfèrica!", p: "(4² + 4) : 2 + √9", a: 13, t: "Súper PEMDAS" }
-        ]
-    };
-
-    let currentDifficulty = [];
-    let currentStep = 0;
+    let currentAns = 0;
+    let step = 0;
+    const totalSteps = 10;
     let seconds = 0;
-    let timerInterval;
+    let timer;
+    let selectedTopics = [];
+    let difficulty = 'medium';
 
-    function startGame(diff) {
-        currentDifficulty = levels[diff];
-        currentStep = 0;
-        seconds = 0;
+    function initMission() {
+        const checkboxes = document.querySelectorAll('.topic:checked');
+        selectedTopics = Array.from(checkboxes).map(cb => cb.value);
+        difficulty = document.getElementById('diff-select').value;
+
+        if (selectedTopics.length === 0) {
+            alert("Tria almenys un tema per a la missió!");
+            return;
+        }
+
         document.getElementById('s-start').classList.remove('active');
         document.getElementById('s-game').classList.add('active');
-        timerInterval = setInterval(() => {
+        
+        timer = setInterval(() => {
             seconds++;
-            document.getElementById('timer').innerText = `Temps: ${seconds}s`;
+            document.getElementById('timer').innerText = `Temps de missió: ${seconds}s`;
         }, 1000);
-        showLevel();
+
+        generateProblem();
     }
 
-    function showLevel() {
-        const lvl = currentDifficulty[currentStep];
-        document.getElementById('level-title').innerText = `Fase ${currentStep + 1}: ${lvl.t}`;
-        document.getElementById('level-story').innerText = lvl.s;
-        document.getElementById('problem-text').innerText = lvl.p;
+    function generateProblem() {
+        const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
+        let pText = "";
+        let ans = 0;
+
+        const rnd = (max, min=1) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        if (topic === 'p') { // Potències
+            const base = difficulty === 'hard' ? rnd(12, 2) : rnd(5, 2);
+            const exp = difficulty === 'hard' ? rnd(3, 2) : rnd(4, 2);
+            pText = `${base}<sup>${exp}</sup>`;
+            ans = Math.pow(base, exp);
+        } 
+        else if (topic === 'a') { // Arrels
+            const root = difficulty === 'hard' ? rnd(15, 2) : rnd(10, 2);
+            pText = `√${root * root}`;
+            ans = root;
+        } 
+        else if (topic === 'b') { // Base 10
+            const n = rnd(99, 1);
+            const exp = rnd(4, 2);
+            pText = `${n} x 10<sup>${exp}</sup>`;
+            ans = n * Math.pow(10, exp);
+        } 
+        else { // Combinades
+            if (difficulty === 'easy') {
+                const a = rnd(10); const b = rnd(5); const c = rnd(5);
+                pText = `${a} + ${b} x ${c}`;
+                ans = a + (b * c);
+            } else if (difficulty === 'medium') {
+                const a = rnd(20); const b = rnd(10); const c = rnd(2);
+                pText = `(${a} - ${b}) x ${c+2}`;
+                ans = (a - b) * (c+2);
+            } else {
+                const a = rnd(5, 2); const b = rnd(10);
+                pText = `${a}² + √${rnd(5,2)**2} x 2`;
+                let r = Math.sqrt(pText.split('√')[1].split(' ')[0]);
+                ans = Math.pow(a, 2) + (parseInt(r) * 2);
+                pText = `${a}² + √${r*r} x 2`;
+            }
+        }
+
+        document.getElementById('problem').innerHTML = pText;
+        currentAns = ans;
+        document.getElementById('lvl-info').innerText = `Reptes superats: ${step}/${totalSteps}`;
+        document.getElementById('progressFill').style.width = (step / totalSteps * 100) + "%";
         document.getElementById('user-input').value = "";
-        document.getElementById('feedback').innerText = "";
-        document.getElementById('progressFill').style.width = (currentStep / currentDifficulty.length * 100) + "%";
     }
 
     function checkAnswer() {
         const val = parseInt(document.getElementById('user-input').value);
-        if (val === currentDifficulty[currentStep].a) {
-            currentStep++;
-            if (currentStep < currentDifficulty.length) showLevel();
-            else finishGame();
+        const feedback = document.getElementById('feedback');
+        
+        if (val === currentAns) {
+            step++;
+            feedback.innerText = "✅ CODI CORRECTE!";
+            feedback.style.color = "var(--accent)";
+            if (step < totalSteps) {
+                setTimeout(generateProblem, 600);
+            } else {
+                finish();
+            }
         } else {
-            const f = document.getElementById('feedback');
-            f.innerText = "❌ ERROR! Revisa l'ordre PEMDAS.";
-            f.style.color = "var(--error)";
+            feedback.innerText = "⚠️ Revisa el resultat de l'operació.";
+            feedback.style.color = "var(--error)";
         }
     }
 
-    function finishGame() {
-        clearInterval(timerInterval);
+    function finish() {
+        clearInterval(timer);
         document.getElementById('s-game').classList.remove('active');
         document.getElementById('s-win').classList.add('active');
-        document.getElementById('final-stats').innerText = `Has salvat la nau en ${seconds} segons!`;
         document.getElementById('progressFill').style.width = "100%";
+        document.getElementById('final-stats').innerText = `Missió completada en ${seconds} segons amb èxit total.`;
     }
 </script>
 
