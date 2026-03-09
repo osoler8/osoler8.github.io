@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Missió Espacial: Generador de Reptes</title>
+    <title>🚀 Missió Espacial: El Codi de 6è</title>
     <style>
-        :root { --main-bg: #0b0e14; --panel: #1c2531; --text: #e0e6ed; --accent: #00d4ff; --gold: #ffcc00; --error: #ff4757; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; }
+        :root { --main-bg: #0b0e14; --panel: #1c2531; --text: #e0e6ed; --accent: #00d4ff; --gold: #ffcc00; --error: #ff4757; --success: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .game-container { width: 100%; max-width: 800px; background: var(--panel); border: 3px solid #334155; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 212, 255, 0.2); text-align: center; flex-grow: 1; }
         .screen { display: none; animation: fadeIn 0.4s; }
         .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -21,71 +21,79 @@
         .p4 { background: #2ecc71; width: 250px; margin: auto; }
 
         .selector-box { background: #2a3441; padding: 20px; border-radius: 15px; margin: 20px 0; border: 1px solid #444; }
-        .option { display: block; margin: 10px; text-align: left; font-size: 1.1em; cursor: pointer; }
+        .option { display: block; margin: 12px; text-align: left; font-size: 1.1em; cursor: pointer; transition: 0.2s; }
+        .option:hover { color: var(--accent); }
         .option input { width: auto; margin-right: 15px; transform: scale(1.5); }
 
-        .math-display { background: #000; padding: 25px; border-radius: 15px; font-size: 2.8em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 1px solid #00d4ff; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .difficulty-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .btn-diff { padding: 15px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; font-size: 0.9em; transition: 0.3s; flex: 1; min-width: 140px; }
+        .btn-diff:hover { transform: translateY(-3px); filter: brightness(1.2); }
+
+        .math-display { background: #000; padding: 25px; border-radius: 15px; font-size: 2.8em; color: #00ff00; font-family: 'Courier New', monospace; margin: 20px 0; border: 1px solid #00d4ff; min-height: 80px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.2); }
         
         input[type="number"] { background: #0b0e14; border: 2px solid var(--accent); color: white; padding: 12px; font-size: 1.6em; border-radius: 10px; width: 160px; text-align: center; }
-        .btn { background: var(--accent); color: #0b0e14; border: none; padding: 15px 35px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1em; }
-        .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-check { background: var(--accent); color: #0b0e14; border: none; padding: 15px 35px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; font-size: 1.1em; width: 100%; }
+        
         .progress-bar { width: 100%; height: 12px; background: #334155; border-radius: 6px; margin-bottom: 20px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.4s; }
-        #timer { font-size: 1.1em; color: var(--gold); margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, var(--accent), var(--success)); width: 0%; transition: 0.4s; }
+        
+        footer { margin-top: 20px; color: #64748b; font-size: 0.9em; padding-bottom: 10px; }
+        #timer { font-size: 1.1em; color: var(--gold); margin-bottom: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
-    <div id="timer">Missió No Iniciada</div>
+    <div id="timer">Preparant motors...</div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
     <div id="s-start" class="screen active">
         <h1>🛠️ CONFIGURADOR DE MISSIÓ</h1>
-        <p>Prepara el teu entrenament personalitzat per a 6è.</p>
+        <p>Selecciona les àrees d'entrenament i el nivell de dificultat per començar.</p>
         
         <div class="selector-box">
-            <p><b>1. Què vols practicar?</b></p>
-            <label class="option"><input type="checkbox" class="topic" value="p"> 🔋 Potències</label>
-            <label class="option"><input type="checkbox" class="topic" value="a"> 📐 Arrels Quadrades</label>
+            <p><b>1. Què vols practicar avui?</b></p>
+            <label class="option"><input type="checkbox" class="topic" value="p" checked> 🔋 Potències</label>
+            <label class="option"><input type="checkbox" class="topic" value="a" checked> 📐 Arrels Quadrades</label>
             <label class="option"><input type="checkbox" class="topic" value="b"> 🚀 Base 10</label>
-            <label class="option"><input type="checkbox" class="topic" value="c" checked> ⚙️ Operacions Combinades</label>
+            <label class="option"><input type="checkbox" class="topic" value="c"> ⚙️ Operacions Combinades</label>
             
-            <p style="margin-top:20px"><b>2. Rang de dificultat:</b></p>
-            <select id="diff-select" style="padding:10px; border-radius:5px; width:100%">
-                <option value="easy">CADET (Números petits)</option>
-                <option value="medium" selected>PILOT (Números fins al 150)</option>
-                <option value="hard">COMANDANT (Reptes complexos)</option>
-            </select>
+            <p style="margin-top:25px"><b>2. Tria el rang de dificultat per iniciar:</b></p>
+            <div class="difficulty-buttons">
+                <button class="btn-diff" style="background:var(--success); color:white" onclick="initMission('easy')">CADET (Fàcil)</button>
+                <button class="btn-diff" style="background:var(--gold); color:black" onclick="initMission('medium')">PILOT (Moderat)</button>
+                <button class="btn-diff" style="background:var(--error); color:white" onclick="initMission('hard')">COMANDANT (Difícil)</button>
+            </div>
         </div>
-
-        <button class="btn" onclick="initMission()">GENERAR MISSIÓ (10 REPTES) 🚀</button>
     </div>
 
     <div id="s-game" class="screen">
         <h2 id="lvl-info">Reptes: 0/10</h2>
+        [Image of the order of operations hierarchy pyramid]
         <div class="math-display" id="problem"></div>
         
-        <div class="pemdas-pyramid" id="mini-manual">
+        <div class="pemdas-pyramid">
             <div class="p-row p1">1. ( )</div>
             <div class="p-row p2">2. x² / √</div>
             <div class="p-row p3">3. × / ÷</div>
             <div class="p-row p4">4. + / -</div>
         </div>
 
-        <input type="number" id="user-input" placeholder="Resultat">
+        <input type="number" id="user-input" placeholder="Codi">
         <br>
-        <button class="btn" onclick="checkAnswer()">VERIFICAR CODI</button>
-        <p id="feedback" style="margin-top:15px; min-height: 25px;"></p>
+        <button class="btn-check" onclick="checkAnswer()">VERIFICAR SISTEMA</button>
+        <p id="feedback" style="margin-top:15px; min-height: 25px; font-weight: bold;"></p>
     </div>
 
     <div id="s-win" class="screen">
         <h1 style="color: var(--gold);">🏆 MISSIÓ COMPLETADA!</h1>
         <p id="final-stats"></p>
-        <div style="font-size: 60px;">🛰️ ✨ 🌏</div>
-        <button class="btn" onclick="location.reload()">NOVA CONFIGURACIÓ</button>
+        <div style="font-size: 60px;">🛰️ ✨ 🌍</div>
+        <button class="btn-check" onclick="location.reload()" style="max-width:300px">NOVA MISSIÓ</button>
     </div>
 </div>
+
+<footer>Desenvolupat per Oriol Soler</footer>
 
 <script>
     let currentAns = 0;
@@ -96,10 +104,10 @@
     let selectedTopics = [];
     let difficulty = 'medium';
 
-    function initMission() {
+    function initMission(diff) {
         const checkboxes = document.querySelectorAll('.topic:checked');
         selectedTopics = Array.from(checkboxes).map(cb => cb.value);
-        difficulty = document.getElementById('diff-select').value;
+        difficulty = diff;
 
         if (selectedTopics.length === 0) {
             alert("Tria almenys un tema per a la missió!");
@@ -121,22 +129,21 @@
         const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
         let pText = "";
         let ans = 0;
-
         const rnd = (max, min=1) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-        if (topic === 'p') { // Potències
-            const base = difficulty === 'hard' ? rnd(12, 2) : rnd(5, 2);
-            const exp = difficulty === 'hard' ? rnd(3, 2) : rnd(4, 2);
+        if (topic === 'p') {
+            const base = difficulty === 'hard' ? rnd(12, 2) : (difficulty === 'medium' ? rnd(9, 2) : rnd(5, 2));
+            const exp = difficulty === 'hard' ? rnd(3, 2) : (difficulty === 'medium' ? 2 : rnd(3, 2));
             pText = `${base}<sup>${exp}</sup>`;
             ans = Math.pow(base, exp);
         } 
-        else if (topic === 'a') { // Arrels
-            const root = difficulty === 'hard' ? rnd(15, 2) : rnd(10, 2);
+        else if (topic === 'a') {
+            const root = difficulty === 'hard' ? rnd(15, 2) : (difficulty === 'medium' ? rnd(12, 2) : rnd(10, 2));
             pText = `√${root * root}`;
             ans = root;
         } 
-        else if (topic === 'b') { // Base 10
-            const n = rnd(99, 1);
+        else if (topic === 'b') {
+            const n = difficulty === 'hard' ? (rnd(999, 100)/10).toFixed(1) : rnd(99, 1);
             const exp = rnd(4, 2);
             pText = `${n} x 10<sup>${exp}</sup>`;
             ans = n * Math.pow(10, exp);
@@ -147,15 +154,13 @@
                 pText = `${a} + ${b} x ${c}`;
                 ans = a + (b * c);
             } else if (difficulty === 'medium') {
-                const a = rnd(20); const b = rnd(10); const c = rnd(2);
-                pText = `(${a} - ${b}) x ${c+2}`;
-                ans = (a - b) * (c+2);
+                const a = rnd(20, 10); const b = rnd(9); const c = rnd(5, 2);
+                pText = `(${a} - ${b}) x ${c}`;
+                ans = (a - b) * c;
             } else {
-                const a = rnd(5, 2); const b = rnd(10);
-                pText = `${a}² + √${rnd(5,2)**2} x 2`;
-                let r = Math.sqrt(pText.split('√')[1].split(' ')[0]);
-                ans = Math.pow(a, 2) + (parseInt(r) * 2);
-                pText = `${a}² + √${r*r} x 2`;
+                const a = rnd(6, 2); const r = rnd(10, 2); const b = rnd(10, 2);
+                pText = `${a}² + √${r*r} - ${b}`;
+                ans = Math.pow(a, 2) + r - b;
             }
         }
 
@@ -164,16 +169,17 @@
         document.getElementById('lvl-info').innerText = `Reptes superats: ${step}/${totalSteps}`;
         document.getElementById('progressFill').style.width = (step / totalSteps * 100) + "%";
         document.getElementById('user-input').value = "";
+        document.getElementById('user-input').focus();
     }
 
     function checkAnswer() {
-        const val = parseInt(document.getElementById('user-input').value);
+        const val = parseFloat(document.getElementById('user-input').value);
         const feedback = document.getElementById('feedback');
         
         if (val === currentAns) {
             step++;
-            feedback.innerText = "✅ CODI CORRECTE!";
-            feedback.style.color = "var(--accent)";
+            feedback.innerText = "✅ CODI ACCEPTAT!";
+            feedback.style.color = "var(--success)";
             if (step < totalSteps) {
                 setTimeout(generateProblem, 600);
             } else {
@@ -190,7 +196,7 @@
         document.getElementById('s-game').classList.remove('active');
         document.getElementById('s-win').classList.add('active');
         document.getElementById('progressFill').style.width = "100%";
-        document.getElementById('final-stats').innerText = `Missió completada en ${seconds} segons amb èxit total.`;
+        document.getElementById('final-stats').innerText = `Missió completada en ${seconds} segons!`;
     }
 </script>
 
