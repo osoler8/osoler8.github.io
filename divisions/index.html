@@ -16,9 +16,9 @@
         .nav.active { background: var(--p); }
         .refresh { background: #f59e0b; }
         .pdf { background: var(--print); }
+        .lliure { background: #8b5cf6; } /* Color lila per al mode lliure */
         button:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* LA CAIXA CLÀSSICA AMB SEPARACIÓ */
         .caixa-v1 { display: flex; justify-content: center; align-items: flex-start; margin-top: 20px; }
         .col-esquerra { text-align: right; padding-right: 35px; }
         
@@ -36,7 +36,6 @@
         footer { font-size: 0.9rem; color: #64748b; padding: 20px 0; text-align: center; }
         footer a { color: var(--p); text-decoration: none; font-weight: bold; }
 
-        /* Estils historial */
         .historial-v1 { font-size: 2.2rem; font-weight: bold; margin: 5px 0; color: #4b5563; }
         .text-vermell { color: #ef4444; }
         .q-part { font-size: 2.2rem; font-weight: bold; color: #4b5563; margin: 5px 0; }
@@ -49,6 +48,7 @@
         <div class="controls-top">
             <button id="btn-lv1" class="nav" onclick="canviarNivell(1)">1 xifra</button>
             <button id="btn-lv2" class="nav" onclick="canviarNivell(2)">2 xifres</button>
+            <button id="btn-free" class="nav lliure" onclick="modeLliure()">Lliure</button>
             <button class="refresh" onclick="generarNova()">🔄 Nova divisió</button>
             <button class="pdf" onclick="generarFullPDF()">📄 Generar full PDF</button>
         </div>
@@ -91,11 +91,48 @@
 
     function canviarNivell(n) { lv = n; generarNova(); }
 
+    function modeLliure() {
+        const userD = prompt("Introdueix el Dividend (número a dividir):", "456");
+        const userS = prompt("Introdueix el Divisor (màxim 99):", "6");
+        
+        if (userD && userS) {
+            const numD = parseInt(userD);
+            const numS = parseInt(userS);
+            
+            if (isNaN(numD) || isNaN(numS) || numS <= 0 || numS > 99) {
+                alert("Si us plau, introdueix números vàlids. El divisor ha de ser entre 1 i 99.");
+                return;
+            }
+            
+            lv = "free"; // Mode especial
+            d = numD;
+            s = numS;
+            resetJocAmbValors();
+        }
+    }
+
     function generarNova() {
+        if (lv === "free") {
+            // Si estem en mode lliure i premen "Nova", repetim els mateixos per defecte o tornem a nivell 1
+            lv = 1;
+        }
+        
         document.getElementById('btn-lv1').classList.toggle('active', lv === 1);
         document.getElementById('btn-lv2').classList.toggle('active', lv === 2);
-        s = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
-        d = lv === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
+        document.getElementById('btn-free').classList.toggle('active', lv === "free");
+
+        if (lv === 1) {
+            s = Math.floor(Math.random()*8)+2;
+            d = Math.floor(Math.random()*800)+100;
+        } else if (lv === 2) {
+            s = Math.floor(Math.random()*89)+11;
+            d = Math.floor(Math.random()*8000)+1000;
+        }
+        
+        resetJocAmbValors();
+    }
+
+    function resetJocAmbValors() {
         r = d; tQ = 0;
         document.getElementById('div-original').innerText = d;
         document.getElementById('disp-s').innerText = s;
@@ -148,8 +185,13 @@
         
         let content = `<html><head><style>${style}</style></head><body><div class="grid">`;
         for(let i=0; i<6; i++) {
-            let pr_s = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
-            let pr_d = lv === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
+            let pr_s, pr_d;
+            if (lv === "free") { // Si estem en mode lliure, el PDF manté els números que hem triat per a tots els exercicis o pots fer-ho mixt. Aquí els fem fixos segons el que s'està jugant.
+                pr_s = s; pr_d = d;
+            } else {
+                pr_s = lv === 1 ? Math.floor(Math.random()*8)+2 : Math.floor(Math.random()*89)+11;
+                pr_d = lv === 1 ? Math.floor(Math.random()*800)+100 : Math.floor(Math.random()*8000)+1000;
+            }
             content += `<div class="item"><div class="div-num">${pr_d}</div><div class="box">${pr_s}</div></div>`;
         }
         content += `</div></body></html>`;
