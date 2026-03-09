@@ -16,10 +16,10 @@
         .nav.active { background: var(--p); }
         .refresh { background: #f59e0b; }
         .pdf { background: var(--print); }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        /* CAIXA AMB SEPARACIÓ */
         .caixa-v1 { display: flex; justify-content: center; align-items: flex-start; margin-top: 20px; }
-        .col-esquerra { text-align: right; padding-right: 35px; } /* Més separació aquí */
+        .col-esquerra { text-align: right; padding-right: 35px; }
         
         .col-dreta { border-left: 6px solid #000; display: flex; flex-direction: column; align-items: flex-start; padding-left: 5px; }
         .divisor-area { border-bottom: 6px solid #000; padding: 0 25px 15px 25px; font-size: 3.5rem; font-weight: bold; color: var(--p); min-width: 150px; }
@@ -44,7 +44,7 @@
             <button id="btn-lv1" class="nav" onclick="canviarNivell(1)">1 xifra</button>
             <button id="btn-lv2" class="nav" onclick="canviarNivell(2)">2 xifres</button>
             <button class="refresh" onclick="generarNova()">🔄 Nova divisió</button>
-            <button class="pdf" onclick="generarFullPDF()">📄 Generar full A4</button>
+            <button class="pdf" onclick="generarFullPDF()">📄 Generar full PDF</button>
         </div>
 
         <div class="caixa-v1">
@@ -132,14 +132,13 @@
     function generarFullPDF() {
         const win = window.open('', '_blank');
         const style = `
-            @page { size: A4; margin: 1.5cm; }
+            @page { size: A4; margin: 1cm; }
             body { font-family: 'Segoe UI', sans-serif; margin: 0; color: #333; }
-            .header { text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 60px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 120px 60px; }
+            .header { text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 80px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 180px 60px; } /* Molt més espai aquí */
             .item { display: flex; align-items: flex-start; font-size: 3rem; font-weight: bold; }
-            .div-num { padding-right: 30px; text-align: right; min-width: 120px; }
+            .div-num { padding-right: 35px; text-align: right; min-width: 130px; }
             .box { border-left: 6px solid #000; padding: 0 25px 15px 25px; min-width: 100px; border-bottom: 6px solid #000; color: #3b82f6; }
-            footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 0.8rem; padding: 20px 0; color: #666; }
         `;
         
         let content = `<html><head><style>${style}</style></head><body>
@@ -152,7 +151,7 @@
             content += `<div class="item"><div class="div-num">${pr_d}</div><div class="box">${pr_s}</div></div>`;
         }
         
-        content += `</div><footer>Divisions pas a pas © 2026 Oriol Soler - Llicència AGPL v3</footer></body></html>`;
+        content += `</div></body></html>`;
         
         win.document.write(content);
         win.document.close();
