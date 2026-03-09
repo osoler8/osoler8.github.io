@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missió Matemàtica 6è: El Gran Laberint</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --error: #e74c3c; --bg: #ecf0f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--primary); text-align: center; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .hidden { display: none; }
+        .level-card { border: 2px solid #eee; padding: 20px; border-radius: 15px; margin: 20px 0; }
+        button { background: var(--accent); color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        input { padding: 12px; font-size: 1.2em; border: 2px solid #bdc3c7; border-radius: 8px; width: 150px; text-align: center; margin: 10px; }
+        .hint { color: #7f8c8d; font-size: 0.9em; margin-top: 10px; display: block; }
+        .progress-container { width: 100%; background: #ddd; height: 12px; border-radius: 6px; margin-bottom: 30px; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; border-radius: 6px; transition: 0.6s; }
+        .math-box { font-size: 2em; background: #f9f9f9; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 5px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+
+    <div id="screen-start">
+        <h1>🕵️‍♂️ OPERACIÓ: CODI OBERT</h1>
+        <p>El sistema central ha estat bloquejat per un error en els càlculs. Com a expert/a de 6è, ets l'única persona capaç de desxifrar els 6 nivells de seguretat.</p>
+        <button onclick="next('level1', 16)">Començar Desencriptació</button>
+    </div>
+
+    <div id="screen-level1" class="hidden">
+        <h2>📂 NIVELL 1: Arxius Duplicats</h2>
+        <p>Una potència és una multiplicació repetida. Calcula el valor de:</p>
+        <div class="math-box">2<sup>5</sup></div>
+        
+        <input type="number" id="ans1" placeholder="Resultat">
+        <button onclick="check(1, 32, 'level2', 32)">Validar</button>
+        <p id="err1"></p>
+    </div>
+
+    <div id="screen-level2" class="hidden">
+        <h2>📐 NIVELL 2: L'Àrea de Seguretat</h2>
+        <p>L'arrel quadrada ens dóna el costat d'un quadrat perfecte. Si l'àrea és 144, quant fa el costat?</p>
+        <div class="math-box">√144</div>
+        
+        <input type="number" id="ans2" placeholder="?">
+        <button onclick="check(2, 12, 'level3', 48)">Desbloquejar Sector</button>
+        <p id="err2"></p>
+    </div>
+
+    <div id="screen-level3" class="hidden">
+        <h2>🚀 NIVELL 3: Distància Estel·lar</h2>
+        <p>En el buit de l'espai, els números es fan gegants. Tradueix aquest codi a un número natural:</p>
+        <div class="math-box">64 x 10<sup>4</sup></div>
+        <span class="hint">Pista: Afegeix tants zeros com digui l'exponent.</span>
+        <input type="number" id="ans3" placeholder="00000">
+        <button onclick="check(3, 640000, 'level4', 64)">Activar Motors</button>
+        <p id="err3"></p>
+    </div>
+
+    <div id="screen-level4" class="hidden">
+        <h2>⚡ NIVELL 4: El Circuit Elèctric</h2>
+        <p>Compte! No pots sumar abans de multiplicar. Resol el circuit:</p>
+        <div class="math-box">15 + 5 x 2<sup>3</sup></div>
+        
+        <span class="hint">1r: Potència | 2n: Multiplicació | 3r: Suma</span>
+        <input type="number" id="ans4">
+        <button onclick="check(4, 55, 'level5', 80)">Reparar Circuit</button>
+        <p id="err4"></p>
+    </div>
+
+    <div id="screen-level5" class="hidden">
+        <h2>🔥 NIVELL 5: El Nucli del Sistema</h2>
+        <p>Aquest és el càlcul més difícil. Segueix l'ordre estrictament (PEMDAS):</p>
+        <div class="math-box">(20 - 4) : 2 + √49</div>
+        <input type="number" id="ans5">
+        <button onclick="check(5, 15, 'win', 100)">DESACTIVAR VIRUS</button>
+        <p id="err5"></p>
+    </div>
+
+    <div id="screen-win" class="hidden">
+        <h1 style="color: var(--success);">🎊 SISTEMA RESTABLERT! 🎊</h1>
+        <p>Has superat tots els nivells. Ets un autèntic geni de 6è.</p>
+        <div style="font-size: 5em;">🏆</div>
+        <button onclick="location.reload()">Tornar a començar</button>
+    </div>
+</div>
+
+<script>
+    function next(id, p) {
+        document.querySelectorAll('.container > div:not(.progress-container)').forEach(d => d.classList.add('hidden'));
+        document.getElementById('screen-' + id).classList.remove('hidden');
+        document.getElementById('progress').style.width = p + '%';
+    }
+
+    function check(lvl, correct, nextId, p) {
+        const val = parseInt(document.getElementById('ans' + lvl).value);
+        const err = document.getElementById('err' + lvl);
+        if (val === correct) {
+            next(nextId, p);
+        } else {
+            err.innerHTML = "❌ Error! Revisa el càlcul i l'ordre.";
+            err.style.color = "var(--error)";
+        }
+    }
+</script>
+
+</body>
+</html>
