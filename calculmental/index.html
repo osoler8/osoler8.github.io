@@ -46,9 +46,9 @@
         </div>
     </div>
 
-    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[200px] justify-center text-center">
+    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[200px] text-center relative overflow-hidden">
         
-        <div id="start-ui" class="hidden">
+        <div id="start-ui" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white rounded-3xl">
             <h2 class="text-xl font-black text-slate-400 uppercase tracking-widest mb-4">Preparat?</h2>
             <button onclick="startGame()" class="bg-blue-500 text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-blue-200 hover:scale-105 transition-transform">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 ml-1" viewBox="0 0 16 16">
@@ -57,17 +57,17 @@
             </button>
         </div>
 
-        <div id="game-ui">
+        <div id="game-ui" class="flex flex-col items-center justify-center min-h-[160px] w-full">
             <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center justify-center gap-3 tracking-tighter">
                 <span id="num1">0</span>
                 <span id="operator" class="text-blue-500 text-3xl"> + </span>
                 <span id="num2">0</span>
             </div>
-            <input type="number" id="answer" readonly class="w-full text-center text-4xl font-bold bg-slate-50 rounded-xl py-3 border-none focus:outline-none" placeholder="?">
+            <input type="number" id="answer" readonly class="w-full text-center text-4xl font-bold bg-slate-50 rounded-xl py-3 border-none focus:outline-none placeholder-slate-200" placeholder="?">
             <div id="feedback" class="mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em]"></div>
         </div>
 
-        <div id="win-ui" class="hidden">
+        <div id="win-ui" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white rounded-3xl">
             <h2 id="win-title" class="text-3xl font-bold text-green-500 mb-2">🎉 Completat!</h2>
             <p id="win-stats" class="text-slate-500 mb-6 font-medium uppercase text-xs tracking-widest"></p>
             <button onclick="resetGame()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 uppercase tracking-tighter">Jugar de nou</button>
