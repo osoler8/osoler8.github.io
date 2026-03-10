@@ -1,4 +1,4 @@
-     <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
@@ -18,17 +18,13 @@
         .progress-bar { transition: width 0.3s linear; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center overflow-x-hidden">
-
-    <header class="w-full max-w-md p-4 text-center">
-        <h1 class="text-2xl font-bold text-slate-800">Càlcul mental</h1>
-    </header>
+<body class="min-h-screen flex flex-col items-center overflow-x-hidden pt-2">
 
     <nav id="controls" class="w-full max-w-md px-4 pb-2 flex flex-col gap-2">
         <div class="flex gap-2">
             <select id="game-mode" onchange="updateSubModes(); resetGame();" class="flex-1 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600">
-                <option value="goal">Mode Repte (Ops)</option>
-                <option value="timed">Mode Cronometrat / Lliure</option>
+                <option value="goal">Mode Repte</option>
+                <option value="timed">Temps / Lliure</option>
             </select>
             <select id="op-type" onchange="resetGame()" class="w-20 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 text-center text-slate-600">
                 <option value="sum">+</option>
@@ -50,7 +46,7 @@
         </div>
     </div>
 
-    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[220px] justify-center text-center">
+    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[200px] justify-center text-center">
         <div id="game-ui">
             <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center justify-center gap-3 tracking-tighter">
                 <span id="num1">0</span>
@@ -64,7 +60,7 @@
         <div id="win-ui" class="hidden">
             <h2 id="win-title" class="text-3xl font-bold text-green-500 mb-2">🎉 Completat!</h2>
             <p id="win-stats" class="text-slate-500 mb-6 font-medium uppercase text-xs tracking-widest"></p>
-            <button onclick="resetGame()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 uppercase tracking-tighter">Torna a jugar</button>
+            <button onclick="resetGame()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 uppercase tracking-tighter">Jugar de nou</button>
         </div>
     </main>
 
@@ -96,9 +92,9 @@
             subModeSelect.innerHTML = '';
             if (gameModeSelect.value === 'goal') {
                 const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
-                subModeSelect.appendChild(opt("10", "Fàcil (10 operacions)"));
-                subModeSelect.appendChild(opt("25", "Mitjà (25 operacions)"));
-                subModeSelect.appendChild(opt("50", "Difícil (50 operacions)"));
+                subModeSelect.appendChild(opt("10", "Repte de 10 operacions"));
+                subModeSelect.appendChild(opt("25", "Repte de 25 operacions"));
+                subModeSelect.appendChild(opt("50", "Repte de 50 operacions"));
             } else {
                 const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
                 subModeSelect.appendChild(opt("60", "1 Minut"));
@@ -161,7 +157,7 @@
                 fill.style.width = `${(solved / goal) * 100}%`;
                 labelR.innerText = `${solved}/${goal}`;
             } else if (subModeSelect.value === 'free') {
-                labelL.innerText = "Operacions";
+                labelL.innerText = "Fet";
                 fill.style.width = `100%`;
                 labelR.innerText = `${solved}`;
             } else {
