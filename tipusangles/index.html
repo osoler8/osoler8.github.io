@@ -24,10 +24,10 @@
     }
 
     #ui-panel {
-      width: 280px; /* Una mica més estret */
+      width: 280px;
       background: var(--panel);
       box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-      padding: 1rem; /* Reduït */
+      padding: 1rem;
       display: flex;
       flex-direction: column;
       z-index: 10;
@@ -37,15 +37,10 @@
       flex-grow: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.8rem; /* Més compacte */
+      gap: 0.8rem;
     }
 
-    h2.side-title {
-      font-size: 1.2rem;
-      color: var(--primary);
-      margin: 0;
-      padding-bottom: 5px;
-    }
+    /* Hem eliminat el h2.side-title */
 
     .author {
       font-size: 0.75rem;
@@ -63,12 +58,12 @@
     }
 
     .top-header {
-      padding: 15px; /* Reduït */
+      padding: 15px;
       text-align: center;
     }
 
     h1.main-title {
-      font-size: 2.2rem; /* Una mica més petita */
+      font-size: 2.2rem;
       margin: 0;
       color: var(--text);
       font-weight: 800;
@@ -85,11 +80,12 @@
       background: #f1f5f9;
       padding: 4px;
       border-radius: 8px;
+      margin-bottom: 5px; /* Espai extra sota el selector */
     }
 
     .mode-btn {
       flex: 1;
-      padding: 6px; /* Més compacte */
+      padding: 8px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -103,7 +99,7 @@
 
     .info-box {
       background: #f1f5f9;
-      padding: 0.8rem; /* Reduït */
+      padding: 1rem;
       border-radius: 12px;
       text-align: center;
     }
@@ -116,7 +112,7 @@
     }
 
     .angle-value { 
-      font-size: 2.5rem; /* Més compacte */
+      font-size: 2.8rem; 
       font-weight: 800; 
       color: var(--primary); 
       line-height: 1;
@@ -126,11 +122,11 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-top: 10px; /* Reduït */
+      margin-top: 12px;
     }
 
     .option-btn {
-      padding: 8px; /* Més compacte */
+      padding: 10px;
       border: 1.5px solid var(--border);
       border-radius: 8px;
       background: white;
@@ -141,28 +137,28 @@
       color: var(--text);
     }
 
-    .option-btn:hover { border-color: var(--primary); }
+    .option-btn:hover { border-color: var(--primary); background: #f0f7ff; }
 
     .feedback {
-      margin-top: 8px;
+      margin-top: 10px;
       text-align: center;
       font-weight: bold;
       padding: 8px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       border-radius: 8px;
     }
 
     .btn-next {
       width: 100%;
-      margin-top: 8px;
-      padding: 10px;
+      margin-top: 10px;
+      padding: 12px;
       background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -170,8 +166,6 @@
 
   <div id="ui-panel">
     <div class="panel-content">
-      <h2 class="side-title">Tipus d'angles</h2>
-      
       <div class="mode-selector">
         <button id="btn-explora" class="mode-btn active-mode" onclick="setMode('explora')">Explora</button>
         <button id="btn-examen" class="mode-btn" onclick="setMode('examen')">Test</button>
@@ -181,7 +175,7 @@
         <div class="info-box">
           <span class="angle-question">Angle actual</span>
           <span id="valDisplay" class="angle-value">45°</span>
-          <div id="typeDisplay" style="font-weight:600; color:#64748b; margin-top:5px; font-size: 0.9rem;">Agut</div>
+          <div id="typeDisplay" style="font-weight:600; color:#64748b; margin-top:8px; font-size: 1rem;">Agut</div>
         </div>
       </div>
 
@@ -236,7 +230,7 @@
       if (mode === 'explora') {
         if (mouseIsPressed && mouseX > 0) {
           let dx = mouseX - width/2;
-          let dy = mouseY - (height/2); 
+          let dy = mouseY - height/2; 
           currentAngle = floor(atan2(dy, dx));
           if (currentAngle < 0) currentAngle += 360;
           currentAngle = (360 - currentAngle) % 360; 
@@ -248,20 +242,20 @@
       noFill();
       stroke(74, 144, 226, 40);
       strokeWeight(4);
-      arc(0, 0, 120, 120, -currentAngle, 0);
+      arc(0, 0, 140, 140, -currentAngle, 0);
 
       strokeCap(ROUND);
       stroke(30, 41, 59);
       strokeWeight(6);
-      line(0, 0, 180, 0); 
+      line(0, 0, 190, 0); 
 
       push();
       rotate(-currentAngle);
       stroke(245, 158, 11); 
-      line(0, 0, 180, 0);
+      line(0, 0, 190, 0);
       fill(245, 158, 11);
       noStroke();
-      circle(180, 0, 10);
+      circle(190, 0, 10);
       pop();
 
       fill(30, 41, 59);
