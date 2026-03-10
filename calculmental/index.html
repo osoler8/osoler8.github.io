@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
@@ -15,6 +15,7 @@
         @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); border-color: #22c55e; } 100% { transform: scale(1); } }
         .numpad-btn { background: white; border-radius: 12px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold; box-shadow: 0 2px 0px #e2e8f0; border: 1px solid #e2e8f0; transition: all 0.05s; }
         .numpad-btn:active { transform: translateY(2px); box-shadow: none; background: #f1f5f9; }
+        .progress-bar { transition: width 0.3s linear; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center overflow-x-hidden">
@@ -23,174 +24,199 @@
         <h1 class="text-2xl font-bold text-slate-800">Càlcul mental</h1>
     </header>
 
-    <nav class="w-full max-w-md px-4 pb-2 flex gap-2">
-        <select id="difficulty" onchange="resetGame()" class="flex-1 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600">
-            <option value="easy">Fàcil (1-10)</option>
-            <option value="medium" selected>Mitjà (1-25)</option>
-            <option value="hard">Difícil (1-100)</option>
-        </select>
-        <select id="op-type" onchange="resetGame()" class="w-20 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 text-center text-slate-600">
-            <option value="sum">+</option>
-            <option value="sub">-</option>
-            <option value="mul">×</option>
-            <option value="mix">MIX</option>
-        </select>
+    <nav id="controls" class="w-full max-w-md px-4 pb-2 flex flex-col gap-2">
+        <div class="flex gap-2">
+            <select id="game-mode" onchange="updateSubModes(); resetGame();" class="flex-1 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600">
+                <option value="goal">Mode Repte (Ops)</option>
+                <option value="timed">Mode Cronometrat / Lliure</option>
+            </select>
+            <select id="op-type" onchange="resetGame()" class="w-20 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 text-center text-slate-600">
+                <option value="sum">+</option>
+                <option value="sub">-</option>
+                <option value="mul">×</option>
+                <option value="mix">MIX</option>
+            </select>
+        </div>
+        <select id="sub-mode" onchange="resetGame()" class="w-full bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600"></select>
     </nav>
 
-    <div class="w-full max-w-md px-6 flex justify-between items-end mb-2">
-        <div>
-            <span class="block text-[9px] uppercase font-black text-slate-400 tracking-widest">Rècord</span>
-            <span id="high-score" class="text-lg font-bold text-blue-600">0</span>
+    <div class="w-full max-w-md px-6 mb-4">
+        <div class="flex justify-between text-[9px] uppercase font-black text-slate-400 mb-1">
+            <span id="label-left">Progrés</span>
+            <span id="label-right">0/10</span>
         </div>
-        <div class="text-right">
-            <span class="block text-[9px] uppercase font-black text-slate-400 tracking-widest">Ratxa</span>
-            <span id="streak" class="text-lg font-bold text-orange-500">0</span>
+        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div id="progress-fill" class="progress-bar h-full bg-blue-500 w-0"></div>
         </div>
     </div>
 
-    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all">
-        <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center gap-3 tracking-tighter">
-            <span id="num1">0</span>
-            <span id="operator" class="text-blue-500 text-3xl"> + </span>
-            <span id="num2">0</span>
+    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[220px] justify-center text-center">
+        <div id="game-ui">
+            <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center justify-center gap-3 tracking-tighter">
+                <span id="num1">0</span>
+                <span id="operator" class="text-blue-500 text-3xl"> + </span>
+                <span id="num2">0</span>
+            </div>
+            <input type="number" id="answer" readonly class="w-full text-center text-4xl font-bold bg-slate-50 rounded-xl py-3 border-none focus:outline-none" placeholder="?">
+            <div id="feedback" class="mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em]"></div>
         </div>
 
-        <div class="w-full">
-            <input type="number" id="answer" readonly
-                class="w-full text-center text-4xl font-bold bg-slate-50 rounded-xl py-3 border-none focus:outline-none placeholder-slate-200"
-                placeholder="?">
+        <div id="win-ui" class="hidden">
+            <h2 id="win-title" class="text-3xl font-bold text-green-500 mb-2">🎉 Completat!</h2>
+            <p id="win-stats" class="text-slate-500 mb-6 font-medium uppercase text-xs tracking-widest"></p>
+            <button onclick="resetGame()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 uppercase tracking-tighter">Torna a jugar</button>
         </div>
-        
-        <div id="feedback" class="mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em]"></div>
     </main>
 
-    <div class="w-full max-w-md grid grid-cols-3 gap-2 px-6 mb-4">
-        <button class="numpad-btn text-slate-700" onclick="addNum(1)">1</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(2)">2</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(3)">3</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(4)">4</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(5)">5</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(6)">6</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(7)">7</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(8)">8</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(9)">9</button>
-        <button class="numpad-btn text-red-500 bg-red-50/50 border-red-100" onclick="clearNum()">C</button>
-        <button class="numpad-btn text-slate-700" onclick="addNum(0)">0</button>
-        <button class="numpad-btn bg-slate-800 text-white border-slate-800" onclick="checkAnswer()">OK</button>
+    <div id="numpad" class="w-full max-w-md grid grid-cols-3 gap-2 px-6 mb-4">
+        <button class="numpad-btn" onclick="addNum(1)">1</button>
+        <button class="numpad-btn" onclick="addNum(2)">2</button>
+        <button class="numpad-btn" onclick="addNum(3)">3</button>
+        <button class="numpad-btn" onclick="addNum(4)">4</button>
+        <button class="numpad-btn" onclick="addNum(5)">5</button>
+        <button class="numpad-btn" onclick="addNum(6)">6</button>
+        <button class="numpad-btn" onclick="addNum(7)">7</button>
+        <button class="numpad-btn" onclick="addNum(8)">8</button>
+        <button class="numpad-btn" onclick="addNum(9)">9</button>
+        <button class="numpad-btn text-red-500 bg-red-50" onclick="clearNum()">C</button>
+        <button class="numpad-btn" onclick="addNum(0)">0</button>
+        <button class="numpad-btn bg-slate-800 text-white" onclick="checkAnswer()">OK</button>
     </div>
 
     <footer class="mt-auto pb-4">
-        <p class="text-slate-400 text-[10px] font-bold tracking-wide uppercase">
-            Creat per Oriol Soler
-        </p>
+        <p class="text-slate-400 text-[10px] font-bold tracking-wide uppercase">Creat per Oriol Soler</p>
     </footer>
 
     <script>
-        let currentResult = 0;
-        let streak = 0;
-        let highScore = localStorage.getItem('highScore') || 0;
-        
-        const num1El = document.getElementById('num1');
-        const num2El = document.getElementById('num2');
-        const opEl = document.getElementById('operator');
-        const answerInput = document.getElementById('answer');
-        const streakEl = document.getElementById('streak');
-        const highScoreEl = document.getElementById('high-score');
-        const gameCard = document.getElementById('game-container');
-        const feedback = document.getElementById('feedback');
+        let currentResult, solved, goal, timer, timeLeft, isGameActive = false;
+        const subModeSelect = document.getElementById('sub-mode');
+        const gameModeSelect = document.getElementById('game-mode');
 
-        highScoreEl.innerText = highScore;
+        function updateSubModes() {
+            subModeSelect.innerHTML = '';
+            if (gameModeSelect.value === 'goal') {
+                const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
+                subModeSelect.appendChild(opt("10", "Fàcil (10 operacions)"));
+                subModeSelect.appendChild(opt("25", "Mitjà (25 operacions)"));
+                subModeSelect.appendChild(opt("50", "Difícil (50 operacions)"));
+            } else {
+                const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
+                subModeSelect.appendChild(opt("60", "1 Minut"));
+                subModeSelect.appendChild(opt("120", "2 Minuts"));
+                subModeSelect.appendChild(opt("300", "5 Minuts"));
+                subModeSelect.appendChild(opt("free", "Mode Lliure (Sense temps)"));
+            }
+        }
 
         function generateOperation() {
-            const diff = document.getElementById('difficulty').value;
             const type = document.getElementById('op-type').value;
-            let max = diff === 'easy' ? 10 : (diff === 'medium' ? 25 : 100);
-            
-            let n1 = Math.floor(Math.random() * max) + 1;
-            let n2 = Math.floor(Math.random() * max) + 1;
-            
+            let n1 = Math.floor(Math.random() * 20) + 1;
+            let n2 = Math.floor(Math.random() * 20) + 1;
             let ops = ['+', '-', '*'];
-            let currentOp = type === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : 
-                           (type === 'sum' ? '+' : (type === 'sub' ? '-' : '*'));
-
+            let currentOp = type === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (type === 'sum' ? '+' : (type === 'sub' ? '-' : '*'));
             if (currentOp === '-' && n1 < n2) [n1, n2] = [n2, n1];
-            if (currentOp === '*' && diff === 'hard') { n1 = Math.floor(Math.random() * 20) + 1; n2 = Math.floor(Math.random() * 12) + 1; }
-            
-            num1El.innerText = n1;
-            num2El.innerText = n2;
-            opEl.innerText = currentOp === '*' ? '×' : (currentOp === '-' ? '−' : '+');
-            
+            if (currentOp === '*') { n1 = Math.floor(Math.random() * 12) + 1; n2 = Math.floor(Math.random() * 10) + 1; }
+            document.getElementById('num1').innerText = n1;
+            document.getElementById('num2').innerText = n2;
+            document.getElementById('operator').innerText = currentOp === '*' ? '×' : (currentOp === '-' ? '−' : '+');
             currentResult = eval(`${n1} ${currentOp} ${n2}`);
-            answerInput.value = '';
-            feedback.innerText = "";
-        }
-
-        function addNum(n) {
-            if (answerInput.value.length < 5) answerInput.value += n;
-        }
-
-        function clearNum() {
-            answerInput.value = '';
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').innerText = "";
         }
 
         function checkAnswer() {
-            if (answerInput.value === "") return;
-            const userAns = parseInt(answerInput.value);
-            
+            if (!isGameActive) return;
+            const userAns = parseInt(document.getElementById('answer').value);
+            if (isNaN(userAns)) return;
+
             if (userAns === currentResult) {
-                streak++;
-                if (streak > highScore) {
-                    highScore = streak;
-                    localStorage.setItem('highScore', highScore);
-                    highScoreEl.innerText = highScore;
+                solved++;
+                updateProgress();
+                if (gameModeSelect.value === 'goal' && solved >= goal) {
+                    endGame();
+                } else {
+                    document.getElementById('feedback').innerText = "Molt bé!";
+                    document.getElementById('feedback').className = "mt-2 h-4 text-[10px] font-black text-green-500";
+                    document.getElementById('game-container').classList.add('correct-pop');
+                    setTimeout(() => {
+                        document.getElementById('game-container').classList.remove('correct-pop');
+                        generateOperation();
+                    }, 300);
                 }
-                
-                feedback.innerText = "Molt bé!";
-                feedback.className = "mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em] text-green-600";
-                gameCard.classList.add('correct-pop', 'border-green-200');
-                
-                setTimeout(() => {
-                    gameCard.classList.remove('correct-pop', 'border-green-200');
-                    generateOperation();
-                }, 400);
             } else {
-                streak = 0;
-                feedback.innerText = "Incorrecte!";
-                feedback.className = "mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em] text-red-500";
-                gameCard.classList.add('shake', 'border-red-200');
-                answerInput.classList.add('text-red-500');
-                setTimeout(() => {
-                    gameCard.classList.remove('shake', 'border-red-200');
-                    answerInput.classList.remove('text-red-500');
-                    clearNum();
-                }, 400);
+                document.getElementById('feedback').innerText = "Incorrecte!";
+                document.getElementById('feedback').className = "mt-2 h-4 text-[10px] font-black text-red-500";
+                document.getElementById('game-container').classList.add('shake');
+                setTimeout(() => { document.getElementById('game-container').classList.remove('shake'); clearNum(); }, 400);
             }
-            streakEl.innerText = streak;
+        }
+
+        function updateProgress() {
+            const fill = document.getElementById('progress-fill');
+            const labelR = document.getElementById('label-right');
+            const labelL = document.getElementById('label-left');
+
+            if (gameModeSelect.value === 'goal') {
+                labelL.innerText = "Progrés";
+                fill.style.width = `${(solved / goal) * 100}%`;
+                labelR.innerText = `${solved}/${goal}`;
+            } else if (subModeSelect.value === 'free') {
+                labelL.innerText = "Operacions";
+                fill.style.width = `100%`;
+                labelR.innerText = `${solved}`;
+            } else {
+                labelL.innerText = "Temps";
+                fill.style.width = `${(timeLeft / goal) * 100}%`;
+                labelR.innerText = `${timeLeft}s`;
+            }
+        }
+
+        function endGame() {
+            isGameActive = false;
+            clearInterval(timer);
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('win-ui').classList.remove('hidden');
+            document.getElementById('win-stats').innerText = `Has resolt ${solved} operacions`;
         }
 
         function resetGame() {
-            streak = 0;
-            streakEl.innerText = streak;
+            clearInterval(timer);
+            if (!event || event.target.id !== 'sub-mode') updateSubModes();
+            isGameActive = true;
+            solved = 0;
+            const modeVal = subModeSelect.value;
+            
+            document.getElementById('game-ui').classList.remove('hidden');
+            document.getElementById('win-ui').classList.add('hidden');
+            
+            if (modeVal === 'free') {
+                goal = Infinity;
+            } else {
+                goal = parseInt(modeVal);
+                timeLeft = goal;
+                if (gameModeSelect.value === 'timed') {
+                    timer = setInterval(() => {
+                        timeLeft--;
+                        updateProgress();
+                        if (timeLeft <= 0) endGame();
+                    }, 1000);
+                }
+            }
+            updateProgress();
             generateOperation();
         }
 
-        // CONTROL DE TECLAT FÍSIC
+        function addNum(n) { if(isGameActive) document.getElementById('answer').value += n; }
+        function clearNum() { document.getElementById('answer').value = ''; }
+
         window.addEventListener('keydown', (e) => {
-            // Números
-            if (e.key >= '0' && e.key <= '9') {
-                addNum(e.key);
-            }
-            // Esborrar
-            if (e.key === 'Backspace' || e.key === 'Delete') {
-                clearNum();
-            }
-            // Enviar amb Enter
-            if (e.key === 'Enter') {
-                checkAnswer();
-            }
+            if (e.key >= '0' && e.key <= '9') addNum(e.key);
+            if (e.key === 'Backspace') clearNum();
+            if (e.key === 'Enter') checkAnswer();
         });
 
-        generateOperation();
+        updateSubModes();
+        resetGame();
     </script>
 </body>
 </html>
