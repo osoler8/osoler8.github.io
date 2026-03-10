@@ -47,6 +47,16 @@
     </div>
 
     <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[200px] justify-center text-center">
+        
+        <div id="start-ui" class="hidden">
+            <h2 class="text-xl font-black text-slate-400 uppercase tracking-widest mb-4">Preparat?</h2>
+            <button onclick="startGame()" class="bg-blue-500 text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-blue-200 hover:scale-105 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 ml-1" viewBox="0 0 16 16">
+                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                </svg>
+            </button>
+        </div>
+
         <div id="game-ui">
             <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center justify-center gap-3 tracking-tighter">
                 <span id="num1">0</span>
@@ -167,6 +177,20 @@
             }
         }
 
+        function startGame() {
+            document.getElementById('start-ui').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            isGameActive = true;
+            if (gameModeSelect.value === 'timed' && subModeSelect.value !== 'free') {
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateProgress();
+                    if (timeLeft <= 0) endGame();
+                }, 1000);
+            }
+            generateOperation();
+        }
+
         function endGame() {
             isGameActive = false;
             clearInterval(timer);
@@ -178,28 +202,28 @@
         function resetGame() {
             clearInterval(timer);
             if (!event || event.target.id !== 'sub-mode') updateSubModes();
-            isGameActive = true;
+            
             solved = 0;
             const modeVal = subModeSelect.value;
             
-            document.getElementById('game-ui').classList.remove('hidden');
             document.getElementById('win-ui').classList.add('hidden');
             
-            if (modeVal === 'free') {
-                goal = Infinity;
-            } else {
+            if (gameModeSelect.value === 'timed' && modeVal !== 'free') {
+                // Necessita botó Play
+                isGameActive = false;
                 goal = parseInt(modeVal);
                 timeLeft = goal;
-                if (gameModeSelect.value === 'timed') {
-                    timer = setInterval(() => {
-                        timeLeft--;
-                        updateProgress();
-                        if (timeLeft <= 0) endGame();
-                    }, 1000);
-                }
+                document.getElementById('game-ui').classList.add('hidden');
+                document.getElementById('start-ui').classList.remove('hidden');
+            } else {
+                // Comença directe
+                isGameActive = true;
+                document.getElementById('start-ui').classList.add('hidden');
+                document.getElementById('game-ui').classList.remove('hidden');
+                goal = modeVal === 'free' ? Infinity : parseInt(modeVal);
+                generateOperation();
             }
             updateProgress();
-            generateOperation();
         }
 
         function addNum(n) { if(isGameActive) document.getElementById('answer').value += n; }
@@ -208,7 +232,10 @@
         window.addEventListener('keydown', (e) => {
             if (e.key >= '0' && e.key <= '9') addNum(e.key);
             if (e.key === 'Backspace') clearNum();
-            if (e.key === 'Enter') checkAnswer();
+            if (e.key === 'Enter') {
+                if (!isGameActive && !document.getElementById('start-ui').classList.contains('hidden')) startGame();
+                else checkAnswer();
+            }
         });
 
         updateSubModes();
