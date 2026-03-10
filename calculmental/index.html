@@ -2,166 +2,180 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Càlcul Mental</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Càlcul Mental Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #f0f2f5; touch-action: manipulation; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+        .correct-pop { animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); color: #22c55e; } 100% { transform: scale(1); } }
+        .numpad-btn { background: white; border-radius: 12px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); active: transform: scale(0.95); transition: all 0.1s; }
+        .numpad-btn:active { background: #e2e8f0; transform: scale(0.95); }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1><a href="index.html">Càlcul mental</a></h1>
-            <p>Entrena la teva ment amb exercicis de matemàtiques</p>
-        </header>
+<body class="min-h-screen flex flex-col items-center p-4">
 
-        <main>
-            <!-- Configuració del joc -->
-            <div id="config-panel" class="panel">
-                <h2>Configuració</h2>
-                
-                <div class="config-group">
-                    <label>Mode de joc:</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="gameMode" value="timed" checked>
-                            <span>Cronometrat</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="gameMode" value="free">
-                            <span>Lliure</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="config-group" id="duration-group">
-                    <label>Duració:</label>
-                    <div class="button-group" id="duration-button-group">
-                        <button class="option-button" data-value="30">⚡ 30s</button>
-                        <button class="option-button active" data-value="60">⏱️ 1min</button>
-                        <button class="option-button" data-value="120">⏰ 2min</button>
-                        <button class="option-button" data-value="300">🕐 5min</button>
-                    </div>
-                </div>
-
-                <div class="config-group">
-                    <label>Dificultat:</label>
-                    <div class="button-group" id="difficulty-group">
-                        <button class="option-button" data-value="easy">🟢 Fàcil (1-10)</button>
-                        <button class="option-button active" data-value="medium">🟡 Mitjà (1-50)</button>
-                        <button class="option-button" data-value="hard">🔴 Difícil (1-100)</button>
-                    </div>
-                </div>
-
-                <div class="config-group">
-                    <label>Operació:</label>
-                    <div class="button-group" id="operation-group">
-                        <button class="option-button" data-value="addition">➕ Suma</button>
-                        <button class="option-button" data-value="subtraction">➖ Resta</button>
-                        <button class="option-button" data-value="multiplication">✖️ Multiplicació</button>
-                        <button class="option-button" data-value="division">➗ Divisió</button>
-                        <button class="option-button active" data-value="mixed">🎲 Barrejat</button>
-                    </div>
-                </div>
-
-                <button id="start-btn" class="btn btn-primary">Començar Joc</button>
+    <header class="w-full max-w-md flex justify-between items-center mb-6">
+        <div class="text-left">
+            <h1 class="text-2xl font-bold text-slate-800">Càlcul Mental</h1>
+            <p class="text-sm text-slate-500">Supera el teu límit</p>
+        </div>
+        <div class="flex gap-4">
+            <div class="text-center">
+                <span class="block text-xs uppercase font-bold text-slate-400">Rècord</span>
+                <span id="high-score" class="text-xl font-bold text-blue-600">0</span>
             </div>
-
-            <!-- Joc actiu -->
-            <div id="game-panel" class="panel hidden">
-                <div class="game-header">
-                    <div class="timer-container">
-                        <span id="timer">--:--</span>
-                    </div>
-                    <div class="score-container">
-                        <span>Puntuació: <span id="score">0</span></span>
-                        <div class="combo-indicator" id="combo-indicator">
-                            <span class="combo-text">Combo x<span id="combo-multiplier">1</span></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="question-container">
-                    <div class="question-wrapper">
-                        <div id="question" class="question">Carregant...</div>
-                        <div class="question-number">Pregunta <span id="question-counter">1</span></div>
-                    </div>
-                    <input type="number" id="answer-input" placeholder="Resposta" autocomplete="off">
-                    <div class="button-group">
-                        <button id="submit-btn" class="btn btn-primary">
-                            <span class="btn-text">Enviar</span>
-                            <span class="btn-icon">✓</span>
-                        </button>
-                        <button id="skip-btn" class="btn btn-secondary">
-                            <span class="btn-text">Saltar</span>
-                            <span class="btn-icon">⏭</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="feedback" id="feedback"></div>
-                
-                <!-- Efectes visuals -->
-                <div id="particles-container" class="particles-container"></div>
-                <div id="floating-points" class="floating-points"></div>
-                
-                <button id="stop-btn" class="btn btn-danger">Aturar Joc</button>
+            <div class="text-center">
+                <span class="block text-xs uppercase font-bold text-slate-400">Ratxa</span>
+                <span id="streak" class="text-xl font-bold text-orange-500">0</span>
             </div>
+        </div>
+    </header>
 
-            <!-- Resultats -->
-            <div id="results-panel" class="panel hidden">
-                <h2>🏆 Resultats</h2>
-                <div id="results-content"></div>
-                
-                <!-- Medalles obtingudes -->
-                <div id="earned-medals" class="earned-medals"></div>
-                
-                <!-- Progressió de nivell -->
-                <div id="level-up-notification" class="level-up-notification hidden">
-                    <div class="level-up-content">
-                        <h3>🎉 Felicitats!</h3>
-                        <p>Has pujat de nivell!</p>
-                    </div>
-                </div>
-                
-                <div class="results-actions">
-                    <button id="play-again-btn" class="btn btn-primary">
-                        <span class="btn-text">Jugar de Nou</span>
-                        <span class="btn-icon">🎮</span>
-                    </button>
-                    <button id="share-btn" class="btn btn-secondary">
-                        <span class="btn-text">Compartir</span>
-                        <span class="btn-icon">📤</span>
-                    </button>
-                </div>
-            </div>
-        </main>
+    <main id="game-container" class="w-full max-w-md glass rounded-3xl p-8 shadow-xl mb-6 flex flex-col items-center">
+        <div id="operation-container" class="text-5xl font-bold text-slate-700 mb-8 flex items-center gap-4">
+            <span id="num1">?</span>
+            <span id="operator" class="text-blue-500">+</span>
+            <span id="num2">?</span>
+        </div>
 
-        <footer>
-            <!-- Perfil de l'usuari -->
-            <div id="user-profile" class="user-profile hidden">
-                <div class="level-info">
-                    <span class="level-badge">Nivell <span id="user-level">1</span></span>
-                    <div class="xp-bar">
-                        <div class="xp-fill" id="xp-fill"></div>
-                        <span class="xp-text"><span id="current-xp">0</span> / <span id="next-level-xp">100</span> XP</span>
-                    </div>
-                </div>
-                <div class="achievements">
-                    <div class="achievement-badge" id="streak-badge" title="Ratxa actual">
-                        🔥 <span id="streak-count">0</span>
-                    </div>
-                    <div class="achievement-badge" id="total-score-badge" title="Puntuació total">
-                        ⭐ <span id="total-score">0</span>
-                    </div>
-                </div>
-            </div>
-            
-            <p>
-                Càlcul mental © 2025 Oriol Soler. 
-                Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank" rel="noopener">AGPL v3</a>
-            </p>
-        </footer>
+        <div class="w-full relative mb-4">
+            <input type="number" id="answer" readonly
+                class="w-full text-center text-4xl font-bold bg-slate-100 rounded-2xl py-4 border-2 border-transparent focus:outline-none transition-all"
+                placeholder="?">
+        </div>
+        
+        <div id="feedback" class="h-6 text-sm font-bold uppercase tracking-wider"></div>
+    </main>
+
+    <div class="w-full max-w-md grid grid-cols-3 gap-3 mb-4">
+        <button class="numpad-btn" onclick="addNum(1)">1</button>
+        <button class="numpad-btn" onclick="addNum(2)">2</button>
+        <button class="numpad-btn" onclick="addNum(3)">3</button>
+        <button class="numpad-btn" onclick="addNum(4)">4</button>
+        <button class="numpad-btn" onclick="addNum(5)">5</button>
+        <button class="numpad-btn" onclick="addNum(6)">6</button>
+        <button class="numpad-btn" onclick="addNum(7)">7</button>
+        <button class="numpad-btn" onclick="addNum(8)">8</button>
+        <button class="numpad-btn" onclick="addNum(9)">9</button>
+        <button class="numpad-btn text-red-500" onclick="clearNum()">C</button>
+        <button class="numpad-btn" onclick="addNum(0)">0</button>
+        <button class="numpad-btn bg-blue-500 text-white" onclick="checkAnswer()">OK</button>
     </div>
 
-    <script src="script.js"></script>
+    <footer class="w-full max-w-md flex justify-center gap-2">
+        <select id="difficulty" onchange="resetGame()" class="bg-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm outline-none">
+            <option value="easy">Fàcil (1-10)</option>
+            <option value="medium" selected>Mitjà (1-25)</option>
+            <option value="hard">Difícil (1-100)</option>
+        </select>
+        <select id="op-type" onchange="resetGame()" class="bg-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm outline-none">
+            <option value="sum">+</option>
+            <option value="sub">-</option>
+            <option value="mul">×</option>
+            <option value="mix">Mix</option>
+        </select>
+    </footer>
+
+    <script>
+        let currentResult = 0;
+        let streak = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        
+        const num1El = document.getElementById('num1');
+        const num2El = document.getElementById('num2');
+        const opEl = document.getElementById('operator');
+        const answerInput = document.getElementById('answer');
+        const streakEl = document.getElementById('streak');
+        const highScoreEl = document.getElementById('high-score');
+        const gameCard = document.getElementById('game-container');
+        const feedback = document.getElementById('feedback');
+
+        highScoreEl.innerText = highScore;
+
+        function generateOperation() {
+            const diff = document.getElementById('difficulty').value;
+            const type = document.getElementById('op-type').value;
+            let max = diff === 'easy' ? 10 : (diff === 'medium' ? 25 : 100);
+            
+            let n1 = Math.floor(Math.random() * max) + 1;
+            let n2 = Math.floor(Math.random() * max) + 1;
+            
+            let ops = ['+', '-', '*'];
+            let currentOp = type === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : 
+                           (type === 'sum' ? '+' : (type === 'sub' ? '-' : '*'));
+
+            // Evitar resultats negatius en la resta
+            if (currentOp === '-' && n1 < n2) [n1, n2] = [n2, n1];
+            
+            num1El.innerText = n1;
+            num2El.innerText = n2;
+            opEl.innerText = currentOp === '*' ? '×' : currentOp;
+            
+            currentResult = eval(`${n1} ${currentOp} ${n2}`);
+            answerInput.value = '';
+        }
+
+        function addNum(n) {
+            if (answerInput.value.length < 5) answerInput.value += n;
+        }
+
+        function clearNum() {
+            answerInput.value = '';
+        }
+
+        function checkAnswer() {
+            const userAns = parseInt(answerInput.value);
+            
+            if (userAns === currentResult) {
+                // Correcte
+                streak++;
+                if (streak > highScore) {
+                    highScore = streak;
+                    localStorage.setItem('highScore', highScore);
+                    highScoreEl.innerText = highScore;
+                }
+                
+                feedback.innerText = "Molt bé!";
+                feedback.className = "h-6 text-sm font-bold uppercase tracking-wider text-green-500";
+                gameCard.classList.add('correct-pop');
+                setTimeout(() => gameCard.classList.remove('correct-pop'), 300);
+                
+                generateOperation();
+            } else {
+                // Error
+                streak = 0;
+                feedback.innerText = "Torna-ho a provar!";
+                feedback.className = "h-6 text-sm font-bold uppercase tracking-wider text-red-500";
+                gameCard.classList.add('shake');
+                answerInput.classList.add('text-red-500');
+                setTimeout(() => {
+                    gameCard.classList.remove('shake');
+                    answerInput.classList.remove('text-red-500');
+                    clearNum();
+                }, 400);
+            }
+            streakEl.innerText = streak;
+        }
+
+        function resetGame() {
+            streak = 0;
+            streakEl.innerText = streak;
+            generateOperation();
+        }
+
+        // Suport per a teclat físic
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= 0 && e.key <= 9) addNum(e.key);
+            if (e.key === 'Backspace') clearNum();
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        generateOperation();
+    </script>
 </body>
 </html>
