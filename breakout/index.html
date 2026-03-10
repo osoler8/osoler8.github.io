@@ -55,7 +55,7 @@
     <div id="s-start" class="screen active">
         <h1 style="color: var(--accent)">👨‍🚀 MISSIÓ PLANETÀRIA</h1>
         <p><b>Comandant Mr. Math:</b> "La nau s'apaga!<br>
-        Tens 3 intents per desxifrar els 10 codis de seguretat. Si falles 3 vegades, la missió fracassarà."</p>
+        Tens 3 intents per desxifrar els 10 codis de seguretat."</p>
         
         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin: 20px 0; text-align: left;">
             <p style="text-align: center; font-weight: bold;">Protocols de reparació:</p>
@@ -63,14 +63,14 @@
                 <label><input type="checkbox" class="topic" value="p" checked> 🔋 Potències</label>
                 <label><input type="checkbox" class="topic" value="a" checked> 📐 Arrels</label>
                 <label><input type="checkbox" class="topic" value="b"> 🚀 Base 10</label>
-                <label><input type="checkbox" class="topic" value="c" checked> ⚙️ Combinades</label>
+                <label><input type="checkbox" class="topic" value="c" checked> ⚙️ Operacions combinades</label>
             </div>
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button class="btn-diff" style="background:#2ecc71" onclick="init('easy')">CADET</button>
-            <button class="btn-diff" style="background:#f1c40f; color:black" onclick="init('medium')">PILOT</button>
-            <button class="btn-diff" style="background:#e74c3c" onclick="init('hard')">COMANDANT</button>
+            <button class="btn-diff" style="background:#2ecc71" onclick="init('easy')">CADET (fàcil)</button>
+            <button class="btn-diff" style="background:#f1c40f; color:black" onclick="init('medium')">PILOT (intermig)</button>
+            <button class="btn-diff" style="background:#e74c3c" onclick="init('hard')">COMANDANT (difícil)</button>
         </div>
     </div>
 
@@ -81,7 +81,7 @@
         <div class="math-display" id="problem"></div>
 
         <div class="help-container">
-            <button class="help-btn" onclick="toggleHelp()">❓ MANUAL D'EMERGÈNCIA (PEMDAS)</button>
+            <button class="help-btn" onclick="toggleHelp()">❓ MANUAL D'EMERGÈNCIA (OPERACIONS)</button>
             <div id="helpContent" class="help-content">
                 <div class="h-step h1"><span>1. ( )</span> <span>Parèntesis</span></div>
                 <div class="h-step h2"><span>2. Potència / √</span> <span>Arrel</span></div>
@@ -165,7 +165,7 @@
         let m = document.getElementById('msg');
         if(v === curA) {
             step++;
-            m.innerText = "✅ SISTEMA OK!"; m.style.color = "var(--success)";
+            m.innerText = "✅ MOLT BÉ! SEGUIM!"; m.style.color = "var(--success)";
             if(step < total) setTimeout(gen, 600);
             else {
                 clearInterval(timer);
