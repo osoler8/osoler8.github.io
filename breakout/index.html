@@ -39,7 +39,7 @@
         .progress-bar { width: 100%; height: 8px; background: #1a2430; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success); width: 0%; transition: 0.4s; }
 
-        .btn-diff { flex: 1; padding: 15px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; color: white; }
+        .btn-diff { flex: 1; padding: 15px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
         footer { margin-top: 20px; color: #4a5568; font-size: 0.85em; }
     </style>
 </head>
@@ -53,8 +53,9 @@
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
     <div id="s-start" class="screen active">
-        <h1 style="color: var(--accent)">👨‍🚀 MISSIÓ ESCAPE ROOM</h1>
-        <p><b>Comandant Mr. Math:</b> "La nau s'apaga! Tens 3 intents per desxifrar els 10 codis de seguretat. Si falles 3 vegades, la missió fracassarà."</p>
+        <h1 style="color: var(--accent)">👨‍🚀 MISSIÓ PLANETÀRIA</h1>
+        <p><b>Comandant Mr. Math:</b> "La nau s'apaga!<br>
+        Tens 3 intents per desxifrar els 10 codis de seguretat. Si falles 3 vegades, la missió fracassarà."</p>
         
         <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin: 20px 0; text-align: left;">
             <p style="text-align: center; font-weight: bold;">Protocols de reparació:</p>
@@ -82,7 +83,6 @@
         <div class="help-container">
             <button class="help-btn" onclick="toggleHelp()">❓ MANUAL D'EMERGÈNCIA (PEMDAS)</button>
             <div id="helpContent" class="help-content">
-                
                 <div class="h-step h1"><span>1. ( )</span> <span>Parèntesis</span></div>
                 <div class="h-step h2"><span>2. Potència / √</span> <span>Arrel</span></div>
                 <div class="h-step h3"><span>3. × / ÷</span> <span>Multiplicació / Divisió</span></div>
@@ -128,6 +128,7 @@
         document.getElementById('s-game').classList.add('active');
         document.getElementById('timer').style.display = 'block';
         document.getElementById('live-display').style.display = 'block';
+        updateLives();
         timer = setInterval(() => { sec++; document.getElementById('timer').innerText = `🕒 ${sec}s`; }, 1000);
         gen();
     }
