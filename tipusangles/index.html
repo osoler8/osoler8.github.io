@@ -1,117 +1,246 @@
 <!DOCTYPE html>
 <html lang="ca">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tipus d'angles</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tipus d'angles</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    :root {
+      --primary: #4a90e2;
+      --success: #48bb78;
+      --error: #f56565;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --text: #1e293b;
+    }
+
+    body {
+      margin: 0; padding: 0;
+      display: flex;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background-color: var(--bg);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #ui-panel {
+      width: 320px;
+      background: var(--panel);
+      box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      z-index: 10;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 5px;
+      background: #f1f5f9;
+      padding: 5px;
+      border-radius: 10px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .active-mode { background: var(--primary); color: white; }
+
+    .info-box {
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .angle-value { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
+    
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    .option-btn:hover { border-color: var(--primary); background: #f0f7ff; }
+    
+    .feedback {
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      margin-top: 10px;
+    }
+
+    #canvas-container {
+      flex-grow: 1;
+      position: relative;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-        <h1>Tipus d'angles</h1>
-        <p>Amb aquest joc aprendràs a diferenciar-los!</p>
-    </header>
 
-        <div id="setup-screen" class="screen active">
-            <div class="angle-selection">
-                <h2>Selecciona els tipus d'angles:</h2>
-                
-                <div class="angle-options">
-                    <div class="angle-group obligatory">
-                        <h3>Obligatoris:</h3>
-                        <label class="angle-option">
-                            <input type="checkbox" id="agut" value="agut" checked disabled>
-                            <span class="checkmark"></span>
-                            <span class="angle-name">Angle Agut (0° - 90°)</span>
-                        </label>
-                        
-                        <label class="angle-option">
-                            <input type="checkbox" id="recte" value="recte" checked disabled>
-                            <span class="checkmark"></span>
-                            <span class="angle-name">Angle Recte (90°)</span>
-                        </label>
-                        
-                        <label class="angle-option">
-                            <input type="checkbox" id="obtus" value="obtus" checked disabled>
-                            <span class="checkmark"></span>
-                            <span class="angle-name">Angle Obtús (90° - 180°)</span>
-                        </label>
-                    </div>
-
-                    <div class="angle-group optional">
-                        <h3>Addicionals:</h3>
-                        <label class="angle-option">
-                            <input type="checkbox" id="pla" value="pla">
-                            <span class="checkmark"></span>
-                            <span class="angle-name">Angle Pla (180°)</span>
-                        </label>
-                        
-                        <label class="angle-option">
-                            <input type="checkbox" id="complet" value="complet">
-                            <span class="checkmark"></span>
-                            <span class="angle-name">Angle Complet (360°)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <button id="start-game" class="btn-primary">Començar Joc</button>
-            </div>
-        </div>
-
-        <div id="game-screen" class="screen">
-            <div class="game-header">
-                <div class="score-section">
-                    <div class="main-score">
-                        <span class="score-label">Puntuació:</span>
-                        <span id="total-score" class="score-value">0</span>
-                    </div>
-                    <div class="stats">
-                        <span class="stat-item correct">✅ <span id="correct-count">0</span></span>
-                        <span class="stat-item incorrect">❌ <span id="incorrect-count">0</span></span>
-                        <span class="stat-item streak">🔥 <span id="streak-count">0</span></span>
-                    </div>
-                </div>
-                <button id="back-to-setup" class="btn-secondary">Tornar a Configuració</button>
-            </div>
-
-            <div class="card-container">
-                <div id="angle-card" class="angle-card">
-                    <div class="angle-display">
-                        <svg id="angle-svg" width="300" height="300" viewBox="0 0 300 300">
-                            <!-- L'angle es dibuixarà aquí -->
-                        </svg>
-                    </div>
-                    
-                    <div class="angle-info">
-                        <p id="angle-degrees"></p>
-                    </div>
-
-                    <div class="answer-options">
-                        <h3>Quin tipus d'angle és?</h3>
-                        <div class="options-grid">
-                            <button class="option-btn" data-type="agut">Agut</button>
-                            <button class="option-btn" data-type="recte">Recte</button>
-                            <button class="option-btn" data-type="obtus">Obtús</button>
-                            <button class="option-btn" data-type="pla">Pla</button>
-                            <button class="option-btn" data-type="complet">Complet</button>
-                        </div>
-                    </div>
-
-                    <div id="feedback" class="feedback hidden">
-                        <p id="feedback-text"></p>
-                        <button id="next-angle" class="btn-primary">Següent Angle</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div id="ui-panel">
+    <h2 style="margin:0; color:var(--primary)">Angles i Geometria</h2>
+    
+    <div class="mode-selector">
+      <button id="btn-explora" class="mode-btn active-mode" onclick="setMode('explora')">Explora</button>
+      <button id="btn-examen" class="mode-btn" onclick="setMode('examen')">Examen</button>
     </div>
 
-    <footer>
-        <p>Tipus d'angles © 2025 Oriol Soler. Llicència del codi: <a href="https://www.gnu.org/licenses/agpl-3.0.ca.html" target="_blank">AGPL v3</a></p>
-    </footer>
+    <div id="panel-explora">
+      <div class="info-box">
+        <span id="valDisplay" class="angle-value">45°</span>
+        <div id="typeDisplay" style="font-weight:600; color:#64748b">Agut</div>
+      </div>
+      <p style="font-size:0.9rem; color:#94a3b8">Mou el ratolí o fes clic al canvas per canviar l'angle.</p>
+    </div>
 
-    <script src="script.js"></script>
+    <div id="panel-examen" style="display:none">
+      <div class="info-box">
+        <span style="display:block; margin-bottom:5px">Quin tipus d'angle és?</span>
+        <div id="target-angle" class="angle-value">?</div>
+      </div>
+      <div class="options-grid">
+        <button class="option-btn" onclick="checkAnswer('Nul')">Nul</button>
+        <button class="option-btn" onclick="checkAnswer('Agut')">Agut</button>
+        <button class="option-btn" onclick="checkAnswer('Recte')">Recte</button>
+        <button class="option-btn" onclick="checkAnswer('Obtús')">Obtús</button>
+        <button class="option-btn" onclick="checkAnswer('Plà')">Plà</button>
+        <button class="option-btn" onclick="checkAnswer('Còncau')">Còncau</button>
+        <button class="option-btn" onclick="checkAnswer('Complet')">Complet</button>
+      </div>
+      <div id="feedback" class="feedback"></div>
+      <button id="next-btn" style="display:none; width:100%; margin-top:10px; padding:10px; background:var(--primary); color:white; border:none; border-radius:8px; cursor:pointer" onclick="newQuestion()">Següent</button>
+    </div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    let currentAngle = 45;
+    let mode = 'explora'; // 'explora' o 'examen'
+    let targetType = '';
+
+    function setup() {
+      let container = document.getElementById('canvas-container');
+      let cnv = createCanvas(container.offsetWidth, container.offsetHeight);
+      cnv.parent('canvas-container');
+      angleMode(DEGREES);
+    }
+
+    function draw() {
+      background(248, 250, 252);
+      
+      if (mode === 'explora') {
+        if (mouseIsPressed && mouseX > 0) {
+          let dx = mouseX - width/2;
+          let dy = mouseY - height/2;
+          currentAngle = floor(atan2(dy, dx));
+          if (currentAngle < 0) currentAngle += 360;
+          currentAngle = (360 - currentAngle) % 360; 
+        }
+        updateUI();
+      }
+
+      translate(width/2, height/2);
+      
+      // Arc de mesura
+      noFill();
+      stroke(74, 144, 226, 80);
+      strokeWeight(3);
+      arc(0, 0, 100, 100, -currentAngle, 0);
+
+      // Linies de l'angle
+      strokeCap(ROUND);
+      stroke(30, 41, 59);
+      strokeWeight(6);
+      line(0, 0, 180, 0); // Base
+
+      push();
+      rotate(-currentAngle);
+      stroke(245, 158, 11); // Taronja per la línia mòbil
+      line(0, 0, 180, 0);
+      fill(245, 158, 11);
+      noStroke();
+      circle(180, 0, 12);
+      pop();
+
+      // Vèrtex
+      fill(30, 41, 59);
+      circle(0, 0, 15);
+    }
+
+    function updateUI() {
+      document.getElementById('valDisplay').innerText = currentAngle + "°";
+      document.getElementById('typeDisplay').innerText = getAngleType(currentAngle);
+    }
+
+    function getAngleType(v) {
+      if (v === 0) return "Nul";
+      if (v < 90) return "Agut";
+      if (v === 90) return "Recte";
+      if (v < 180) return "Obtús";
+      if (v === 180) return "Plà";
+      if (v < 360) return "Còncau";
+      return "Complet";
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btn-explora').classList.toggle('active-mode', m === 'explora');
+      document.getElementById('btn-examen').classList.toggle('active-mode', m === 'examen');
+      document.getElementById('panel-explora').style.display = m === 'explora' ? 'block' : 'none';
+      document.getElementById('panel-examen').style.display = m === 'examen' ? 'block' : 'none';
+      if (m === 'examen') newQuestion();
+    }
+
+    function newQuestion() {
+      currentAngle = floor(random(0, 361));
+      targetType = getAngleType(currentAngle);
+      document.getElementById('feedback').style.display = 'none';
+      document.getElementById('next-btn').style.display = 'none';
+      document.getElementById('target-angle').innerText = currentAngle + "°";
+    }
+
+    function checkAnswer(answer) {
+      let f = document.getElementById('feedback');
+      f.style.display = 'block';
+      if (answer === targetType) {
+        f.innerText = "Correcte! 🎉";
+        f.style.background = "#dcfce7";
+        f.style.color = "#166534";
+        document.getElementById('next-btn').style.display = 'block';
+      } else {
+        f.innerText = "Torna-ho a provar...";
+        f.style.background = "#fee2e2";
+        f.style.color = "#991b1b";
+      }
+    }
+
+    function windowResized() {
+      let container = document.getElementById('canvas-container');
+      resizeCanvas(container.offsetWidth, container.offsetHeight);
+    }
+  </script>
 </body>
-
 </html>
+
