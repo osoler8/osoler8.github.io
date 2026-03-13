@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generador WhatsApp • Planificació setmana</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --accent: #58ACA6; }
+    body { font-family: Inter, system-ui, -apple-system, sans-serif; }
+    .card { box-shadow: 0 10px 25px -10px rgba(0,0,0,.15); transition: border-color 0.2s; }
+    .card:focus-within { border-color: var(--accent); }
+    textarea { tab-size: 2; resize: vertical; }
+    .mono { font-variant-ligatures: none; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    /* Estils per als colors dels dies */
+    .day-dl { border-left: 4px solid #3b82f6; } /* Blau */
+    .day-dm { border-left: 4px solid #10b981; } /* Verd */
+    .day-dx { border-left: 4px solid #f59e0b; } /* Taronja */
+    .day-dj { border-left: 4px solid #facc15; } /* Groc */
+    .day-dv { border-left: 4px solid #ec4899; } /* Rosa */
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <header class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Generador de missatge WhatsApp</h1>
+        <p class="text-slate-600 text-sm md:text-base">Planificació setmanal per a centres educatius.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input id="centre" type="text" placeholder="Nom del centre" class="w-full sm:w-72 rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-4 focus:ring-[color:var(--accent)]/30"/>
+        <input id="setmana" type="text" placeholder="Setmana (ex. 8–12 set)" class="w-full sm:w-60 rounded-xl border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-4 focus:ring-[color:var(--accent)]/30"/>
+      </div>
+    </header>
+
+    <section id="days-section" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"></section>
+
+    <div class="card rounded-2xl bg-white p-4 md:p-6 border border-slate-200 flex flex-col gap-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="font-semibold text-lg">Missatge generat</h3>
+        <div class="flex flex-wrap gap-2">
+          <button id="btn-generate" class="rounded-xl px-4 py-2.5 bg-[color:var(--accent)] text-white font-semibold hover:opacity-95 active:scale-95 transition-all">Genera missatge</button>
+          <button id="btn-copy" class="rounded-xl px-4 py-2.5 bg-slate-900 text-white font-semibold hover:opacity-95 active:scale-95 transition-all flex items-center gap-2">
+            <span id="copy-text">Copia</span>
+          </button>
+          <button id="btn-share" class="rounded-xl px-4 py-2.5 bg-green-600 text-white font-semibold hover:opacity-95 active:scale-95 transition-all sm:inline-hidden">Compartir</button>
+          <button id="btn-clear-all" class="rounded-xl px-4 py-2.5 bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-colors">Esborrar tot</button>
+        </div>
+      </div>
+      <textarea id="output" class="mono w-full min-h-[220px] rounded-xl border border-slate-300 p-4 bg-slate-50 focus:bg-white transition-colors" placeholder="El missatge apareixerà aquí..."></textarea>
+    </div>
+  </div>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const daysMeta = [
+      { id: 'dl', label: 'Dilluns', emoji: '📘' },
+      { id: 'dm', label: 'Dimarts', emoji: '📗' },
+      { id: 'dx', label: 'Dimecres', emoji: '📙' },
+      { id: 'dj', label: 'Dijous', emoji: '📒' },
+      { id: 'dv', label: 'Divendres', emoji: '📔' }
+    ];
+
+    // 1. Generar la interfície
+    const daysSection = $('#days-section');
+    daysMeta.forEach(d => {
+      daysSection.insertAdjacentHTML('beforeend', `
+        <div class="card day-${d.id} rounded-2xl bg-white p-4 border border-slate-200">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-slate-800">${d.label} ${d.emoji}</h3>
+            <input type="date" id="date-${d.id}" class="date-input rounded-lg border border-slate-200 px-2 py-1 text-sm focus:ring-2 focus:ring-[color:var(--accent)] outline-none"/>
+          </div>
+          <div class="space-y-2">
+            <textarea id="${d.id}-tasks" rows="3" class="save-state w-full rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm focus:bg-white focus:border-slate-300 outline-none" placeholder="Tasques / substitucions..."></textarea>
+            <textarea id="${d.id}-outings" rows="2" class="save-state w-full rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm focus:bg-white focus:border-slate-300 outline-none" placeholder="🚌 Sortides..."></textarea>
+            <textarea id="${d.id}-extra" rows="1" class="save-state w-full rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm focus:bg-white focus:border-slate-300 outline-none" placeholder="🎉 Altres..."></textarea>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-50">
+            <label class="text-xs text-slate-500 inline-flex items-center gap-1.5 cursor-pointer">
+              <input id="inc-${d.id}" type="checkbox" class="save-state rounded text-[color:var(--accent)]" checked> Incloure
+            </label>
+            <button data-clear="${d.id}" class="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors">Neteja dia</button>
+          </div>
+        </div>
+      `);
+    });
+
+    // 2. Lògica d'emplenat automàtic de dates
+    $('#date-dl').addEventListener('change', (e) => {
+      const startDate = new Date(e.target.value);
+      if (isNaN(startDate)) return;
+      daysMeta.forEach((d, idx) => {
+        if (idx === 0) return;
+        const nextDate = new Date(startDate);
+        nextDate.setDate(startDate.getDate() + idx);
+        $(`#date-${d.id}`).value = nextDate.toISOString().split('T')[0];
+      });
+      saveAll();
+    });
+
+    // 3. Persistència (LocalStorage)
+    function saveAll() {
+      const data = {};
+      document.querySelectorAll('.save-state, .date-input, #centre, #setmana').forEach(el => {
+        data[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      localStorage.setItem('whatsapp_planner_data', JSON.stringify(data));
+    }
+
+    function loadAll() {
+      const data = JSON.parse(localStorage.getItem('whatsapp_planner_data') || '{}');
+      Object.entries(data).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (el.type === 'checkbox') el.checked = val;
+          else el.value = val;
+        }
+      });
+    }
+
+    document.addEventListener('input', saveAll);
+    window.addEventListener('load', loadAll);
+
+    // 4. Lògica de generació de missatge
+    function formatLine(line, icon) {
+      // Millorat per detectar diversos separadors: " - ", " – ", ": ", " / "
+      const parts = line.split(/\s*[-–—:/]\s*(.*)/);
+      if (parts.length >= 2) {
+        return `• ${icon} *${parts[0].trim()}* — ${parts[1].trim()}`;
+      }
+      return `• ${icon} ${line.trim()}`;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const dt = new Date(iso + 'T00:00:00');
+      return dt.toLocaleDateString('ca-ES', { day:'2-digit', month:'short' }).replace('.', '');
+    }
+
+    function buildMessage() {
+      const centre = $('#centre').value.trim();
+      const setmana = $('#setmana').value.trim();
+      let msg = `📢 *Planificació de la propera setmana*\n`;
+      if (centre) msg += `🏫 ${centre}\n`;
+      if (setmana) msg += `📅 ${setmana}\n`;
+      msg += `\n`;
+
+      daysMeta.forEach(d => {
+        if (!$(`#inc-${d.id}`).checked) return;
+        const t = $(`#${d.id}-tasks`).value.split('\n').filter(x => x.trim());
+        const o = $(`#${d.id}-outings`).value.split('\n').filter(x => x.trim());
+        const e = $(`#${d.id}-extra`).value.split('\n').filter(x => x.trim());
+        
+        if (t.length || o.length || e.length) {
+          const dStr = fmtDate($(`#date-${d.id}`).value);
+          msg += `${d.emoji} *${d.label.toUpperCase()}*${dStr ? ` _(${dStr})_` : ''}\n`;
+          t.forEach(l => msg += formatLine(l, '👩‍🏫') + '\n');
+          o.forEach(l => msg += formatLine(l, '🚌') + '\n');
+          e.forEach(l => msg += formatLine(l, '🎉') + '\n');
+          msg += `\n`;
+        }
+      });
+
+      msg += `Bon cap de setmana!`;
+      return msg.trim();
+    }
+
+    // 5. Botons d'acció
+    $('#btn-generate').onclick = () => {
+      $('#output').value = buildMessage();
+    };
+
+    $('#btn-copy').onclick = async () => {
+      const txt = $('#output').value || buildMessage();
+      try {
+        await navigator.clipboard.writeText(txt);
+        const btnText = $('#copy-text');
+        const oldTxt = btnText.textContent;
+        btnText.textContent = '✅ Copiat!';
+        $('#btn-copy').classList.replace('bg-slate-900', 'bg-green-600');
+        setTimeout(() => {
+          btnText.textContent = oldTxt;
+          $('#btn-copy').classList.replace('bg-green-600', 'bg-slate-900');
+        }, 2000);
+      } catch (err) { alert('Error al copiar'); }
+    };
+
+    $('#btn-share').onclick = async () => {
+      const text = $('#output').value || buildMessage();
+      if (navigator.share) {
+        navigator.share({ text });
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      }
+    };
+
+    $('#btn-clear-all').onclick = () => {
+      if(confirm('Segur que vols esborrar totes les dades de la setmana?')) {
+        localStorage.removeItem('whatsapp_planner_data');
+        location.reload();
+      }
+    };
+
+    document.addEventListener('click', e => {
+      if (e.target.dataset.clear) {
+        const id = e.target.dataset.clear;
+        $(`#${id}-tasks`).value = '';
+        $(`#${id}-outings`).value = '';
+        $(`#${id}-extra`).value = '';
+        saveAll();
+      }
+    });
+  </script>
+</body>
+</html>
