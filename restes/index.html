@@ -18,10 +18,9 @@
         body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; min-height: 100vh; }
 
         .config-top { margin: 15px 0; background: white; padding: 15px 25px; border-radius: 15px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .config-top label { font-weight: bold; color: #444; font-size: 0.85rem; }
         .config-top input { width: 70px; padding: 8px; border-radius: 8px; border: 2px solid #eee; text-align: center; font-size: 1.1rem; }
         .btn-gen { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-
-        #error-msg { display: none; background: #ffebee; color: var(--error); padding: 12px 20px; border-radius: 10px; border: 1px solid #ffcdd2; margin-bottom: 15px; text-align: center; max-width: 90%; }
 
         .main-wrapper { display: flex; gap: 20px; max-width: 1300px; width: 100%; flex-wrap: wrap; justify-content: center; }
 
@@ -46,9 +45,7 @@
         .block-ten div { border-right: 1px solid var(--gold-dark); }
         .block-one { width: 30px; height: 30px; background: var(--gold); border: 2px solid var(--gold-dark); border-radius: 2px; cursor: pointer; }
 
-        /* Icona de Tisores: Sols una i dinàmica */
-        .break-btn { position: absolute; top: -15px; right: -15px; background: #fff; border: 2px solid var(--blue); border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        .break-btn { position: absolute; top: -15px; right: -15px; background: #fff; border: 2px solid var(--blue); border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
         .bottom-zone .block-hundred, .bottom-zone .block-ten, .bottom-zone .block-one { opacity: 0.25; filter: grayscale(0.5); border-style: dashed; }
         .bottom-zone .break-btn { display: none; }
@@ -64,19 +61,17 @@
 <body>
 
     <div class="config-top">
-        <label>Minuend: <input type="number" id="n1" value="70"></label> 
-        <label>Subtrahend: <input type="number" id="n2" value="67"></label>
+        <label>Minuend: <input type="number" id="n1" value="77" max="999"></label> 
+        <label>Subtrahend: <input type="number" id="n2" value="67" max="999"></label>
         <button class="btn-gen" onclick="iniciar()">Generar Joc</button>
     </div>
-
-    <div id="error-msg">❌ El segon número no pot ser més gran que el primer!</div>
 
     <div class="main-wrapper">
         <div class="guide-panel">
             <h3>Guia de passos</h3>
-            <div id="step1" class="step active"><span class="step-num">1</span><b>Mira què tenim:</b> El primer número (<span id="txt-n1">70</span>) ja està dibuixat.</div>
-            <div id="step2" class="step"><span class="step-num">2</span><b>Treu el que sobra:</b> Clica els blocs per anar restant el segon número. Si et falten unitats, apareixeran unes tisores ✂️ per ajudar-te!</div>
-            <div id="step3" class="step"><span class="step-num">3</span><b>Compta:</b> Què ha quedat a dalt? Escriu el número a la casella del resultat.</div>
+            <div id="step1" class="step active"><span class="step-num">1</span><b>Mira què tenim:</b> El primer número (<span id="txt-n1">77</span>) ja està dibuixat.</div>
+            <div id="step2" class="step"><span class="step-num">2</span><b>Treu el que sobra:</b> Clica els blocs per anar restant el segon número. Si et falten peces, usa les tisores ✂️.</div>
+            <div id="step3" class="step"><span class="step-num">3</span><b>Compta:</b> Què ha quedat a dalt? Escriu el número al resultat.</div>
             <div id="step4" class="step"><span class="step-num">4</span><b>Valida:</b> Prem el botó verd.</div>
         </div>
 
@@ -89,7 +84,7 @@
             </div>
             <div class="math-card">
                 <div class="op-container">
-                    <div></div><div id="v-h1">0</div><div id="v-t1">7</div><div id="v-u1">0</div>
+                    <div></div><div id="v-h1">0</div><div id="v-t1">7</div><div id="v-u1">7</div>
                     <div style="color:var(--error)">-</div><div id="v-h2" style="color:var(--error)">0</div><div id="v-t2" style="color:var(--error)">6</div><div id="v-u2" style="color:var(--error)">7</div>
                     <div class="math-line"></div>
                     <div></div>
@@ -106,12 +101,11 @@
 
     <script>
         function iniciar() {
-            let n1 = parseInt(document.getElementById('n1').value) || 0;
-            let n2 = parseInt(document.getElementById('n2').value) || 0;
-            if (n2 > n1) { document.getElementById('error-msg').style.display = 'block'; return; }
-            document.getElementById('error-msg').style.display = 'none';
-            document.getElementById('txt-n1').innerText = n1;
+            let n1 = Math.min(parseInt(document.getElementById('n1').value) || 0, 999);
+            let n2 = Math.min(parseInt(document.getElementById('n2').value) || 0, 999);
+            if (n2 > n1) { alert("El minuend ha de ser més gran!"); return; }
 
+            document.getElementById('txt-n1').innerText = n1;
             document.getElementById('v-h1').innerText = Math.floor(n1/100);
             document.getElementById('v-t1').innerText = Math.floor((n1%100)/10);
             document.getElementById('v-u1').innerText = n1%10;
@@ -137,7 +131,6 @@
                 const isTop = this.parentElement.id.includes('top');
                 document.getElementById(isTop ? targetId : homeId).appendChild(this);
                 actualitzarSumatori();
-                setStep(2);
             };
             document.getElementById(homeId).appendChild(b);
             return b;
@@ -152,23 +145,21 @@
         }
 
         function gestionarTisores() {
-            // Eliminar tisores existents
             document.querySelectorAll('.break-btn').forEach(btn => btn.remove());
-
             const n2 = parseInt(document.getElementById('n2').value) || 0;
-            const targetU = n2 % 10;
-            const targetT = Math.floor((n2 % 100) / 10);
+            const hTarget = Math.floor(n2 / 100);
+            const tTarget = Math.floor((n2 % 100) / 10);
+            const uTarget = n2 % 10;
 
-            const actualU = document.getElementById('units-top').children.length;
-            const actualT = document.getElementById('tens-top').children.length;
+            const uMoguts = document.getElementById('units-bottom').children.length;
+            const tMoguts = document.getElementById('tens-bottom').children.length;
+            const uDisponibles = document.getElementById('units-top').children.length;
+            const tDisponibles = document.getElementById('tens-top').children.length;
 
-            // SI FALTEN UNITATS: Tisores a l'última desena
-            if (actualU < targetU && actualT > 0) {
+            if (uMoguts < uTarget && uDisponibles < (uTarget - uMoguts) && tDisponibles > 0) {
                 const lastTen = document.getElementById('tens-top').lastElementChild;
                 afegirTisora(lastTen, 'block-ten');
-            } 
-            // SI FALTEN DESENES: Tisores a l'última centena
-            else if (actualT < targetT && document.getElementById('huns-top').children.length > 0) {
+            } else if (tMoguts < tTarget && tDisponibles < (tTarget - tMoguts) && document.getElementById('huns-top').children.length > 0) {
                 const lastHun = document.getElementById('huns-top').lastElementChild;
                 afegirTisora(lastHun, 'block-hundred');
             }
@@ -195,10 +186,14 @@
         }
 
         function validar() {
-            const n1 = parseInt(document.getElementById('n1').value);
-            const n2 = parseInt(document.getElementById('n2').value);
-            const res = parseInt((document.getElementById('ans-h').value || "0") + (document.getElementById('ans-t').value || "0") + (document.getElementById('ans-u').value || "0"));
-            if (res === (n1 - n2)) alert("Molt bé Oriol! ✨"); else alert("Revisa els blocs o el número.");
+            const n1 = parseInt(document.getElementById('n1').value) || 0;
+            const n2 = parseInt(document.getElementById('n2').value) || 0;
+            const hVal = document.getElementById('ans-h').value || "0";
+            const tVal = document.getElementById('ans-t').value || "0";
+            const uVal = document.getElementById('ans-u').value || "0";
+            const res = parseInt(hVal + tVal + uVal);
+            if (res === (n1 - n2)) alert("✨ Molt bé! L'operació és correcta."); 
+            else alert("Torna-ho a provar.");
         }
         iniciar();
     </script>
