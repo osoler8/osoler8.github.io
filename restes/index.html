@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprenem a restar, pas a pas</title>
+    <style>
+        :root {
+            --blue: #00a8e8;
+            --gold: #ffd54f;
+            --gold-dark: #f9a825;
+            --green: #4caf50;
+            --error: #d32f2f;
+            --centena: #ff5252;
+            --centena-dark: #b71c1c;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; min-height: 100vh; }
+
+        .config-top { margin: 15px 0; background: white; padding: 15px 25px; border-radius: 15px; border: 1px solid #ddd; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .config-top label { font-weight: bold; color: #444; font-size: 0.85rem; }
+        .config-top input { width: 70px; padding: 8px; border-radius: 8px; border: 2px solid #eee; text-align: center; font-size: 1.1rem; }
+        .btn-gen { background: var(--blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        .main-wrapper { display: flex; gap: 20px; max-width: 1300px; width: 100%; flex-wrap: wrap; justify-content: center; }
+
+        .guide-panel { flex: 1; min-width: 280px; max-width: 300px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--blue); height: fit-content; }
+        .step { margin-bottom: 15px; padding: 12px; border-radius: 8px; transition: 0.3s; color: #666; font-size: 0.95rem; }
+        .step.active { background: #e3f2fd; color: #0d47a1; border-left: 4px solid var(--blue); font-weight: bold; }
+        .step-num { display: inline-block; width: 25px; height: 25px; background: #ddd; border-radius: 50%; text-align: center; margin-right: 10px; line-height: 25px; color: white; }
+        .active .step-num { background: var(--blue); }
+
+        .game-area { flex: 3; min-width: 320px; display: flex; flex-direction: column; gap: 20px; }
+        .board { display: grid; grid-template-columns: 1fr 1fr 1fr; background: white; border: 3px solid var(--blue); border-radius: 12px; overflow: hidden; }
+        .col-header { background: var(--blue); color: white; padding: 10px; text-align: center; font-weight: bold; font-size: 0.8rem; }
+        .zone { min-height: 250px; padding: 15px; display: flex; flex-direction: column; gap: 10px; align-items: center; position: relative; }
+
+        .units-layout { display: grid !important; grid-template-columns: repeat(5, 30px); gap: 5px; justify-content: center; align-content: start; }
+        .divider { grid-column: span 3; height: 40px; background: #f8f9fa; border-top: 2px solid #ddd; border-bottom: 2px solid #ddd; display: flex; align-items: center; justify-content: center; }
+        .discard-info { font-size: 0.9rem; color: #1565c0; font-weight: bold; }
+
+        .block-hundred { width: 100px; height: 100px; background: var(--centena); border: 2px solid var(--centena-dark); border-radius: 2px; cursor: pointer; display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr); position: relative; }
+        .block-hundred div { border: 0.1px solid rgba(183, 28, 28, 0.2); }
+        .block-ten { width: 150px; height: 25px; background: var(--gold); border: 2px solid var(--gold-dark); border-radius: 2px; cursor: pointer; display: grid; grid-template-columns: repeat(10, 1fr); position: relative; }
+        .block-ten div { border-right: 1px solid var(--gold-dark); }
+        .block-one { width: 30px; height: 30px; background: var(--gold); border: 2px solid var(--gold-dark); border-radius: 2px; cursor: pointer; }
+
+        .break-btn { position: absolute; top: -15px; right: -15px; background: #fff; border: 2px solid var(--blue); border-radius: 50%; width: 28px; height: 28px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        .bottom-zone .block-hundred, .bottom-zone .block-ten, .bottom-zone .block-one { opacity: 0.25; filter: grayscale(0.5); border-style: dashed; }
+        .bottom-zone .break-btn { display: none; }
+
+        .math-card { background: white; padding: 30px; border-radius: 15px; border: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; }
+        .op-container { display: grid; grid-template-columns: 50px 60px 60px 60px; align-items: center; justify-items: center; font-size: 3.5rem; font-family: 'Courier New', Courier, monospace; }
+        .math-line { grid-column: 1 / span 4; width: 100%; border-bottom: 5px solid #333; margin: 10px 0; }
+        .res-input { width: 55px; height: 70px; font-size: 2.5rem; text-align: center; border: 2px solid #90caf9; border-radius: 12px; outline: none; }
+
+        footer { margin-top: auto; padding: 25px; color: #888; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="config-top">
+        <label>Minuend: <input type="number" id="n1" value="75" max="999"></label> 
+        <label>Subtrahend: <input type="number" id="n2" value="25" max="999"></label>
+        <button class="btn-gen" onclick="iniciar()">Generar</button>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="guide-panel">
+            <h3>Guia de passos</h3>
+            <div id="step1" class="step active"><span class="step-num">1</span><b>Mira què tenim:</b> El primer número (<span id="txt-n1">75</span>) ja està dibuixat.</div>
+            <div id="step2" class="step"><span class="step-num">2</span><b>Treu el que sobra:</b> Clica els blocs per anar restant el segon número. Si et falten peces, usa les tisores ✂️.</div>
+            <div id="step3" class="step"><span class="step-num">3</span><b>Compta:</b> Què ha quedat a dalt? Escriu el número al resultat.</div>
+            <div id="step4" class="step"><span class="step-num">4</span><b>Valida:</b> Prem el botó verd.</div>
+        </div>
+
+        <div class="game-area">
+            <div class="board">
+                <div class="col-header">CENTENES (100)</div><div class="col-header">DESENES (10)</div><div class="col-header">UNITATS (1)</div>
+                <div class="zone" id="huns-top"></div><div class="zone" id="tens-top"></div><div class="zone units-layout" id="units-top"></div>
+                <div class="divider"><span class="discard-info" id="discard-sum">BLOCS SENSE ÚS: 0</span></div>
+                <div class="zone bottom-zone" id="huns-bottom"></div><div class="zone bottom-zone" id="tens-bottom"></div><div class="zone units-layout bottom-zone" id="units-bottom"></div>
+            </div>
+            <div class="math-card">
+                <div class="op-container">
+                    <div></div><div id="v-h1">0</div><div id="v-t1">7</div><div id="v-u1">7</div>
+                    <div style="color:var(--error)">-</div><div id="v-h2" style="color:var(--error)">0</div><div id="v-t2" style="color:var(--error)">6</div><div id="v-u2" style="color:var(--error)">7</div>
+                    <div class="math-line"></div>
+                    <div></div>
+                    <input type="text" id="ans-h" class="res-input" maxlength="1" placeholder="C">
+                    <input type="text" id="ans-t" class="res-input" maxlength="1" placeholder="D">
+                    <input type="text" id="ans-u" class="res-input" maxlength="1" placeholder="U">
+                </div>
+                <button class="btn-gen" style="background:var(--green); width:100%; max-width:300px; font-size:1.3rem; margin-top:20px" onclick="validar()">Comprovar resultat</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>Fet per Oriol Soler</footer>
+
+    <script>
+        function iniciar() {
+            let n1 = Math.min(parseInt(document.getElementById('n1').value) || 0, 999);
+            let n2 = Math.min(parseInt(document.getElementById('n2').value) || 0, 999);
+            if (n2 > n1) { alert("El minuend ha de ser més gran!"); return; }
+
+            document.getElementById('txt-n1').innerText = n1;
+            document.getElementById('v-h1').innerText = Math.floor(n1/100);
+            document.getElementById('v-t1').innerText = Math.floor((n1%100)/10);
+            document.getElementById('v-u1').innerText = n1%10;
+            document.getElementById('v-h2').innerText = Math.floor(n2/100);
+            document.getElementById('v-t2').innerText = Math.floor((n2%100)/10);
+            document.getElementById('v-u2').innerText = n2%10;
+
+            ['huns-top', 'tens-top', 'units-top', 'huns-bottom', 'tens-bottom', 'units-bottom'].forEach(id => document.getElementById(id).innerHTML = '');
+            for(let i=0; i<Math.floor(n1/100); i++) crearBloc('block-hundred', 'huns-top', 'huns-bottom');
+            for(let i=0; i<Math.floor((n1%100)/10); i++) crearBloc('block-ten', 'tens-top', 'tens-bottom');
+            for(let i=0; i<n1%10; i++) crearBloc('block-one', 'units-top', 'units-bottom');
+            
+            actualitzarSumatori();
+            setStep(1);
+        }
+
+        function crearBloc(classe, homeId, targetId) {
+            const b = document.createElement('div');
+            b.className = classe;
+            if (classe === 'block-hundred') for(let j=0; j<100; j++) b.appendChild(document.createElement('div'));
+            if (classe === 'block-ten') for(let j=0; j<10; j++) b.appendChild(document.createElement('div'));
+            b.onclick = function() {
+                const isTop = this.parentElement.id.includes('top');
+                document.getElementById(isTop ? targetId : homeId).appendChild(this);
+                actualitzarSumatori();
+            };
+            document.getElementById(homeId).appendChild(b);
+            return b;
+        }
+
+        function actualitzarSumatori() {
+            const h = document.getElementById('huns-bottom').children.length;
+            const t = document.getElementById('tens-bottom').children.length;
+            const u = document.getElementById('units-bottom').children.length;
+            document.getElementById('discard-sum').innerText = `BLOCS SENSE ÚS: ${(h*100)+(t*10)+u} (${h}C ${t}D ${u}U)`;
+            gestionarTisores();
+        }
+
+        function gestionarTisores() {
+            document.querySelectorAll('.break-btn').forEach(btn => btn.remove());
+            const n2 = parseInt(document.getElementById('n2').value) || 0;
+            const hTarget = Math.floor(n2 / 100);
+            const tTarget = Math.floor((n2 % 100) / 10);
+            const uTarget = n2 % 10;
+
+            const uMoguts = document.getElementById('units-bottom').children.length;
+            const tMoguts = document.getElementById('tens-bottom').children.length;
+            const uDisponibles = document.getElementById('units-top').children.length;
+            const tDisponibles = document.getElementById('tens-top').children.length;
+
+            if (uMoguts < uTarget && uDisponibles < (uTarget - uMoguts) && tDisponibles > 0) {
+                const lastTen = document.getElementById('tens-top').lastElementChild;
+                afegirTisora(lastTen, 'block-ten');
+            } else if (tMoguts < tTarget && tDisponibles < (tTarget - tMoguts) && document.getElementById('huns-top').children.length > 0) {
+                const lastHun = document.getElementById('huns-top').lastElementChild;
+                afegirTisora(lastHun, 'block-hundred');
+            }
+        }
+
+        function afegirTisora(parent, tipus) {
+            if (!parent) return;
+            const btn = document.createElement('div');
+            btn.className = 'break-btn';
+            btn.innerHTML = '✂️';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                parent.remove();
+                if (tipus === 'block-ten') for(let i=0; i<10; i++) crearBloc('block-one', 'units-top', 'units-bottom');
+                else for(let i=0; i<10; i++) crearBloc('block-ten', 'tens-top', 'tens-bottom');
+                actualitzarSumatori();
+            };
+            parent.appendChild(btn);
+        }
+
+        function setStep(n) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + n).classList.add('active');
+        }
+
+        function validar() {
+            const n1 = parseInt(document.getElementById('n1').value) || 0;
+            const n2 = parseInt(document.getElementById('n2').value) || 0;
+            const hVal = document.getElementById('ans-h').value || "0";
+            const tVal = document.getElementById('ans-t').value || "0";
+            const uVal = document.getElementById('ans-u').value || "0";
+            const res = parseInt(hVal + tVal + uVal);
+            if (res === (n1 - n2)) alert("✨ Molt bé! L'operació és correcta."); 
+            else alert("Torna-ho a provar.");
+        }
+        iniciar();
+    </script>
+</body>
+</html>
