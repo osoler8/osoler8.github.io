@@ -3,124 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualitzador de Fraccions</title>
+    <title>Fraccions Pro Responsive</title>
     <style>
-        :root { --primary: #4a90e2; --bg: #f5f7fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 40px; color: #333; }
-        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 500px; width: 100%; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .input-group { display: flex; flex-direction: column; align-items: center; }
-        input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 80%; margin-top: 5px; }
-        canvas { background: white; margin-top: 20px; max-width: 100%; height: auto; }
-        .info { margin-top: 15px; font-weight: bold; color: var(--primary); min-height: 1.2em; }
-        button { grid-column: span 2; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-        button:hover { opacity: 0.9; }
+        :root {
+            --primary: #2ecc71;
+            --secondary: #27ae60;
+            --bg: #f0f2f5;
+            --text: #2c3e50;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            padding: clamp(1rem, 5vw, 2.5rem);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: var(--primary);
+        }
+
+        /* Controls adaptatius */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #7f8c8d;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.3s;
+        }
+
+        button:active { transform: scale(0.98); }
+        button:hover { background: var(--secondary); }
+
+        /* Contenidor de resultats */
+        .info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            border-left: 5px solid var(--primary);
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+        }
+
+        canvas {
+            max-width: 100%; /* Important per a mòbils */
+            height: auto;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .controls { grid-template-columns: 1fr 1fr; }
+            button { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🎨 Fraccions Visuals</h1>
+    <h1>🎨 Visualitzador de Fraccions</h1>
     
     <div class="controls">
         <div class="input-group">
             <label>Numerador</label>
-            <input type="number" id="num" value="2" min="1">
+            <input type="number" id="num" value="11" min="1">
         </div>
         <div class="input-group">
             <label>Denominador</label>
             <input type="number" id="den" value="4" min="1">
         </div>
         <div class="input-group">
-            <label>Tipus de gràfic</label>
+            <label>Forma</label>
             <select id="tipus">
-                <option value="cercle">Cercle (Pizza)</option>
-                <option value="barra">Barra (Xocolata)</option>
+                <option value="cercle">Cercles</option>
+                <option value="barra">Barres</option>
             </select>
         </div>
         <div class="input-group">
             <label>Color</label>
-            <input type="color" id="color" value="#4a90e2">
+            <input type="color" id="color" value="#2ecc71">
         </div>
-        <button onclick="dibuixar()">Actualitzar Gràfic</button>
+        <button onclick="generarFraccio()">Generar Visualització</button>
     </div>
 
-    <div id="simplificacio" class="info"></div>
-    <canvas id="canvasFraccio" width="400" height="400"></canvas>
+    <div id="textInfo" class="info"></div>
+    <div id="canvasContainer" class="canvas-container"></div>
 </div>
 
 <script>
-    // Funció per trobar el Màxim Comú Divisor (MCD)
-    function calcularMCD(a, b) {
-        return b === 0 ? a : calcularMCD(b, a % b);
-    }
+    function calcularMCD(a, b) { return b === 0 ? a : calcularMCD(b, a % b); }
 
-    function dibuixar() {
-        const canvas = document.getElementById('canvasFraccio');
-        const ctx = canvas.getContext('2d');
-        const num = parseInt(document.getElementById('num').value) || 0;
-        const den = parseInt(document.getElementById('den').value) || 1;
+    function generarFraccio() {
+        const container = document.getElementById('canvasContainer');
+        const num = Math.abs(parseInt(document.getElementById('num').value)) || 0;
+        const den = Math.abs(parseInt(document.getElementById('den').value)) || 1;
         const tipus = document.getElementById('tipus').value;
         const color = document.getElementById('color').value;
-        const infoDiv = document.getElementById('simplificacio');
-
-        // 1. Lògica de simplificació
-        const mcd = calcularMCD(num, den);
-        if (mcd > 1) {
-            infoDiv.innerText = `💡 Es pot simplificar: ${num}/${den} = ${num/mcd}/${den/mcd}`;
-        } else {
-            infoDiv.innerText = "";
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (den <= 0) return;
-
-        const padding = 40;
         
+        container.innerHTML = "";
+
+        const unitats = Math.ceil(num / den);
+        const mcd = calcularMCD(num, den);
+        
+        // Text informatiu
+        let txt = `Representant ${num}/${den}. `;
+        if (mcd > 1) txt += `Equival a ${num/mcd}/${den/mcd}. `;
+        if (num > den) txt += `Són ${Math.floor(num/den)} unitats senceres i ${num % den}/${den}.`;
+        document.getElementById('textInfo').innerText = txt;
+
+        let restants = num;
+        for (let i = 0; i < unitats; i++) {
+            const canvas = document.createElement('canvas');
+            // Mida base del canvas (es reduirà per CSS si cal)
+            canvas.width = 220; 
+            canvas.height = 220;
+            container.appendChild(canvas);
+            
+            const aPintar = Math.min(restants, den);
+            dibuixarUnitat(canvas.getContext('2d'), aPintar, den, tipus, color);
+            restants -= aPintar;
+        }
+    }
+
+    function dibuixarUnitat(ctx, n, d, tipus, col) {
+        const size = 220;
+        const center = size / 2;
+
         if (tipus === 'cercle') {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radi = 150;
-
-            for (let i = 0; i < den; i++) {
-                const angleInici = (i * 2 * Math.PI) / den - Math.PI/2;
-                const angleFinal = ((i + 1) * 2 * Math.PI) / den - Math.PI/2;
-
+            const radi = 85;
+            for (let i = 0; i < d; i++) {
+                const s = (i * 2 * Math.PI) / d - Math.PI/2;
+                const e = ((i + 1) * 2 * Math.PI) / d - Math.PI/2;
                 ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radi, angleInici, angleFinal);
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, radi, s, e);
                 ctx.closePath();
-
-                ctx.fillStyle = i < num ? color : '#f0f0f0';
+                ctx.fillStyle = i < n ? col : '#f0f0f0';
                 ctx.fill();
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 3;
                 ctx.stroke();
             }
         } else {
-            // Mode Barra
-            const ampleBarra = canvas.width - (padding * 2);
-            const altBarra = 100;
-            const x = padding;
-            const y = (canvas.height / 2) - (altBarra / 2);
-            const ampleSector = ampleBarra / den;
-
-            for (let i = 0; i < den; i++) {
+            const h = 70, w = 180;
+            const x = (size-w)/2, y = (size-h)/2;
+            const step = w / d;
+            for (let i = 0; i < d; i++) {
                 ctx.beginPath();
-                ctx.rect(x + (i * ampleSector), y, ampleSector, altBarra);
-                
-                ctx.fillStyle = i < num ? color : '#f0f0f0';
+                ctx.rect(x + (i * step), y, step, h);
+                ctx.fillStyle = i < n ? col : '#f0f0f0';
                 ctx.fill();
                 ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 2;
                 ctx.stroke();
             }
         }
     }
 
-    // Dibuix inicial
-    window.onload = dibuixar;
+    window.onload = generarFraccio;
 </script>
-
 </body>
 </html>
