@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fraccions Pro Responsive</title>
+    <title>Visualitzador de fraccions</title>
     <style>
         :root {
-            --primary: #2ecc71;
-            --secondary: #27ae60;
-            --bg: #f0f2f5;
+            --primary: #3498db;
+            --secondary: #2980b9;
+            --bg: #f4f7f6;
             --text: #2c3e50;
         }
 
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
             padding: 20px;
         }
@@ -29,27 +29,29 @@
         .card {
             background: white;
             width: 100%;
-            max-width: 900px;
-            padding: clamp(1rem, 5vw, 2.5rem);
+            max-width: 800px;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            flex-grow: 1;
         }
 
         h1 {
             margin-top: 0;
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
             color: var(--primary);
         }
 
-        /* Controls adaptatius */
         .controls {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 15px;
-            margin-bottom: 30px;
-            background: #f8f9fa;
+            margin-bottom: 25px;
+            background: #f9fbfd;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 15px;
+            border: 1px solid #edf2f7;
         }
 
         .input-group {
@@ -59,82 +61,77 @@
         }
 
         label {
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: bold;
             margin-bottom: 5px;
-            color: #7f8c8d;
+            text-transform: uppercase;
+            color: #94a3b8;
         }
 
         input, select {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
             border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s;
             font-size: 1rem;
+            outline: none;
         }
 
-        input:focus, select:focus {
-            border-color: var(--primary);
-        }
+        input:focus { border-color: var(--primary); }
 
         button {
             grid-column: 1 / -1;
-            padding: 15px;
+            padding: 14px;
             background: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.1s, background 0.3s;
+            transition: background 0.2s;
         }
 
-        button:active { transform: scale(0.98); }
         button:hover { background: var(--secondary); }
 
-        /* Contenidor de resultats */
         .info {
-            background: #e8f5e9;
+            background: #ebf8ff;
             padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
             font-weight: 500;
-            border-left: 5px solid var(--primary);
+            color: #2c5282;
+            border-left: 4px solid var(--primary);
         }
 
         .canvas-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
-            padding: 10px;
+            gap: 20px;
         }
 
         canvas {
-            max-width: 100%; /* Important per a mòbils */
+            max-width: 100%;
             height: auto;
-            border-radius: 10px;
-            background: #fff;
         }
 
-        @media (max-width: 480px) {
-            body { padding: 10px; }
-            .controls { grid-template-columns: 1fr 1fr; }
-            button { font-size: 1rem; }
+        footer {
+            margin-top: 30px;
+            padding: 20px;
+            color: #64748b;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🎨 Visualitzador de Fraccions</h1>
+    <h1>🎨 Visualitzador de fraccions</h1>
     
     <div class="controls">
         <div class="input-group">
             <label>Numerador</label>
-            <input type="number" id="num" value="11" min="1">
+            <input type="number" id="num" value="2" min="1">
         </div>
         <div class="input-group">
             <label>Denominador</label>
@@ -143,25 +140,29 @@
         <div class="input-group">
             <label>Forma</label>
             <select id="tipus">
-                <option value="cercle">Cercles</option>
-                <option value="barra">Barres</option>
+                <option value="cercle">Cercles (Pizza)</option>
+                <option value="barra">Barres (Rajola)</option>
             </select>
         </div>
         <div class="input-group">
             <label>Color</label>
-            <input type="color" id="color" value="#2ecc71">
+            <input type="color" id="color" value="#3498db">
         </div>
-        <button onclick="generarFraccio()">Generar Visualització</button>
+        <button onclick="generar()">Actualitzar representació</button>
     </div>
 
     <div id="textInfo" class="info"></div>
     <div id="canvasContainer" class="canvas-container"></div>
 </div>
 
-<script>
-    function calcularMCD(a, b) { return b === 0 ? a : calcularMCD(b, a % b); }
+<footer>
+    Creat per <strong>Oriol Soler</strong>
+</footer>
 
-    function generarFraccio() {
+<script>
+    function mcd(a, b) { return b === 0 ? a : mcd(b, a % b); }
+
+    function generar() {
         const container = document.getElementById('canvasContainer');
         const num = Math.abs(parseInt(document.getElementById('num').value)) || 0;
         const den = Math.abs(parseInt(document.getElementById('den').value)) || 1;
@@ -170,65 +171,65 @@
         
         container.innerHTML = "";
 
-        const unitats = Math.ceil(num / den);
-        const mcd = calcularMCD(num, den);
-        
-        // Text informatiu
-        let txt = `Representant ${num}/${den}. `;
-        if (mcd > 1) txt += `Equival a ${num/mcd}/${den/mcd}. `;
-        if (num > den) txt += `Són ${Math.floor(num/den)} unitats senceres i ${num % den}/${den}.`;
-        document.getElementById('textInfo').innerText = txt;
+        // Informació matemàtica
+        const divisorComu = mcd(num, den);
+        let info = `Fracció actual: ${num}/${den}. `;
+        if (divisorComu > 1) info += `Equival a ${num/divisorComu}/${den/divisorComu}. `;
+        if (num > den) info += `Representa ${Math.floor(num/den)} unitat(s) i ${num % den}/${den}.`;
+        document.getElementById('textInfo').innerText = info;
 
-        let restants = num;
+        // Dibuix per unitats
+        const unitats = Math.ceil(num / den);
+        let trossosRestants = num;
+
         for (let i = 0; i < unitats; i++) {
             const canvas = document.createElement('canvas');
-            // Mida base del canvas (es reduirà per CSS si cal)
-            canvas.width = 220; 
-            canvas.height = 220;
+            canvas.width = 200;
+            canvas.height = 200;
             container.appendChild(canvas);
             
-            const aPintar = Math.min(restants, den);
-            dibuixarUnitat(canvas.getContext('2d'), aPintar, den, tipus, color);
-            restants -= aPintar;
+            const trossosUnitat = Math.min(trossosRestants, den);
+            dibuixar(canvas.getContext('2d'), trossosUnitat, den, tipus, color);
+            trossosRestants -= trossosUnitat;
         }
     }
 
-    function dibuixarUnitat(ctx, n, d, tipus, col) {
-        const size = 220;
+    function dibuixar(ctx, n, d, tipus, col) {
+        const size = 200;
         const center = size / 2;
 
         if (tipus === 'cercle') {
-            const radi = 85;
+            const r = 80;
             for (let i = 0; i < d; i++) {
                 const s = (i * 2 * Math.PI) / d - Math.PI/2;
                 const e = ((i + 1) * 2 * Math.PI) / d - Math.PI/2;
                 ctx.beginPath();
                 ctx.moveTo(center, center);
-                ctx.arc(center, center, radi, s, e);
+                ctx.arc(center, center, r, s, e);
                 ctx.closePath();
-                ctx.fillStyle = i < n ? col : '#f0f0f0';
+                ctx.fillStyle = i < n ? col : '#f1f5f9';
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
                 ctx.stroke();
             }
         } else {
-            const h = 70, w = 180;
+            const h = 60, w = 160;
             const x = (size-w)/2, y = (size-h)/2;
             const step = w / d;
             for (let i = 0; i < d; i++) {
                 ctx.beginPath();
                 ctx.rect(x + (i * step), y, step, h);
-                ctx.fillStyle = i < n ? col : '#f0f0f0';
+                ctx.fillStyle = i < n ? col : '#f1f5f9';
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
+                ctx.strokeStyle = '#ffffff';
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
         }
     }
 
-    window.onload = generarFraccio;
+    window.onload = generar;
 </script>
 </body>
 </html>
