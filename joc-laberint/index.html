@@ -3,95 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joc del Laberint</title>
+    <title>Laberint dels Matemàtics</title>
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f4f5f0;
             font-family: Arial, sans-serif;
             margin: 0;
         }
-        /* La quadrícula principal */
-        .grid {
-            display: grid;
-            /* Graella de 5 columnes per al Nivell 1 */
-            grid-template-columns: repeat(5, 60px); 
-            gap: 4px;
-            background: #000; /* Color de les parets */
-            padding: 4px;
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
         }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #1d5932;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #144023; }
+        
+        #game-board {
+            display: grid;
+            background: #fff;
+            padding: 10px;
+            border: 2px solid #333;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Elements de la graella */
         .cell {
-            width: 60px;
-            height: 60px;
-            background: #cdd4d9; /* Color de casella buida */
+            background: #cdd4d9;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            user-select: none; /* Evita seleccionar el text en arrossegar */
-            cursor: pointer;
+            position: relative;
         }
-        /* Classes especials per a diferents tipus de cel·la */
-        .cell.obstacle { background: #a2a0a8; } /* Zones grises */
-        .cell.start { background: #b8e6c7; color: #1d5932; } /* Lletra E */
-        .cell.end { background: #f2c7d2; color: #7d1c3a; } /* Lletra S */
-        .cell.path { background: #f2d250; } /* El camí groc del jugador */
+        .obstacle { background: #a2a0a8; }
+        
+        /* Murs clicables */
+        .wall-v, .wall-h {
+            background: #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .wall-v:hover, .wall-h:hover { background: #bbb; }
+        .wall-v.active, .wall-h.active { background: #000; } /* Paret construïda */
+        .pillar { background: #333; } /* Interseccions fixes */
+
+        /* Indicadors d'Entrada/Sortida */
+        .marker {
+            position: absolute;
+            font-weight: bold;
+            font-size: 20px;
+            width: 100%;
+            text-align: center;
+        }
+        .marker.start { background: #b8e6c7; color: #1d5932; top: 100%; height: 30px; line-height: 30px; }
+        .marker.end { background: #f2c7d2; color: #7d1c3a; bottom: 100%; height: 30px; line-height: 30px; }
+
+        /* El personatge (punt blau) */
+        .player {
+            width: 20px;
+            height: 20px;
+            background-color: #007bff;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            transition: all 0.3s ease; /* Animació de moviment */
+        }
+        .visited { background: #f2d250 !important; } /* Marca per on ja hem passat */
     </style>
 </head>
 <body>
 
-    <div class="grid" id="game-board"></div>
+    <div class="header">
+        <h1>Laberint dels Matemàtics</h1>
+        <h2 id="level-title">Nivell 1</h2>
+        <button onclick="loadLevel(0)">Nivell 1</button>
+        <button onclick="loadLevel(1)">Nivell 2</button>
+        <br><br>
+        <button onclick="walkPath()">🚶‍♂️ Fer caminar el personatge</button>
+        <button onclick="resetBoard()">🔄 Reiniciar Parets</button>
+    </div>
+
+    <div id="game-board"></div>
 
     <script>
-        // Representació del Nivell 1 (0: obstacle, 1: casella lliure, 'E': entrada, 'S': sortida)
-        const levelData = [
-            [0, 0, 'S', 1, 1],
-            [1, 1,  1,  1, 1],
-            [1, 1,  1,  1, 1],
-            [1, 1,  1,  1, 1],
-            [1, 1, 'E', 0, 0]
+        // Configuració dels nivells
+        const levels = [
+            {
+                id: 1, cols: 5, rows: 5,
+                E: { r: 4, c: 2 }, // Entrada (fila, columna)
+                S: { r: 0, c: 2 }, // Sortida
+                grayCells: [[0,0], [0,1], [4,3], [4,4]] // Caselles que no juguen
+            },
+            {
+                id: 2, cols: 6, rows: 5, // Un nivell 2 aproximat
+                E: { r: 4, c: 1 }, 
+                S: { r: 0, c: 2 }, 
+                grayCells: [[0,0], [0,1], [4,5], [3,5]] 
+            }
         ];
 
+        let currentLevel = null;
+        let cellsDom = []; // Per guardar les referències HTML de les cel·les
+        let walls = {};    // Estat lògic dels murs
+        let playerDom = null;
+
         const board = document.getElementById('game-board');
-        let isDrawing = false;
 
-        // Generar la graella
-        levelData.forEach((row) => {
-            row.forEach((val) => {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                
-                if (val === 0) cell.classList.add('obstacle');
-                if (val === 'E') { cell.classList.add('start'); cell.innerText = 'E'; }
-                if (val === 'S') { cell.classList.add('end'); cell.innerText = 'S'; }
+        function loadLevel(index) {
+            currentLevel = levels[index];
+            document.getElementById('level-title').innerText = `Nivell ${currentLevel.id}`;
+            buildGrid();
+        }
 
-                // Lògica per dibuixar arrossegant el ratolí
-                cell.addEventListener('mousedown', () => {
-                    if (val !== 0) {
-                        isDrawing = true;
-                        cell.classList.add('path');
+        function buildGrid() {
+            board.innerHTML = '';
+            cellsDom = [];
+            walls = {};
+            
+            const { cols, rows, E, S, grayCells } = currentLevel;
+
+            // Configurar el CSS Grid per intercalar cel·les (60px) i murs (10px)
+            let colTemplate = "60px";
+            for (let i = 1; i < cols; i++) colTemplate += " 10px 60px";
+            board.style.gridTemplateColumns = colTemplate;
+
+            // Generar la matriu
+            for (let r = 0; r < rows * 2 - 1; r++) {
+                cellsDom[Math.floor(r/2)] = cellsDom[Math.floor(r/2)] || [];
+                for (let c = 0; c < cols * 2 - 1; c++) {
+                    const div = document.createElement('div');
+                    
+                    const isCellRow = r % 2 === 0;
+                    const isCellCol = c % 2 === 0;
+
+                    if (isCellRow && isCellCol) {
+                        // És una cel·la transitable
+                        const cellR = r/2; const cellC = c/2;
+                        div.className = 'cell';
+                        div.id = `cell-${cellR}-${cellC}`;
+                        
+                        // És grisa?
+                        if (grayCells.some(g => g[0] === cellR && g[1] === cellC)) {
+                            div.classList.add('obstacle');
+                        }
+
+                        // És E o S?
+                        if (E.r === cellR && E.c === cellC) {
+                            div.innerHTML += '<div class="marker start">E</div>';
+                        }
+                        if (S.r === cellR && S.c === cellC) {
+                            div.innerHTML += '<div class="marker end">S</div>';
+                        }
+                        
+                        cellsDom[cellR][cellC] = div;
+                    } 
+                    else if (isCellRow && !isCellCol) {
+                        // Mur vertical
+                        div.className = 'wall-v';
+                        div.id = `v-${r/2}-${(c-1)/2}`;
+                        div.onclick = () => toggleWall(div.id);
+                    } 
+                    else if (!isCellRow && isCellCol) {
+                        // Mur horitzontal
+                        div.className = 'wall-h';
+                        div.id = `h-${(r-1)/2}-${c/2}`;
+                        div.onclick = () => toggleWall(div.id);
+                    } 
+                    else {
+                        // Intersecció entre murs (pilar)
+                        div.className = 'pillar';
                     }
-                });
 
-                cell.addEventListener('mouseenter', () => {
-                    if (isDrawing && val !== 0 && !cell.classList.contains('start')) {
-                        cell.classList.add('path');
+                    // Assignar alçades manualment per al CSS grid
+                    div.style.height = isCellRow ? '60px' : '10px';
+                    board.appendChild(div);
+                }
+            }
+        }
+
+        function toggleWall(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('active');
+            walls[id] = el.classList.contains('active');
+        }
+
+        function resetBoard() {
+            loadLevel(levels.indexOf(currentLevel));
+        }
+
+        // Lògica de caminada automàtica
+        async function walkPath() {
+            // Netejar visites anteriors i esborrar personatge
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('visited'));
+            if(playerDom) playerDom.remove();
+
+            let { r, c } = currentLevel.E;
+            let visitedCount = 0;
+            let pathBlocked = false;
+
+            // Comptar quantes cel·les blanques hi ha per saber si hem guanyat
+            const totalToVisit = (currentLevel.cols * currentLevel.rows) - currentLevel.grayCells.length;
+
+            // Crear personatge
+            playerDom = document.createElement('div');
+            playerDom.className = 'player';
+            cellsDom[r][c].appendChild(playerDom);
+
+            // Bucle de moviment cada 300ms
+            while (!pathBlocked) {
+                cellsDom[r][c].classList.add('visited');
+                cellsDom[r][c].appendChild(playerDom); // Moure el dom
+                visitedCount++;
+
+                // Hem arribat a la sortida?
+                if (r === currentLevel.S.r && c === currentLevel.S.c) {
+                    await sleep(300);
+                    if (visitedCount === totalToVisit) {
+                        alert('🏆 Enhorabona! Has passat per totes les caselles!');
+                    } else {
+                        alert(`❌ Has arribat a la sortida, però t'has deixat ${totalToVisit - visitedCount} caselles per visitar.`);
                     }
-                });
+                    return;
+                }
 
-                board.appendChild(cell);
-            });
-        });
+                await sleep(300);
 
-        // Deixar de dibuixar quan deixem anar el clic
-        window.addEventListener('mouseup', () => { 
-            isDrawing = false; 
-            // Aquí en el futur afegirem la funció per comprovar si has guanyat!
-        });
+                // Cercar següent casella vàlida (no visitada, no obstacle, sense paret)
+                const neighbors = [];
+
+                // Mirar amunt
+                if (r > 0 && !walls[`h-${r-1}-${c}`] && isValid(r-1, c)) neighbors.push({nr: r-1, nc: c});
+                // Mirar avall
+                if (r < currentLevel.rows-1 && !walls[`h-${r}-${c}`] && isValid(r+1, c)) neighbors.push({nr: r+1, nc: c});
+                // Mirar esquerra
+                if (c > 0 && !walls[`v-${r}-${c-1}`] && isValid(r, c-1)) neighbors.push({nr: r, nc: c-1});
+                // Mirar dreta
+                if (c < currentLevel.cols-1 && !walls[`v-${r}-${c}`] && isValid(r, c+1)) neighbors.push({nr: r, nc: c+1});
+
+                if (neighbors.length === 1) {
+                    // Només hi ha un camí clar, movem!
+                    r = neighbors[0].nr;
+                    c = neighbors[0].nc;
+                } else if (neighbors.length > 1) {
+                    alert("⛔ El personatge està confús! Has deixat camins oberts amb bifurcacions. Construeix més parets.");
+                    pathBlocked = true;
+                } else {
+                    alert("🧱 El personatge s'ha quedat encallat o atrapat.");
+                    pathBlocked = true;
+                }
+            }
+        }
+
+        // Funció auxiliar per comprovar si una casella és trepitjable
+        function isValid(r, c) {
+            const cell = cellsDom[r][c];
+            if (cell.classList.contains('visited') || cell.classList.contains('obstacle')) return false;
+            return true;
+        }
+
+        // Funció auxiliar per aturar el temps
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        // Carregar Nivell 1 al començar
+        window.onload = () => loadLevel(0);
     </script>
 </body>
 </html>
