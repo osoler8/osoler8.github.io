@@ -115,13 +115,20 @@
             font-weight: bold;
         }
         #winScreen button:active { transform: translateY(4px); box-shadow: 0 0 0 #16a085; }
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+            text-align: center;
+            padding-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
     <h1>Explora el Laberint</h1>
     <div class="instructions">
-        Fes servir les <b>fletxes del teclat</b> o els controls per moure el jugador.<br>
+        Fes servir les <b>fletxes del teclat</b> o els controls per moure el jugador/a.<br>
         Has de passar per sobre de tots els <b>punts grocs</b> per guanyar!
     </div>
 
@@ -146,6 +153,10 @@
             <button class="btn btn-right" id="btnRight">▶</button>
             <button class="btn btn-down" id="btnDown">▼</button>
         </div>
+    </div>
+
+    <div class="footer">
+        PD4 PCMAT - Creat per Oriol Soler
     </div>
 
     <script>
