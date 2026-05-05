@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Laberint dels Matemàtics</title>
     <style>
-        /* S'aplica a html i body per bloquejar l'scroll i el zoom totalment */
+        /* S'aplica a html i body per bloquejar només l'scroll horitzontal */
         html, body {
-            overflow: hidden;
-            touch-action: none;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         
         body {
@@ -16,7 +16,7 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
-            height: 100vh; /* Canviat de min-height a height fixe */
+            min-height: 100vh; /* Tornem a min-height perquè la web pugui créixer cap avall */
             background-color: #f4f5f0;
             font-family: Arial, sans-serif;
             margin: 0;
@@ -52,7 +52,8 @@
         /* Contenidor del tauler */
         #board-container {
             position: relative;
-            margin: 20px; /* Reduït una mica per cabre millor en pantalles petites */
+            margin: 20px; 
+            margin-bottom: 40px; /* Donem una mica de marge a baix per si hi ha la "E" o la "S" */
         }
         
         #game-board {
@@ -124,6 +125,7 @@
             text-align: center;
             font-size: 14px;
             box-sizing: border-box;
+            margin-top: 20px;
         }
     </style>
 </head>
