@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joc del Laberint</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f5f0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        /* La quadrícula principal */
+        .grid {
+            display: grid;
+            /* Graella de 5 columnes per al Nivell 1 */
+            grid-template-columns: repeat(5, 60px); 
+            gap: 4px;
+            background: #000; /* Color de les parets */
+            padding: 4px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: #cdd4d9; /* Color de casella buida */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            user-select: none; /* Evita seleccionar el text en arrossegar */
+            cursor: pointer;
+        }
+        /* Classes especials per a diferents tipus de cel·la */
+        .cell.obstacle { background: #a2a0a8; } /* Zones grises */
+        .cell.start { background: #b8e6c7; color: #1d5932; } /* Lletra E */
+        .cell.end { background: #f2c7d2; color: #7d1c3a; } /* Lletra S */
+        .cell.path { background: #f2d250; } /* El camí groc del jugador */
+    </style>
+</head>
+<body>
+
+    <div class="grid" id="game-board"></div>
+
+    <script>
+        // Representació del Nivell 1 (0: obstacle, 1: casella lliure, 'E': entrada, 'S': sortida)
+        const levelData = [
+            [0, 0, 'S', 1, 1],
+            [1, 1,  1,  1, 1],
+            [1, 1,  1,  1, 1],
+            [1, 1,  1,  1, 1],
+            [1, 1, 'E', 0, 0]
+        ];
+
+        const board = document.getElementById('game-board');
+        let isDrawing = false;
+
+        // Generar la graella
+        levelData.forEach((row) => {
+            row.forEach((val) => {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                
+                if (val === 0) cell.classList.add('obstacle');
+                if (val === 'E') { cell.classList.add('start'); cell.innerText = 'E'; }
+                if (val === 'S') { cell.classList.add('end'); cell.innerText = 'S'; }
+
+                // Lògica per dibuixar arrossegant el ratolí
+                cell.addEventListener('mousedown', () => {
+                    if (val !== 0) {
+                        isDrawing = true;
+                        cell.classList.add('path');
+                    }
+                });
+
+                cell.addEventListener('mouseenter', () => {
+                    if (isDrawing && val !== 0 && !cell.classList.contains('start')) {
+                        cell.classList.add('path');
+                    }
+                });
+
+                board.appendChild(cell);
+            });
+        });
+
+        // Deixar de dibuixar quan deixem anar el clic
+        window.addEventListener('mouseup', () => { 
+            isDrawing = false; 
+            // Aquí en el futur afegirem la funció per comprovar si has guanyat!
+        });
+    </script>
+</body>
+</html>
