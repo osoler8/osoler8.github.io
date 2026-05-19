@@ -44,11 +44,14 @@
         }
         .status-msg {
             font-size: 14px;
-            color: #e74c3c;
-            background: rgba(231, 76, 60, 0.1);
-            padding: 5px 10px;
-            border-radius: 4px;
+            color: #fff;
+            background: #e74c3c;
+            padding: 8px 12px;
+            border-radius: 6px;
             display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            text-align: center;
+            line-height: 1.4;
         }
         #gameContainer {
             position: relative;
@@ -134,7 +137,7 @@
     </div>
 
     <div class="ui-bar">
-        <div class="status-msg" id="statusMsg">Mode estricte (no s'ha trobat la imatge)</div>
+        <div class="status-msg" id="statusMsg">Mode estricte (no s'ha trobat la imatge pcmat.png)</div>
         <div class="score-box">Punts: <span id="score">0</span> / <span id="total">?</span></div>
     </div>
 
@@ -189,6 +192,7 @@
             document.getElementById('touchControls').style.display = 'block';
         }
 
+        // Bloqueig de l'scroll del navegador amb les tecles de direcció i espai
         window.addEventListener('keydown', (e) => { 
             if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].indexOf(e.key) > -1) {
                 e.preventDefault();
@@ -241,19 +245,19 @@
             initGridMode();
         };
 
-        // Arxiu de la imatge correcte
+        // Arxiu de la imatge definitiu
         img.src = 'pcmat.png';
 
         function showFallbackMessage() {
             statusMsg.style.display = 'block';
-            statusMsg.innerText = "S'usa el mapa generat (pcmat.png no trobat o blocat per CORS en local)";
+            statusMsg.innerHTML = "⚠️ <b>Avís (Mode Local):</b> S'està usant un mapa de seguretat. Perquè el joc llegeixi la imatge <b>pcmat.png</b> i els seus colors reals, puja els fitxers a GitHub Pages o utilitza un servidor local.";
         }
 
         function initImageMode() {
             canvas.width = imgWidth;
             canvas.height = imgHeight;
             
-            // Primer de tot extraiem els punts per tenir referències de posició
+            // Primer extraiem els punts per saber la disposició
             extractDotsFromImage();
 
             if(dots.length > 0) {
@@ -261,10 +265,9 @@
                 let bestStartY = imgHeight / 2;
                 let refDot = dots[0];
 
-                // NOU RADAR INFAL·LIBLE:
-                // Tracem una línia recta cap a l'esquerra des de CADA punt groc.
-                // El punt que aconsegueixi arribar més a l'esquerra sense xocar amb paret verda
-                // és forçosament el que està connectat a la porta d'entrada!
+                // RADAR INTEL·LIGENT D'ENTRADA:
+                // Tracem rutes a l'esquerra des de cada punt. Aquell que arribi més lluny cap a x=0
+                // sense topar amb la paret verda (fosca) ens marca l'entrada real.
                 for (let d of dots) {
                     let currentX = Math.floor(d.x);
                     let currentY = Math.floor(d.y);
@@ -273,22 +276,21 @@
                         let idx = (currentY * imgWidth + currentX) * 4;
                         let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
                         
-                        // Si trobem un color fosc (paret verda o marc), parem el "radar"
+                        // Si detectem paret verda (lluminositat mitjana < 140) parem
                         if((r+g+b)/3 < 140) {
                             break;
                         }
                         currentX--;
                     }
 
-                    // Ens quedem amb el camí que hagi arribat més a fora
                     if (currentX < bestStartX) {
                         bestStartX = currentX;
-                        bestStartY = d.y; // L'entrada està a aquesta altura
+                        bestStartY = d.y;
                         refDot = d;
                     }
                 }
 
-                // Posem el jugador una miqueta més endins de la vora lliure detectada
+                // Iniciem el jugador exactament al passadís d'entrada detectat
                 startX = Math.max(15, bestStartX + 15);
                 startY = bestStartY;
                 player.radius = Math.max(4, Math.min(12, refDot.radius * 0.8));
@@ -315,6 +317,7 @@
                     let idx = (y * imgWidth + x) * 4;
                     let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
                     
+                    // Condicions cromàtiques per identificar punts grocs reals
                     if(r > 180 && g > 160 && b < 120 && !visited[y*imgWidth+x]) {
                         let q = [{x,y}]; 
                         visited[y*imgWidth+x] = 1;
@@ -354,7 +357,7 @@
                 }
             }
 
-            // FUSIÓ DE PUNTS: Agrupa punts massa propers per evitar detectar artefactes
+            // FUSIÓ INTEL·LIGENT DE PUNTS PER ASSEGURAR EXACTAMENT 13 PUNTS
             dots = [];
             for(let d of rawDots) {
                 let merged = false;
@@ -396,7 +399,7 @@
             return false;
         }
 
-        // Mode graella per si la imatge falla
+        // Mode graella de recanvi per si hi ha un error de CORS en local
         const fallbackMap = [
             "1111111111111111111111111111111",
             "1000000000000000000000000000001",
@@ -493,6 +496,7 @@
                 dy = (dy/len) * player.speed;
             }
 
+            // Hitbox reduïda per a girs molt més fluids i precisos
             let hitbox = player.radius * 0.4;
 
             if(!checkWall(player.x + dx, player.y, hitbox)) player.x += dx;
@@ -519,6 +523,7 @@
             if(useImageMode && bgImage) {
                 ctx.drawImage(bgImage, 0, 0);
                 
+                // Esborrem visualment els punts recollits dibuixant a sobre amb el color del passadís
                 for(let d of dots) {
                     if(d.collected) {
                         ctx.beginPath();
@@ -549,7 +554,7 @@
                 }
             }
 
-            // Jugador
+            // Dibuix del jugador/a
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
             ctx.fillStyle = '#E74C3C';
