@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCMAT Laberint Matemàtic</title>
+    <title>PCMAT - Laberint matemàtic</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,13 +13,16 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            min-height: 100vh;
+            margin: 0;
         }
-        h1 { color: #2c7a4b; }
+        h1 { color: #2c7a4b; text-align: center; }
         .container {
             display: flex;
             gap: 40px;
             flex-wrap: wrap;
             justify-content: center;
+            flex-grow: 1;
         }
         /* Graella del joc */
         .board-wrapper {
@@ -42,6 +45,7 @@
             align-items: center;
             font-weight: bold;
             font-size: 1.2em;
+            position: relative;
         }
         .label { background-color: #e9ecef; font-size: 1em; color: #555; }
         .cell { cursor: pointer; }
@@ -49,7 +53,11 @@
         
         /* Elements del joc */
         .obstacle { background-color: #555 !important; }
-        .robot { font-size: 2em; transition: transform 0.3s; }
+        .robot { 
+            font-size: 2em; 
+            transition: transform 0.3s;
+            pointer-events: none; /* Evita que el robot bloquegi el clic a la casella */
+        }
         .start-end { color: #d9534f; font-weight: bold; font-size: 1.5em; text-align: center; margin: 5px 0;}
         
         /* Controls */
@@ -79,22 +87,32 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             max-height: 500px;
             overflow-y: auto;
+            min-width: 300px;
         }
         table {
             border-collapse: collapse;
             width: 100%;
-            min-width: 300px;
             text-align: center;
         }
         th, td { border: 1px solid #ddd; padding: 8px; }
         th { background-color: #f2f2f2; }
         
         .instructions { max-width: 800px; margin-bottom: 20px; text-align: center; }
+        
+        /* Peu de pàgina */
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
-    <h1>PCMAT Laberint Matemàtic</h1>
+    <h1>PCMAT - Laberint matemàtic</h1>
     <div class="instructions">
         <p>Clica a les caselles blanques per crear ombres (obstacles). Després, utilitza els botons per programar el recorregut del robot des de l'Entrada (E) fins a la Sortida (S).</p>
     </div>
@@ -115,7 +133,7 @@
         </div>
 
         <div class="log-section">
-            <h3>Graella del recorregut</h3>
+            <h3 style="margin-top: 0;">Graella del recorregut</h3>
             <table>
                 <thead>
                     <tr>
@@ -129,6 +147,10 @@
             </table>
         </div>
     </div>
+
+    <footer>
+        Creat per Oriol Soler
+    </footer>
 
     <script>
         const cols = ['A', 'B', 'C', 'D', 'E'];
@@ -146,6 +168,7 @@
         // Dibuixar la graella
         function initGrid() {
             gridEl.innerHTML = '';
+            
             // Cantonada superior esquerra buida
             const corner = document.createElement('div');
             corner.className = 'label';
@@ -171,25 +194,41 @@
                     cell.className = 'cell';
                     cell.id = `cell-${x}-${y}`;
                     
-                    // Afegir o treure ombres (obstacles)
-                    cell.addEventListener('click', () => {
-                        if (stepCount > 0 || !gameActive || (x === robotX && y === robotY)) return; // No permetre un cop començat o sota el robot
-                        const posKey = `${x},${y}`;
-                        if (obstacles.has(posKey)) {
-                            obstacles.delete(posKey);
-                            cell.classList.remove('obstacle');
-                        } else {
-                            obstacles.add(posKey);
-                            cell.classList.add('obstacle');
-                        }
-                    });
+                    // Si la cel·la havia estat marcada com obstacle abans de reiniciar, mantenir-la
+                    if (obstacles.has(`${x},${y}`)) {
+                        cell.classList.add('obstacle');
+                    }
 
                     gridEl.appendChild(cell);
                 }
             }
             updateRobotDisplay();
-            logStep('Inici', '');
         }
+
+        // Delegació d'esdeveniments per als clics a les caselles (obstacles)
+        gridEl.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+
+            // Extreure coordenades de l'ID 'cell-X-Y'
+            const parts = cell.id.split('-');
+            const cx = parseInt(parts[1]);
+            const cy = parseInt(parts[2]);
+
+            // No permetre posar obstacle on ja hi ha el robot
+            if (cx === robotX && cy === robotY) return;
+
+            const posKey = `${cx},${cy}`;
+            if (obstacles.has(posKey)) {
+                obstacles.delete(posKey);
+                cell.classList.remove('obstacle');
+            } else {
+                obstacles.add(posKey);
+                cell.classList.add('obstacle');
+            }
+        });
 
         function getCoordinateString(x, y) {
             return cols[x] + (y + 1);
@@ -201,7 +240,12 @@
 
         function updateRobotDisplay() {
             // Netejar el robot de totes les cel·les
-            document.querySelectorAll('.cell').forEach(cell => cell.innerHTML = '');
+            document.querySelectorAll('.cell').forEach(cell => {
+                const existingRobot = cell.querySelector('.robot');
+                if (existingRobot) {
+                    existingRobot.remove();
+                }
+            });
             
             const currentCell = document.getElementById(`cell-${robotX}-${robotY}`);
             if (currentCell) {
@@ -243,7 +287,7 @@
             // Comprovar si guanya (surt per dalt al Nord des de C1)
             if (robotX === 2 && robotY === 0 && direction === 0) {
                 stepCount++;
-                robotY--; // Surt del tauler
+                robotY--; // Surt del tauler visualment
                 updateRobotDisplay();
                 logStep("Avança 1 casella (Sortida)");
                 logStep("Atura't", "S");
@@ -261,7 +305,7 @@
                     updateRobotDisplay();
                     logStep('Avança 1 casella');
                 } else {
-                    alert("Hi ha un obstacle (ombra)!");
+                    alert("Hi ha un obstacle (ombra) en aquesta direcció!");
                 }
             } else {
                 alert("No pots sortir del tauler per aquí!");
@@ -270,7 +314,7 @@
 
         function turnLeft() {
             if (!gameActive) return;
-            direction = (direction + 3) % 4; // -1 però evitant negatius
+            direction = (direction + 3) % 4;
             stepCount++;
             updateRobotDisplay();
             logStep("Gira a l'esquerra 90°");
@@ -289,13 +333,14 @@
             robotY = 4; // 5
             direction = 0; // Nord
             stepCount = 0;
-            obstacles.clear();
+            obstacles.clear(); // Opcional: comenta aquesta línia si vols que les ombres es mantinguin en reiniciar
             gameActive = true;
             logBody.innerHTML = '';
             initGrid();
+            logStep('Inici', '');
         }
 
-        // Event Listeners
+        // Event Listeners dels botons
         document.getElementById('btn-forward').addEventListener('click', moveForward);
         document.getElementById('btn-left').addEventListener('click', turnLeft);
         document.getElementById('btn-right').addEventListener('click', turnRight);
@@ -303,6 +348,7 @@
 
         // Inicialitzar
         initGrid();
+        logStep('Inici', '');
     </script>
 </body>
 </html>
