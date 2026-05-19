@@ -56,9 +56,20 @@
         .robot { 
             font-size: 2em; 
             transition: transform 0.3s;
-            pointer-events: none; /* Evita que el robot bloquegi el clic a la casella */
+            pointer-events: none;
         }
-        .start-end { color: #d9534f; font-weight: bold; font-size: 1.5em; text-align: center; margin: 5px 0;}
+        
+        /* Centrat perfecte de l'Entrada (E) i Sortida (S) */
+        .start-end { 
+            color: #d9534f; 
+            font-weight: bold; 
+            font-size: 1.5em; 
+            text-align: center; 
+            margin: 5px 0;
+            width: 344px;         /* Amplada total exacta de la graella */
+            padding-left: 32px;  /* Compensa la columna de números de l'esquerra + vora */
+            box-sizing: border-box;
+        }
         
         /* Controls */
         .controls {
@@ -158,8 +169,8 @@
         const logBody = document.getElementById('log-body');
         
         // Estat del joc
-        let robotX = 2; // Columna C (0-indexat: 0=A, 1=B, 2=C)
-        let robotY = 4; // Fila 5 (0-indexat: 4)
+        let robotX = 2; // Columna C
+        let robotY = 4; // Fila 5
         let direction = 0; // 0: Nord, 1: Est, 2: Sud, 3: Oest
         let stepCount = 0;
         let obstacles = new Set();
@@ -169,12 +180,10 @@
         function initGrid() {
             gridEl.innerHTML = '';
             
-            // Cantonada superior esquerra buida
             const corner = document.createElement('div');
             corner.className = 'label';
             gridEl.appendChild(corner);
             
-            // Lletres de les columnes
             cols.forEach(col => {
                 const el = document.createElement('div');
                 el.className = 'label';
@@ -182,7 +191,6 @@
                 gridEl.appendChild(el);
             });
 
-            // Files amb números i cel·les
             for (let y = 0; y < 5; y++) {
                 const rowLabel = document.createElement('div');
                 rowLabel.className = 'label';
@@ -194,7 +202,6 @@
                     cell.className = 'cell';
                     cell.id = `cell-${x}-${y}`;
                     
-                    // Si la cel·la havia estat marcada com obstacle abans de reiniciar, mantenir-la
                     if (obstacles.has(`${x},${y}`)) {
                         cell.classList.add('obstacle');
                     }
@@ -205,19 +212,17 @@
             updateRobotDisplay();
         }
 
-        // Delegació d'esdeveniments per als clics a les caselles (obstacles)
+        // Delegació d'esdeveniments per als obstacles
         gridEl.addEventListener('click', (e) => {
             if (!gameActive) return;
             
             const cell = e.target.closest('.cell');
             if (!cell) return;
 
-            // Extreure coordenades de l'ID 'cell-X-Y'
             const parts = cell.id.split('-');
             const cx = parseInt(parts[1]);
             const cy = parseInt(parts[2]);
 
-            // No permetre posar obstacle on ja hi ha el robot
             if (cx === robotX && cy === robotY) return;
 
             const posKey = `${cx},${cy}`;
@@ -239,7 +244,6 @@
         }
 
         function updateRobotDisplay() {
-            // Netejar el robot de totes les cel·les
             document.querySelectorAll('.cell').forEach(cell => {
                 const existingRobot = cell.querySelector('.robot');
                 if (existingRobot) {
@@ -279,15 +283,14 @@
             let newX = robotX;
             let newY = robotY;
 
-            if (direction === 0) newY--; // Nord
-            else if (direction === 1) newX++; // Est
-            else if (direction === 2) newY++; // Sud
-            else if (direction === 3) newX--; // Oest
+            if (direction === 0) newY--;
+            else if (direction === 1) newX++;
+            else if (direction === 2) newY++;
+            else if (direction === 3) newX--;
 
-            // Comprovar si guanya (surt per dalt al Nord des de C1)
             if (robotX === 2 && robotY === 0 && direction === 0) {
                 stepCount++;
-                robotY--; // Surt del tauler visualment
+                robotY--;
                 updateRobotDisplay();
                 logStep("Avança 1 casella (Sortida)");
                 logStep("Atura't", "S");
@@ -296,7 +299,6 @@
                 return;
             }
 
-            // Comprovar límits i obstacles
             if (newX >= 0 && newX < 5 && newY >= 0 && newY < 5) {
                 if (!obstacles.has(`${newX},${newY}`)) {
                     robotX = newX;
@@ -329,24 +331,22 @@
         }
 
         function resetGame() {
-            robotX = 2; // C
-            robotY = 4; // 5
-            direction = 0; // Nord
+            robotX = 2;
+            robotY = 4;
+            direction = 0;
             stepCount = 0;
-            obstacles.clear(); // Opcional: comenta aquesta línia si vols que les ombres es mantinguin en reiniciar
+            obstacles.clear();
             gameActive = true;
             logBody.innerHTML = '';
             initGrid();
             logStep('Inici', '');
         }
 
-        // Event Listeners dels botons
         document.getElementById('btn-forward').addEventListener('click', moveForward);
         document.getElementById('btn-left').addEventListener('click', turnLeft);
         document.getElementById('btn-right').addEventListener('click', turnRight);
         document.getElementById('btn-reset').addEventListener('click', resetGame);
 
-        // Inicialitzar
         initGrid();
         logStep('Inici', '');
     </script>
