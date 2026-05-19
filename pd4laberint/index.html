@@ -257,30 +257,41 @@
             extractDotsFromImage();
 
             if(dots.length > 0) {
-                // Trobem el punt groc situat més a l'esquerra del laberint
-                let leftmostDot = dots.slice().sort((a,b) => a.x - b.x)[0];
-                
-                // Sabem que l'entrada està a la mateixa altura que aquest punt
-                startY = leftmostDot.y;
+                let bestStartX = imgWidth;
+                let bestStartY = imgHeight / 2;
+                let refDot = dots[0];
 
-                // Seguim el passadís blanc marxa enrere (cap a l'esquerra) fins a topar amb la vora/paret
-                let currentX = Math.floor(leftmostDot.x);
-                let currentY = Math.floor(startY);
-                
-                while(currentX > 0) {
-                    let idx = (currentY * imgWidth + currentX) * 4;
-                    let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
+                // NOU RADAR INFAL·LIBLE:
+                // Tracem una línia recta cap a l'esquerra des de CADA punt groc.
+                // El punt que aconsegueixi arribar més a l'esquerra sense xocar amb paret verda
+                // és forçosament el que està connectat a la porta d'entrada!
+                for (let d of dots) {
+                    let currentX = Math.floor(d.x);
+                    let currentY = Math.floor(d.y);
                     
-                    // Si trobem un color fosc (la paret verda exterior o la vora), ens aturem
-                    if((r+g+b)/3 < 140) {
-                        break;
+                    while(currentX > 0) {
+                        let idx = (currentY * imgWidth + currentX) * 4;
+                        let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
+                        
+                        // Si trobem un color fosc (paret verda o marc), parem el "radar"
+                        if((r+g+b)/3 < 140) {
+                            break;
+                        }
+                        currentX--;
                     }
-                    currentX--;
+
+                    // Ens quedem amb el camí que hagi arribat més a fora
+                    if (currentX < bestStartX) {
+                        bestStartX = currentX;
+                        bestStartY = d.y; // L'entrada està a aquesta altura
+                        refDot = d;
+                    }
                 }
 
-                // Posem el jugador una miqueta més endins (15px) de la vora detectada
-                startX = currentX + 15;
-                player.radius = Math.max(4, Math.min(12, leftmostDot.radius * 0.8));
+                // Posem el jugador una miqueta més endins de la vora lliure detectada
+                startX = Math.max(15, bestStartX + 15);
+                startY = bestStartY;
+                player.radius = Math.max(4, Math.min(12, refDot.radius * 0.8));
             } else {
                 startX = 20;
                 startY = imgHeight / 2;
