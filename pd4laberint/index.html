@@ -252,40 +252,43 @@
         function initImageMode() {
             canvas.width = imgWidth;
             canvas.height = imgHeight;
+            
+            // Primer de tot extraiem els punts per tenir referències de posició
             extractDotsFromImage();
 
-            // 1. Escanejar la paret de l'esquerra per trobar la porta d'entrada real
-            let doorY = imgHeight / 2;
-            for(let y = 10; y < imgHeight - 10; y++) {
-                let idx = (y * imgWidth + 5) * 4; // Columna 5 píxels endins
-                let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
+            if(dots.length > 0) {
+                // Trobem el punt groc situat més a l'esquerra del laberint
+                let leftmostDot = dots.slice().sort((a,b) => a.x - b.x)[0];
                 
-                if((r+g+b)/3 > 180) { // Color clar (camí)
-                    let length = 0;
-                    let cy = y;
-                    while(cy < imgHeight) {
-                        let cidx = (cy * imgWidth + 5) * 4;
-                        let br = (imgDataArray[cidx] + imgDataArray[cidx+1] + imgDataArray[cidx+2]) / 3;
-                        if(br > 180) { length++; cy++; } else break;
-                    }
-                    if(length > 10 && length < 100) { // Trobada la porta!
-                        doorY = y + length / 2;
+                // Sabem que l'entrada està a la mateixa altura que aquest punt
+                startY = leftmostDot.y;
+
+                // Seguim el passadís blanc marxa enrere (cap a l'esquerra) fins a topar amb la vora/paret
+                let currentX = Math.floor(leftmostDot.x);
+                let currentY = Math.floor(startY);
+                
+                while(currentX > 0) {
+                    let idx = (currentY * imgWidth + currentX) * 4;
+                    let r = imgDataArray[idx], g = imgDataArray[idx+1], b = imgDataArray[idx+2];
+                    
+                    // Si trobem un color fosc (la paret verda exterior o la vora), ens aturem
+                    if((r+g+b)/3 < 140) {
                         break;
                     }
+                    currentX--;
                 }
-            }
 
-            // Posem el jugador a la porta
-            startX = 15; 
-            startY = doorY;
-            player.x = startX;
-            player.y = startY;
-
-            if(dots.length > 0) {
-                player.radius = Math.max(4, Math.min(12, dots[0].radius * 0.8));
+                // Posem el jugador una miqueta més endins (15px) de la vora detectada
+                startX = currentX + 15;
+                player.radius = Math.max(4, Math.min(12, leftmostDot.radius * 0.8));
             } else {
+                startX = 20;
+                startY = imgHeight / 2;
                 player.radius = 6;
             }
+
+            player.x = startX;
+            player.y = startY;
             player.speed = player.radius * 0.6; 
 
             totalEl.innerText = dots.length;
