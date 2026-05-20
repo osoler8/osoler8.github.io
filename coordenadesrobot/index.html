@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCMAT - Laberint matemàtic</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #2c7a4b; text-align: center; }
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-grow: 1;
+        }
+        /* Graella del joc */
+        .board-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 30px repeat(5, 60px);
+            grid-template-rows: 30px repeat(5, 60px);
+            gap: 2px;
+            background-color: #333;
+            border: 2px solid #333;
+        }
+        .cell, .label {
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            position: relative;
+        }
+        .label { background-color: #e9ecef; font-size: 1em; color: #555; }
+        .cell { cursor: pointer; }
+        .cell:hover { background-color: #f0f0f0; }
+        
+        /* Elements del joc */
+        .obstacle { background-color: #555 !important; }
+        .robot { 
+            font-size: 2em; 
+            transition: transform 0.3s;
+            pointer-events: none;
+        }
+        
+        /* Centrat perfecte de l'Entrada (E) i Sortida (S) */
+        .start-end { 
+            color: #d9534f; 
+            font-weight: bold; 
+            font-size: 1.5em; 
+            text-align: center; 
+            margin: 5px 0;
+            width: 344px;         
+            padding-left: 32px;  
+            box-sizing: border-box;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: #2c7a4b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #1e5a36; }
+        button:disabled { background-color: #999; cursor: not-allowed; }
+        
+        /* Taula de registre */
+        .log-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 500px;
+            overflow-y: auto;
+            min-width: 300px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+        }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        
+        .instructions { max-width: 800px; margin-bottom: 20px; text-align: center; }
+        
+        /* Peu de pàgina */
+        footer {
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PCMAT - Laberint matemàtic</h1>
+    <div class="instructions">
+        <p>Clica a les caselles blanques per crear ombres (obstacles). Després, utilitza els botons per programar el recorregut del robot des de l'Entrada (E) fins a la Sortida (S).</p>
+    </div>
+
+    <div class="container">
+        <div class="board-wrapper">
+            <div class="start-end">S</div>
+            <div class="grid" id="grid">
+                </div>
+            <div class="start-end">E</div>
+            
+            <div class="controls">
+                <button id="btn-left" title="Gira a l'esquerra 90°">↰</button>
+                <button id="btn-forward" title="Avança 1 casella">↑</button>
+                <button id="btn-right" title="Gira a la dreta 90°">↱</button>
+            </div>
+            <button id="btn-reset" style="margin-top: 10px; background-color: #d9534f;">Reinicia / Neteja</button>
+        </div>
+
+        <div class="log-section">
+            <h3 style="margin-top: 0;">Graella del recorregut</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pas</th>
+                        <th>Coordenada</th>
+                        <th>Moviment/instrucció</th>
+                    </tr>
+                </thead>
+                <tbody id="log-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        Creat per Oriol Soler
+    </footer>
+
+    <script>
+        const cols = ['A', 'B', 'C', 'D', 'E'];
+        const gridEl = document.getElementById('grid');
+        const logBody = document.getElementById('log-body');
+        
+        // Estat del joc
+        let robotX = 2; // Columna C
+        let robotY = 4; // Fila 5
+        let direction = 0; // 0: Nord, 1: Est, 2: Sud, 3: Oest
+        
+        // Noves variables pel control de passos
+        let currentPas = 0; 
+        let lastLoggedCoord = null; 
+        
+        let obstacles = new Set();
+        let gameActive = true;
+
+        // Dibuixar la graella
+        function initGrid() {
+            gridEl.innerHTML = '';
+            
+            const corner = document.createElement('div');
+            corner.className = 'label';
+            gridEl.appendChild(corner);
+            
+            cols.forEach(col => {
+                const el = document.createElement('div');
+                el.className = 'label';
+                el.textContent = col;
+                gridEl.appendChild(el);
+            });
+
+            for (let y = 0; y < 5; y++) {
+                const rowLabel = document.createElement('div');
+                rowLabel.className = 'label';
+                rowLabel.textContent = y + 1;
+                gridEl.appendChild(rowLabel);
+
+                for (let x = 0; x < 5; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${x}-${y}`;
+                    
+                    if (obstacles.has(`${x},${y}`)) {
+                        cell.classList.add('obstacle');
+                    }
+
+                    gridEl.appendChild(cell);
+                }
+            }
+            updateRobotDisplay();
+        }
+
+        // Delegació d'esdeveniments per als obstacles
+        gridEl.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+
+            const parts = cell.id.split('-');
+            const cx = parseInt(parts[1]);
+            const cy = parseInt(parts[2]);
+
+            if (cx === robotX && cy === robotY) return;
+
+            const posKey = `${cx},${cy}`;
+            if (obstacles.has(posKey)) {
+                obstacles.delete(posKey);
+                cell.classList.remove('obstacle');
+            } else {
+                obstacles.add(posKey);
+                cell.classList.add('obstacle');
+            }
+        });
+
+        function getCoordinateString(x, y) {
+            return cols[x] + (y + 1);
+        }
+
+        function getRotationDegree() {
+            return direction * 90;
+        }
+
+        function updateRobotDisplay() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                const existingRobot = cell.querySelector('.robot');
+                if (existingRobot) {
+                    existingRobot.remove();
+                }
+            });
+            
+            const currentCell = document.getElementById(`cell-${robotX}-${robotY}`);
+            if (currentCell) {
+                const robotEl = document.createElement('div');
+                robotEl.className = 'robot';
+                robotEl.textContent = '⬆️';
+                robotEl.style.transform = `rotate(${getRotationDegree()}deg)`;
+                currentCell.appendChild(robotEl);
+            }
+        }
+
+        // Nova lògica de registre (agrupant per coordenada)
+        function logStep(instructionStr, coordOverride = null) {
+            const tr = document.createElement('tr');
+            const tdStep = document.createElement('td');
+            const tdCoord = document.createElement('td');
+            const tdInst = document.createElement('td');
+
+            const currentCoord = coordOverride !== null ? coordOverride : getCoordinateString(robotX, robotY);
+
+            // Cas inicial
+            if (instructionStr === 'Inici') {
+                currentPas = 0;
+                lastLoggedCoord = currentCoord;
+                tdStep.textContent = 'Inici';
+            } else {
+                // Si la coordenada actual és diferent a l'última que vam registrar, sumem 1 al Pas
+                if (currentCoord !== lastLoggedCoord) {
+                    currentPas++;
+                    lastLoggedCoord = currentCoord;
+                }
+                tdStep.textContent = currentPas;
+            }
+
+            tdCoord.textContent = currentCoord;
+            tdInst.textContent = instructionStr;
+
+            tr.appendChild(tdStep);
+            tr.appendChild(tdCoord);
+            tr.appendChild(tdInst);
+            
+            // Fes scroll automàtic fins abaix de la taula
+            logBody.appendChild(tr);
+            const logSection = document.querySelector('.log-section');
+            logSection.scrollTop = logSection.scrollHeight;
+        }
+
+        function moveForward() {
+            if (!gameActive) return;
+            
+            let newX = robotX;
+            let newY = robotY;
+
+            if (direction === 0) newY--;
+            else if (direction === 1) newX++;
+            else if (direction === 2) newY++;
+            else if (direction === 3) newX--;
+
+            if (robotX === 2 && robotY === 0 && direction === 0) {
+                robotY--;
+                updateRobotDisplay();
+                logStep("Avança 1 casella (Sortida)", "S");
+                logStep("Atura't", "S");
+                alert("Molt bé! Has arribat a la Sortida!");
+                gameActive = false;
+                return;
+            }
+
+            if (newX >= 0 && newX < 5 && newY >= 0 && newY < 5) {
+                if (!obstacles.has(`${newX},${newY}`)) {
+                    robotX = newX;
+                    robotY = newY;
+                    updateRobotDisplay();
+                    logStep('Avança 1 casella');
+                } else {
+                    alert("Hi ha un obstacle (ombra) en aquesta direcció!");
+                }
+            } else {
+                alert("No pots sortir del tauler per aquí!");
+            }
+        }
+
+        function turnLeft() {
+            if (!gameActive) return;
+            direction = (direction + 3) % 4;
+            updateRobotDisplay();
+            logStep("Gira a l'esquerra 90°");
+        }
+
+        function turnRight() {
+            if (!gameActive) return;
+            direction = (direction + 1) % 4;
+            updateRobotDisplay();
+            logStep("Gira a la dreta 90°");
+        }
+
+        function resetGame() {
+            robotX = 2;
+            robotY = 4;
+            direction = 0;
+            currentPas = 0;
+            lastLoggedCoord = null;
+            obstacles.clear();
+            gameActive = true;
+            logBody.innerHTML = '';
+            initGrid();
+            logStep('Inici', 'E');
+        }
+
+        document.getElementById('btn-forward').addEventListener('click', moveForward);
+        document.getElementById('btn-left').addEventListener('click', turnLeft);
+        document.getElementById('btn-right').addEventListener('click', turnRight);
+        document.getElementById('btn-reset').addEventListener('click', resetGame);
+
+        initGrid();
+        logStep('Inici', 'E');
+    </script>
+</body>
+</html>
