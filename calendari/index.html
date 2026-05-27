@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Meu Calendari Cuqui</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #fffcf7;
+            --day-bg: #e2e2f9;
+            --empty-bg: #ffd6e0;
+            --yellow-accent: #fecd1a;
+            --blue-grid: #e4f0f6;
+            --text-color: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Elements decoratius de fons */
+        .decoracions {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .cor { position: absolute; font-size: 30px; opacity: 0.6; }
+        .flor { position: absolute; font-size: 40px; opacity: 0.7; }
+
+        /* Selectors de data superiors */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .controls select {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            border: 3px solid var(--text-color);
+            border-radius: 20px;
+            background-color: white;
+            cursor: pointer;
+            font-weight: 600;
+            outline: none;
+        }
+
+        /* Layout Principal */
+        .calendari-wrapper {
+            display: grid;
+            grid-template-columns: 3fr 1.2fr;
+            gap: 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 900px) {
+            .calendari-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Gralla del Calendari */
+        .calendari-principal {
+            background: transparent;
+        }
+
+        .dies-setmana {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .dies-gralla {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(110px, auto);
+            gap: 12px;
+        }
+
+        .casella {
+            border-radius: 12px;
+            padding: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .casella:hover {
+            transform: scale(1.02);
+        }
+
+        .casella.actiu {
+            background-color: var(--day-bg);
+            border: 2px solid transparent;
+        }
+
+        .casella.buda {
+            background-color: var(--empty-bg);
+            opacity: 0.7;
+        }
+
+        .num-dia {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        /* Àrea editable de text dins el dia */
+        .esdeveniment-text {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            resize: none;
+            font-size: 0.9rem;
+            color: #444;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* Barra Lateral (Notes i Afirmacions) */
+        .lateral {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .nom-mes-gegant {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: right;
+            text-transform: capitalize;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        /* Bloc de Notes Estil Núvol/Taca */
+        .bloc-notes {
+            background-color: var(--yellow-accent);
+            border-radius: 40px 60px 35px 50px;
+            padding: 25px;
+            box-shadow: 5px 5px 0px var(--text-color);
+            border: 3px solid var(--text-color);
+        }
+
+        .bloc-notes h3, .bloc-afirmacions h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .bloc-notes textarea {
+            width: 100%;
+            height: 150px;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-size: 1.05rem;
+            font-family: inherit;
+        }
+
+        /* Bloc d'Afirmacions Estil Quadres */
+        .bloc-afirmacions {
+            background-color: var(--blue-grid);
+            background-image: 
+                linear-gradient(to right, #c6dbe7 1px, transparent 1px),
+                linear-gradient(to bottom, #c6dbe7 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            border: 2px solid #b2cbdc;
+        }
+
+        /* Efecte de cinta adhesiva ("washi tape") */
+        .bloc-afirmacions::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 30%;
+            width: 80px;
+            height: 25px;
+            background-color: rgba(255, 182, 193, 0.7);
+            transform: rotate(-3deg);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .bloc-afirmacions textarea {
+            width: 100%;
+            height: 200px;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-size: 1.05rem;
+            line-height: 20px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decoracions">
+        <div class="flor" style="top: 2%; left: 3%; color: #f27a24;">✿</div>
+        <div class="flor" style="top: 2%; left: 22%; color: #fcd116;">❀</div>
+        <div class="cor" style="top: 6%; left: 47%; color: #ffccd5;">♥</div>
+        <div class="flor" style="top: -2%; right: 2%; color: #f27a24; font-size: 60px;">✿</div>
+        <div class="cor" style="bottom: 5%; left: 5%; color: #ffccd5; font-size: 45px;">♥</div>
+        <div class="flor" style="bottom: -2%; left: 25%; color: #f27a24; font-size: 50px;">❀</div>
+        <div class="cor" style="bottom: 2%; left: 55%; color: #ffccd5;">♥</div>
+        <div class="flor" style="bottom: -2%; right: 15%; color: #fcd116; font-size: 50px;">✿</div>
+    </div>
+
+    <div class="controls">
+        <select id="mesSelector"></select>
+        <select id="anySelector"></select>
+    </div>
+
+    <div class="calendari-wrapper">
+        
+        <div class="calendari-principal">
+            <div class="dies-setmana">
+                <div style="color: #e45757;">Dg</div>
+                <div>Dl</div>
+                <div>Dt</div>
+                <div>Dc</div>
+                <div>Dj</div>
+                <div>Dv</div>
+                <div>Ds</div>
+            </div>
+            <div class="dies-gralla" id="grallaDies"></div>
+        </div>
+
+        <div class="lateral">
+            <div class="nom-mes-gegant" id="nomMesGegant">Gener</div>
+            
+            <div class="bloc-notes">
+                <h3>Notes</h3>
+                <textarea id="textNotes" placeholder="Apunta cosetes aquí..."></textarea>
+            </div>
+
+            <div class="bloc-afirmacions">
+                <h3>Afirmacions</h3>
+                <textarea id="textAfirmacions" placeholder="Sóc capaç de tot de tot! ✨"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const nomsMesos = ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny", "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"];
+        const canviAnyRef = document.getElementById('anySelector');
+        const canviMesRef = document.getElementById('mesSelector');
+        const grallaDies = document.getElementById('grallaDies');
+        const nomMesGegant = document.getElementById('nomMesGegant');
+        const textNotes = document.getElementById('textNotes');
+        const textAfirmacions = document.getElementById('textAfirmacions');
+
+        // Inicialitzar selectors d'anys (generem des de 2025 fins a 2035)
+        const anyActual = new Date().getFullYear();
+        for (let a = 2025; a <= 2035; a++) {
+            let opt = document.createElement('option');
+            opt.value = a;
+            opt.textContent = a;
+            if (a === anyActual) opt.selected = true;
+            canviAnyRef.appendChild(opt);
+        }
+
+        // Inicialitzar selector de mesos
+        nomsMesos.forEach((mes, index) => {
+            let opt = document.createElement('option');
+            opt.value = index;
+            opt.textContent = mes;
+            if (index === new Date().getMonth()) opt.selected = true;
+            canviMesRef.appendChild(opt);
+        });
+
+        // Funció principal per renderitzar el calendari adaptat
+        function dibuixaCalendari() {
+            const any = parseInt(canviAnyRef.value);
+            const mes = parseInt(canviMesRef.value);
+
+            nomMesGegant.textContent = nomsMesos[mes];
+
+            // Netejar gralla vella
+            grallaDies.innerHTML = '';
+
+            // Calcular primer dia del mes i total de dies
+            const primerDiaIndex = new Date(any, mes, 1).getDay(); // 0 = Dg, 1 = Dl...
+            const totalDies = new Date(any, mes + 1, 0).getDate();
+
+            // 1. Caselles buides inicials (en color rosa pastís com la teva imatge)
+            for (let i = 0; i < primerDiaIndex; i++) {
+                const casellaBuida = document.createElement('div');
+                casellaBuida.classList.add('casella', 'buda');
+                grallaDies.appendChild(casellaBuida);
+            }
+
+            // 2. Caselles dels dies del mes
+            for (let dia = 1; dia <= totalDies; dia++) {
+                const casella = document.createElement('div');
+                casella.classList.add('casella', 'actiu');
+
+                const numDia = document.createElement('div');
+                numDia.classList.add('num-dia');
+                numDia.textContent = dia;
+                casella.appendChild(numDia);
+
+                const areaText = document.createElement('textarea');
+                areaText.classList.add('esdeveniment-text');
+                areaText.placeholder = "...";
+                
+                // Clau única de memòria per aquest dia concret
+                const storageKey = `cal-${any}-${mes}-${dia}`;
+                areaText.value = localStorage.getItem(storageKey) || '';
+
+                // Desar automàticament quan l'usuari escriu
+                areaText.addEventListener('input', () => {
+                    localStorage.setItem(storageKey, areaText.value);
+                });
+
+                casella.appendChild(areaText);
+                grallaDies.appendChild(casella);
+            }
+
+            // 3. Caselles buides al final per quadrar la gralla visualment (opcional, estil la imatge)
+            const casellesTotals = primerDiaIndex + totalDies;
+            const restants = casellesTotals % 7 === 0 ? 0 : 7 - (casellesTotals % 7);
+            for (let i = 0; i < restants; i++) {
+                const casellaBuida = document.createElement('div');
+                casellaBuida.classList.add('casella', 'buda');
+                grallaDies.appendChild(casellaBuida);
+            }
+
+            // Carregar Notes i Afirmacions del mes concret
+            textNotes.value = localStorage.getItem(`notes-${any}-${mes}`) || '';
+            textAfirmacions.value = localStorage.getItem(`afirmacions-${any}-${mes}`) || '';
+        }
+
+        // Desament de Notes i Afirmacions generals del mes
+        textNotes.addEventListener('input', () => {
+            const any = canviAnyRef.value;
+            const mes = canviMesRef.value;
+            localStorage.setItem(`notes-${any}-${mes}`, textNotes.value);
+        });
+
+        textAfirmacions.addEventListener('input', () => {
+            const any = canviAnyRef.value;
+            const mes = canviMesRef.value;
+            localStorage.setItem(`afirmacions-${any}-${mes}`, textAfirmacions.value);
+        });
+
+        // Escoltar els canvis de mes o any
+        canviMesRef.addEventListener('change', dibuixaCalendari);
+        canviAnyRef.addEventListener('change', dibuixaCalendari);
+
+        // Execució inicial
+        dibuixaCalendari();
+    </script>
+</body>
+</html>
