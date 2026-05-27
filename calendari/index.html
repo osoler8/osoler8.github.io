@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Meu Calendari - Sincronitzat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-color: #fffcf7;
+            --day-bg: #e2e2f9;
+            --empty-bg: #ffd6e0;
+            --yellow-accent: #fecd1a;
+            --blue-grid: #e4f0f6;
+            --text-color: #333333;
+            --btn-green: #4caf50;
+            --btn-blue: #008cba;
+            --btn-orange: #ff9800;
+            --btn-red: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* PANTALLA DE LOGIN */
+        .auth-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 30px;
+            border: 3px solid var(--text-color);
+            border-radius: 30px;
+            box-shadow: 6px 6px 0px var(--text-color);
+            text-align: center;
+        }
+
+        .auth-container h2 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .auth-container input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 2px solid var(--text-color);
+            border-radius: 15px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* CALENDARI (Ocult per defecte) */
+        .app-container {
+            display: none;
+        }
+
+        .interficie-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .selectors-i-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .selectors select {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            border: 3px solid var(--text-color);
+            border-radius: 20px;
+            background-color: white;
+            cursor: pointer;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .user-badge {
+            background: #eee;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 2px solid var(--text-color);
+        }
+
+        .botons-accions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            border: 3px solid var(--text-color);
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--text-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--text-color);
+        }
+
+        .btn-guardar { background-color: var(--btn-green); }
+        .btn-pdf { background-color: var(--btn-blue); }
+        .btn-logout { background-color: var(--btn-red); }
+        .btn-auth { background-color: var(--btn-blue); width: 100%; margin-bottom: 10px; }
+        .btn-auth-sec { background-color: var(--btn-orange); width: 100%; }
+
+        .missatge-alerta {
+            font-weight: 600;
+            color: var(--btn-green);
+            height: 20px;
+            margin-top: -5px;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .calendari-wrapper {
+            display: grid;
+            grid-template-columns: 3fr 1.2fr;
+            gap: 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .calendari-wrapper { grid-template-columns: 1fr; }
+        }
+
+        .dies-setmana {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .dies-gralla {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(110px, auto);
+            gap: 12px;
+        }
+
+        .casella {
+            border-radius: 12px;
+            padding: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .casella.actiu {
+            background-color: var(--day-bg);
+            border: 2px solid transparent;
+        }
+
+        .casella.buda {
+            background-color: var(--empty-bg);
+            opacity: 0.7;
+        }
+
+        .num-dia {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .esdeveniment-text {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            resize: none;
+            font-size: 0.9rem;
+            color: #444;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .lateral {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .nom-mes-gegant {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: right;
+            text-transform: capitalize;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .bloc-notes {
+            background-color: var(--yellow-accent);
+            border-radius: 40px 60px 35px 50px;
+            padding: 25px;
+            box-shadow: 5px 5px 0px var(--text-color);
+            border: 3px solid var(--text-color);
+        }
+
+        .bloc-notes h3, .bloc-altres h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .bloc-notes textarea {
+            width: 100%;
+            height: 150px;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-size: 1.05rem;
+            font-family: inherit;
+        }
+
+        .bloc-altres {
+            background-color: var(--blue-grid);
+            background-image: 
+                linear-gradient(to right, #c6dbe7 1px, transparent 1px),
+                linear-gradient(to bottom, #c6dbe7 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            border: 2px solid #b2cbdc;
+        }
+
+        .bloc-altres::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 30%;
+            width: 80px;
+            height: 25px;
+            background-color: rgba(255, 182, 193, 0.7);
+            transform: rotate(-3deg);
+        }
+
+        .bloc-altres textarea {
+            width: 100%;
+            height: 200px;
+            background: transparent;
+            border: none;
+            resize: none;
+            outline: none;
+            font-size: 1.05rem;
+            line-height: 20px;
+            font-family: inherit;
+        }
+
+        @media print {
+            .interficie-controls { display: none !important; }
+            body { background-color: var(--bg-color) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
+            .calendari-wrapper { max-width: 100%; grid-template-columns: 3fr 1.2fr; }
+            @page { size: A4 landscape; margin: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="authContainer" class="auth-container">
+        <h2 id="authTitle">Inicia Sessió</h2>
+        <input type="email" id="authEmail" placeholder="El teu correu electrònic">
+        <input type="password" id="authPassword" placeholder="La teva contrasenya">
+        <div>
+            <button class="btn btn-auth" id="btnActionAuth">Entrar</button>
+            <button class="btn btn-auth-sec" id="btnToggleMode">Vull crear un compte nou</button>
+        </div>
+    </div>
+
+    <div id="appContainer" class="app-container">
+        <div class="interficie-controls">
+            <div class="selectors-i-user">
+                <div class="selectors">
+                    <select id="mesSelector"></select>
+                    <select id="anySelector"></select>
+                </div>
+                <div class="user-badge" id="userBadge">usuari@correu.com</div>
+            </div>
+            <div class="botons-accions">
+                <button class="btn btn-guardar" id="btnGuardar">Guardar al Núvol</button>
+                <button class="btn btn-pdf" id="btnPDF">Generar PDF</button>
+                <button class="btn btn-logout" id="btnLogout">Surt</button>
+            </div>
+            <div class="missatge-alerta" id="missatgeAlerta">Sincronitzat amb Supabase correctament! ✓</div>
+        </div>
+
+        <div class="calendari-wrapper">
+            <div class="calendari-principal">
+                <div class="dies-setmana">
+                    <div>Dl</div><div>Dt</div><div>Dc</div><div>Dj</div><div>Dv</div><div>Ds</div>
+                    <div style="color: #e45757;">Dg</div>
+                </div>
+                <div class="dies-gralla" id="grallaDies"></div>
+            </div>
+
+            <div class="lateral">
+                <div class="nom-mes-gegant" id="nomMesGegant">Gener</div>
+                <div class="bloc-notes">
+                    <h3>Notes</h3>
+                    <textarea id="textNotes" placeholder="Apunta cosetes..."></textarea>
+                </div>
+                <div class="bloc-altres">
+                    <h3>Altres</h3>
+                    <textarea id="textAltres" placeholder="Tasques importants..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =================================================================
+        // RECORDA CANVIAR AQUESTES DUES LÍNIES AMB LES TEVES CLAUS REALS:
+        // =================================================================
+        const SUPABASE_URL = "https://EL_TEU_PROJECTE.supabase.co";
+        const SUPABASE_ANON_KEY = "LA_TEVA_CLAU_ANON_AQUÍ";
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const authContainer = document.getElementById('authContainer');
+        const appContainer = document.getElementById('appContainer');
+        const authTitle = document.getElementById('authTitle');
+        const authEmail = document.getElementById('authEmail');
+        const authPassword = document.getElementById('authPassword');
+        const btnActionAuth = document.getElementById('btnActionAuth');
+        const btnToggleMode = document.getElementById('btnToggleMode');
+        const userBadge = document.getElementById('userBadge');
+        const btnLogout = document.getElementById('btnLogout');
+
+        const nomsMesos = ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny", "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"];
+        const canviAnyRef = document.getElementById('anySelector');
+        const canviMesRef = document.getElementById('mesSelector');
+        const grallaDies = document.getElementById('grallaDies');
+        const nomMesGegant = document.getElementById('nomMesGegant');
+        const textNotes = document.getElementById('textNotes');
+        const textAltres = document.getElementById('textAltres');
+        const btnGuardar = document.getElementById('btnGuardar');
+        const btnPDF = document.getElementById('btnPDF');
+        const missatgeAlerta = document.getElementById('missatgeAlerta');
+
+        let esModeLogin = true;
+        let usuariActual = null;
+        let dadesMesActual = {};
+
+        btnToggleMode.addEventListener('click', () => {
+            esModeLogin = !esModeLogin;
+            if (esModeLogin) {
+                authTitle.textContent = "Inicia Sessió";
+                btnActionAuth.textContent = "Entrar";
+                btnToggleMode.textContent = "Vull crear un compte nou";
+            } else {
+                authTitle.textContent = "Crea un compte nou";
+                btnActionAuth.textContent = "Registrar-me";
+                btnToggleMode.textContent = "Ja tinc un compte, vull entrar";
+            }
+        });
+
+        btnActionAuth.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authPassword.value;
+            if(!email || !password) { alert("Omple tots els camps."); return; }
+
+            if (esModeLogin) {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) alert("Error: " + error.message);
+            } else {
+                const { error } = await supabase.auth.signUp({ email, password });
+                if (error) alert("Error: " + error.message);
+                else alert("Compte creat amb èxit! Ja pots iniciar sessió.");
+            }
+        });
+
+        btnLogout.addEventListener('click', async () => { await supabase.auth.signOut(); });
+
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                usuariActual = session.user;
+                userBadge.textContent = usuariActual.email;
+                authContainer.style.display = 'none';
+                appContainer.style.display = 'block';
+                dibuixaCalendari();
+            } else {
+                usuariActual = null;
+                authContainer.style.display = 'block';
+                appContainer.style.display = 'none';
+            }
+        });
+
+        const anyActual = new Date().getFullYear();
+        for (let a = 2025; a <= 2035; a++) {
+            let opt = document.createElement('option');
+            opt.value = a; opt.textContent = a;
+            if (a === anyActual) opt.selected = true;
+            canviAnyRef.appendChild(opt);
+        }
+
+        nomsMesos.forEach((mes, index) => {
+            let opt = document.createElement('option');
+            opt.value = index; opt.textContent = mes;
+            if (index === new Date().getMonth()) opt.selected = true;
+            canviMesRef.appendChild(opt);
+        });
+
+        async function carregarDadesDelMes(any, mes) {
+            if (!usuariActual) return;
+            const prefixFiltre = `%-${any}-${mes}-%`;
+            const clauNotes = `notes-${any}-${mes}`;
+            const clauAltres = `altres-${any}-${mes}`;
+
+            const { data, error } = await supabase
+                .from('calendar_data')
+                .select('clau, contingut')
+                .or(`clau.like.${prefixFiltre},clau.eq.${clauNotes},clau.eq.${clauAltres}`);
+
+            dadesMesActual = {};
+            if (data) { data.forEach(row => { dadesMesActual[row.clau] = row.contingut; }); }
+        }
+
+        async function dibuixaCalendari() {
+            const any = parseInt(canviAnyRef.value);
+            const mes = parseInt(canviMesRef.value);
+
+            nomMesGegant.textContent = nomsMesos[mes];
+            grallaDies.innerHTML = 'Carregant dades del núvol...';
+
+            await carregarDadesDelMes(any, mes);
+            grallaDies.innerHTML = '';
+
+            const primerDiaNatiu = new Date(any, mes, 1).getDay(); 
+            const primerDiaIndex = primerDiaNatiu === 0 ? 6 : primerDiaNatiu - 1; 
+            const totalDies = new Date(any, mes + 1, 0).getDate();
+
+            for (let i = 0; i < primerDiaIndex; i++) {
+                const casellaBuida = document.createElement('div');
+                casellaBuida.classList.add('casella', 'buda');
+                grallaDies.appendChild(casellaBuida);
+            }
+
+            for (let dia = 1; dia <= totalDies; dia++) {
+                const casella = document.createElement('div');
+                casella.classList.add('casella', 'actiu');
+
+                const numDia = document.createElement('div');
+                numDia.classList.add('num-dia');
+                numDia.textContent = dia;
+                casella.appendChild(numDia);
+
+                const areaText = document.createElement('textarea');
+                areaText.classList.add('esdeveniment-text');
+                areaText.placeholder = "...";
+                
+                const storageKey = `cal-${any}-${mes}-${dia}`;
+                areaText.value = dadesMesActual[storageKey] || '';
+                areaText.dataset.key = storageKey;
+
+                casella.appendChild(areaText);
+                grallaDies.appendChild(casella);
+            }
+
+            const casellesTotals = primerDiaIndex + totalDies;
+            const restants = casellesTotals % 7 === 0 ? 0 : 7 - (casellesTotals % 7);
+            for (let i = 0; i < restants; i++) {
+                const casellaBuida = document.createElement('div');
+                casellaBuida.classList.add('casella', 'buda');
+                grallaDies.appendChild(casellaBuida);
+            }
+
+            textNotes.value = dadesMesActual[`notes-${any}-${mes}`] || '';
+            textAltres.value = dadesMesActual[`altres-${any}-${mes}`] || '';
+        }
+
+        async function guardarAlNuvol() {
+            if (!usuariActual) return;
+            const any = canviAnyRef.value;
+            const mes = canviMesRef.value;
+            const filesToUpsert = [];
+
+            document.querySelectorAll('.esdeveniment-text').forEach(el => {
+                filesToUpsert.push({
+                    user_id: usuariActual.id,
+                    clau: el.dataset.key,
+                    contingut: el.value
+                });
+            });
+
+            filesToUpsert.push({ user_id: usuariActual.id, clau: `notes-${any}-${mes}`, contingut: textNotes.value });
+            filesToUpsert.push({ user_id: usuariActual.id, clau: `altres-${any}-${mes}`, contingut: textAltres.value });
+
+            const { error } = await supabase
+                .from('calendar_data')
+                .upsert(filesToUpsert, { onConflict: 'clau,user_id' });
+
+            if (error) {
+                alert("Error al guardar: " + error.message);
+            } else {
+                missatgeAlerta.style.opacity = '1';
+                setTimeout(() => { missatgeAlerta.style.opacity = '0'; }, 3000);
+            }
+        }
+
+        canviMesRef.addEventListener('change', dibuixaCalendari);
+        canviAnyRef.addEventListener('change', dibuixaCalendari);
+        btnGuardar.addEventListener('click', guardarAlNuvol);
+        btnPDF.addEventListener('click', () => { window.print(); });
+    </script>
+</body>
+</html>
