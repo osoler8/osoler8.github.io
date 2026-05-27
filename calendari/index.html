@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Meu Calendari - Sincronitzat</title>
+    <title>El Meu Calendari Privat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
@@ -20,7 +20,6 @@
             --text-color: #333333;
             --btn-green: #4caf50;
             --btn-blue: #008cba;
-            --btn-orange: #ff9800;
             --btn-red: #f44336;
         }
 
@@ -38,10 +37,10 @@
             min-height: 100vh;
         }
 
-        /* PANTALLA DE LOGIN */
+        /* PANTALLA DE LOGIN NETTA */
         .auth-container {
             max-width: 400px;
-            margin: 80px auto;
+            margin: 100px auto;
             background: white;
             padding: 30px;
             border: 3px solid var(--text-color);
@@ -51,7 +50,7 @@
         }
 
         .auth-container h2 {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 1.8rem;
         }
 
@@ -65,7 +64,7 @@
             outline: none;
         }
 
-        /* CALENDARI (Ocult per defecte) */
+        /* CALENDARI */
         .app-container {
             display: none;
         }
@@ -132,8 +131,7 @@
         .btn-guardar { background-color: var(--btn-green); }
         .btn-pdf { background-color: var(--btn-blue); }
         .btn-logout { background-color: var(--btn-red); }
-        .btn-auth { background-color: var(--btn-blue); width: 100%; margin-bottom: 10px; }
-        .btn-auth-sec { background-color: var(--btn-orange); width: 100%; }
+        .btn-auth { background-color: var(--btn-blue); width: 100%; margin-top: 10px; }
 
         .missatge-alerta {
             font-weight: 600;
@@ -295,13 +293,10 @@
 <body>
 
     <div id="authContainer" class="auth-container">
-        <h2 id="authTitle">Inicia Sessió</h2>
-        <input type="email" id="authEmail" placeholder="El teu correu electrònic">
-        <input type="password" id="authPassword" placeholder="La teva contrasenya">
-        <div>
-            <button class="btn btn-auth" id="btnActionAuth">Entrar</button>
-            <button class="btn btn-auth-sec" id="btnToggleMode">Vull crear un compte nou</button>
-        </div>
+        <h2>Accés Privat</h2>
+        <input type="email" id="authEmail" placeholder="Correu electrònic">
+        <input type="password" id="authPassword" placeholder="Contrasenya">
+        <button class="btn btn-auth" id="btnActionAuth">Entrar</button>
     </div>
 
     <div id="appContainer" class="app-container">
@@ -311,14 +306,14 @@
                     <select id="mesSelector"></select>
                     <select id="anySelector"></select>
                 </div>
-                <div class="user-badge" id="userBadge">usuari@correu.com</div>
+                <div class="user-badge" id="userBadge">...</div>
             </div>
             <div class="botons-accions">
                 <button class="btn btn-guardar" id="btnGuardar">Guardar al Núvol</button>
                 <button class="btn btn-pdf" id="btnPDF">Generar PDF</button>
                 <button class="btn btn-logout" id="btnLogout">Surt</button>
             </div>
-            <div class="missatge-alerta" id="missatgeAlerta">Sincronitzat amb Supabase correctament! ✓</div>
+            <div class="missatge-alerta" id="missatgeAlerta">Sincronitzat correctament! ✓</div>
         </div>
 
         <div class="calendari-wrapper">
@@ -331,10 +326,10 @@
             </div>
 
             <div class="lateral">
-                <div class="nom-mes-gegant" id="nomMesGegant">Gener</div>
+                <div class="nom-mes-gegant" id="nomMesGegant">...</div>
                 <div class="bloc-notes">
                     <h3>Notes</h3>
-                    <textarea id="textNotes" placeholder="Apunta cosetes..."></textarea>
+                    <textarea id="textNotes" placeholder="Apunta coses..."></textarea>
                 </div>
                 <div class="bloc-altres">
                     <h3>Altres</h3>
@@ -346,7 +341,7 @@
 
     <script>
         // =================================================================
-        // RECORDA CANVIAR AQUESTES DUES LÍNIES AMB LES TEVES CLAUS REALS:
+        // CLAUS D'ACCÉS (NOMÉS ENGANXAR UNA VEGADA AQUÍ)
         // =================================================================
         const SUPABASE_URL = "https://vgmevmnvehroobssyxpc.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_vdqQsme8rUfSBtPpnUw5Ow_Y_Ra7Pej";
@@ -355,11 +350,9 @@
 
         const authContainer = document.getElementById('authContainer');
         const appContainer = document.getElementById('appContainer');
-        const authTitle = document.getElementById('authTitle');
         const authEmail = document.getElementById('authEmail');
         const authPassword = document.getElementById('authPassword');
         const btnActionAuth = document.getElementById('btnActionAuth');
-        const btnToggleMode = document.getElementById('btnToggleMode');
         const userBadge = document.getElementById('userBadge');
         const btnLogout = document.getElementById('btnLogout');
 
@@ -374,36 +367,17 @@
         const btnPDF = document.getElementById('btnPDF');
         const missatgeAlerta = document.getElementById('missatgeAlerta');
 
-        let esModeLogin = true;
         let usuariActual = null;
         let dadesMesActual = {};
 
-        btnToggleMode.addEventListener('click', () => {
-            esModeLogin = !esModeLogin;
-            if (esModeLogin) {
-                authTitle.textContent = "Inicia Sessió";
-                btnActionAuth.textContent = "Entrar";
-                btnToggleMode.textContent = "Vull crear un compte nou";
-            } else {
-                authTitle.textContent = "Crea un compte nou";
-                btnActionAuth.textContent = "Registrar-me";
-                btnToggleMode.textContent = "Ja tinc un compte, vull entrar";
-            }
-        });
-
+        // LOGIN STRICTE
         btnActionAuth.addEventListener('click', async () => {
             const email = authEmail.value.trim();
             const password = authPassword.value;
             if(!email || !password) { alert("Omple tots els camps."); return; }
 
-            if (esModeLogin) {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert("Error: " + error.message);
-            } else {
-                const { error } = await supabase.auth.signUp({ email, password });
-                if (error) alert("Error: " + error.message);
-                else alert("Compte creat amb èxit! Ja pots iniciar sessió.");
-            }
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) alert("Error d'accés: " + error.message);
         });
 
         btnLogout.addEventListener('click', async () => { await supabase.auth.signOut(); });
@@ -422,6 +396,7 @@
             }
         });
 
+        // GENERACIÓ DINÀMICA
         const anyActual = new Date().getFullYear();
         for (let a = 2025; a <= 2035; a++) {
             let opt = document.createElement('option');
@@ -457,7 +432,7 @@
             const mes = parseInt(canviMesRef.value);
 
             nomMesGegant.textContent = nomsMesos[mes];
-            grallaDies.innerHTML = 'Carregant dades del núvol...';
+            grallaDies.innerHTML = 'Carregant dades...';
 
             await carregarDadesDelMes(any, mes);
             grallaDies.innerHTML = '';
