@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El meu calendari</title>
+    <title>El Meu Calendari Privat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
@@ -329,7 +329,7 @@
                 <div class="nom-mes-gegant" id="nomMesGegant">...</div>
                 <div class="bloc-notes">
                     <h3>Notes</h3>
-                    <textarea id="textNotes" placeholder="Apunta coses..."></textarea>
+                    <textarea id="textNotes" placeholder="Apunta cosetes..."></textarea>
                 </div>
                 <div class="bloc-altres">
                     <h3>Altres</h3>
@@ -341,11 +341,12 @@
 
     <script>
         // =================================================================
-        // CLAUS D'ACCÉS (NOMÉS ENGANXAR UNA VEGADA AQUÍ)
+        // RECORDA CONFIGURAR LES TEVES DUES CLAUS AQUÍ SOTA ↓
         // =================================================================
         const SUPABASE_URL = "https://vgmevmnvehroobssyxpc.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_vdqQsme8rUfSBtPpnUw5Ow_Y_Ra7Pej";
 
+        // Inicialització neta (Només es declara una vegada a tot el fitxer)
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const authContainer = document.getElementById('authContainer');
@@ -370,14 +371,33 @@
         let usuariActual = null;
         let dadesMesActual = {};
 
-        // LOGIN STRICTE
+        // CODI DE DIAGNÒSTIC INTEGRAT
         btnActionAuth.addEventListener('click', async () => {
+            alert("📢 PAS 1: El clic s'ha registrat correctament.");
+
             const email = authEmail.value.trim();
             const password = authPassword.value;
-            if(!email || !password) { alert("Omple tots els camps."); return; }
 
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) alert("Error d'accés: " + error.message);
+            alert("📢 PAS 2: Camps llegits. Email detectat: [" + email + "]");
+
+            if(!email || !password) { 
+                alert("⚠️ Atenció: Has deixat el correu o la contrasenya buits."); 
+                return; 
+            }
+
+            try {
+                alert("📢 PAS 3: Enviant dades al servidor de Supabase... clica OK i espera.");
+                
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                
+                if (error) {
+                    alert("❌ PAS 4 (ERROR DEL SERVIDOR): Supabase ha contestat amb aquest error: " + error.message);
+                } else {
+                    alert("✅ PAS 4 (ÈXIT): Credencials correctes! Obrint calendari...");
+                }
+            } catch (crash) {
+                alert("💥 PAS 4 (FALLA SINTAXI): El codi ha petat abans de sortir de l'ordinador. Detall: " + crash.message);
+            }
         });
 
         btnLogout.addEventListener('click', async () => { await supabase.auth.signOut(); });
@@ -396,7 +416,7 @@
             }
         });
 
-        // GENERACIÓ DINÀMICA
+        // GENERACIÓ DINÀMICA DELS ANYS I MESOS
         const anyActual = new Date().getFullYear();
         for (let a = 2025; a <= 2035; a++) {
             let opt = document.createElement('option');
