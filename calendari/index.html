@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Meu Calendari Cuqui</title>
+    <title>El Meu Calendari - Personalitzat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
@@ -16,6 +16,8 @@
             --yellow-accent: #fecd1a;
             --blue-grid: #e4f0f6;
             --text-color: #333333;
+            --btn-green: #4caf50;
+            --btn-blue: #008cba;
         }
 
         * {
@@ -30,34 +32,23 @@
             color: var(--text-color);
             padding: 20px;
             min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
         }
 
-        /* Elements decoratius de fons */
-        .decoracions {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .cor { position: absolute; font-size: 30px; opacity: 0.6; }
-        .flor { position: absolute; font-size: 40px; opacity: 0.7; }
-
-        /* Selectors de data superiors */
-        .controls {
+        /* Controls superiors i botons */
+        .interficie-controls {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             gap: 15px;
             margin-bottom: 25px;
-            position: relative;
-            z-index: 10;
         }
 
-        .controls select {
+        .selectors {
+            display: flex;
+            gap: 15px;
+        }
+
+        .selectors select {
             padding: 10px 20px;
             font-size: 1.1rem;
             border: 3px solid var(--text-color);
@@ -68,6 +59,40 @@
             outline: none;
         }
 
+        .botons-accions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            border: 3px solid var(--text-color);
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px var(--text-color);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--text-color);
+        }
+
+        .btn-guardar { background-color: var(--btn-green); }
+        .btn-pdf { background-color: var(--btn-blue); }
+
+        .missatge-alerta {
+            font-weight: 600;
+            color: var(--btn-green);
+            height: 20px;
+            margin-top: -5px;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
         /* Layout Principal */
         .calendari-wrapper {
             display: grid;
@@ -75,8 +100,6 @@
             gap: 30px;
             max-width: 1300px;
             margin: 0 auto;
-            position: relative;
-            z-index: 1;
         }
 
         @media (max-width: 900px) {
@@ -116,10 +139,6 @@
             transition: transform 0.2s;
         }
 
-        .casella:hover {
-            transform: scale(1.02);
-        }
-
         .casella.actiu {
             background-color: var(--day-bg);
             border: 2px solid transparent;
@@ -149,7 +168,7 @@
             font-family: inherit;
         }
 
-        /* Barra Lateral (Notes i Afirmacions) */
+        /* Barra Lateral */
         .lateral {
             display: flex;
             flex-direction: column;
@@ -165,7 +184,7 @@
             color: #222;
         }
 
-        /* Bloc de Notes Estil Núvol/Taca */
+        /* Bloc de Notes Estil Núvol */
         .bloc-notes {
             background-color: var(--yellow-accent);
             border-radius: 40px 60px 35px 50px;
@@ -174,7 +193,7 @@
             border: 3px solid var(--text-color);
         }
 
-        .bloc-notes h3, .bloc-afirmacions h3 {
+        .bloc-notes h3, .bloc-altres h3 {
             font-size: 1.4rem;
             margin-bottom: 10px;
             font-weight: 700;
@@ -191,8 +210,8 @@
             font-family: inherit;
         }
 
-        /* Bloc d'Afirmacions Estil Quadres */
-        .bloc-afirmacions {
+        /* Bloc Altres Estil Quadres */
+        .bloc-altres {
             background-color: var(--blue-grid);
             background-image: 
                 linear-gradient(to right, #c6dbe7 1px, transparent 1px),
@@ -205,7 +224,7 @@
         }
 
         /* Efecte de cinta adhesiva ("washi tape") */
-        .bloc-afirmacions::before {
+        .bloc-altres::before {
             content: '';
             position: absolute;
             top: -10px;
@@ -217,7 +236,7 @@
             box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
         }
 
-        .bloc-afirmacions textarea {
+        .bloc-altres textarea {
             width: 100%;
             height: 200px;
             background: transparent;
@@ -228,37 +247,58 @@
             line-height: 20px;
             font-family: inherit;
         }
+
+        /* OPTIMITZACIÓ PER A GENERAR PDF / IMPRIMIR */
+        @media print {
+            .interficie-controls {
+                display: none !important;
+            }
+            body {
+                background-color: var(--bg-color) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 0;
+            }
+            .calendari-wrapper {
+                max-width: 100%;
+                grid-template-columns: 3fr 1.2fr;
+            }
+            .casella, .bloc-notes, .bloc-altres {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="decoracions">
-        <div class="flor" style="top: 2%; left: 3%; color: #f27a24;">✿</div>
-        <div class="flor" style="top: 2%; left: 22%; color: #fcd116;">❀</div>
-        <div class="cor" style="top: 6%; left: 47%; color: #ffccd5;">♥</div>
-        <div class="flor" style="top: -2%; right: 2%; color: #f27a24; font-size: 60px;">✿</div>
-        <div class="cor" style="bottom: 5%; left: 5%; color: #ffccd5; font-size: 45px;">♥</div>
-        <div class="flor" style="bottom: -2%; left: 25%; color: #f27a24; font-size: 50px;">❀</div>
-        <div class="cor" style="bottom: 2%; left: 55%; color: #ffccd5;">♥</div>
-        <div class="flor" style="bottom: -2%; right: 15%; color: #fcd116; font-size: 50px;">✿</div>
-    </div>
-
-    <div class="controls">
-        <select id="mesSelector"></select>
-        <select id="anySelector"></select>
+    <div class="interficie-controls">
+        <div class="selectors">
+            <select id="mesSelector"></select>
+            <select id="anySelector"></select>
+        </div>
+        <div class="botons-accions">
+            <button class="btn btn-guardar" id="btnGuardar">Guardar dades</button>
+            <button class="btn btn-pdf" id="btnPDF">Generar PDF</button>
+        </div>
+        <div class="missatge-alerta" id="missatgeAlerta">Dades desades correctament al navegador! ✓</div>
     </div>
 
     <div class="calendari-wrapper">
         
         <div class="calendari-principal">
             <div class="dies-setmana">
-                <div style="color: #e45757;">Dg</div>
                 <div>Dl</div>
                 <div>Dt</div>
                 <div>Dc</div>
                 <div>Dj</div>
                 <div>Dv</div>
                 <div>Ds</div>
+                <div style="color: #e45757;">Dg</div>
             </div>
             <div class="dies-gralla" id="grallaDies"></div>
         </div>
@@ -271,9 +311,9 @@
                 <textarea id="textNotes" placeholder="Apunta cosetes aquí..."></textarea>
             </div>
 
-            <div class="bloc-afirmacions">
-                <h3>Afirmacions</h3>
-                <textarea id="textAfirmacions" placeholder="Sóc capaç de tot de tot! ✨"></textarea>
+            <div class="bloc-altres">
+                <h3>Altres</h3>
+                <textarea id="textAltres" placeholder="Altres anotacions o tasques importants..."></textarea>
             </div>
         </div>
 
@@ -286,9 +326,12 @@
         const grallaDies = document.getElementById('grallaDies');
         const nomMesGegant = document.getElementById('nomMesGegant');
         const textNotes = document.getElementById('textNotes');
-        const textAfirmacions = document.getElementById('textAfirmacions');
+        const textAltres = document.getElementById('textAltres');
+        const btnGuardar = document.getElementById('btnGuardar');
+        const btnPDF = document.getElementById('btnPDF');
+        const missatgeAlerta = document.getElementById('missatgeAlerta');
 
-        // Inicialitzar selectors d'anys (generem des de 2025 fins a 2035)
+        // Inicialitzar selectors d'anys (2025-2035)
         const anyActual = new Date().getFullYear();
         for (let a = 2025; a <= 2035; a++) {
             let opt = document.createElement('option');
@@ -307,28 +350,30 @@
             canviMesRef.appendChild(opt);
         });
 
-        // Funció principal per renderitzar el calendari adaptat
+        // Funció principal per renderitzar el calendari
         function dibuixaCalendari() {
             const any = parseInt(canviAnyRef.value);
             const mes = parseInt(canviMesRef.value);
 
             nomMesGegant.textContent = nomsMesos[mes];
-
-            // Netejar gralla vella
             grallaDies.innerHTML = '';
 
-            // Calcular primer dia del mes i total de dies
-            const primerDiaIndex = new Date(any, mes, 1).getDay(); // 0 = Dg, 1 = Dl...
+            // Obtener el primer día de forma nativa (0 = Dg, 1 = Dl, 2 = Dt...)
+            const primerDiaNatiu = new Date(any, mes, 1).getDay(); 
+            
+            // Reajustar l'índex perquè el Dilluns sigui 0 i el Diumenge sigui 6
+            const primerDiaIndex = primerDiaNatiu === 0 ? 6 : primerDiaNatiu - 1;
+            
             const totalDies = new Date(any, mes + 1, 0).getDate();
 
-            // 1. Caselles buides inicials (en color rosa pastís com la teva imatge)
+            // 1. Caselles buides inicials (rosa) adaptades al Dilluns
             for (let i = 0; i < primerDiaIndex; i++) {
                 const casellaBuida = document.createElement('div');
                 casellaBuida.classList.add('casella', 'buda');
                 grallaDies.appendChild(casellaBuida);
             }
 
-            // 2. Caselles dels dies del mes
+            // 2. Caselles dels dies actius
             for (let dia = 1; dia <= totalDies; dia++) {
                 const casella = document.createElement('div');
                 casella.classList.add('casella', 'actiu');
@@ -342,11 +387,10 @@
                 areaText.classList.add('esdeveniment-text');
                 areaText.placeholder = "...";
                 
-                // Clau única de memòria per aquest dia concret
                 const storageKey = `cal-${any}-${mes}-${dia}`;
                 areaText.value = localStorage.getItem(storageKey) || '';
 
-                // Desar automàticament quan l'usuari escriu
+                // Desa automàticament al teclejar
                 areaText.addEventListener('input', () => {
                     localStorage.setItem(storageKey, areaText.value);
                 });
@@ -355,7 +399,7 @@
                 grallaDies.appendChild(casella);
             }
 
-            // 3. Caselles buides al final per quadrar la gralla visualment (opcional, estil la imatge)
+            // 3. Caselles buides al final per quadrar la gralla de 7 columnes
             const casellesTotals = primerDiaIndex + totalDies;
             const restants = casellesTotals % 7 === 0 ? 0 : 7 - (casellesTotals % 7);
             for (let i = 0; i < restants; i++) {
@@ -364,27 +408,45 @@
                 grallaDies.appendChild(casellaBuida);
             }
 
-            // Carregar Notes i Afirmacions del mes concret
+            // Carregar Notes i Altres del mes concret
             textNotes.value = localStorage.getItem(`notes-${any}-${mes}`) || '';
-            textAfirmacions.value = localStorage.getItem(`afirmacions-${any}-${mes}`) || '';
+            textAltres.value = localStorage.getItem(`altres-${any}-${mes}`) || '';
         }
 
-        // Desament de Notes i Afirmacions generals del mes
+        // Funció per al botó de Guardar Manual
+        function guardarManual() {
+            const any = canviAnyRef.value;
+            const mes = canviMesRef.value;
+            
+            localStorage.setItem(`notes-${any}-${mes}`, textNotes.value);
+            localStorage.setItem(`altres-${any}-${mes}`, textAltres.value);
+
+            missatgeAlerta.style.opacity = '1';
+            setTimeout(() => {
+                missatgeAlerta.style.opacity = '0';
+            }, 3000);
+        }
+
+        // Auto-desat al modificar les caixes laterals
         textNotes.addEventListener('input', () => {
             const any = canviAnyRef.value;
             const mes = canviMesRef.value;
             localStorage.setItem(`notes-${any}-${mes}`, textNotes.value);
         });
 
-        textAfirmacions.addEventListener('input', () => {
+        textAltres.addEventListener('input', () => {
             const any = canviAnyRef.value;
             const mes = canviMesRef.value;
-            localStorage.setItem(`afirmacions-${any}-${mes}`, textAfirmacions.value);
+            localStorage.setItem(`altres-${any}-${mes}`, textAltres.value);
         });
 
-        // Escoltar els canvis de mes o any
         canviMesRef.addEventListener('change', dibuixaCalendari);
         canviAnyRef.addEventListener('change', dibuixaCalendari);
+        
+        btnGuardar.addEventListener('click', guardarManual);
+        btnPDF.addEventListener('click', () => {
+            window.print();
+        });
 
         // Execució inicial
         dibuixaCalendari();
