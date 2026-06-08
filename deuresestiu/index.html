@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Deures d'Estiu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-primari: #2c3e50;
+            --color-secundari: #3498db;
+            --color-fons: #f9f9f9;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-fons);
+            margin: 0;
+            padding: 20px;
+            color: var(--color-primari);
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+        }
+
+        /* --- SECCIÓ D'EDICIÓ (No s'imprimirà) --- */
+        .editor-caixa {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .formulari-afegir {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            min-width: 250px;
+        }
+
+        button {
+            background-color: var(--color-secundari);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .botons-control {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .btn-imprimir {
+            background-color: #27ae60;
+        }
+
+        .btn-imprimir:hover {
+            background-color: #2ecc71;
+        }
+
+        .btn-esborrar-tot {
+            background-color: #e74c3c;
+        }
+        
+        .btn-esborrar-tot:hover {
+            background-color: #c0392b;
+        }
+
+        /* --- SECCIÓ DE VISTA PRÈVIA / IMPRESSIÓ --- */
+        .capcalera-document {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .capcalera-document h1 {
+            font-size: 3rem;
+            margin-bottom: 5px;
+            color: var(--color-primari);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .capcalera-document h2 {
+            font-weight: normal;
+            color: #555;
+        }
+
+        .graella-propostes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .targeta-proposta {
+            background: white;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .caixa-seleccio {
+            width: 25px;
+            height: 25px;
+            border: 2px solid var(--color-primari);
+            border-radius: 4px;
+            appearance: none; /* Amaga el checkbox per defecte per imprimir-lo buit */
+            -webkit-appearance: none;
+            background-color: white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .text-proposta {
+            flex-grow: 1;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .icona-proposta {
+            font-size: 2rem;
+            color: #7f8c8d;
+            flex-shrink: 0;
+        }
+
+        .btn-eliminar-item {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* --- ESTILS NOMÉS PER IMPRIMIR (PDF) --- */
+        @media print {
+            body {
+                background-color: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .targeta-proposta {
+                break-inside: avoid;
+                border-color: #000;
+            }
+            .caixa-seleccio {
+                border-color: #000;
+            }
+            .icona-proposta {
+                color: #000;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="editor-caixa no-print">
+        <h2>🛠️ Editor de Propostes Lúdiques</h2>
+        <p style="text-align: center;">Afegeix noves tasques per als alumnes. Aquesta caixa no apareixerà al PDF final.</p>
+        
+        <form id="formulari" class="formulari-afegir">
+            <input type="text" id="text-tasca" placeholder="Ex: Fer un diari de vacances amb fotos..." required>
+            
+            <select id="icona-tasca">
+                <optgroup label="Bàsics i Cultura">
+                    <option value="fa-book-open">📖 Llibre / Llegir</option>
+                    <option value="fa-pen-fancy">✒️ Escriure / Diari</option>
+                    <option value="fa-music">🎵 Música / Ballar</option>
+                    <option value="fa-film">🎬 Cinema / Pel·lícules</option>
+                    <option value="fa-flask">🧪 Experiments</option>
+                </optgroup>
+
+                <optgroup label="Natura i Animals">
+                    <option value="fa-leaf">🍃 Natura general</option>
+                    <option value="fa-sun">☀️ Sol / Posta de sol</option>
+                    <option value="fa-bug">🐛 Insectes</option>
+                    <option value="fa-paw">🐾 Animals / Mascotes</option>
+                    <option value="fa-fish">🐟 Peixos / Riu</option>
+                    <option value="fa-seedling">🌱 Jardineria / Plantes</option>
+                    <option value="fa-tree">🌳 Bosc / Arbres</option>
+                </optgroup>
+
+                <optgroup label="Esports i Moviment">
+                    <option value="fa-basketball">🏀 Bàsquet / Esport general</option>
+                    <option value="fa-futbol">⚽ Futbol</option>
+                    <option value="fa-bicycle">🚲 Bicicleta / Patinet</option>
+                    <option value="fa-person-swimming">🏊 Nedar</option>
+                    <option value="fa-person-hiking">🥾 Excursió / Caminar</option>
+                    <option value="fa-water">🌊 Platja / Piscina</option>
+                </optgroup>
+
+                <optgroup label="Creativitat i Jocs">
+                    <option value="fa-palette">🎨 Pintar / Dibuixar</option>
+                    <option value="fa-scissors">✂️ Manualitats</option>
+                    <option value="fa-puzzle-piece">🧩 Puzles / Lego / Maquetes</option>
+                    <option value="fa-dice">🎲 Jocs de taula</option>
+                    <option value="fa-gamepad">🎮 Videojocs / Joc lliure</option>
+                    <option value="fa-camera">📷 Fotografia</option>
+                </optgroup>
+
+                <optgroup label="Casa i Família">
+                    <option value="fa-utensils">🍳 Cuinar</option>
+                    <option value="fa-ice-cream">🍦 Gelat / Dolços</option>
+                    <option value="fa-broom">🧹 Ajudar a casa / Netejar</option>
+                    <option value="fa-cart-shopping">🛒 Anar a comprar</option>
+                    <option value="fa-users">👥 Amics / Família</option>
+                    <option value="fa-bed">🛌 Descansar / Badar</option>
+                </optgroup>
+
+                <optgroup label="Viatges i Aventures">
+                    <option value="fa-plane">✈️ Avió / Viatjar lluny</option>
+                    <option value="fa-train">🚆 Tren / Transport públic</option>
+                    <option value="fa-car">🚗 Cotxe / Ruta</option>
+                    <option value="fa-campground">⛺ Càmping / Cabana</option>
+                    <option value="fa-map-location-dot">🗺️ Descobrir / Museus</option>
+                </optgroup>
+            </select>
+            
+            <button type="submit"><i class="fa-solid fa-plus"></i> Afegir</button>
+        </form>
+
+        <div class="botons-control">
+            <button type="button" class="btn-esborrar-tot" onclick="netejarTot()"><i class="fa-solid fa-trash"></i> Esborrar tot</button>
+            <button type="button" class="btn-imprimir" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Imprimir / Crear PDF</button>
+        </div>
+    </div>
+
+    <div class="document-final">
+        <div class="capcalera-document">
+            <h2>Deures</h2>
+            <h1>D'ESTIU</h1>
+            <h3>EUGENI D'ORS - VALLS</h3>
+            <p>Propostes per fer aquestes vacances d'estiu</p>
+        </div>
+
+        <div class="graella-propostes" id="contingenidor-propostes">
+            </div>
+    </div>
+
+    <script>
+        // Dades inicials per defecte (basades en el PDF original)
+        const propostesPerDefecte = [
+            { id: 1, text: "Fer un diari de vacances amb fotos, entrades, dibuixos...", icona: "fa-pen-fancy" },
+            { id: 2, text: "Observar/fotografiar insectes i animals", icona: "fa-bug" },
+            { id: 3, text: "Llegir/intercanviar llibres, contes, i còmics amb amics/gues", icona: "fa-book-open" },
+            { id: 4, text: "Fer esport", icona: "fa-basketball" },
+            { id: 5, text: "Viatjar", icona: "fa-plane" },
+            { id: 6, text: "Jugar a jocs de taula", icona: "fa-dice" },
+            { id: 7, text: "Escoltar música diversa i ballar", icona: "fa-music" },
+            { id: 8, text: "Banyar-se a la platja, piscina, riu...", icona: "fa-water" },
+            { id: 9, text: "Fer un dibuix a la natura", icona: "fa-palette" },
+            { id: 10, text: "Construir una cabana", icona: "fa-campground" },
+            { id: 11, text: "Veure una posta de sol", icona: "fa-sun" },
+            { id: 12, text: "Fer experiments", icona: "fa-flask" },
+            { id: 13, text: "Anar a comprar", icona: "fa-cart-shopping" },
+            { id: 14, text: "Ajudar a casa", icona: "fa-broom" },
+            { id: 15, text: "Sessió de cinema a la fresca", icona: "fa-film" },
+            { id: 16, text: "Fer una excursió a peu", icona: "fa-person-hiking" },
+            { id: 17, text: "Cuinar", icona: "fa-utensils" }
+        ];
+
+        // Llista que contindrà l'estat actual de les tasques
+        let llistaPropostes = [];
+
+        // Funció que s'executa en carregar la pàgina
+        function inicialitzar() {
+            // Comprovem si hi ha dades guardades al navegador
+            const dadesGuardades = localStorage.getItem('deuresEstiu');
+            
+            if (dadesGuardades) {
+                llistaPropostes = JSON.parse(dadesGuardades);
+            } else {
+                llistaPropostes = [...propostesPerDefecte];
+            }
+            renderitzarPropostes();
+        }
+
+        // Funció per dibuixar les caixes a la pantalla
+        function renderitzarPropostes() {
+            const contenidor = document.getElementById('contingenidor-propostes');
+            contenidor.innerHTML = ''; // Netegem abans de dibuixar
+
+            llistaPropostes.forEach(proposta => {
+                const targeta = document.createElement('div');
+                targeta.className = 'targeta-proposta';
+                
+                targeta.innerHTML = `
+                    <input type="checkbox" class="caixa-seleccio">
+                    <p class="text-proposta">${proposta.text}</p>
+                    <i class="fa-solid ${proposta.icona} icona-proposta"></i>
+                    <button class="btn-eliminar-item no-print" onclick="eliminarProposta(${proposta.id})" title="Eliminar proposta">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                contenidor.appendChild(targeta);
+            });
+
+            // Guardem l'estat actual al navegador
+            localStorage.setItem('deuresEstiu', JSON.stringify(llistaPropostes));
+        }
+
+        // Funció per afegir una nova proposta des del formulari
+        document.getElementById('formulari').addEventListener('submit', function(e) {
+            e.preventDefault(); // Evita que la pàgina es recarregui
+            
+            const textInput = document.getElementById('text-tasca');
+            const iconaSelect = document.getElementById('icona-tasca');
+
+            const novaProposta = {
+                id: Date.now(), // Genera un ID únic
+                text: textInput.value,
+                icona: iconaSelect.value
+            };
+
+            llistaPropostes.push(novaProposta);
+            renderitzarPropostes();
+            
+            // Netegem el formulari
+            textInput.value = '';
+            textInput.focus();
+        });
+
+        // Funció per eliminar una proposta individual
+        function eliminarProposta(id) {
+            llistaPropostes = llistaPropostes.filter(proposta => proposta.id !== id);
+            renderitzarPropostes();
+        }
+
+        // Funció per esborrar tota la graella de cop
+        function netejarTot() {
+            if(confirm("Estàs segur que vols esborrar totes les propostes?")) {
+                llistaPropostes = [];
+                renderitzarPropostes();
+            }
+        }
+
+        // Inicialitzem l'aplicació
+        inicialitzar();
+    </script>
+</body>
+</html>
