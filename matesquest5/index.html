@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mates Quest 5è - El Mapa dels 5 Móns</title>
+    <title>La gesta matemàtica de 5è</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4A90E2;
-            --success: #2ECC71;
-            --danger: #E74C3C;
-            --warning: #F1C40F;
-            --dark: #2C3E50;
-            --light: #ECF0F1;
+            --or: #D4AF37;
+            --pedra-fosca: #2C3539;
+            --vermell-reial: #8B0000;
+            --pergami: #F5DEB3;
+            --fusta: #5C4033;
+            --verd-bosc: #228B22;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--dark);
+            font-family: 'MedievalSharp', cursive;
+            background: radial-gradient(circle, #4a4a4a 0%, #1a1a1a 100%);
+            color: var(--pedra-fosca);
             margin: 0;
             padding: 15px;
             display: flex;
@@ -25,210 +26,230 @@
             min-height: 100vh;
         }
         #game-box {
-            background-color: white;
+            background-color: var(--pergami);
             width: 100%;
-            max-width: 700px;
-            border-radius: 24px;
-            padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 750px;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2), inset 0 0 50px rgba(92, 64, 51, 0.3);
+            border: 4px solid var(--fusta);
             box-sizing: border-box;
+            position: relative;
         }
-        h1 { text-align: center; color: var(--primary); margin-top: 0; font-size: 2.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
-        h2 { color: #555; text-align: center; }
+        h1 { 
+            text-align: center; 
+            color: var(--vermell-reial); 
+            margin-top: 0; 
+            font-size: 2.8rem; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            border-bottom: 2px solid var(--fusta);
+            padding-bottom: 15px;
+        }
+        h2 { color: var(--pedra-fosca); text-align: center; font-size: 2rem;}
+        p { font-family: 'Georgia', serif; font-size: 1.1rem; line-height: 1.6; }
         
         /* Dashboard de dades */
         .dashboard {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
-            background: #f8f9fa;
+            background: var(--fusta);
+            color: var(--pergami);
             padding: 15px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            font-weight: bold;
+            border-radius: 5px;
+            margin-bottom: 25px;
             text-align: center;
-            font-size: 0.95rem;
-            border: 2px solid #eef2f3;
+            font-size: 1rem;
+            border: 2px solid var(--or);
         }
         .dash-item { display: flex; flex-direction: column; justify-content: center; }
-        .dash-val { font-size: 1.3rem; color: var(--primary); margin-top: 4px; }
+        .dash-val { font-size: 1.5rem; color: var(--or); margin-top: 4px; font-family: 'MedievalSharp', cursive; }
         
-        /* Barra de progrés del món */
+        /* Barra de progrés */
         .progress-container {
-            background-color: #e0e0e0;
-            border-radius: 10px;
+            background-color: var(--pedra-fosca);
+            border: 2px solid var(--fusta);
+            border-radius: 5px;
             margin-bottom: 25px;
             position: relative;
-            height: 20px;
+            height: 25px;
             overflow: hidden;
         }
         .progress-bar {
-            background-color: var(--success);
+            background-color: var(--vermell-reial);
             height: 100%;
             width: 0%;
-            transition: width 0.4s ease;
+            transition: width 0.5s ease;
         }
         .progress-text {
             position: absolute;
             width: 100%;
             text-align: center;
-            top: 1px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #333;
+            top: 2px;
+            font-size: 1rem;
+            color: white;
+            text-shadow: 1px 1px 2px black;
         }
 
         /* Pantalles */
         .screen { display: none; }
-        .active { display: block; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         /* Zona de preguntes */
-        .world-title { text-align: center; background: #eef2f3; padding: 8px; border-radius: 8px; font-weight: bold; color: #764ba2; }
-        .question-text { font-size: 1.3rem; font-weight: 600; margin: 20px 0; text-align: center; line-height: 1.5; }
-        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+        .world-title { text-align: center; background: rgba(139, 0, 0, 0.1); padding: 10px; border-radius: 5px; font-size: 1.5rem; color: var(--vermell-reial); margin-bottom: 15px; }
+        .question-text { font-size: 1.4rem; font-family: 'Georgia', serif; margin: 20px 0; text-align: center; color: #111; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
         @media(min-width: 480px) { .options-grid { grid-template-columns: 1fr 1fr; } }
         
         button.btn {
-            background: var(--light);
-            color: var(--dark);
-            border: 2px solid #ccc;
-            padding: 14px 20px;
-            font-size: 1.1rem;
-            border-radius: 12px;
+            background: linear-gradient(to bottom, #f0e6d2, #d3c2a3);
+            color: var(--pedra-fosca);
+            border: 2px solid var(--fusta);
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'MedievalSharp', cursive;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-weight: 500;
         }
-        button.btn:hover { background: #e2e8f0; border-color: #999; transform: translateY(-2px); }
-        button.btn-action { background: var(--primary); color: white; border: none; width: 100%; font-weight: bold; margin-top: 10px; }
-        button.btn-action:hover { background: #357ABD; }
+        button.btn:hover { background: var(--fusta); color: var(--pergami); transform: scale(1.02); }
+        button.btn-action { background: var(--vermell-reial); color: var(--or); border: 2px solid var(--or); width: 100%; font-size: 1.5rem; margin-top: 15px; padding: 15px; }
+        button.btn-action:hover { background: #660000; color: white; }
         
         /* Feedback */
-        #feedback { text-align: center; font-size: 1.3rem; font-weight: bold; min-height: 30px; margin: 15px 0; }
-        .txt-correct { color: var(--success); animation: pop 0.3s ease; }
-        .txt-incorrect { color: var(--danger); animation: shake 0.4s ease; }
+        #feedback { text-align: center; font-size: 1.5rem; min-height: 35px; margin: 15px 0; }
+        .txt-correct { color: var(--verd-bosc); text-shadow: 1px 1px 0px white; }
+        .txt-incorrect { color: var(--vermell-reial); text-shadow: 1px 1px 0px white; }
 
         /* Botiga */
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .shop-item { border: 2px solid #eee; padding: 15px; border-radius: 12px; text-align: center; background: #fff; }
-        .shop-item p { margin: 5px 0; font-size: 0.9rem; }
-        
-        /* Animacions */
-        @keyframes pop { 0% { transform: scale(0.8); } 100% { transform: scale(1); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .shop-item { border: 2px dashed var(--fusta); padding: 20px; text-align: center; background: rgba(255,255,255,0.4); }
+        .shop-item p { margin: 10px 0; font-family: 'Georgia', serif;}
+        .price { font-size: 1.2rem; color: var(--vermell-reial); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="game-box">
-    <h1>⚔️ Mates Quest 5è ⚔️</h1>
+    <h1>⚔️ La Gesta Matemàtica ⚔️</h1>
 
     <div id="global-stats" class="dashboard" style="display:none;">
-        <div class="dash-item">Món <span id="stat-world" class="dash-val">1/5</span></div>
-        <div class="dash-item">Monedes 🪙 <span id="stat-coins" class="dash-val">0</span></div>
-        <div class="dash-item">Vides ❤️ <span id="stat-lives" class="dash-val">3</span></div>
+        <div class="dash-item">Regne <span id="stat-world" class="dash-val">1/5</span></div>
+        <div class="dash-item">Or 🪙 <span id="stat-coins" class="dash-val">0</span></div>
+        <div class="dash-item">Salut ❤️ <span id="stat-lives" class="dash-val">3</span></div>
         <div class="dash-item">Escuts 🛡️ <span id="stat-shields" class="dash-val">0</span></div>
     </div>
 
     <div id="screen-intro" class="screen active">
-        <h2>L'Aventura Matemàtica Completa</h2>
-        <p>Benvingut/da, heroi o heroïna! Has de creuar els 5 Móns de les Matemàtiques per completar el teu dossier d'estiu.</p>
-        <p><strong>Com es juga?</strong><br>
-        - Respon correctament per guanyar monedes 🪙.<br>
-        - Si t'equivoques, perdràs una vida ❤️ a no ser que tinguis un escut 🛡️.<br>
-        - Entre nivell i nivell podràs visitar la <strong>Botiga de Màgia</strong> per comprar objectes!</p>
-        <button class="btn btn-action" onclick="startGame()">Comença la Missió 🗺️</button>
+        <h2>La Crida de l'Heroi</h2>
+        <p style="text-align: center;">Benvingut, jove escuder/a. El Regne dels Nombres està sumit en el caos. Et necessitem per creuar les 5 Terres Màgiques i resoldre els enigmes dels antics savis.</p>
+        <p><strong>Lleis de Cavalleria:</strong><br>
+        🗡️ Cada encert et donarà Or (🪙).<br>
+        🐉 Cada error et farà perdre Salut (❤️).<br>
+        🍻 Abans de canviar de terra, podràs visitar la Taverna per comprar pocions i armes.<br>
+        </p>
+        <button class="btn btn-action" onclick="startGame()">Aixecar l'Espasa i Començar!</button>
     </div>
 
     <div id="screen-quiz" class="screen">
         <div id="world-banner" class="world-title">MÓN 1</div>
         <div class="progress-container">
             <div id="p-bar" class="progress-bar"></div>
-            <div id="p-text" class="progress-text">Pregunta 1 de 4</div>
+            <div id="p-text" class="progress-text">Repte 1 de 6</div>
         </div>
-        <div id="q-text" class="question-text">Carregant repte...</div>
+        <div id="q-text" class="question-text">Carregant l'enigma...</div>
         <div id="options-box" class="options-grid"></div>
         <div id="feedback"></div>
     </div>
 
     <div id="screen-shop" class="screen">
-        <h2>🏪 La Botiga del Mag</h2>
-        <p style="text-align:center;">Fes servir les teves monedes abans de viatjar al següent món!</p>
+        <h2>🍻 La Taverna del Mag Pòtium</h2>
+        <p style="text-align:center;">Descansa a prop del foc. Tens monedes d'or? Gasta-les aquí abans del següent perill!</p>
         <div class="shop-grid">
             <div class="shop-item">
-                <h3>Poció de Vida (❤️)</h3>
-                <p>Recupera 1 vida instantàniament.</p>
-                <p><strong>Preu: 20 monedes</strong></p>
-                <button class="btn" style="background: #ffe3e3;" onclick="buyItem('life')">Comprar ❤️</button>
+                <h3 style="margin-top:0;">Poció Màgica (❤️)</h3>
+                <p>Una beguda vermella que et cura una ferida instantàniament.</p>
+                <p class="price">Preu: 20 Or</p>
+                <button class="btn" style="width: 100%; border-color: red;" onclick="buyItem('life')">Beure Poció (+1 ❤️)</button>
             </div>
             <div class="shop-item">
-                <h3>Escut Protector (🛡️)</h3>
-                <p>Et salva de perdre una vida en fallar un cop.</p>
-                <p><strong>Preu: 15 monedes</strong></p>
-                <button class="btn" style="background: #e3f2fd;" onclick="buyItem('shield')">Comprar 🛡️</button>
+                <h3 style="margin-top:0;">Escut de Ferro (🛡️)</h3>
+                <p>Un poderós escut pesat. Et protegirà del dany si falles una resposta.</p>
+                <p class="price">Preu: 15 Or</p>
+                <button class="btn" style="width: 100%; border-color: gray;" onclick="buyItem('shield')">Comprar Escut (+1 🛡️)</button>
             </div>
         </div>
-        <button class="btn btn-action" style="background: var(--success); margin-top:30px;" onclick="goToNextWorld()">Viatjar al Següent Món ➡️</button>
+        <button class="btn btn-action" style="background: var(--verd-bosc); border-color: darkgreen;" onclick="goToNextWorld()">Continuar el Viatge 🗺️</button>
     </div>
 
     <div id="screen-end" class="screen">
-        <h2 id="end-title">🏆 Victòria! 🏆</h2>
-        <p id="end-body" style="text-align:center; font-size:1.2rem;"></p>
-        <button class="btn btn-action" onclick="location.reload()">Torna a intentar l'Aventura 🔄</button>
+        <h2 id="end-title">🏆 Victòria Llegendària! 🏆</h2>
+        <p id="end-body" style="text-align:center; font-size:1.3rem;"></p>
+        <button class="btn btn-action" onclick="location.reload()">Reviure la Llegenda 🔄</button>
     </div>
 </div>
 
 <script>
-    // Base de dades completa de 20 preguntes dividida en 5 móns temàtics extrets dels teus PDF
+    // Base de dades medieval amb 30 reptes oficials (6 per món)
     const gameData = [
         {
-            worldName: "MÓN 1: El Regne dels Grans Nombres",
+            worldName: "🏰 El Castell dels Grans Nombres",
             questions: [
                 { q: "Quina és la forma correcta d'escriure en xifres el nombre 'un milió dotze mil'?", a: ["1.000.012", "1.120.000", "1.012.000", "1.000.120"], correct: 2 },
-                { q: "Arrodoneix el nombre 409.769 a la unitat de miler més propera:", a: ["409.000", "410.000", "409.700", "400.000"], correct: 1 },
-                { q: "Quin d'aquests signes d'ordenació (< o >) és el correcte?  51.399 ___ 51.939", a: [">", "<"], correct: 1 },
-                { q: "Arrodoneix el nombre 349.812 a la desena de miler més propera:", a: ["340.000", "349.000", "350.000", "300.000"], correct: 2 }
+                { q: "Quina màgia amaga l'escriptura d'aquest gran nombre? Dos milions nou-cents trenta-quatre mil sis-cents catorze:", a: ["2.934.614", "2.944.614", "2.394.614", "2.904.614"], correct: 0 },
+                { q: "Els savis han demanat arrodonir 409.769 a la unitat de miler més propera:", a: ["409.000", "410.000", "409.700", "400.000"], correct: 1 },
+                { q: "Posa el signe correcte per a la balança del rei: 51.399 ___ 51.939", a: [">", "<", "="], correct: 1 },
+                { q: "Arrodoneix el nombre d'habitants del poble (19.111) a la desena:", a: ["19.110", "19.100", "19.000", "19.120"], correct: 0 },
+                { q: "A la desena de miler més propera, com s'arrodoneix l'exèrcit de 349.812 soldats?", a: ["340.000", "349.000", "350.000", "300.000"], correct: 2 }
             ]
         },
         {
-            worldName: "MÓN 2: El Laberint de les Operacions",
+            worldName: "⚔️ La Masmorra del Càlcul",
             questions: [
-                { q: "Com s'anomena el terme o nombre que és dividit en una operació de divisió?", a: ["Divisor", "Quocient", "Dividend", "Residu"], correct: 2 },
-                { q: "Segons l'ordre de les operacions combinades, quines s'han de fer SEMPRE primer?", a: ["Les sumes", "Les multiplicacions", "Les restes", "Les operacions que estan entre parèntesis"], correct: 3 },
-                { q: "Observa un tiquet de compra: Fruita (75€), Conserves (115€), Total (369€). Quin és el preu del detergent que falta?", a: ["194 €", "179 €", "169 €", "215 €"], correct: 1 },
-                { q: "Fes el càlcul aproximat d'aquesta suma arrodonint a la unitat de miler: 8.479 + 5.987", a: ["13.000", "14.000", "15.000", "12.000"], correct: 1 }
+                { q: "Quin element NO pertany a l'encanteri de la divisió?", a: ["Dividend", "Divisor", "Multiplicador", "Residu"], correct: 2 },
+                { q: "En les Operacions Combinades, quin pergamí es llegeix SEMPRE primer?", a: ["Les sumes", "Les multiplicacions", "Els parèntesis", "Les restes"], correct: 2 },
+                { q: "Ajudem al tresorer del rei: Si 5.274 - ___ = 5.070, quants monedes falten?", a: ["200", "204", "104", "240"], correct: 1 },
+                { q: "Calcula ràpidament el total aproximat de fletxes arrodonint a unitats de miler: 5.289 + 7.214 =", a: ["13.000", "14.000", "12.000", "15.000"], correct: 2 },
+                { q: "Reparteix el botí de 328 monedes d'or exactament entre 4 cavallers:", a: ["84", "82", "72", "86"], correct: 1 },
+                { q: "L'encanteri de multiplicació dels decimals! Multiplica la poció: 0,24 × 10 =", a: ["24", "2,4", "0,024", "240"], correct: 1 }
             ]
         },
         {
-            worldName: "MÓN 3: L'Illa dels Decimals",
+            worldName: "🌊 El Llac dels Decimals Foscos",
             questions: [
-                { q: "Com s'escriu correctament en xifres decimals: '40 unitats i 36 mil·lèsimes'?", a: ["40,36", "40,036", "4.036", "40,360"], correct: 1 },
-                { q: "Quin d'aquests signes és el correcte?  0,5 ___ 0,05", a: ["<", ">", "="], correct: 1 },
-                { q: "Quin és el resultat exacte d'aquesta multiplicació?  40,3 × 100 =", a: ["403", "4.030", "40.300", "4,03"], correct: 1 },
-                { q: "Quin és el resultat de moure la coma en dividir?  541,2 : 1.000 =", a: ["5,412", "54,12", "0,5412", "0,05412"], correct: 2 }
+                { q: "Com s'escriu al llibre de registres: '40 unitats i 36 mil·lèsimes'?", a: ["40,36", "40,036", "4.036", "40,360"], correct: 1 },
+                { q: "Com escriu el mag de l'aigua '5 unitats i 7 centèsimes'?", a: ["5,7", "0,57", "5,07", "50,7"], correct: 2 },
+                { q: "Quina mesura d'encanteri és més potent? 0,5 ___ 0,05", a: ["<", ">", "="], correct: 1 },
+                { q: "Expandeix el poder x100! 40,3 × 100 =", a: ["403", "4.030", "40.300", "4,03"], correct: 1 },
+                { q: "Encongeix la bèstia dividint! 541,2 : 1.000 =", a: ["5,412", "54,12", "0,5412", "0,05412"], correct: 2 },
+                { q: "Quanta energia falta per tenir 1 unitat de poder completa? 0,3 + ___ = 1", a: ["0,5", "0,6", "0,7", "0,8"], correct: 2 }
             ]
         },
         {
-            worldName: "MÓN 4: El Bosc de les Fraccions i el Temps",
+            worldName: "🕰️ El Bosc del Temps i les Fraccions",
             questions: [
-                { q: "Trobeu l'equivalència temporal: Quantes hores són 240 minuts?", a: ["2 hores", "3 hores", "4 hores", "6 hores"], correct: 2 },
-                { q: "Calcula el pas del temps a segons: Quants segons són exactament 2 minuts?", a: ["60 s", "120 s", "200 s", "180 s"], correct: 1 },
-                { q: "Quina d'aquestes parelles de fraccions són equivalents (representen el mateix)?", a: ["2/6 i 2/8", "1/3 i 3/9", "1/2 i 1/3", "3/4 i 3/9"], correct: 1 },
-                { q: "Completa la igualtat de fraccions: 4/5 + ▢/5 = 7/5. Quin és el nombre de la caixa?", a: ["2", "3", "4", "11"], correct: 1 }
+                { q: "Trobeu l'equivalència en el rellotge de sorra: Quantes hores són 240 minuts?", a: ["2 hores", "3 hores", "4 hores", "6 hores"], correct: 2 },
+                { q: "Quants segons necessites per llançar un encanteri de 2 minuts?", a: ["60 s", "120 s", "200 s", "180 s"], correct: 1 },
+                { q: "Un cicle de lluna triga 72 hores. Quants dies són?", a: ["2 dies", "3 dies", "4 dies", "5 dies"], correct: 1 },
+                { q: "El druida ens demana la fracció equivalent a 1/2. Quina és?", a: ["2/4", "1/3", "3/9", "4/10"], correct: 0 },
+                { q: "I quina d'aquestes fraccions representa el mateix que 1/4 d'una poció?", a: ["1/8", "2/6", "2/8", "3/4"], correct: 2 },
+                { q: "Completa la fórmula fraccionària trencada: 4/5 + ▢/5 = 7/5", a: ["2", "3", "4", "11"], correct: 1 }
             ]
         },
         {
-            worldName: "MÓN 5: La Muntanya dels Problemes",
+            worldName: "🐉 La Torre de Lògica del Drac",
             questions: [
-                { q: "La Cristina ha marcat 20 gols i en Jordi en ha marcat 9 menys. Quants gols han marcat en total entre tots dos?", a: ["29 gols", "11 gols", "31 gols", "20 gols"], correct: 2 },
-                { q: "Si una pizza es divideix en 12 porcions i et menges els 2/3 d'ella, quantes porcions et queden?", a: ["8 porcions", "4 porcions", "6 porcions", "3 porcions"], correct: 1 },
-                { q: "En una capsa de monedes n'hi caben 18. Hem de guardar 306 monedes. Quantes capses necessitarem?", a: ["15 capses", "17 capses", "18 capses", "20 capses"], correct: 1 },
-                { q: "La Noèlia té el doble de colors que en Martí. Entre tots dos en tenen 30. Quants colors té cadascú?", a: ["Noèlia 15 i Martí 15", "Noèlia 20 i Martí 10", "Noèlia 10 i Martí 20", "Noèlia 18 i Martí 12"], correct: 1 }
+                { q: "Cristina ha derrocat 20 dracs i el cavaller Jordi 9 menys que ella. Quants monstres han vençut entre els dos en total?", a: ["29", "11", "31", "20"], correct: 2 },
+                { q: "En un banquet, la pizza gegant es talla en 12 trossos i et menges els 2/3. Quants trossos queden?", a: ["8", "4", "6", "3"], correct: 1 },
+                { q: "Un cofre petit només pot contenir 18 monedes. Tenim 306 monedes al tresor reial. Quants cofres ens falten?", a: ["15", "17", "18", "20"], correct: 1 },
+                { q: "La maga Heura té 45 peces d'or. La Sara en té el doble. Quantes en sumen entre totes dues?", a: ["90", "45", "135", "180"], correct: 2 },
+                { q: "La Noèlia té el doble de fletxes que en Martí. Si junts en sumen 30. Quantes en té cadascú?", a: ["Noèlia 15 i Martí 15", "Noèlia 20 i Martí 10", "Noèlia 10 i Martí 20", "Noèlia 18 i Martí 12"], correct: 1 },
+                { q: "Si 3/4 de kg de carn de senglar valen 1,83 monedes, quant costarà el quilogram sencer?", a: ["1,22 monedes", "0,61 monedes", "2,00 monedes", "2,44 monedes"], correct: 3 }
             ]
         }
     ];
 
-    // Variables estat de la partida
     let currentWorldIdx = 0;
     let currentQuestionIdx = 0;
     let coins = 0;
@@ -245,7 +266,7 @@
         document.getElementById('stat-world').innerText = (currentWorldIdx + 1) + "/5";
         document.getElementById('stat-coins').innerText = coins;
         document.getElementById('stat-lives').innerText = "❤️".repeat(lives);
-        document.getElementById('stat-shields').innerText = shields;
+        document.getElementById('stat-shields').innerText = "🛡️".repeat(shields);
     }
 
     function startGame() {
@@ -268,17 +289,14 @@
         let worldData = gameData[currentWorldIdx];
         let qData = worldData.questions[currentQuestionIdx];
         
-        // Actualitzar títols i barra de progrés
         document.getElementById('world-banner').innerText = worldData.worldName;
         let totalQ = worldData.questions.length;
         let progressPercent = ((currentQuestionIdx) / totalQ) * 100;
         document.getElementById('p-bar').style.width = progressPercent + "%";
         document.getElementById('p-text').innerText = `Repte ${currentQuestionIdx + 1} de ${totalQ}`;
         
-        // Text pregunta
         document.getElementById('q-text').innerText = qData.q;
         
-        // Generar botons
         let optionsBox = document.getElementById('options-box');
         optionsBox.innerHTML = "";
         qData.a.forEach((option, idx) => {
@@ -299,63 +317,58 @@
         let feed = document.getElementById('feedback');
         
         if (selectedIdx === qData.correct) {
-            coins += 10; // Guanyen monedes
-            feed.innerText = "✨ INCREÏBLE! +10 🪙 ✨";
+            coins += 10;
+            feed.innerText = "✨ RESPOSTA MAGISTRAL! +10 🪙 ✨";
             feed.className = "txt-correct";
         } else {
-            // Mecànica de l'escut
             if (shields > 0) {
                 shields--;
-                feed.innerText = "🛡️ L'escut t'ha salvat! L'antídot era: " + qData.a[qData.correct];
+                feed.innerText = "🛡️ L'ESCUT HA ABSORBIT EL COP! La resposta era: " + qData.a[qData.correct];
                 feed.className = "txt-incorrect";
             } else {
                 lives--;
-                feed.innerText = "💥 Oi! Resposta incorrecta. Era: " + qData.a[qData.correct];
+                feed.innerText = "💥 FALLADA! Has perdut salut. Era: " + qData.a[qData.correct];
                 feed.className = "txt-incorrect";
             }
         }
         
         updateStats();
         
-        // Comprovar si s'ha mort
         if (lives <= 0) {
-            setTimeout(() => endGame(false), 2000);
+            setTimeout(() => endGame(false), 2500);
             return;
         }
 
-        // Passar a la següent pregunta amb un retard perquè vegin el resultat
         setTimeout(() => {
             currentQuestionIdx++;
             if (currentQuestionIdx < worldData.questions.length) {
                 loadQuestion();
             } else {
-                // S'ha acabat el món actual!
                 if (currentWorldIdx < gameData.length - 1) {
-                    changeScreen('screen-shop'); // Va a la botiga
+                    changeScreen('screen-shop');
                 } else {
-                    endGame(true); // Victòria final!
+                    endGame(true);
                 }
             }
-        }, 2500);
+        }, 3000); // 3 segons de lectura del feedback
     }
 
-    // Mecàniques de la botiga
     function buyItem(itemType) {
         if (itemType === 'life') {
             if (coins >= 20) {
                 coins -= 20;
                 lives++;
-                alert("❤️ Has comprat una vida extra!");
+                alert("❤️ Glup, glup! Has begut una poció i recuperes 1 salut!");
             } else {
-                alert("🪙 No tens suficients monedes!");
+                alert("🪙 Et falta or, estranger!");
             }
         } else if (itemType === 'shield') {
             if (coins >= 15) {
                 coins -= 15;
                 shields++;
-                alert("🛡️ Escut protector afegit al teu inventari!");
+                alert("🛡️ Has equipat un fort escut d'acer!");
             } else {
-                alert("🪙 No tens suficients monedes!");
+                alert("🪙 Et falta or per l'escut!");
             }
         }
         updateStats();
@@ -376,11 +389,11 @@
         let body = document.getElementById('end-body');
         
         if (isVictory) {
-            title.innerText = "👑 MESTRE/A DE LES MATES 👑";
-            body.innerHTML = `Felicitats! Has superat amb èxit els 5 Móns del coneixement.<br><br>Has acabat l'aventura amb <strong>${coins} monedes 🪙</strong> i un total de <strong>${lives} unitats de salut ❤️</strong>.<br>Estàs totalment preparat/da per començar 6è de Primària!`;
+            title.innerText = "👑 GRAN CAVALLER DE LES MATEMÀTIQUES 👑";
+            body.innerHTML = `Ho has aconseguit! Has travessat els 5 Móns Foscos i has demostrat la teva saviesa infinita.<br><br>Has acumulat <strong>${coins} Monedes d'Or 🪙</strong> i has sobreviscut amb <strong>${lives} unitats de Salut ❤️</strong>.<br>El rei de la classe de 6è et donarà la benvinguda amb honors!`;
         } else {
-            title.innerText = "💥 GAME OVER 💥";
-            body.innerHTML = `T'has quedat sense vides enmig del camí.<br>No et preocupis, els grans matemàtics aprenen dels seus errors.<br><br>Torna-ho a intentar per aconseguir el títol de campió!`;
+            title.innerText = "☠️ CAIGUT EN BATALLA ☠️";
+            body.innerHTML = `Els dracs de l'error t'han arrabassat tota la salut abans d'arribar al final.<br>El Regne dels Nombres necessita que t'entrenis i ho tornis a provar.<br><br>Aixeca't i lluita un altre cop!`;
         }
     }
 </script>
