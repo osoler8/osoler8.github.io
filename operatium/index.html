@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPERATIUM - Matemàtiques Romanes</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:wght@400;700&display=swap');
+
+        :root {
+            --roman-red: #7c0a02;
+            --gold: #d4af37;
+            --dark-gold: #997a00;
+            --marble: #f4f4f0;
+            --dark-bg: #1a1a1a;
+            --text-dark: #2c2c2c;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at center, #3a0804 0%, var(--dark-bg) 100%),
+                url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h100v100H0z" fill="none"/><path d="M0 50h100M50 0v100" stroke="rgba(255,215,0,0.05)" stroke-width="1"/></svg>');
+            color: var(--marble);
+            text-align: center;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: var(--marble);
+            color: var(--text-dark);
+            padding: 40px;
+            border-radius: 5px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(212, 175, 55, 0.2);
+            max-width: 650px;
+            width: 90%;
+            border: 4px solid var(--gold);
+            position: relative;
+            z-index: 10;
+            border-image: linear-gradient(to bottom right, #b8860b, #ffd700, #b8860b) 1;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--roman-red);
+            font-size: 3.5em;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--dark-gold);
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: var(--roman-red);
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            color: var(--roman-red);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .btn-abandon {
+            background: transparent;
+            color: var(--text-dark);
+            border-color: var(--text-dark);
+            font-size: 0.9em;
+            padding: 10px 20px;
+        }
+
+        #game-screen, #game-over-screen {
+            display: none;
+        }
+
+        .stats-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--gold);
+            margin-bottom: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .lives {
+            font-size: 1.5em;
+            letter-spacing: 5px;
+        }
+
+        .rank-display {
+            grid-column: span 2;
+            color: var(--roman-red);
+            font-family: 'Cinzel', serif;
+            font-size: 1.4em;
+            border-top: 1px dashed var(--dark-gold);
+            padding-top: 10px;
+        }
+
+        .problem {
+            font-size: 4em;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 30px 0;
+            color: var(--roman-red);
+            font-family: 'Cinzel', serif;
+        }
+
+        input[type="number"] {
+            font-size: 2.5em;
+            padding: 10px;
+            width: 70%;
+            text-align: center;
+            border: 3px solid var(--gold);
+            border-radius: 5px;
+            background: #fff;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-family: 'Lora', serif;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--roman-red);
+            box-shadow: 0 0 15px rgba(124, 10, 2, 0.3);
+        }
+
+        .feedback {
+            font-size: 1.4em;
+            min-height: 40px;
+            margin-top: 20px;
+            font-weight: bold;
+            font-style: italic;
+        }
+
+        .correct { color: #2e7d32; }
+        .incorrect { color: var(--roman-red); }
+
+        .columns {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(90deg, #e0e0e0 0%, #ffffff 50%, #d0d0d0 100%);
+            border-left: 2px solid #bbb;
+            border-right: 2px solid #bbb;
+            z-index: -1;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+        }
+        .col-left { left: 5%; }
+        .col-right { right: 5%; }
+
+    </style>
+</head>
+<body>
+    <div class="columns col-left"></div>
+    <div class="columns col-right"></div>
+
+    <div class="container" id="menu-screen">
+        <h1>OPERATIUM</h1>
+        <h2>L'Imperi de les Matemàtiques</h2>
+        <p>Alista't a les legions de Roma. Resol els càlculs, guanya denaris i ascendeix de rang per aconseguir la glòria eterna.</p>
+        <button class="btn" onclick="startGame(1)">Tiro (3r - 4t)</button><br>
+        <button class="btn" onclick="startGame(2)">Legionari (4t)</button><br>
+        <button class="btn" onclick="startGame(3)">Centurió (5è - 6è)</button>
+    </div>
+
+    <div class="container" id="game-screen">
+        <div class="stats-board">
+            <div>Denaris: <span id="score-display">0</span> 🪙</div>
+            <div class="lives" id="lives-display">🛡️🛡️🛡️</div>
+            <div class="rank-display" id="rank-display">Rang: Plebeu</div>
+        </div>
+        <div class="problem" id="math-problem"></div>
+        <input type="number" id="answer-input" autocomplete="off" onkeypress="handleEnter(event)" placeholder="La teva resposta...">
+        <br>
+        <button class="btn" onclick="checkAnswer()">Confirmar ⚔️</button>
+        <button class="btn btn-abandon" onclick="showMenu()">Desertar</button>
+        <div class="feedback" id="feedback-msg"></div>
+    </div>
+
+    <div class="container" id="game-over-screen">
+        <h1>VILIPENDIUM!</h1>
+        <h2>Has perdut tots els escuts</h2>
+        <p style="font-size: 1.5em; margin: 20px 0;">Has recollit <strong><span id="final-score"></span></strong> denaris.</p>
+        <p style="font-size: 1.2em; font-style: italic; color: var(--roman-red); margin-bottom: 30px;">El teu rang final és: <strong id="final-rank"></strong></p>
+        <button class="btn" onclick="showMenu()">Tornar al Campament</button>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let score = 0;
+        let streak = 0;
+        let lives = 3;
+        let correctAnswer = 0;
+        let currentRank = "Plebeu";
+
+        const ranks = [
+            { points: 0, name: "Plebeu" },
+            { points: 50, name: "Miles (Soldat)" },
+            { points: 150, name: "Optio" },
+            { points: 300, name: "Centurió" },
+            { points: 500, name: "Tribú" },
+            { points: 800, name: "Llegat" },
+            { points: 1200, name: "Cèsar 👑" }
+        ];
+
+        function rand(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function startGame(level) {
+            currentLevel = level;
+            score = 0;
+            streak = 0;
+            lives = 3;
+            updateRank();
+            updateStats();
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('feedback-msg').innerHTML = '';
+            generateProblem();
+        }
+
+        function showMenu() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'block';
+        }
+
+        function generateProblem() {
+            const ops = ['+', '-', '*', '/'];
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            let num1, num2;
+
+            if (currentLevel === 1) { 
+                if (op === '+') { num1 = rand(1000, 9999); num2 = rand(100, 9999); correctAnswer = num1 + num2; }
+                if (op === '-') { num1 = rand(1000, 9999); num2 = rand(100, num1 - 1); correctAnswer = num1 - num2; }
+                if (op === '*') { num1 = rand(100, 9999); num2 = rand(2, 9); correctAnswer = num1 * num2; }
+                if (op === '/') { num2 = rand(2, 9); correctAnswer = rand(10, 999); num1 = num2 * correctAnswer; }
+            } else if (currentLevel === 2) { 
+                if (op === '+') { num1 = rand(10000, 99999); num2 = rand(1000, 99999); correctAnswer = num1 + num2; }
+                if (op === '-') { num1 = rand(10000, 99999); num2 = rand(1000, num1 - 1); correctAnswer = num1 - num2; }
+                if (op === '*') { num1 = rand(100, 9999); num2 = rand(10, 99); correctAnswer = num1 * num2; }
+                if (op === '/') { num2 = rand(2, 12); correctAnswer = rand(100, 4000); num1 = num2 * correctAnswer; }
+            } else { 
+                if (op === '+') { num1 = rand(50000, 999999); num2 = rand(10000, 999999); correctAnswer = num1 + num2; }
+                if (op === '-') { num1 = rand(50000, 999999); num2 = rand(10000, num1 - 1); correctAnswer = num1 - num2; }
+                if (op === '*') { num1 = rand(1000, 9999); num2 = rand(100, 999); correctAnswer = num1 * num2; }
+                if (op === '/') { num2 = rand(10, 99); correctAnswer = rand(100, 9999); num1 = num2 * correctAnswer; }
+            }
+
+            const opSymbol = op === '*' ? '×' : op === '/' ? '÷' : op;
+            const formatNumber = (num) => num.toLocaleString('ca-ES');
+
+            document.getElementById('math-problem').innerText = `${formatNumber(num1)} ${opSymbol} ${formatNumber(num2)}`;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+        }
+
+        function checkAnswer() {
+            const userInput = document.getElementById('answer-input').value;
+            const cleanInput = userInput.replace(/\./g, '');
+            const userAnswer = parseInt(cleanInput);
+            const feedback = document.getElementById('feedback-msg');
+
+            if (isNaN(userAnswer)) {
+                feedback.innerHTML = "Per Júpiter! Introdueix un número vàlid!";
+                feedback.className = "feedback incorrect";
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                streak++;
+                let pointsEarned = (10 * currentLevel) + (streak * 5);
+                score += pointsEarned;
+                updateRank();
+                
+                let praise = ["Glòria a Roma!", "Càlcul perfecte!", "Els déus et somriuen!", "Molt bé, soldat!"];
+                let randomPraise = praise[Math.floor(Math.random() * praise.length)];
+                
+                feedback.innerHTML = `${randomPraise} (+${pointsEarned} 🪙)`;
+                feedback.className = "feedback correct";
+                updateStats();
+                
+                setTimeout(() => {
+                    feedback.innerHTML = '';
+                    generateProblem();
+                }, 1500);
+            } else {
+                streak = 0;
+                lives--;
+                feedback.innerHTML = "Error! Era " + correctAnswer.toLocaleString('ca-ES') + ". Has perdut un escut!";
+                feedback.className = "feedback incorrect";
+                updateStats();
+                
+                if (lives <= 0) {
+                    setTimeout(() => {
+                        endGame();
+                    }, 2000);
+                } else {
+                    setTimeout(() => {
+                        feedback.innerHTML = '';
+                        generateProblem();
+                    }, 2500);
+                }
+            }
+        }
+
+        function updateRank() {
+            for (let i = ranks.length - 1; i >= 0; i--) {
+                if (score >= ranks[i].points) {
+                    currentRank = ranks[i].name;
+                    break;
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('score-display').innerText = score;
+            
+            let livesHtml = "";
+            for(let i=0; i<lives; i++) livesHtml += "🛡️";
+            for(let i=lives; i<3; i++) livesHtml += "❌"; // Escuts trencats
+            document.getElementById('lives-display').innerHTML = livesHtml;
+            
+            document.getElementById('rank-display').innerText = `Rang: ${currentRank} ${streak > 2 ? '🔥' : ''}`;
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'block';
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-rank').innerText = currentRank;
+        }
+
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        }
+    </script>
+</body>
+</html>
