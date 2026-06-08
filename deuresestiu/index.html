@@ -36,6 +36,24 @@
             margin-right: auto;
         }
 
+        .seccio-configuracio {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .grup-input {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .grup-input label {
+            font-weight: bold;
+            font-size: 14px;
+            color: #555;
+        }
+
         .formulari-afegir {
             display: flex;
             gap: 10px;
@@ -53,6 +71,11 @@
         input[type="text"] {
             flex-grow: 1;
             min-width: 250px;
+        }
+
+        #nom-escola-input {
+            width: 100%;
+            box-sizing: border-box;
         }
 
         button {
@@ -112,6 +135,14 @@
         .capcalera-document h2 {
             font-weight: normal;
             color: #555;
+            margin-bottom: 0;
+        }
+
+        .capcalera-document h3 {
+            margin-top: 5px;
+            font-size: 1.3rem;
+            color: #444;
+            text-transform: uppercase;
         }
 
         .graella-propostes {
@@ -200,10 +231,17 @@
 
     <div class="editor-caixa no-print">
         <h2>🛠️ Editor de Propostes Lúdiques</h2>
-        <p style="text-align: center;">Afegeix noves tasques per als alumnes. Aquesta caixa no apareixerà al PDF final.</p>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">Afegeix noves tasques per l'alumnat. Aquesta caixa no apareixerà al PDF final.</p>
         
+        <div class="seccio-configuracio">
+            <div class="grup-input">
+                <label for="nom-escola-input">🏫 Nom de l'Escola / Centre:</label>
+                <input type="text" id="nom-escola-input" value="EUGENI D'ORS - VALLS" placeholder="Escriu el nom de la teva escola aquí...">
+            </div>
+        </div>
+
         <form id="formulari" class="formulari-afegir">
-            <input type="text" id="text-tasca" placeholder="Ex: Fer un diari de vacances amb fotos..." required>
+            <input type="text" id="text-tasca" placeholder="Ex: Llegir un còmic a la fresca..." required>
             
             <select id="icona-tasca">
                 <optgroup label="Bàsics i Cultura">
@@ -260,7 +298,7 @@
                 </optgroup>
             </select>
             
-            <button type="submit"><i class="fa-solid fa-plus"></i> Afegir</button>
+            <button type="submit"><i class="fa-solid fa-plus"></i> Afegir proposta</button>
         </form>
 
         <div class="botons-control">
@@ -273,7 +311,7 @@
         <div class="capcalera-document">
             <h2>Deures</h2>
             <h1>D'ESTIU</h1>
-            <h3>EUGENI D'ORS - VALLS</h3>
+            <h3 id="nom-escola-text">EUGENI D'ORS - VALLS</h3>
             <p>Propostes per fer aquestes vacances d'estiu</p>
         </div>
 
@@ -308,14 +346,30 @@
 
         // Funció que s'executa en carregar la pàgina
         function inicialitzar() {
-            // Comprovem si hi ha dades guardades al navegador
+            // 1. Comprovem si hi ha propostes guardades al navegador
             const dadesGuardades = localStorage.getItem('deuresEstiu');
-            
             if (dadesGuardades) {
                 llistaPropostes = JSON.parse(dadesGuardades);
             } else {
                 llistaPropostes = [...propostesPerDefecte];
             }
+
+            // 2. Comprovem si hi ha un nom d'escola guardat
+            const escolaGuardada = localStorage.getItem('nomEscola');
+            const escolaInput = document.getElementById('nom-escola-input');
+            const escolaText = document.getElementById('nom-escola-text');
+
+            if (escolaGuardada) {
+                escolaInput.value = escolaGuardada;
+                escolaText.textContent = escolaGuardada;
+            }
+
+            // 3. Escoltador d'esdeveniments per actualitzar el nom de l'escola en temps real
+            escolaInput.addEventListener('input', function() {
+                escolaText.textContent = escolaInput.value;
+                localStorage.setItem('nomEscola', escolaInput.value);
+            });
+
             renderitzarPropostes();
         }
 
@@ -339,7 +393,7 @@
                 contenidor.appendChild(targeta);
             });
 
-            // Guardem l'estat actual al navegador
+            // Guardem l'estat actual de les propostes al navegador
             localStorage.setItem('deuresEstiu', JSON.stringify(llistaPropostes));
         }
 
@@ -378,8 +432,9 @@
             }
         }
 
-        // Inicialitzem l'aplicació
+        // Inicialitzem l'aplicació en carregar la pàgina
         inicialitzar();
     </script>
 </body>
 </html>
+    
