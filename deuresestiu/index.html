@@ -4,36 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Deures d'Estiu</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --color-primari: #2c3e50;
             --color-secundari: #3498db;
-            --color-fons: #f9f9f9;
+            --color-accent: #e67e22; /* Taronja estiuenc */
+            --color-fons: #f4f7f6;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: var(--color-fons);
             margin: 0;
             padding: 20px;
             color: var(--color-primari);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         h1, h2, h3 {
+            margin: 0;
             text-align: center;
         }
 
         /* --- SECCIÓ D'EDICIÓ (No s'imprimirà) --- */
         .editor-caixa {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        .editor-caixa h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .seccio-configuracio {
@@ -49,7 +65,7 @@
         }
 
         .grup-input label {
-            font-weight: bold;
+            font-weight: 600;
             font-size: 14px;
             color: #555;
         }
@@ -62,10 +78,11 @@
         }
 
         input[type="text"], select {
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
         }
 
         input[type="text"] {
@@ -79,35 +96,41 @@
         }
 
         button {
+            font-family: 'Poppins', sans-serif;
             background-color: var(--color-secundari);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         button:hover {
             background-color: #2980b9;
+            transform: translateY(-1px);
         }
 
         .botons-control {
             display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 25px;
             border-top: 1px solid #eee;
-            padding-top: 15px;
+            padding-top: 20px;
         }
 
-        .btn-imprimir {
-            background-color: #27ae60;
+        .btn-restaurar {
+            background-color: #f39c12;
         }
 
-        .btn-imprimir:hover {
-            background-color: #2ecc71;
+        .btn-restaurar:hover {
+            background-color: #e67e22;
         }
 
         .btn-esborrar-tot {
@@ -118,46 +141,79 @@
             background-color: #c0392b;
         }
 
+        .btn-imprimir {
+            background-color: #27ae60;
+            margin-left: auto; /* Empeny el botó d'imprimir cap a la dreta */
+        }
+
+        .btn-imprimir:hover {
+            background-color: #2ecc71;
+        }
+
         /* --- SECCIÓ DE VISTA PRÈVIA / IMPRESSIÓ --- */
+        .document-final {
+            background: white;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
         .capcalera-document {
             text-align: center;
             margin-bottom: 30px;
-        }
-
-        .capcalera-document h1 {
-            font-size: 3rem;
-            margin-bottom: 5px;
-            color: var(--color-primari);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            border-bottom: 2px dashed #bdc3c7;
+            padding-bottom: 20px;
         }
 
         .capcalera-document h2 {
-            font-weight: normal;
-            color: #555;
-            margin-bottom: 0;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.4rem;
+            color: var(--color-primari);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            font-weight: 400;
+        }
+
+        .capcalera-document h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 3.8rem;
+            font-weight: 700;
+            margin: 2px 0;
+            color: var(--color-accent);
+            letter-spacing: 2px;
         }
 
         .capcalera-document h3 {
-            margin-top: 5px;
-            font-size: 1.3rem;
-            color: #444;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 1.15rem;
+            color: #7f8c8d;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            min-height: 1.5rem; /* Manté l'espai si està buit */
+        }
+
+        .capcalera-document p {
+            font-size: 1.1rem;
+            color: #555;
+            margin: 10px 0 0 0;
+            font-style: italic;
         }
 
         .graella-propostes {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
         }
 
         .targeta-proposta {
             background: white;
-            border: 2px dashed #ccc;
+            border: 2px dashed #cbd5e1;
             border-radius: 10px;
-            padding: 15px;
+            padding: 14px 18px;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -165,11 +221,11 @@
         }
 
         .caixa-seleccio {
-            width: 25px;
-            height: 25px;
-            border: 2px solid var(--color-primari);
-            border-radius: 4px;
-            appearance: none; /* Amaga el checkbox per defecte per imprimir-lo buit */
+            width: 24px;
+            height: 24px;
+            border: 2px solid #94a3b8;
+            border-radius: 6px;
+            appearance: none;
             -webkit-appearance: none;
             background-color: white;
             cursor: pointer;
@@ -178,51 +234,94 @@
 
         .text-proposta {
             flex-grow: 1;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
+            font-weight: 400;
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.45;
+            color: #334155;
         }
 
         .icona-proposta {
-            font-size: 2rem;
-            color: #7f8c8d;
+            font-size: 1.8rem;
+            color: #64748b;
             flex-shrink: 0;
         }
 
         .btn-eliminar-item {
             position: absolute;
-            top: -10px;
-            right: -10px;
+            top: -8px;
+            right: -8px;
             background: #e74c3c;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 25px;
-            height: 25px;
+            width: 22px;
+            height: 22px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* --- ESTILS NOMÉS PER IMPRIMIR (PDF) --- */
+        /* --- MAQUETACIÓ ESTRICTA PER A IMPRESSIÓ A4 (MAX 1 FULL) --- */
         @media print {
+            @page {
+                margin: 0; /* Elimina les capçaleres i peus de pàgina del navegador (URL, data...) */
+                size: A4 portrait;
+            }
+            
             body {
                 background-color: white;
+                padding: 15mm 15mm; /* Apliquem nosaltres el marge de seguretat del paper */
             }
+            
             .no-print {
                 display: none !important;
             }
+            
+            .document-final {
+                padding: 0;
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .capcalera-document {
+                margin-bottom: 20px;
+                padding-bottom: 12px;
+            }
+
+            .capcalera-document h1 {
+                font-size: 3rem !important;
+            }
+
+            .graella-propostes {
+                grid-template-columns: repeat(2, 1fr) !important; /* Força exactament 2 columnes per estalviar espai */
+                gap: 10px !important;
+            }
+
             .targeta-proposta {
-                break-inside: avoid;
-                border-color: #000;
+                padding: 10px 14px !important;
+                border-color: #334155 !important;
+                break-inside: avoid; /* Evita que una caixa es trenqui entre fulls */
             }
-            .caixa-seleccio {
-                border-color: #000;
+
+            .text-proposta {
+                font-size: 0.92rem !important;
+                line-height: 1.35 !important;
+                color: #000 !important;
             }
+
             .icona-proposta {
-                color: #000;
+                font-size: 1.5rem !important;
+                color: #000 !important;
+            }
+
+            .caixa-seleccio {
+                border-color: #000 !important;
+                width: 20px !important;
+                height: 20px !important;
             }
         }
     </style>
@@ -231,12 +330,12 @@
 
     <div class="editor-caixa no-print">
         <h2>🛠️ Editor de Propostes Lúdiques</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">Afegeix noves tasques per l'alumnat. Aquesta caixa no apareixerà al PDF final.</p>
+        <p style="text-align: center; color: #666; margin-top: 0; margin-bottom: 20px; font-size: 14px;">Afegeix noves tasques per l'alumnat. Aquesta caixa no apareixerà al PDF final.</p>
         
         <div class="seccio-configuracio">
             <div class="grup-input">
                 <label for="nom-escola-input">🏫 Nom de l'Escola / Centre:</label>
-                <input type="text" id="nom-escola-input" value="EUGENI D'ORS - VALLS" placeholder="Escriu el nom de la teva escola aquí...">
+                <input type="text" id="nom-escola-input" value="" placeholder="Escriu el nom de la teva escola aquí (opcional)...">
             </div>
         </div>
 
@@ -302,6 +401,7 @@
         </form>
 
         <div class="botons-control">
+            <button type="button" class="btn-restaurar" onclick="restaurarExemples()"><i class="fa-solid fa-rotate-left"></i> Propostes d'exemple</button>
             <button type="button" class="btn-esborrar-tot" onclick="netejarTot()"><i class="fa-solid fa-trash"></i> Esborrar tot</button>
             <button type="button" class="btn-imprimir" onclick="window.print()"><i class="fa-solid fa-file-pdf"></i> Imprimir / Crear PDF</button>
         </div>
@@ -311,8 +411,8 @@
         <div class="capcalera-document">
             <h2>Deures</h2>
             <h1>D'ESTIU</h1>
-            <h3 id="nom-escola-text">EUGENI D'ORS - VALLS</h3>
-            <p>Propostes per fer aquestes vacances d'estiu</p>
+            <h3 id="nom-escola-text"></h3>
+            <p>Propostes per fer aquestes vacances d'estiu [cite: 5]</p>
         </div>
 
         <div class="graella-propostes" id="contingenidor-propostes">
@@ -320,7 +420,7 @@
     </div>
 
     <script>
-        // Dades inicials per defecte (basades en el PDF original)
+        // Dades inicials per defecte de les propostes (Sense la graella de llibres)
         const propostesPerDefecte = [
             { id: 1, text: "Fer un diari de vacances amb fotos, entrades, dibuixos...", icona: "fa-pen-fancy" },
             { id: 2, text: "Observar/fotografiar insectes i animals", icona: "fa-bug" },
@@ -341,42 +441,42 @@
             { id: 17, text: "Cuinar", icona: "fa-utensils" }
         ];
 
-        // Llista que contindrà l'estat actual de les tasques
         let llistaPropostes = [];
 
-        // Funció que s'executa en carregar la pàgina
         function inicialitzar() {
-            // 1. Comprovem si hi ha propostes guardades al navegador
-            const dadesGuardades = localStorage.getItem('deuresEstiu');
+            // 1. Carregar propostes del magatzem local
+            const dadesGuardades = localStorage.getItem('deuresEstiu_v2');
             if (dadesGuardades) {
                 llistaPropostes = JSON.parse(dadesGuardades);
             } else {
                 llistaPropostes = [...propostesPerDefecte];
             }
 
-            // 2. Comprovem si hi ha un nom d'escola guardat
-            const escolaGuardada = localStorage.getItem('nomEscola');
+            // 2. Carregar nom de l'escola del magatzem local
+            const escolaGuardada = localStorage.getItem('nomEscola_v2');
             const escolaInput = document.getElementById('nom-escola-input');
             const escolaText = document.getElementById('nom-escola-text');
 
-            if (escolaGuardada) {
+            if (escolaGuardada !== null) {
                 escolaInput.value = escolaGuardada;
                 escolaText.textContent = escolaGuardada;
+            } else {
+                escolaInput.value = "";
+                escolaText.textContent = "";
             }
 
-            // 3. Escoltador d'esdeveniments per actualitzar el nom de l'escola en temps real
+            // Actualització en temps real del text del centre
             escolaInput.addEventListener('input', function() {
                 escolaText.textContent = escolaInput.value;
-                localStorage.setItem('nomEscola', escolaInput.value);
+                localStorage.setItem('nomEscola_v2', escolaInput.value);
             });
 
             renderitzarPropostes();
         }
 
-        // Funció per dibuixar les caixes a la pantalla
         function renderitzarPropostes() {
             const contenidor = document.getElementById('contingenidor-propostes');
-            contenidor.innerHTML = ''; // Netegem abans de dibuixar
+            contenidor.innerHTML = '';
 
             llistaPropostes.forEach(proposta => {
                 const targeta = document.createElement('div');
@@ -393,19 +493,17 @@
                 contenidor.appendChild(targeta);
             });
 
-            // Guardem l'estat actual de les propostes al navegador
-            localStorage.setItem('deuresEstiu', JSON.stringify(llistaPropostes));
+            localStorage.setItem('deuresEstiu_v2', JSON.stringify(llistaPropostes));
         }
 
-        // Funció per afegir una nova proposta des del formulari
         document.getElementById('formulari').addEventListener('submit', function(e) {
-            e.preventDefault(); // Evita que la pàgina es recarregui
+            e.preventDefault();
             
             const textInput = document.getElementById('text-tasca');
             const iconaSelect = document.getElementById('icona-tasca');
 
             const novaProposta = {
-                id: Date.now(), // Genera un ID únic
+                id: Date.now(),
                 text: textInput.value,
                 icona: iconaSelect.value
             };
@@ -413,28 +511,31 @@
             llistaPropostes.push(novaProposta);
             renderitzarPropostes();
             
-            // Netegem el formulari
             textInput.value = '';
             textInput.focus();
         });
 
-        // Funció per eliminar una proposta individual
         function eliminarProposta(id) {
             llistaPropostes = llistaPropostes.filter(proposta => proposta.id !== id);
             renderitzarPropostes();
         }
 
-        // Funció per esborrar tota la graella de cop
         function netejarTot() {
-            if(confirm("Estàs segur que vols esborrar totes les propostes?")) {
+            if(confirm("Estàs segur que vols esborrar totes les propostes de la llista?")) {
                 llistaPropostes = [];
                 renderitzarPropostes();
             }
         }
 
-        // Inicialitzem l'aplicació en carregar la pàgina
-        inicialitzar();
+        // Nova funció per restaurar les propostes inicials
+        function restaurarExemples() {
+            if(confirm("Vols restaurar les propostes d'exemple? Això esborrarà qualsevol proposta nova que hagis afegit.")) {
+                llistaPropostes = [...propostesPerDefecte];
+                renderitzarPropostes();
+            }
+        }
+
+        window.onload = inicialitzar;
     </script>
 </body>
 </html>
-    
