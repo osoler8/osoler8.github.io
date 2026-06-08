@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La gesta matemàtica de 6è</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --or: #D4AF37;
+            --pedra-fosca: #2C3539;
+            --vermell-reial: #8B0000;
+            --pergami: #F5DEB3;
+            --fusta: #5C4033;
+            --verd-bosc: #228B22;
+            --blau-nit: #1A2B4C;
+        }
+        body {
+            font-family: 'MedievalSharp', cursive;
+            background: radial-gradient(circle, var(--blau-nit) 0%, #000000 100%);
+            color: var(--pedra-fosca);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #game-box {
+            background-color: var(--pergami);
+            width: 100%;
+            max-width: 750px;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2), inset 0 0 50px rgba(92, 64, 51, 0.3);
+            border: 4px solid var(--fusta);
+            box-sizing: border-box;
+            position: relative;
+        }
+        h1 { 
+            text-align: center; 
+            color: var(--vermell-reial); 
+            margin-top: 0; 
+            font-size: 2.8rem; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            border-bottom: 2px solid var(--fusta);
+            padding-bottom: 15px;
+        }
+        h2 { color: var(--pedra-fosca); text-align: center; font-size: 2rem;}
+        p { font-family: 'Georgia', serif; font-size: 1.1rem; line-height: 1.6; text-align: center; }
+        
+        /* Dashboard de dades */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: var(--fusta);
+            color: var(--pergami);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1rem;
+            border: 2px solid var(--or);
+        }
+        .dash-item { display: flex; flex-direction: column; justify-content: center; }
+        .dash-val { font-size: 1.5rem; color: var(--or); margin-top: 4px; font-family: 'MedievalSharp', cursive; }
+        
+        /* Barra de progrés */
+        .progress-container {
+            background-color: var(--pedra-fosca);
+            border: 2px solid var(--fusta);
+            border-radius: 5px;
+            margin-bottom: 25px;
+            position: relative;
+            height: 25px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: var(--vermell-reial);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 2px;
+            font-size: 1rem;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Pantalles */
+        .screen { display: none; }
+        .active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Zona de preguntes */
+        .world-title { text-align: center; background: rgba(139, 0, 0, 0.1); padding: 10px; border-radius: 5px; font-size: 1.5rem; color: var(--vermell-reial); margin-bottom: 15px; }
+        .question-text { font-size: 1.4rem; font-family: 'Georgia', serif; margin: 20px 0; text-align: center; color: #111; font-weight: bold; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        @media(min-width: 480px) { .options-grid { grid-template-columns: 1fr 1fr; } }
+        
+        button.btn {
+            background: linear-gradient(to bottom, #f0e6d2, #d3c2a3);
+            color: var(--pedra-fosca);
+            border: 2px solid var(--fusta);
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'MedievalSharp', cursive;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button.btn:hover { background: var(--fusta); color: var(--pergami); transform: scale(1.02); }
+        button.btn-action { background: var(--vermell-reial); color: var(--or); border: 2px solid var(--or); width: 100%; font-size: 1.5rem; margin-top: 15px; padding: 15px; }
+        button.btn-action:hover { background: #660000; color: white; }
+        
+        /* Feedback */
+        #feedback { text-align: center; font-size: 1.5rem; min-height: 35px; margin: 15px 0; }
+        .txt-correct { color: var(--verd-bosc); text-shadow: 1px 1px 0px white; }
+        .txt-incorrect { color: var(--vermell-reial); text-shadow: 1px 1px 0px white; }
+
+        /* Botiga */
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .shop-item { border: 2px dashed var(--fusta); padding: 20px; text-align: center; background: rgba(255,255,255,0.4); }
+        .shop-item p { margin: 10px 0; font-family: 'Georgia', serif;}
+        .price { font-size: 1.2rem; color: var(--vermell-reial); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <h1>⚔️ La gesta matemàtica (6è) ⚔️</h1>
+
+    <div id="global-stats" class="dashboard" style="display:none;">
+        <div class="dash-item">Regne <span id="stat-world" class="dash-val">1/5</span></div>
+        <div class="dash-item">Or 🪙 <span id="stat-coins" class="dash-val">0</span></div>
+        <div class="dash-item">Salut ❤️ <span id="stat-lives" class="dash-val">3</span></div>
+        <div class="dash-item">Escuts 🛡️ <span id="stat-shields" class="dash-val">0</span></div>
+    </div>
+
+    <div id="screen-intro" class="screen active">
+        <h2>La crida dels Savis</h2>
+        <p>Benvingut/da a la Gesta Final abans de l'Institut (ESO). Les terres de 6è requereixen un coneixement superior per ser pacificades.</p>
+        <p><strong>Les lleis de l'aventura:</strong><br>
+        🗡️ Cada encert et proporciona Or (🪙).<br>
+        🐉 Cada error farà que perdis Salut (❤️).<br>
+        🛡️ Entre regnes, el mag et vendrà pocions i escuts.<br>
+        </p>
+        <button class="btn btn-action" onclick="startGame()">Començar l'aventura!</button>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div id="world-banner" class="world-title">MÓN 1</div>
+        <div class="progress-container">
+            <div id="p-bar" class="progress-bar"></div>
+            <div id="p-text" class="progress-text">Repte 1 de 6</div>
+        </div>
+        <div id="q-text" class="question-text">Carregant l'enigma...</div>
+        <div id="options-box" class="options-grid"></div>
+        <div id="feedback"></div>
+    </div>
+
+    <div id="screen-shop" class="screen">
+        <h2>🛡️ La casa del Mag</h2>
+        <p>Descansa al costat del foc, valent cavaller. Què vols comprar amb les teves monedes?</p>
+        <div class="shop-grid">
+            <div class="shop-item">
+                <h3 style="margin-top:0;">Poció màgica (❤️)</h3>
+                <p>Una beguda vermella que cura una ferida al moment.</p>
+                <p class="price">Preu: 20 Or</p>
+                <button class="btn" style="width: 100%; border-color: red;" onclick="buyItem('life')">Comprar (+1 ❤️)</button>
+            </div>
+            <div class="shop-item">
+                <h3 style="margin-top:0;">Escut de ferro (🛡️)</h3>
+                <p>Et protegirà completament del dany d'una mala decisió.</p>
+                <p class="price">Preu: 15 Or</p>
+                <button class="btn" style="width: 100%; border-color: gray;" onclick="buyItem('shield')">Comprar (+1 🛡️)</button>
+            </div>
+        </div>
+        <button class="btn btn-action" style="background: var(--verd-bosc); border-color: darkgreen;" onclick="goToNextWorld()">Viatjar a la Següent Terra 🗺️</button>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <h2 id="end-title">🏆 Victòria llegendària! 🏆</h2>
+        <p id="end-body" style="font-size:1.3rem;"></p>
+        <button class="btn btn-action" onclick="location.reload()">Tornar a jugar 🔄</button>
+    </div>
+</div>
+
+<script>
+    // Reptes estrictament basats en el dossier de 6è
+    const gameData = [
+        {
+            worldName: "🏰 L'orde de les operacions",
+            questions: [
+                { q: "Quina regla sagrada s'ha de complir SEMPRE primer en una operació combinada?", a: ["Les sumes", "Les multiplicacions i divisions", "Els parèntesis", "Les restes"], correct: 2 },
+                { q: "Desxifra l'encanteri: (4 + 7) x 3 =", a: ["15", "33", "25", "21"], correct: 1 },
+                { q: "Un altre pergamí secret! Quant és: 4 x 5 + 12 : 2 =", a: ["16", "32", "26", "20"], correct: 2 },
+                { q: "Multiplica la poció de forma ràpida: 7135 x 1.000 =", a: ["71.350", "7.135.000", "713.500", "7.000.135"], correct: 1 },
+                { q: "Divideix l'energia del monstre ràpidament: 45.000 : 10 =", a: ["450", "4.500", "45", "40.500"], correct: 1 },
+                { q: "Quina és la pedra oculta a la balança? 789 x ___ = 78.900", a: ["10", "100", "1.000", "1"], correct: 1 }
+            ]
+        },
+        {
+            worldName: "⚖️ El castell dels múltiples i divisors",
+            questions: [
+                { q: "Els savis t'exigeixen un múltiple del nombre 5. Quin d'aquests HO ÉS?", a: ["14", "25", "32", "51"], correct: 1 },
+                { q: "Quina d'aquestes llistes conté NOMÉS divisors del nombre 36?", a: ["1, 2, 3, 5", "1, 2, 4, 9, 36", "3, 6, 7, 12", "18, 36, 72"], correct: 1 },
+                { q: "Com podem saber ràpidament si un nombre és divisible per 2?", a: ["Si acaba en 0 o parell", "Si acaba en 5", "Si la suma de xifres és 2", "Si acaba en nombre senar"], correct: 0 },
+                { q: "Un nombre serà divisible per 5 si la seva darrera xifra és...", a: ["Un nombre parell", "Només un 5", "Un 0 o un 5", "Només un 0"], correct: 2 },
+                { q: "Completa la xifra màgica perquè '3.4_0' sigui divisible per 3:", a: ["2", "1", "3", "0"], correct: 0 },
+                { q: "El druida rega un ficus cada 3 dies i un cactus cada 5 dies. Quants dies mínim han de passar per regar-los el mateix dia? (m.c.m)", a: ["8 dies", "15 dies", "10 dies", "3 dies"], correct: 1 }
+            ]
+        },
+        {
+            worldName: "🍕 La vall de les fraccions i percentatges",
+            questions: [
+                { q: "Transforma la fracció 1/4 en la seva mesura decimal equivalent:", a: ["0,25", "0,4", "1,4", "0,50"], correct: 0 },
+                { q: "Calcula el poder restant: Quant és 1/3 de 2.400 guerrers?", a: ["600", "800", "1.200", "1.600"], correct: 1 },
+                { q: "Quina és la fracció equivalent a 2/3 obtinguda per amplificació?", a: ["4/6", "3/4", "4/9", "6/8"], correct: 0 },
+                { q: "D'un pou de 8m, 1/5 del pou està tapat pel fang i 2/5 tenen aigua. Quina fracció del pou està buida?", a: ["3/5", "1/5", "2/5", "4/5"], correct: 2 },
+                { q: "Càlcul ràpid a la botiga! Quant és el 50% de 140 monedes?", a: ["50", "70", "100", "28"], correct: 1 },
+                { q: "I quant és el 10% de 1.200 cavalls?", a: ["120", "12", "1.000", "600"], correct: 0 }
+            ]
+        },
+        {
+            worldName: "📐 El laberint de la geometria i els angles",
+            questions: [
+                { q: "Al llibre antic es diu que dos angles són complementaris quan la seva suma és...", a: ["90 graus", "180 graus", "360 graus", "45 graus"], correct: 0 },
+                { q: "I si els angles són suplementaris, la seva suma ha de ser...", a: ["90 graus", "100 graus", "180 graus", "200 graus"], correct: 2 },
+                { q: "Quina és la suma total de TOTS els angles interns d'un triangle?", a: ["360 graus", "180 graus", "90 graus", "270 graus"], correct: 1 },
+                { q: "Com s'anomena el triangle on TOTS els seus costats mesuren exactament igual?", a: ["Isòsceles", "Escalè", "Rectangle", "Equilàter"], correct: 3 },
+                { q: "Un angle molt obert que mesuri 137º exactament, de quin tipus és?", a: ["Recte", "Agut", "Obtús", "Pla"], correct: 2 },
+                { q: "Dues línies que es creuen formant quatre angles rectes (com una creu perfecta) s'anomenen rectes...", a: ["Paral·leles", "Perpendiculars", "Diagonals", "Corbes"], correct: 1 }
+            ]
+        },
+        {
+            worldName: "⚖️ El drac del sistema mètric",
+            questions: [
+                { q: "Ajuda l'arquitecte del castell: Transforma '13 m i 7 cm' tot a centímetres (cm):", a: ["137 cm", "1.370 cm", "1.307 cm", "13.007 cm"], correct: 2 },
+                { q: "Un pergamí pesa 2 kg. Quants grams (g) són això?", a: ["2.000 g", "200 g", "20 g", "20.000 g"], correct: 0 },
+                { q: "El fossat té 3,4 kl d'aigua. Expressa aquesta capacitat en litres (l):", a: ["34 l", "340 l", "3.400 l", "34.000 l"], correct: 2 },
+                { q: "Un camí mesura '2 km 4 hm i 8 dam'. Quants metres (m) són en total?", a: ["2.480 m", "248 m", "20.480 m", "2.048 m"], correct: 0 },
+                { q: "Recorda que les unitats de superfície van de 100 en 100! Quants metres quadrats són 3,5 dam²?", a: ["35 m²", "350 m²", "3.500 m²", "35.000 m²"], correct: 1 },
+                { q: "Quina és l'àrea d'un mur rectangular de 8 cm d'altura i 17 cm de llargada?", a: ["50 cm²", "25 cm²", "100 cm²", "136 cm²"], correct: 3 }
+            ]
+        }
+    ];
+
+    let currentWorldIdx = 0;
+    let currentQuestionIdx = 0;
+    let coins = 0;
+    let lives = 3;
+    let shields = 0;
+    let lockSelection = false;
+
+    function changeScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function updateStats() {
+        document.getElementById('stat-world').innerText = (currentWorldIdx + 1) + "/5";
+        document.getElementById('stat-coins').innerText = coins;
+        document.getElementById('stat-lives').innerText = "❤️".repeat(lives);
+        document.getElementById('stat-shields').innerText = "🛡️".repeat(shields);
+    }
+
+    function startGame() {
+        currentWorldIdx = 0;
+        currentQuestionIdx = 0;
+        coins = 0;
+        lives = 3;
+        shields = 0;
+        
+        document.getElementById('global-stats').style.display = 'grid';
+        updateStats();
+        changeScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        lockSelection = false;
+        document.getElementById('feedback').innerText = "";
+        
+        let worldData = gameData[currentWorldIdx];
+        let qData = worldData.questions[currentQuestionIdx];
+        
+        document.getElementById('world-banner').innerText = worldData.worldName;
+        let totalQ = worldData.questions.length;
+        let progressPercent = ((currentQuestionIdx) / totalQ) * 100;
+        document.getElementById('p-bar').style.width = progressPercent + "%";
+        document.getElementById('p-text').innerText = `Repte ${currentQuestionIdx + 1} de ${totalQ}`;
+        
+        document.getElementById('q-text').innerText = qData.q;
+        
+        let optionsBox = document.getElementById('options-box');
+        optionsBox.innerHTML = "";
+        qData.a.forEach((option, idx) => {
+            let btn = document.createElement('button');
+            btn.className = "btn";
+            btn.innerText = option;
+            btn.onclick = () => checkAnswer(idx);
+            optionsBox.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIdx) {
+        if (lockSelection) return;
+        lockSelection = true;
+        
+        let worldData = gameData[currentWorldIdx];
+        let qData = worldData.questions[currentQuestionIdx];
+        let feed = document.getElementById('feedback');
+        
+        if (selectedIdx === qData.correct) {
+            coins += 10;
+            feed.innerText = "✨ RESPOSTA MAGISTRAL! +10 🪙 ✨";
+            feed.className = "txt-correct";
+        } else {
+            if (shields > 0) {
+                shields--;
+                feed.innerText = "🛡️ L'ESCUT T'HA SALVAT! La resposta era: " + qData.a[qData.correct];
+                feed.className = "txt-incorrect";
+            } else {
+                lives--;
+                feed.innerText = "💥 COP CRÍTIC! Has perdut salut. Era: " + qData.a[qData.correct];
+                feed.className = "txt-incorrect";
+            }
+        }
+        
+        updateStats();
+        
+        if (lives <= 0) {
+            setTimeout(() => endGame(false), 2500);
+            return;
+        }
+
+        setTimeout(() => {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < worldData.questions.length) {
+                loadQuestion();
+            } else {
+                if (currentWorldIdx < gameData.length - 1) {
+                    changeScreen('screen-shop');
+                } else {
+                    endGame(true);
+                }
+            }
+        }, 3000);
+    }
+
+    function buyItem(itemType) {
+        if (itemType === 'life') {
+            if (coins >= 20) {
+                coins -= 20;
+                lives++;
+                alert("❤️ Has begut una poció curativa. +1 Salut!");
+            } else {
+                alert("🪙 No tens prou or!");
+            }
+        } else if (itemType === 'shield') {
+            if (coins >= 15) {
+                coins -= 15;
+                shields++;
+                alert("🛡️ Has equipat un escut d'acer al teu braç!");
+            } else {
+                alert("🪙 Et falta or per comprar l'escut!");
+            }
+        }
+        updateStats();
+    }
+
+    function goToNextWorld() {
+        currentWorldIdx++;
+        currentQuestionIdx = 0;
+        changeScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    function endGame(isVictory) {
+        document.getElementById('global-stats').style.display = 'none';
+        changeScreen('screen-end');
+        
+        let title = document.getElementById('end-title');
+        let body = document.getElementById('end-body');
+        
+        if (isVictory) {
+            title.innerText = "👑 MESTRE/A ABSOLUT DE 6È 👑";
+            body.innerHTML = `L'institut t'espera amb les portes obertes!<br><br>Has vençut els 5 Móns amb <strong>${coins} Monedes d'Or 🪙</strong> i <strong>${lives} unitats de Salut ❤️</strong>.<br>Ets una autèntica llegenda de les matemàtiques.`;
+        } else {
+            title.innerText = "☠️ CAIGUT EN BATALLA ☠️";
+            body.innerHTML = `Les matemàtiques de 6è són dures, però no et pots rendir.<br>Repassa la teoria i torna-ho a intentar quan estiguis a punt!`;
+        }
+    }
+</script>
+</body>
+</html>
