@@ -132,7 +132,7 @@
 <body>
 
 <div id="game-box">
-    <h1>⚔️ La Gesta Matemàtica ⚔️</h1>
+    <h1>⚔️ La gesta matemàtica ⚔️</h1>
 
     <div id="global-stats" class="dashboard" style="display:none;">
         <div class="dash-item">Regne <span id="stat-world" class="dash-val">1/5</span></div>
@@ -142,14 +142,14 @@
     </div>
 
     <div id="screen-intro" class="screen active">
-        <h2>La Crida de l'Heroi</h2>
+        <h2>La crida de l'Heroi</h2>
         <p style="text-align: center;">Benvingut, jove escuder/a. El Regne dels Nombres està sumit en el caos. Et necessitem per creuar les 5 Terres Màgiques i resoldre els enigmes dels antics savis.</p>
         <p><strong>Lleis de Cavalleria:</strong><br>
         🗡️ Cada encert et donarà Or (🪙).<br>
         🐉 Cada error et farà perdre Salut (❤️).<br>
-        🍻 Abans de canviar de terra, podràs visitar la Taverna per comprar pocions i armes.<br>
+        Abans de canviar de terra, podràs visitar la casa del mag per comprar pocions i armes.<br>
         </p>
-        <button class="btn btn-action" onclick="startGame()">Aixecar l'Espasa i Començar!</button>
+        <button class="btn btn-action" onclick="startGame()">Aixecar l'espasa i començar!</button>
     </div>
 
     <div id="screen-quiz" class="screen">
@@ -164,17 +164,17 @@
     </div>
 
     <div id="screen-shop" class="screen">
-        <h2>🍻 La Taverna del Mag Pòtium</h2>
+        <h2>La casa del Mag Pòtium</h2>
         <p style="text-align:center;">Descansa a prop del foc. Tens monedes d'or? Gasta-les aquí abans del següent perill!</p>
         <div class="shop-grid">
             <div class="shop-item">
-                <h3 style="margin-top:0;">Poció Màgica (❤️)</h3>
+                <h3 style="margin-top:0;">Poció màgica (❤️)</h3>
                 <p>Una beguda vermella que et cura una ferida instantàniament.</p>
                 <p class="price">Preu: 20 Or</p>
                 <button class="btn" style="width: 100%; border-color: red;" onclick="buyItem('life')">Beure Poció (+1 ❤️)</button>
             </div>
             <div class="shop-item">
-                <h3 style="margin-top:0;">Escut de Ferro (🛡️)</h3>
+                <h3 style="margin-top:0;">Escut de ferro (🛡️)</h3>
                 <p>Un poderós escut pesat. Et protegirà del dany si falles una resposta.</p>
                 <p class="price">Preu: 15 Or</p>
                 <button class="btn" style="width: 100%; border-color: gray;" onclick="buyItem('shield')">Comprar Escut (+1 🛡️)</button>
@@ -184,7 +184,7 @@
     </div>
 
     <div id="screen-end" class="screen">
-        <h2 id="end-title">🏆 Victòria Llegendària! 🏆</h2>
+        <h2 id="end-title">🏆 Victòria llegendària! 🏆</h2>
         <p id="end-body" style="text-align:center; font-size:1.3rem;"></p>
         <button class="btn btn-action" onclick="location.reload()">Reviure la Llegenda 🔄</button>
     </div>
@@ -194,7 +194,7 @@
     // Base de dades medieval amb 30 reptes oficials (6 per món)
     const gameData = [
         {
-            worldName: "🏰 El Castell dels Grans Nombres",
+            worldName: "🏰 El castell dels grans nombres",
             questions: [
                 { q: "Quina és la forma correcta d'escriure en xifres el nombre 'un milió dotze mil'?", a: ["1.000.012", "1.120.000", "1.012.000", "1.000.120"], correct: 2 },
                 { q: "Quina màgia amaga l'escriptura d'aquest gran nombre? Dos milions nou-cents trenta-quatre mil sis-cents catorze:", a: ["2.934.614", "2.944.614", "2.394.614", "2.904.614"], correct: 0 },
@@ -205,7 +205,7 @@
             ]
         },
         {
-            worldName: "⚔️ La Masmorra del Càlcul",
+            worldName: "⚔️ La masmorra del càlcul",
             questions: [
                 { q: "Quin element NO pertany a l'encanteri de la divisió?", a: ["Dividend", "Divisor", "Multiplicador", "Residu"], correct: 2 },
                 { q: "En les Operacions Combinades, quin pergamí es llegeix SEMPRE primer?", a: ["Les sumes", "Les multiplicacions", "Els parèntesis", "Les restes"], correct: 2 },
@@ -216,7 +216,7 @@
             ]
         },
         {
-            worldName: "🌊 El Llac dels Decimals Foscos",
+            worldName: "🌊 El llac dels decimals foscos",
             questions: [
                 { q: "Com s'escriu al llibre de registres: '40 unitats i 36 mil·lèsimes'?", a: ["40,36", "40,036", "4.036", "40,360"], correct: 1 },
                 { q: "Com escriu el mag de l'aigua '5 unitats i 7 centèsimes'?", a: ["5,7", "0,57", "5,07", "50,7"], correct: 2 },
@@ -227,7 +227,7 @@
             ]
         },
         {
-            worldName: "🕰️ El Bosc del Temps i les Fraccions",
+            worldName: "🕰️ El bosc del temps i les fraccions",
             questions: [
                 { q: "Trobeu l'equivalència en el rellotge de sorra: Quantes hores són 240 minuts?", a: ["2 hores", "3 hores", "4 hores", "6 hores"], correct: 2 },
                 { q: "Quants segons necessites per llançar un encanteri de 2 minuts?", a: ["60 s", "120 s", "200 s", "180 s"], correct: 1 },
@@ -238,7 +238,7 @@
             ]
         },
         {
-            worldName: "🐉 La Torre de Lògica del Drac",
+            worldName: "🐉 La torre de lògica del drac",
             questions: [
                 { q: "Cristina ha derrocat 20 dracs i el cavaller Jordi 9 menys que ella. Quants monstres han vençut entre els dos en total?", a: ["29", "11", "31", "20"], correct: 2 },
                 { q: "En un banquet, la pizza gegant es talla en 12 trossos i et menges els 2/3. Quants trossos queden?", a: ["8", "4", "6", "3"], correct: 1 },
@@ -389,7 +389,7 @@
         let body = document.getElementById('end-body');
         
         if (isVictory) {
-            title.innerText = "👑 GRAN CAVALLER DE LES MATEMÀTIQUES 👑";
+            title.innerText = "👑 GRAN CAVALLER/A DE LES MATEMÀTIQUES 👑";
             body.innerHTML = `Ho has aconseguit! Has travessat els 5 Móns Foscos i has demostrat la teva saviesa infinita.<br><br>Has acumulat <strong>${coins} Monedes d'Or 🪙</strong> i has sobreviscut amb <strong>${lives} unitats de Salut ❤️</strong>.<br>El rei de la classe de 6è et donarà la benvinguda amb honors!`;
         } else {
             title.innerText = "☠️ CAIGUT EN BATALLA ☠️";
