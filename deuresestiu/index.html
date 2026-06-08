@@ -143,7 +143,7 @@
 
         .btn-imprimir {
             background-color: #27ae60;
-            margin-left: auto; /* Empeny el botó d'imprimir cap a la dreta */
+            margin-left: auto;
         }
 
         .btn-imprimir:hover {
@@ -193,7 +193,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 5px;
-            min-height: 1.5rem; /* Manté l'espai si està buit */
+            min-height: 1.5rem;
         }
 
         .capcalera-document p {
@@ -239,6 +239,22 @@
             margin: 0;
             line-height: 1.45;
             color: #334155;
+            padding: 4px; /* Espai extra per a l'edició */
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        /* Estils per indicar que el text es pot editar */
+        .text-proposta[contenteditable="true"]:hover {
+            background-color: #f0f8ff;
+            outline: 1px dashed var(--color-secundari);
+            cursor: text;
+        }
+
+        .text-proposta[contenteditable="true"]:focus {
+            background-color: #fff;
+            outline: 2px solid var(--color-secundari);
+            cursor: text;
         }
 
         .icona-proposta {
@@ -265,16 +281,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* --- MAQUETACIÓ ESTRICTA PER A IMPRESSIÓ A4 (MAX 1 FULL) --- */
+        /* --- MAQUETACIÓ ESTRICTA PER A IMPRESSIÓ A4 --- */
         @media print {
             @page {
-                margin: 0; /* Elimina les capçaleres i peus de pàgina del navegador (URL, data...) */
+                margin: 0;
                 size: A4 portrait;
             }
             
             body {
                 background-color: white;
-                padding: 15mm 15mm; /* Apliquem nosaltres el marge de seguretat del paper */
+                padding: 15mm 15mm;
             }
             
             .no-print {
@@ -297,20 +313,22 @@
             }
 
             .graella-propostes {
-                grid-template-columns: repeat(2, 1fr) !important; /* Força exactament 2 columnes per estalviar espai */
+                grid-template-columns: repeat(2, 1fr) !important;
                 gap: 10px !important;
             }
 
             .targeta-proposta {
                 padding: 10px 14px !important;
                 border-color: #334155 !important;
-                break-inside: avoid; /* Evita que una caixa es trenqui entre fulls */
+                break-inside: avoid;
             }
 
             .text-proposta {
                 font-size: 0.92rem !important;
                 line-height: 1.35 !important;
                 color: #000 !important;
+                padding: 0 !important;
+                outline: none !important;
             }
 
             .icona-proposta {
@@ -330,7 +348,10 @@
 
     <div class="editor-caixa no-print">
         <h2>🛠️ Editor de Propostes Lúdiques</h2>
-        <p style="text-align: center; color: #666; margin-top: 0; margin-bottom: 20px; font-size: 14px;">Afegeix noves tasques per l'alumnat. Aquesta caixa no apareixerà al PDF final.</p>
+        <p style="text-align: center; color: #666; margin-top: 0; margin-bottom: 20px; font-size: 14px;">
+            Afegeix noves tasques per l'alumnat. <br>
+            <strong>💡 Consell:</strong> Pots fer clic al text de qualsevol proposta de la llista de sota per editar-lo directament.
+        </p>
         
         <div class="seccio-configuracio">
             <div class="grup-input">
@@ -412,7 +433,7 @@
             <h2>Deures</h2>
             <h1>D'ESTIU</h1>
             <h3 id="nom-escola-text"></h3>
-            <p>Propostes per fer aquestes vacances d'estiu [cite: 5]</p>
+            <p>Propostes per fer aquestes vacances d'estiu</p>
         </div>
 
         <div class="graella-propostes" id="contingenidor-propostes">
@@ -420,7 +441,6 @@
     </div>
 
     <script>
-        // Dades inicials per defecte de les propostes (Sense la graella de llibres)
         const propostesPerDefecte = [
             { id: 1, text: "Fer un diari de vacances amb fotos, entrades, dibuixos...", icona: "fa-pen-fancy" },
             { id: 2, text: "Observar/fotografiar insectes i animals", icona: "fa-bug" },
@@ -444,7 +464,6 @@
         let llistaPropostes = [];
 
         function inicialitzar() {
-            // 1. Carregar propostes del magatzem local
             const dadesGuardades = localStorage.getItem('deuresEstiu_v2');
             if (dadesGuardades) {
                 llistaPropostes = JSON.parse(dadesGuardades);
@@ -452,7 +471,6 @@
                 llistaPropostes = [...propostesPerDefecte];
             }
 
-            // 2. Carregar nom de l'escola del magatzem local
             const escolaGuardada = localStorage.getItem('nomEscola_v2');
             const escolaInput = document.getElementById('nom-escola-input');
             const escolaText = document.getElementById('nom-escola-text');
@@ -460,12 +478,8 @@
             if (escolaGuardada !== null) {
                 escolaInput.value = escolaGuardada;
                 escolaText.textContent = escolaGuardada;
-            } else {
-                escolaInput.value = "";
-                escolaText.textContent = "";
             }
 
-            // Actualització en temps real del text del centre
             escolaInput.addEventListener('input', function() {
                 escolaText.textContent = escolaInput.value;
                 localStorage.setItem('nomEscola_v2', escolaInput.value);
@@ -482,9 +496,10 @@
                 const targeta = document.createElement('div');
                 targeta.className = 'targeta-proposta';
                 
+                // Hem afegit 'contenteditable="true"' al text de la proposta
                 targeta.innerHTML = `
                     <input type="checkbox" class="caixa-seleccio">
-                    <p class="text-proposta">${proposta.text}</p>
+                    <p class="text-proposta" contenteditable="true" onblur="actualitzarTextProposta(${proposta.id}, this)" title="Fes clic per editar">${proposta.text}</p>
                     <i class="fa-solid ${proposta.icona} icona-proposta"></i>
                     <button class="btn-eliminar-item no-print" onclick="eliminarProposta(${proposta.id})" title="Eliminar proposta">
                         <i class="fa-solid fa-xmark"></i>
@@ -494,6 +509,23 @@
             });
 
             localStorage.setItem('deuresEstiu_v2', JSON.stringify(llistaPropostes));
+        }
+
+        // Nova funció que s'executa quan acabem d'editar el text en línia
+        function actualitzarTextProposta(id, elementNode) {
+            const nouText = elementNode.innerText.trim();
+            const index = llistaPropostes.findIndex(p => p.id === id);
+            
+            if (index !== -1) {
+                if (nouText !== "") {
+                    // Si hi ha text, l'actualitzem a la llista
+                    llistaPropostes[index].text = nouText;
+                    localStorage.setItem('deuresEstiu_v2', JSON.stringify(llistaPropostes));
+                } else {
+                    // Si l'usuari ho ha deixat completament en blanc, restaurem el text anterior
+                    elementNode.innerText = llistaPropostes[index].text;
+                }
+            }
         }
 
         document.getElementById('formulari').addEventListener('submit', function(e) {
@@ -521,13 +553,12 @@
         }
 
         function netejarTot() {
-            if(confirm("Estàs segur que vols esborrar totes les propostes de la llista?")) {
+            if(confirm("Estàs segur/a que vols esborrar totes les propostes de la llista?")) {
                 llistaPropostes = [];
                 renderitzarPropostes();
             }
         }
 
-        // Nova funció per restaurar les propostes inicials
         function restaurarExemples() {
             if(confirm("Vols restaurar les propostes d'exemple? Això esborrarà qualsevol proposta nova que hagis afegit.")) {
                 llistaPropostes = [...propostesPerDefecte];
