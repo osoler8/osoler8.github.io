@@ -2,30 +2,47 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <title>Joc de Programació - Panda</title>
+    <title>Joc de Programació - Panda Avançat</title>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            display: flex;
             margin: 0;
-            padding: 20px;
             background-color: #f0f8ff;
-            gap: 20px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        /* --- Estils del Joc (Esquerra) --- */
-        #game-container {
-            width: 400px;
+        /* --- Pantalles --- */
+        .screen { display: none; text-align: center; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; }
+        
+        h1 { color: #2E7D32; }
+
+        /* --- Estils del Tauler --- */
+        #game-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        #panel-esquerra {
             display: flex;
             flex-direction: column;
             gap: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         #board {
             display: grid;
-            grid-template-columns: repeat(4, 80px); /* 4 columnes de 80px */
-            grid-template-rows: repeat(4, 80px);    /* 4 files de 80px */
+            grid-template-columns: repeat(5, 70px);
+            grid-template-rows: repeat(5, 70px);
             gap: 2px;
             background-color: #4CAF50;
             border: 4px solid #388E3C;
@@ -39,77 +56,216 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 30px;
+            font-size: 35px;
         }
 
-        .obstacle { background-color: #558B2F; } /* Color arbust */
-        
-        .btn-run {
-            padding: 15px;
-            background-color: #E53935;
-            color: white;
+        .obstacle { background-color: #558B2F; }
+
+        /* --- Botons --- */
+        .btn {
+            padding: 12px 24px;
             font-size: 18px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            margin: 5px;
         }
+        .btn-start { background-color: #4CAF50; font-size: 24px; }
+        .btn-run { background-color: #E53935; }
         .btn-run:hover { background-color: #C62828; }
+        .btn-next { background-color: #1976D2; }
 
-        /* --- Estils de Blockly (Dreta) --- */
+        /* --- Espai Blockly --- */
         #blocklyDiv {
-            height: 500px;
+            height: 550px;
             width: 600px;
             border: 2px solid #ccc;
             border-radius: 8px;
+            background: white;
+        }
+
+        #missatge {
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 25px;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <h2>Ajuda el Panda!</h2>
-        <div id="board"></div>
-        <button class="btn-run" onclick="executarCodi()">▶ EXECUTAR</button>
-        <p id="missatge"></p>
+    <div id="screen-start" class="screen active">
+        <h1>🐼 Aventura del Panda</h1>
+        <p>Programa els moviments del panda per menjar tot el bambú!</p>
+        <button class="btn btn-start" onclick="iniciarJoc()">Començar a Jugar</button>
     </div>
 
-    <div id="blocklyDiv"></div>
+    <div id="screen-game" class="screen">
+        <h2 id="titol-nivell">Nivell X</h2>
+        <div id="game-layout">
+            <div id="panel-esquerra">
+                <div id="board"></div>
+                <button class="btn btn-run" onclick="executarCodi()">▶ EXECUTAR</button>
+                <p id="missatge"></p>
+            </div>
+            <div id="blocklyDiv"></div>
+        </div>
+    </div>
 
-    <xml id="toolbox" style="display: none">
-        <block type="mou_nord"></block>
-        <block type="mou_sud"></block>
-        <block type="mou_est"></block>
-        <block type="mou_oest"></block>
-    </xml>
+    <div id="screen-win" class="screen">
+        <h1>🎉 Nivell Completat! 🎋</h1>
+        <p>Has aconseguit el bambú amb el teu codi.</p>
+        <button class="btn btn-next" onclick="seguentNivell()">Següent Nivell ➡️</button>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <h1>🏆 Joc Completat! 🏆</h1>
+        <p>Ets un mestre de la programació!</p>
+        <button class="btn btn-start" onclick="location.reload()">Tornar a Jugar</button>
+    </div>
 
     <script>
-        // 1. ESTRUCTURA DEL NIVELL
-        // 0 = Lliure, 1 = Arbust (Obstacle), 2 = Bambú (Objectiu)
-        const mapaInicial = [
-            [1, 1, 1, 1],
-            [1, 0, 2, 1],
-            [1, 0, 1, 1],
-            [1, 0, 0, 1]
+        // --- 1. DEFINICIÓ DELS NIVELLS ---
+        // 0 = Lliure, 1 = Arbust, 2 = Bambú
+        const nivells = [
+            {   // Nivell 1: Línia recta (Ús bàsic de blocs)
+                mapa: [
+                    [1, 1, 1, 1, 1],
+                    [1, 0, 0, 2, 1],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+                panda: { f: 1, c: 1 },
+                blocsPermesos: ['mou_est']
+            },
+            {   // Nivell 2: Girar la cantonada
+                mapa: [
+                    [1, 1, 1, 1, 1],
+                    [1, 0, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 2, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+                panda: { f: 1, c: 1 },
+                blocsPermesos: ['mou_est', 'mou_sud']
+            },
+            {   // Nivell 3: Introducció al Bucle
+                mapa: [
+                    [1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 2],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+                panda: { f: 1, c: 0 },
+                blocsPermesos: ['mou_est', 'bucle_repeteix']
+            }
         ];
 
-        let pandaPos = { f: 3, c: 1 }; // Posició inicial: Fila 3, Columna 1
+        let nivellActualIndex = 0;
+        let pandaPos = { f: 0, c: 0 };
+        let mapaActual = [];
         let movimentsPendents = [];
+        let workspace;
 
-        // 2. DIBUIXAR EL TAULER
+        // --- 2. GESTIÓ DE PANTALLES ---
+        function canviarPantalla(idPantalla) {
+            document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+            document.getElementById(idPantalla).classList.add('active');
+        }
+
+        // --- 3. CONFIGURACIÓ DE BLOCKLY (BLOCS PERSONALITZATS) ---
+        // Blocs de moviment
+        const direccions = [
+            { type: 'mou_nord', label: '⬆️ NORD', df: -1, dc: 0 },
+            { type: 'mou_sud', label: '⬇️ SUD', df: 1, dc: 0 },
+            { type: 'mou_est', label: '➡️ EST', df: 0, dc: 1 },
+            { type: 'mou_oest', label: '⬅️ OEST', df: 0, dc: -1 }
+        ];
+
+        direccions.forEach(dir => {
+            Blockly.Blocks[dir.type] = {
+                init: function() {
+                    this.appendDummyInput().appendField(dir.label);
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(230);
+                }
+            };
+            Blockly.JavaScript.forBlock[dir.type] = function() {
+                return `afegirMoviment(${dir.df}, ${dir.dc});\n`;
+            };
+        });
+
+        // Bloc BUCLE
+        Blockly.Blocks['bucle_repeteix'] = {
+            init: function() {
+                this.appendDummyInput()
+                    .appendField("🔁 Repeteix")
+                    .appendField(new Blockly.FieldNumber(2, 1, 10), "VEGADES")
+                    .appendField("vegades");
+                this.appendStatementInput("DO").setCheck(null);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(120);
+            }
+        };
+
+        Blockly.JavaScript.forBlock['bucle_repeteix'] = function(block) {
+            let repeats = block.getFieldValue('VEGADES');
+            let branch = Blockly.JavaScript.statementToCode(block, 'DO');
+            // Generem un bucle en JS que executa el contingut de dins
+            return `for (let i = 0; i < ${repeats}; i++) {\n${branch}}\n`;
+        };
+
+        // --- 4. LÒGICA DEL JOC ---
+        function iniciarJoc() {
+            // S'assegura que el workspace s'injecti només un cop
+            if (!workspace) {
+                workspace = Blockly.inject('blocklyDiv', { toolbox: '<xml></xml>' });
+            }
+            carregarNivell(0);
+            canviarPantalla('screen-game');
+        }
+
+        function carregarNivell(index) {
+            nivellActualIndex = index;
+            let dadesNivell = nivells[index];
+            
+            // Copiem profundament el mapa per poder-lo reiniciar
+            mapaActual = JSON.parse(JSON.stringify(dadesNivell.mapa));
+            pandaPos = { f: dadesNivell.panda.f, c: dadesNivell.panda.c };
+            
+            document.getElementById('titol-nivell').innerText = `Nivell ${index + 1}`;
+            document.getElementById('missatge').innerText = "";
+            
+            // Generem la caixa d'eines (toolbox) dinàmicament
+            let blocsXml = '<xml id="toolbox" style="display: none">';
+            dadesNivell.blocsPermesos.forEach(tipusBloc => {
+                blocsXml += `<block type="${tipusBloc}"></block>`;
+            });
+            blocsXml += '</xml>';
+            workspace.updateToolbox(blocsXml);
+            workspace.clear(); // Buidem l'àrea de treball per al nou nivell
+
+            dibuixarTauler();
+        }
+
         function dibuixarTauler() {
             const boardDiv = document.getElementById('board');
-            boardDiv.innerHTML = ''; // Netejem el tauler
+            boardDiv.innerHTML = ''; 
 
-            for (let f = 0; f < mapaInicial.length; f++) {
-                for (let c = 0; c < mapaInicial[f].length; c++) {
+            for (let f = 0; f < mapaActual.length; f++) {
+                for (let c = 0; c < mapaActual[f].length; c++) {
                     const cell = document.createElement('div');
                     cell.classList.add('cell');
                     
-                    if (mapaInicial[f][c] === 1) cell.classList.add('obstacle');
-                    if (mapaInicial[f][c] === 2) cell.innerHTML = '🎋'; // Bambú
+                    if (mapaActual[f][c] === 1) cell.classList.add('obstacle');
+                    if (mapaActual[f][c] === 2) cell.innerHTML = '🎋';
                     
-                    // Si és la posició del panda, el dibuixem
                     if (f === pandaPos.f && c === pandaPos.c) {
                         cell.innerHTML = '🐼';
                     }
@@ -118,99 +274,71 @@
             }
         }
 
-        // 3. CONFIGURAR ELS BLOCS PERSONALITZATS (BLOCKLY)
-        Blockly.Blocks['mou_nord'] = {
-            init: function() {
-                this.appendDummyInput().appendField("⬆️ NORD");
-                this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-                this.setColour(230);
-            }
-        };
-        Blockly.Blocks['mou_sud'] = {
-            init: function() {
-                this.appendDummyInput().appendField("⬇️ SUD");
-                this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-                this.setColour(230);
-            }
-        };
-        Blockly.Blocks['mou_est'] = {
-            init: function() {
-                this.appendDummyInput().appendField("➡️ EST");
-                this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-                this.setColour(230);
-            }
-        };
-        Blockly.Blocks['mou_oest'] = {
-            init: function() {
-                this.appendDummyInput().appendField("⬅️ OEST");
-                this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-                this.setColour(230);
-            }
-        };
-
-        // Com es tradueixen els blocs a JavaScript
-        Blockly.JavaScript.forBlock['mou_nord'] = function() { return 'afegirMoviment(-1, 0);\n'; };
-        Blockly.JavaScript.forBlock['mou_sud'] = function() { return 'afegirMoviment(1, 0);\n'; };
-        Blockly.JavaScript.forBlock['mou_est'] = function() { return 'afegirMoviment(0, 1);\n'; };
-        Blockly.JavaScript.forBlock['mou_oest'] = function() { return 'afegirMoviment(0, -1);\n'; };
-
-        // 4. INICIALITZAR BLOCKLY
-        const workspace = Blockly.inject('blocklyDiv', {
-            toolbox: document.getElementById('toolbox')
-        });
-
-        // 5. LÒGICA DEL JOC I EXECUCIÓ
         function afegirMoviment(df, dc) {
             movimentsPendents.push({ df: df, dc: dc });
         }
 
         function executarCodi() {
-            // Reiniciem variables per si l'usuari torna a clicar executar
-            pandaPos = { f: 3, c: 1 }; 
+            // Reinici del panda a la posició d'inici del nivell actual
+            pandaPos = { f: nivells[nivellActualIndex].panda.f, c: nivells[nivellActualIndex].panda.c };
             movimentsPendents = [];
             document.getElementById('missatge').innerText = "";
             dibuixarTauler();
 
-            // Generem el codi dels blocs i l'avaluem
+            // Obtenir i executar el codi de Blockly
             const codi = Blockly.JavaScript.workspaceToCode(workspace);
-            eval(codi); // Això omplirà la llista "movimentsPendents"
-
-            animarMoviments();
+            
+            try {
+                eval(codi); // L'avaluació generarà les crides a afegirMoviment()
+                animarMoviments();
+            } catch (e) {
+                document.getElementById('missatge').innerText = "Error en el codi!";
+                document.getElementById('missatge').style.color = "red";
+            }
         }
 
         function animarMoviments() {
-            if (movimentsPendents.length === 0) return;
-
-            const moviment = movimentsPendents.shift();
-            const novaFila = pandaPos.f + moviment.df;
-            const novaColumna = pandaPos.c + moviment.dc;
-
-            // Comprovem límits i obstacles
-            if (novaFila >= 0 && novaFila < 4 && novaColumna >= 0 && novaColumna < 4) {
-                if (mapaInicial[novaFila][novaColumna] !== 1) { // Si no és un obstacle
-                    pandaPos.f = novaFila;
-                    pandaPos.c = novaColumna;
-                    dibuixarTauler();
-
-                    // Comprovem si hem guanyat
-                    if (mapaInicial[pandaPos.f][pandaPos.c] === 2) {
-                        document.getElementById('missatge').innerText = "🎉 Has guanyat! 🎋";
-                        document.getElementById('missatge').style.color = "green";
-                        return; // Acabem l'animació
-                    }
-                } else {
-                    document.getElementById('missatge').innerText = "💥 T'has xocat amb un arbust!";
+            if (movimentsPendents.length === 0) {
+                // S'han acabat els moviments, comprovem si estem sobre el bambú
+                if (mapaActual[pandaPos.f][pandaPos.c] !== 2) {
+                    document.getElementById('missatge').innerText = "No has arribat al bambú. Torna-ho a provar!";
                     document.getElementById('missatge').style.color = "red";
-                    return;
                 }
+                return;
             }
 
-            // Cridem el següent moviment amb un petit retard per fer l'efecte d'animació
-            setTimeout(animarMoviments, 500); // 500 mil·lisegons per pas
+            const moviment = movimentsPendents.shift();
+            const novaF = pandaPos.f + moviment.df;
+            const novaC = pandaPos.c + moviment.dc;
+
+            // Comprovació de xoc
+            if (novaF >= 0 && novaF < 5 && novaC >= 0 && novaC < 5 && mapaActual[novaF][novaC] !== 1) {
+                pandaPos.f = novaF;
+                pandaPos.c = novaC;
+                dibuixarTauler();
+
+                // Comprovar si guanyem
+                if (mapaActual[pandaPos.f][pandaPos.c] === 2) {
+                    setTimeout(() => { canviarPantalla('screen-win'); }, 500);
+                    return; 
+                }
+            } else {
+                document.getElementById('missatge').innerText = "💥 Crash! Has xocat!";
+                document.getElementById('missatge').style.color = "red";
+                return;
+            }
+
+            setTimeout(animarMoviments, 400); // Velocitat d'animació (400ms)
         }
 
-        // Iniciem dibuixant el primer fotograma
-        dibuixarTauler();
+        function seguentNivell() {
+            if (nivellActualIndex + 1 < nivells.length) {
+                carregarNivell(nivellActualIndex + 1);
+                canviarPantalla('screen-game');
+            } else {
+                canviarPantalla('screen-end');
+            }
+        }
     </script>
 </body>
 </html>
