@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OPERATIUM - L'imperi de les matemàtiques</title>
+    <title>OPERATIUM - Matemàtiques Romanes</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:wght@400;700&display=swap');
 
@@ -65,13 +65,19 @@
             color: #444;
         }
 
+        .level-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
         .btn {
             background: var(--light-bg);
             color: var(--roman-red);
             border: 2px solid var(--gold);
             padding: 15px 25px;
             font-size: 1.1em;
-            margin: 8px;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
@@ -79,6 +85,7 @@
             font-weight: bold;
             width: 80%;
             max-width: 350px;
+            margin-bottom: 5px;
         }
 
         .btn:hover {
@@ -87,6 +94,12 @@
             border-color: var(--roman-red);
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(139, 0, 0, 0.3);
+        }
+
+        .high-score-text {
+            font-size: 0.9em;
+            color: var(--gold);
+            font-weight: bold;
         }
 
         .btn-abandon {
@@ -166,6 +179,20 @@
 
         .correct { color: #2e7d32; }
         .incorrect { color: var(--roman-red); }
+        
+        #new-record-msg {
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-top: 10px;
+            display: none;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
 
     </style>
 </head>
@@ -176,9 +203,20 @@
         <h2>L'Imperi de les Matemàtiques</h2>
         <p>Uneix-te a les legions de Roma. Resol els càlculs, guanya denaris i demostra el teu valor en combat.</p>
         
-        <button class="btn" onclick="startGame(1)">Auxiliar (1r nivell)</button><br>
-        <button class="btn" onclick="startGame(2)">Legionari (2n nivell)</button><br>
-        <button class="btn" onclick="startGame(3)">Centurió (3r nivell)</button>
+        <div class="level-card">
+            <button class="btn" onclick="startGame(1)">Auxiliar (1r nivell)</button>
+            <div class="high-score-text">Rècord: <span id="hs-1">0</span> 🪙</div>
+        </div>
+        
+        <div class="level-card">
+            <button class="btn" onclick="startGame(2)">Legionari (2n nivell)</button>
+            <div class="high-score-text">Rècord: <span id="hs-2">0</span> 🪙</div>
+        </div>
+        
+        <div class="level-card">
+            <button class="btn" onclick="startGame(3)">Centurió (3r nivell)</button>
+            <div class="high-score-text">Rècord: <span id="hs-3">0</span> 🪙</div>
+        </div>
     </div>
 
     <div class="container" id="game-screen">
@@ -205,7 +243,8 @@
             Total recollit:<br>
             <strong style="font-size: 1.5em; color: var(--gold);"><span id="final-score"></span> 🪙</strong>
         </p>
-        <button class="btn" onclick="showMenu()">Tornar a jugar</button>
+        <div id="new-record-msg">🏆 NOU RÈCORD ACONSEGUIT! 🏆</div>
+        <button class="btn" style="margin-top: 20px;" onclick="showMenu()">Tornar a jugar</button>
     </div>
 
     <script>
@@ -214,6 +253,19 @@
         let streak = 0;
         let lives = 3;
         let correctAnswer = 0;
+
+        // Carregar rècords guardats al navegador
+        let highScores = JSON.parse(localStorage.getItem('operatiumHighScores')) || { 1: 0, 2: 0, 3: 0 };
+
+        // Actualitzar visió dels rècords al carregar la pàgina
+        function updateHighScoreDisplay() {
+            document.getElementById('hs-1').innerText = highScores[1];
+            document.getElementById('hs-2').innerText = highScores[2];
+            document.getElementById('hs-3').innerText = highScores[3];
+        }
+
+        // Executar la primera vegada
+        updateHighScoreDisplay();
 
         function rand(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -227,6 +279,7 @@
             updateStats();
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('new-record-msg').style.display = 'none';
             document.getElementById('game-screen').style.display = 'block';
             document.getElementById('feedback-msg').innerHTML = '';
             generateProblem();
@@ -236,6 +289,7 @@
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('game-over-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'block';
+            updateHighScoreDisplay();
         }
 
         function generateProblem() {
@@ -326,6 +380,13 @@
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('game-over-screen').style.display = 'block';
             document.getElementById('final-score').innerText = score;
+
+            // Comprovar si hi ha nou rècord
+            if (score > highScores[currentLevel]) {
+                highScores[currentLevel] = score;
+                localStorage.setItem('operatiumHighScores', JSON.stringify(highScores));
+                document.getElementById('new-record-msg').style.display = 'block';
+            }
         }
 
         function handleEnter(event) {
