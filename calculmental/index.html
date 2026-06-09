@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Càlcul mental - Arcade</title>
+    <title>Càlcul Mental - Arcade Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
@@ -82,11 +82,11 @@
             gap: 15px; 
             overflow-y: auto; 
             overflow-x: hidden;
-            padding-bottom: 20px; 
-            padding-right: 10px;
+            /* Aquí afegim marge interior als costats perquè les caixes no xoquin en escalar-se */
+            padding: 5px 15px 20px 5px; 
         }
         .levels-grid::-webkit-scrollbar { width: 6px; height: 0px; }
-        .levels-grid::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+        .levels-grid::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; margin: 10px 0; }
         .levels-grid::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 10px; }
         
         .level-card { background: var(--surface); border: 2px solid #2A354E; border-radius: 15px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s; }
