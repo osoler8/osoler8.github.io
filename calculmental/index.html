@@ -3,243 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Càlcul mental</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <title>Càlcul mental - gamificat</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'Outfit', sans-serif; background: #f8fafc; touch-action: manipulation; }
-        .glass { background: white; border: 1px solid #e2e8f0; }
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-        .correct-pop { animation: pop 0.3s ease-out; }
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); border-color: #22c55e; } 100% { transform: scale(1); } }
-        .numpad-btn { background: white; border-radius: 12px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold; box-shadow: 0 2px 0px #e2e8f0; border: 1px solid #e2e8f0; transition: all 0.05s; }
-        .numpad-btn:active { transform: translateY(2px); box-shadow: none; background: #f1f5f9; }
-        .progress-bar { transition: width 0.3s linear; }
+        :root {
+            --primary: #4F46E5;
+            --bg: #F3F4F6;
+            --surface: #FFFFFF;
+            --text: #1F2937;
+            --success: #10B981;
+            --error: #EF4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation; /* Evita zoom al fer doble tap als botons */
+        }
+
+        .container {
+            background-color: var(--surface);
+            width: 100%;
+            max-width: 400px;
+            min-height: 600px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Pantalles */
+        .screen { display: none; flex-direction: column; height: 100%; flex-grow: 1; }
+        .screen.active { display: flex; }
+
+        h1, h2 { text-align: center; margin-bottom: 20px; color: var(--primary); }
+
+        /* Pantalla d'Inici */
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .btn-mode {
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mode:hover { background: var(--primary); color: white; transform: translateY(-3px); }
+
+        /* Header Joc */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .streak-box {
+            font-size: 18px;
+            color: #FCD34D;
+            transition: transform 0.2s;
+        }
+        .streak-bump { transform: scale(1.3); }
+
+        /* Zona de Pregunta */
+        .question-area {
+            text-align: center;
+            margin: auto 0;
+            transition: all 0.2s;
+        }
+        .question-text { font-size: 48px; font-weight: bold; letter-spacing: 2px; }
+        .input-display {
+            font-size: 48px;
+            color: var(--primary);
+            min-height: 60px;
+            margin-top: 10px;
+            border-bottom: 3px dashed #CBD5E1;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        /* Teclat */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: auto;
+        }
+        .key {
+            background: #E2E8F0;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px 0;
+            cursor: pointer;
+            color: var(--text);
+            transition: background 0.1s;
+        }
+        .key:active { background: #CBD5E1; }
+        .key-action { background: var(--primary); color: white; }
+        .key-clear { background: var(--error); color: white; }
+
+        /* Animacions i Feedback */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .error-shake { animation: shake 0.4s ease-in-out; background-color: #FEE2E2 !important; }
+        
+        @keyframes success-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); color: var(--success); }
+            100% { transform: scale(1); }
+        }
+        .success-pop { animation: success-pop 0.3s ease-out; }
+
+        /* Pantalla Final */
+        .score-display { text-align: center; font-size: 64px; color: var(--primary); font-weight: bold; margin: 20px 0; }
+        .highscore-display { text-align: center; font-size: 18px; color: #6B7280; margin-bottom: 30px; }
+        .btn-restart {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center overflow-x-hidden pt-2">
+<body>
 
-    <nav id="controls" class="w-full max-w-md px-4 pb-2 flex flex-col gap-2">
-        <div class="flex gap-2">
-            <select id="game-mode" onchange="updateSubModes(); resetGame();" class="flex-1 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600">
-                <option value="goal">Mode Repte</option>
-                <option value="timed">Temps / Lliure</option>
-            </select>
-            <select id="op-type" onchange="resetGame()" class="w-20 bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 text-center text-slate-600">
-                <option value="sum">+</option>
-                <option value="sub">-</option>
-                <option value="mul">×</option>
-                <option value="mix">MIX</option>
-            </select>
+<div class="container" id="game-container">
+    
+    <div id="screen-start" class="screen active">
+        <h1>Càlcul Mental</h1>
+        <p style="text-align: center; color: #6B7280;">Completa 10 operacions ràpidament i sense fallar per guanyar més punts!</p>
+        <div class="mode-grid">
+            <button class="btn-mode" onclick="startGame('+')">+</button>
+            <button class="btn-mode" onclick="startGame('-')">-</button>
+            <button class="btn-mode" onclick="startGame('*')">×</button>
+            <button class="btn-mode" onclick="startGame('MIX')">MIX</button>
         </div>
-        <select id="sub-mode" onchange="resetGame()" class="w-full bg-white px-3 py-2 rounded-xl text-[11px] font-black shadow-sm outline-none border border-slate-200 uppercase text-slate-600"></select>
-    </nav>
-
-    <div class="w-full max-w-md px-6 mb-4">
-        <div class="flex justify-between text-[9px] uppercase font-black text-slate-400 mb-1">
-            <span id="label-left">Progrés</span>
-            <span id="label-right">0/10</span>
-        </div>
-        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div id="progress-fill" class="progress-bar h-full bg-blue-500 w-0"></div>
+        <div style="margin-top: auto; text-align: center; color: #9CA3AF; font-size: 14px;">
+            Rècord actual: <span id="home-highscore">0</span> pts
         </div>
     </div>
 
-    <main id="game-container" class="w-[92%] max-w-md glass rounded-3xl p-5 shadow-lg shadow-slate-200/50 mb-4 flex flex-col items-center border-2 border-transparent transition-all min-h-[200px] text-center relative overflow-hidden">
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <div>Pregunta: <span id="progress-text">1/10</span></div>
+            <div>Punts: <span id="score-text">0</span></div>
+            <div class="streak-box" id="streak-text">🔥 x1</div>
+        </div>
+
+        <div class="question-area" id="question-area">
+            <div class="question-text" id="question">5 + 7</div>
+            <div class="input-display" id="input-display"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key" onclick="pressKey('1')">1</button>
+            <button class="key" onclick="pressKey('2')">2</button>
+            <button class="key" onclick="pressKey('3')">3</button>
+            <button class="key" onclick="pressKey('4')">4</button>
+            <button class="key" onclick="pressKey('5')">5</button>
+            <button class="key" onclick="pressKey('6')">6</button>
+            <button class="key" onclick="pressKey('7')">7</button>
+            <button class="key" onclick="pressKey('8')">8</button>
+            <button class="key" onclick="pressKey('9')">9</button>
+            <button class="key key-clear" onclick="pressKey('C')">C</button>
+            <button class="key" onclick="pressKey('0')">0</button>
+            <button class="key key-action" onclick="checkAnswer()">OK</button>
+        </div>
+    </div>
+
+    <div id="screen-end" class="screen">
+        <h2>🎉 Completat!</h2>
+        <div class="score-display" id="final-score">0</div>
+        <div class="highscore-display" id="highscore-msg">Rècord anterior: 0</div>
+        <div style="margin: auto 0;"></div> <button class="btn-restart" onclick="showScreen('screen-start')">Tornar a jugar</button>
+    </div>
+
+</div>
+
+<script>
+    // Variables d'estat
+    let currentMode = '';
+    let correctAnswer = 0;
+    let currentInput = '';
+    let questionCount = 0;
+    let maxQuestions = 10;
+    
+    // Sistema de puntuació
+    let score = 0;
+    let streak = 1;
+    let questionStartTime = 0;
+
+    // Elements DOM
+    const inputDisplay = document.getElementById('input-display');
+    const questionEl = document.getElementById('question');
+    const scoreText = document.getElementById('score-text');
+    const streakText = document.getElementById('streak-text');
+    const progressText = document.getElementById('progress-text');
+    const questionArea = document.getElementById('question-area');
+    const container = document.getElementById('game-container');
+
+    // Carregar Highscore
+    let highScore = localStorage.getItem('calculMentalHighScore') || 0;
+    document.getElementById('home-highscore').innerText = highScore;
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
         
-        <div id="start-ui" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white rounded-3xl">
-            <h2 class="text-xl font-black text-slate-400 uppercase tracking-widest mb-4">A punt?</h2>
-            <button onclick="startGame()" class="bg-blue-500 text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-blue-200 hover:scale-105 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-8 h-8 ml-1" viewBox="0 0 16 16">
-                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-                </svg>
-            </button>
-        </div>
+        if(id === 'screen-start') {
+            document.getElementById('home-highscore').innerText = localStorage.getItem('calculMentalHighScore') || 0;
+        }
+    }
 
-        <div id="game-ui" class="flex flex-col items-center justify-center min-h-[160px] w-full">
-            <div id="operation-container" class="text-5xl font-bold text-slate-800 mb-4 flex items-center justify-center gap-3 tracking-tighter">
-                <span id="num1">0</span>
-                <span id="operator" class="text-blue-500 text-3xl"> + </span>
-                <span id="num2">0</span>
-            </div>
-            <input type="number" id="answer" readonly class="w-full text-center text-4xl font-bold bg-slate-50 rounded-xl py-3 border-none focus:outline-none placeholder-slate-200" placeholder="?">
-            <div id="feedback" class="mt-2 h-4 text-[10px] font-black uppercase tracking-[0.2em]"></div>
-        </div>
+    function startGame(mode) {
+        currentMode = mode;
+        score = 0;
+        streak = 1;
+        questionCount = 0;
+        updateStatsUI();
+        showScreen('screen-game');
+        nextQuestion();
+    }
 
-        <div id="win-ui" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white rounded-3xl">
-            <h2 id="win-title" class="text-3xl font-bold text-green-500 mb-2">🎉 Completat!</h2>
-            <p id="win-stats" class="text-slate-500 mb-6 font-medium uppercase text-xs tracking-widest"></p>
-            <button onclick="resetGame()" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-700 uppercase tracking-tighter">Jugar de nou</button>
-        </div>
-    </main>
+    function updateStatsUI() {
+        scoreText.innerText = score;
+        progressText.innerText = `${questionCount}/${maxQuestions}`;
+        streakText.innerText = `🔥 x${streak}`;
+        
+        // Animació visual del combo
+        streakText.classList.remove('streak-bump');
+        void streakText.offsetWidth; // Trigger reflow
+        if (streak > 1) streakText.classList.add('streak-bump');
+    }
 
-    <div id="numpad" class="w-full max-w-md grid grid-cols-3 gap-2 px-6 mb-4">
-        <button class="numpad-btn" onclick="addNum(1)">1</button>
-        <button class="numpad-btn" onclick="addNum(2)">2</button>
-        <button class="numpad-btn" onclick="addNum(3)">3</button>
-        <button class="numpad-btn" onclick="addNum(4)">4</button>
-        <button class="numpad-btn" onclick="addNum(5)">5</button>
-        <button class="numpad-btn" onclick="addNum(6)">6</button>
-        <button class="numpad-btn" onclick="addNum(7)">7</button>
-        <button class="numpad-btn" onclick="addNum(8)">8</button>
-        <button class="numpad-btn" onclick="addNum(9)">9</button>
-        <button class="numpad-btn text-red-500 bg-red-50" onclick="clearNum()">C</button>
-        <button class="numpad-btn" onclick="addNum(0)">0</button>
-        <button class="numpad-btn bg-slate-800 text-white" onclick="checkAnswer()">OK</button>
-    </div>
+    function generateNumber(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-    <footer class="mt-auto pb-4">
-        <p class="text-slate-400 text-[10px] font-bold tracking-wide uppercase">Creat per Oriol Soler</p>
-    </footer>
+    function nextQuestion() {
+        if (questionCount >= maxQuestions) {
+            endGame();
+            return;
+        }
 
-    <script>
-        let currentResult, solved, goal, timer, timeLeft, isGameActive = false;
-        const subModeSelect = document.getElementById('sub-mode');
-        const gameModeSelect = document.getElementById('game-mode');
+        questionCount++;
+        currentInput = '';
+        inputDisplay.innerText = '';
+        updateStatsUI();
 
-        function updateSubModes() {
-            subModeSelect.innerHTML = '';
-            if (gameModeSelect.value === 'goal') {
-                const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
-                subModeSelect.appendChild(opt("10", "Repte de 10 operacions"));
-                subModeSelect.appendChild(opt("25", "Repte de 25 operacions"));
-                subModeSelect.appendChild(opt("50", "Repte de 50 operacions"));
-            } else {
-                const opt = (v, t) => { let o = document.createElement('option'); o.value=v; o.innerText=t; return o; };
-                subModeSelect.appendChild(opt("60", "1 Minut"));
-                subModeSelect.appendChild(opt("120", "2 Minuts"));
-                subModeSelect.appendChild(opt("300", "5 Minuts"));
-                subModeSelect.appendChild(opt("free", "Mode Lliure (Sense temps)"));
+        let op = currentMode;
+        if (op === 'MIX') {
+            const ops = ['+', '-', '*'];
+            op = ops[Math.floor(Math.random() * ops.length)];
+        }
+
+        let num1, num2;
+
+        if (op === '+') {
+            num1 = generateNumber(2, 50);
+            num2 = generateNumber(2, 50);
+            correctAnswer = num1 + num2;
+        } else if (op === '-') {
+            num1 = generateNumber(10, 50);
+            num2 = generateNumber(2, num1 - 1); // Evita resultats negatius
+            correctAnswer = num1 - num2;
+        } else if (op === '*') {
+            num1 = generateNumber(2, 10);
+            num2 = generateNumber(2, 10);
+            correctAnswer = num1 * num2;
+        }
+
+        questionEl.innerText = `${num1} ${op} ${num2}`;
+        questionStartTime = Date.now();
+    }
+
+    function pressKey(key) {
+        if (key === 'C') {
+            currentInput = '';
+        } else {
+            // Evitar números massa llargs
+            if (currentInput.length < 4) {
+                currentInput += key;
             }
         }
+        inputDisplay.innerText = currentInput;
+    }
 
-        function generateOperation() {
-            const type = document.getElementById('op-type').value;
-            let n1 = Math.floor(Math.random() * 20) + 1;
-            let n2 = Math.floor(Math.random() * 20) + 1;
-            let ops = ['+', '-', '*'];
-            let currentOp = type === 'mix' ? ops[Math.floor(Math.random() * ops.length)] : (type === 'sum' ? '+' : (type === 'sub' ? '-' : '*'));
-            if (currentOp === '-' && n1 < n2) [n1, n2] = [n2, n1];
-            if (currentOp === '*') { n1 = Math.floor(Math.random() * 12) + 1; n2 = Math.floor(Math.random() * 10) + 1; }
-            document.getElementById('num1').innerText = n1;
-            document.getElementById('num2').innerText = n2;
-            document.getElementById('operator').innerText = currentOp === '*' ? '×' : (currentOp === '-' ? '−' : '+');
-            currentResult = eval(`${n1} ${currentOp} ${n2}`);
-            document.getElementById('answer').value = '';
-            document.getElementById('feedback').innerText = "";
-        }
+    function checkAnswer() {
+        if (currentInput === '') return;
 
-        function checkAnswer() {
-            if (!isGameActive) return;
-            const userAns = parseInt(document.getElementById('answer').value);
-            if (isNaN(userAns)) return;
-
-            if (userAns === currentResult) {
-                solved++;
-                updateProgress();
-                if (gameModeSelect.value === 'goal' && solved >= goal) {
-                    endGame();
-                } else {
-                    document.getElementById('feedback').innerText = "Molt bé!";
-                    document.getElementById('feedback').className = "mt-2 h-4 text-[10px] font-black text-green-500";
-                    document.getElementById('game-container').classList.add('correct-pop');
-                    setTimeout(() => {
-                        document.getElementById('game-container').classList.remove('correct-pop');
-                        generateOperation();
-                    }, 300);
-                }
-            } else {
-                document.getElementById('feedback').innerText = "Incorrecte!";
-                document.getElementById('feedback').className = "mt-2 h-4 text-[10px] font-black text-red-500";
-                document.getElementById('game-container').classList.add('shake');
-                setTimeout(() => { document.getElementById('game-container').classList.remove('shake'); clearNum(); }, 400);
-            }
-        }
-
-        function updateProgress() {
-            const fill = document.getElementById('progress-fill');
-            const labelR = document.getElementById('label-right');
-            const labelL = document.getElementById('label-left');
-
-            if (gameModeSelect.value === 'goal') {
-                labelL.innerText = "Progrés";
-                fill.style.width = `${(solved / goal) * 100}%`;
-                labelR.innerText = `${solved}/${goal}`;
-            } else if (subModeSelect.value === 'free') {
-                labelL.innerText = "Fet";
-                fill.style.width = `100%`;
-                labelR.innerText = `${solved}`;
-            } else {
-                labelL.innerText = "Temps";
-                fill.style.width = `${(timeLeft / goal) * 100}%`;
-                labelR.innerText = `${timeLeft}s`;
-            }
-        }
-
-        function startGame() {
-            document.getElementById('start-ui').classList.add('hidden');
-            document.getElementById('game-ui').classList.remove('hidden');
-            isGameActive = true;
-            if (gameModeSelect.value === 'timed' && subModeSelect.value !== 'free') {
-                timer = setInterval(() => {
-                    timeLeft--;
-                    updateProgress();
-                    if (timeLeft <= 0) endGame();
-                }, 1000);
-            }
-            generateOperation();
-        }
-
-        function endGame() {
-            isGameActive = false;
-            clearInterval(timer);
-            document.getElementById('game-ui').classList.add('hidden');
-            document.getElementById('win-ui').classList.remove('hidden');
-            document.getElementById('win-stats').innerText = `Has resolt ${solved} operacions`;
-        }
-
-        function resetGame() {
-            clearInterval(timer);
-            if (!event || event.target.id !== 'sub-mode') updateSubModes();
+        const userAnswer = parseInt(currentInput);
+        
+        if (userAnswer === correctAnswer) {
+            // ENCERT!
+            const timeTaken = (Date.now() - questionStartTime) / 1000;
             
-            solved = 0;
-            const modeVal = subModeSelect.value;
-            
-            document.getElementById('win-ui').classList.add('hidden');
-            
-            if (gameModeSelect.value === 'timed' && modeVal !== 'free') {
-                // Necessita botó Play
-                isGameActive = false;
-                goal = parseInt(modeVal);
-                timeLeft = goal;
-                document.getElementById('game-ui').classList.add('hidden');
-                document.getElementById('start-ui').classList.remove('hidden');
-            } else {
-                // Comença directe
-                isGameActive = true;
-                document.getElementById('start-ui').classList.add('hidden');
-                document.getElementById('game-ui').classList.remove('hidden');
-                goal = modeVal === 'free' ? Infinity : parseInt(modeVal);
-                generateOperation();
+            // Càlcul de punts: Base 100 + bonus si tardes menys de 5 segons
+            let points = 100;
+            if (timeTaken < 5) {
+                points += Math.floor((5 - timeTaken) * 20); 
             }
-            updateProgress();
+            
+            // Aplicar multiplicador de combo
+            score += Math.floor(points * streak);
+            streak++; // Pugem el combo
+            
+            // Animació de "Juice" correcte
+            questionArea.classList.add('success-pop');
+            setTimeout(() => {
+                questionArea.classList.remove('success-pop');
+                nextQuestion();
+            }, 300);
+
+        } else {
+            // ERROR!
+            streak = 1; // Resetejem el combo
+            updateStatsUI();
+            
+            // Animació de "Juice" error (Shake & Red)
+            container.classList.add('error-shake');
+            currentInput = ''; // Buidem per tornar a intentar-ho
+            inputDisplay.innerText = '';
+            
+            setTimeout(() => {
+                container.classList.remove('error-shake');
+            }, 400);
+        }
+    }
+
+    function endGame() {
+        showScreen('screen-end');
+        document.getElementById('final-score').innerText = score;
+        
+        // Comprovar Highscore amb LocalStorage
+        let currentHighScore = parseInt(localStorage.getItem('calculMentalHighScore')) || 0;
+        const hsMsg = document.getElementById('highscore-msg');
+        
+        if (score > currentHighScore) {
+            localStorage.setItem('calculMentalHighScore', score);
+            hsMsg.innerText = "🏆 Nou Rècord!";
+            hsMsg.style.color = "var(--success)";
+            hsMsg.style.fontWeight = "bold";
+        } else {
+            hsMsg.innerText = `Rècord anterior: ${currentHighScore}`;
+            hsMsg.style.color = "#6B7280";
+            hsMsg.style.fontWeight = "normal";
         }
 
-        function addNum(n) { if(isGameActive) document.getElementById('answer').value += n; }
-        function clearNum() { document.getElementById('answer').value = ''; }
+        // Llançar confeti!
+        triggerConfetti();
+    }
 
-        window.addEventListener('keydown', (e) => {
-            if (e.key >= '0' && e.key <= '9') addNum(e.key);
-            if (e.key === 'Backspace') clearNum();
-            if (e.key === 'Enter') {
-                if (!isGameActive && !document.getElementById('start-ui').classList.contains('hidden')) startGame();
-                else checkAnswer();
+    function triggerConfetti() {
+        var duration = 3 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
             }
-        });
 
-        updateSubModes();
-        resetGame();
-    </script>
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    }
+
+    // Suport per teclat físic
+    document.addEventListener('keydown', (event) => {
+        if (document.getElementById('screen-game').classList.contains('active')) {
+            if (event.key >= '0' && event.key <= '9') {
+                pressKey(event.key);
+            } else if (event.key === 'Backspace' || event.key === 'Delete' || event.key.toLowerCase() === 'c') {
+                pressKey('C');
+            } else if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+    });
+
+</script>
 </body>
 </html>
