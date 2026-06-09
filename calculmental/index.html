@@ -3,193 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Càlcul mental - Gamificat</title>
+    <title>Càlcul Mental - Arcade Edition</title>
+    <!-- Llibreria de confeti i icones -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #4F46E5;
-            --bg: #F3F4F6;
-            --surface: #FFFFFF;
-            --text: #1F2937;
-            --success: #10B981;
-            --error: #EF4444;
+            --bg: #0B0F19;
+            --surface: #151C2C;
+            --surface-hover: #1E273C;
+            --neon-cyan: #00F0FF;
+            --neon-pink: #FF003C;
+            --neon-yellow: #FFE800;
+            --neon-green: #00FF66;
+            --text: #E2E8F0;
+            --text-dim: #94A3B8;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; user-select: none; }
 
         body {
             background-color: var(--bg);
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
             color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            touch-action: manipulation; /* Evita zoom al fer doble tap als botons */
+            touch-action: manipulation;
         }
 
         .container {
-            background-color: var(--surface);
             width: 100%;
-            max-width: 400px;
-            min-height: 620px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 20px;
+            max-width: 450px;
+            height: 100vh;
+            max-height: 850px;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            background: radial-gradient(circle at top, var(--surface) 0%, var(--bg) 100%);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        @media (min-width: 500px) {
+            .container { height: 90vh; border-radius: 20px; border: 1px solid #2A354E; }
         }
 
-        /* Pantalles */
-        .screen { display: none; flex-direction: column; height: 100%; flex-grow: 1; }
-        .screen.active { display: flex; }
+        /* Gestió de Pantalles */
+        .screen { display: none; flex-direction: column; height: 100%; flex-grow: 1; padding: 20px; }
+        .screen.active { display: flex; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1, h2 { text-align: center; margin-bottom: 20px; color: var(--primary); }
+        /* Títols Globals */
+        h1 { text-align: center; font-size: 32px; font-weight: 900; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,240,255,0.4); margin-bottom: 5px; }
+        .subtitle-main { text-align: center; color: var(--neon-pink); font-size: 14px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 25px; }
 
-        /* Pantalla d'Inici */
-        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
-        .btn-mode {
+        /* Pantalla MAPA (Nivells) */
+        .levels-grid { display: grid; gap: 15px; overflow-y: auto; padding-bottom: 20px; }
+        .levels-grid::-webkit-scrollbar { width: 5px; }
+        .levels-grid::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 5px; }
+        
+        .level-card {
             background: var(--surface);
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            font-size: 24px;
-            font-weight: bold;
-            padding: 20px;
+            border: 2px solid #2A354E;
             border-radius: 15px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-mode:hover { background: var(--primary); color: white; transform: translateY(-3px); }
+        .level-card:hover { transform: scale(1.02); border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,240,255,0.2); }
+        .level-card.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+        .level-card.locked:hover { transform: none; border-color: #2A354E; box-shadow: none; }
+        
+        .level-info h3 { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+        .level-info p { font-size: 13px; color: var(--text-dim); }
+        
+        .level-stars { color: #475569; font-size: 14px; }
+        .level-stars .active { color: var(--neon-yellow); text-shadow: 0 0 8px rgba(255,232,0,0.6); }
+        .level-icon { font-size: 24px; color: var(--neon-cyan); }
+        .locked .level-icon { color: var(--text-dim); }
 
-        /* Header Joc */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--primary);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
+        /* Pantalla JOC */
+        .top-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 12px; border: 1px solid #2A354E; }
+        .lives-box { color: var(--neon-pink); font-size: 18px; text-shadow: 0 0 8px rgba(255,0,60,0.6); }
+        .lives-box i.empty { color: #334155; text-shadow: none; }
+        .score-box { font-weight: 900; font-size: 20px; color: var(--neon-yellow); }
+        
+        .progress-container { width: 100%; background: #1E293B; height: 8px; border-radius: 4px; margin-bottom: 30px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--neon-cyan); width: 0%; transition: width 0.3s; box-shadow: 0 0 10px var(--neon-cyan); }
 
-        .streak-box {
-            font-size: 18px;
-            color: #FCD34D;
-            transition: transform 0.2s;
-        }
-        .streak-bump { transform: scale(1.3); }
-
-        /* Zona de Pregunta */
-        .question-area {
-            text-align: center;
-            margin: auto 0;
-            transition: all 0.2s;
-        }
-        .question-text { font-size: 48px; font-weight: bold; letter-spacing: 2px; }
-        .input-display {
-            font-size: 48px;
-            color: var(--primary);
-            min-height: 60px;
-            margin-top: 10px;
-            border-bottom: 3px dashed #CBD5E1;
-            display: inline-block;
-            min-width: 100px;
-        }
+        .question-area { text-align: center; margin: auto 0; display: flex; flex-direction: column; align-items: center; }
+        .streak-indicator { color: var(--neon-pink); font-weight: 900; font-size: 18px; height: 25px; margin-bottom: 10px; opacity: 0; transition: opacity 0.2s; }
+        .streak-indicator.visible { opacity: 1; }
+        .streak-indicator.bump { animation: pop 0.2s ease-out; }
+        
+        .question-text { font-size: 60px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .input-display { font-size: 55px; color: var(--neon-cyan); height: 70px; margin-top: 5px; border-bottom: 4px solid var(--neon-cyan); min-width: 120px; text-shadow: 0 0 15px rgba(0,240,255,0.6); }
 
         /* Teclat */
-        .keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: auto;
-            margin-bottom: 15px;
-        }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: auto; margin-bottom: 15px; }
         .key {
-            background: #E2E8F0;
-            border: none;
-            border-radius: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 15px 0;
-            cursor: pointer;
+            background: var(--surface-hover);
+            border: 1px solid #2A354E;
+            border-radius: 12px;
+            font-size: 28px;
+            font-weight: 900;
+            padding: 18px 0;
             color: var(--text);
-            transition: background 0.1s;
-        }
-        .key:active { background: #CBD5E1; }
-        .key-action { background: var(--primary); color: white; }
-        .key-clear { background: var(--error); color: white; }
-
-        /* Peu de pàgina */
-        .footer {
-            text-align: center;
-            color: #9CA3AF;
-            font-size: 13px;
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid #F3F4F6;
-        }
-
-        /* Animacions i Feedback */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
-        }
-        .error-shake { animation: shake 0.4s ease-in-out; background-color: #FEE2E2 !important; }
-        
-        @keyframes success-pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); color: var(--success); }
-            100% { transform: scale(1); }
-        }
-        .success-pop { animation: success-pop 0.3s ease-out; }
-
-        /* Pantalla Final */
-        .score-display { text-align: center; font-size: 64px; color: var(--primary); font-weight: bold; margin: 20px 0; }
-        .highscore-display { text-align: center; font-size: 18px; color: #6B7280; margin-bottom: 30px; }
-        .btn-restart {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 15px;
+            transition: all 0.1s;
         }
+        .key:active { background: #2A354E; transform: scale(0.95); }
+        .key-clear { color: var(--neon-pink); }
+        .key-action { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px rgba(0,240,255,0.4); border: none; }
+        .key-action:active { background: #00C0CC; }
+
+        /* Pantalla RESULTAT */
+        .result-content { text-align: center; margin: auto 0; }
+        .result-title { font-size: 42px; margin-bottom: 10px; }
+        .result-title.win { color: var(--neon-green); text-shadow: 0 0 15px rgba(0,255,102,0.5); }
+        .result-title.lose { color: var(--neon-pink); text-shadow: 0 0 15px rgba(255,0,60,0.5); }
+        
+        .big-stars { font-size: 50px; color: #334155; margin: 20px 0; letter-spacing: 10px; }
+        .big-stars .active { color: var(--neon-yellow); text-shadow: 0 0 20px rgba(255,232,0,0.8); animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards; }
+        .big-stars i:nth-child(2) { animation-delay: 0.2s; font-size: 65px; transform: translateY(-10px); display: inline-block; }
+        .big-stars i:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes starPop { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+        
+        .final-score-text { font-size: 20px; color: var(--text-dim); }
+        .final-score-number { font-size: 48px; font-weight: 900; color: var(--neon-cyan); margin-bottom: 30px; }
+        
+        .btn-large {
+            display: block; width: 100%; background: var(--surface-hover); border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan); font-size: 20px; font-weight: 900; padding: 18px; border-radius: 12px;
+            cursor: pointer; text-transform: uppercase; margin-bottom: 15px; transition: all 0.2s;
+        }
+        .btn-large.primary { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px rgba(0,240,255,0.4); }
+        .btn-large:active { transform: scale(0.98); }
+
+        /* Footer */
+        .footer { text-align: center; color: var(--text-dim); font-size: 13px; margin-top: auto; padding-top: 15px; border-top: 1px solid #2A354E; padding-bottom: 10px; }
+
+        /* Animacions Action */
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-15px); } 40%, 80% { transform: translateX(15px); } }
     </style>
 </head>
 <body>
 
 <div class="container" id="game-container">
     
-    <div id="screen-start" class="screen active">
-        <h1>Càlcul Mental</h1>
-        <p style="text-align: center; color: #6B7280;">Completa 10 operacions ràpidament i sense fallar per guanyar més punts!</p>
-        <div class="mode-grid">
-            <button class="btn-mode" onclick="startGame('+')">+</button>
-            <button class="btn-mode" onclick="startGame('-')">-</button>
-            <button class="btn-mode" onclick="startGame('*')">x</button>
-            <button class="btn-mode" onclick="startGame('MIX')">MIX</button>
+    <!-- 1. PANTALLA MAPA NIVELLS -->
+    <div id="screen-map" class="screen active">
+        <h1>Arcade</h1>
+        <div class="subtitle-main">Càlcul Mental</div>
+        
+        <div class="levels-grid" id="levels-container">
+            <!-- Els nivells es generen per JS -->
         </div>
-        <div style="margin-top: auto; text-align: center; color: #9CA3AF; font-size: 14px; margin-bottom: 20px;">
-            Rècord actual: <span id="home-highscore">0</span> pts
-        </div>
+        
+        <div class="footer">Creat per Oriol Soler</div>
     </div>
 
+    <!-- 2. PANTALLA JOC -->
     <div id="screen-game" class="screen">
-        <div class="game-header">
-            <div>Pregunta: <span id="progress-text">1/10</span></div>
-            <div>Punts: <span id="score-text">0</span></div>
-            <div class="streak-box" id="streak-text">🔥 x1</div>
+        <div class="top-hud">
+            <div class="lives-box" id="lives-display">
+                <i class="fa-solid fa-heart"></i> <i class="fa-solid fa-heart"></i> <i class="fa-solid fa-heart"></i>
+            </div>
+            <div style="font-weight: bold; color: var(--text-dim);" id="level-title-ingame">Nivell 1</div>
+            <div class="score-box" id="score-text">0</div>
         </div>
+        
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
 
         <div class="question-area" id="question-area">
+            <div class="streak-indicator" id="streak-text">COMBO x2!</div>
             <div class="question-text" id="question">5 x 7</div>
             <div class="input-display" id="input-display"></div>
         </div>
@@ -210,227 +209,319 @@
         </div>
     </div>
 
-    <div id="screen-end" class="screen">
-        <h2>🎉 Completat!</h2>
-        <div class="score-display" id="final-score">0</div>
-        <div class="highscore-display" id="highscore-msg">Rècord anterior: 0</div>
-        <div style="margin: auto 0;"></div> <button class="btn-restart" onclick="showScreen('screen-start')">Tornar a jugar</button>
+    <!-- 3. PANTALLA RESULTAT -->
+    <div id="screen-result" class="screen">
+        <div class="result-content">
+            <h2 class="result-title" id="result-title">NIVELL SUPERAT!</h2>
+            
+            <div class="big-stars" id="result-stars">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+            </div>
+            
+            <div class="final-score-text" id="result-msg">Puntuació aconseguida</div>
+            <div class="final-score-number" id="result-score">0</div>
+        </div>
+        
+        <div style="margin-top: auto;">
+            <button class="btn-large primary" id="btn-next" onclick="nextLevelAction()">Següent Nivell</button>
+            <button class="btn-large" onclick="initMap()">Tornar al Menú</button>
+        </div>
     </div>
-
-    <div class="footer">Creat per Oriol Soler</div>
 
 </div>
 
 <script>
-    // Variables d'estat
-    let currentMode = '';
-    let correctAnswer = 0;
-    let currentInput = '';
-    let questionCount = 0;
-    let maxQuestions = 10;
-    
-    // Sistema de puntuació
+    // --- DEFINICIÓ DELS NIVELLS ---
+    const GAME_LEVELS = [
+        { id: 1, title: "NIVELL 1", subtitle: "Sumes Inicia't", op: '+', max: 10 },
+        { id: 2, title: "NIVELL 2", subtitle: "Restes Inicia't", op: '-', max: 15 },
+        { id: 3, title: "NIVELL 3", subtitle: "Multiplica x2, x3", op: '*', maxM1: 3, maxM2: 10 },
+        { id: 4, title: "NIVELL 4", subtitle: "Sumes Avançades", op: '+', max: 50 },
+        { id: 5, title: "NIVELL 5", subtitle: "Mix Bàsic", op: 'MIX', max: 20, maxM1: 4, maxM2: 10 },
+        { id: 6, title: "NIVELL 6", subtitle: "Taules x4, x5, x6", op: '*', maxM1: 6, maxM2: 10 },
+        { id: 7, title: "NIVELL 7", subtitle: "Restes Perilloses", op: '-', max: 99 },
+        { id: 8, title: "NIVELL 8", subtitle: "Sumes Centenàries", op: '+', max: 200 },
+        { id: 9, title: "NIVELL 9", subtitle: "Totes les Taules", op: '*', maxM1: 10, maxM2: 10 },
+        { id: 10, title: "BOSS FINAL", subtitle: "Mestre del Càlcul", op: 'MIX', max: 100, maxM1: 10, maxM2: 10 }
+    ];
+
+    // --- VARIABLES GLOBALS ---
+    let progressData = JSON.parse(localStorage.getItem('calculMentalArcade')) || {};
+    let currentLevel = null;
     let score = 0;
     let streak = 1;
+    let lives = 3;
+    let qCount = 0;
+    const MAX_QUESTIONS = 10;
+    let correctAnswer = 0;
+    let currentInput = '';
     let questionStartTime = 0;
 
     // Elements DOM
     const inputDisplay = document.getElementById('input-display');
     const questionEl = document.getElementById('question');
-    const scoreText = document.getElementById('score-text');
     const streakText = document.getElementById('streak-text');
-    const progressText = document.getElementById('progress-text');
-    const questionArea = document.getElementById('question-area');
-    const container = document.getElementById('game-container');
+    const scoreText = document.getElementById('score-text');
+    const progressBar = document.getElementById('progress-bar');
+    const livesDisplay = document.getElementById('lives-display');
 
-    // Carregar Highscore
-    let highScore = localStorage.getItem('calculMentalHighScore') || 0;
-    document.getElementById('home-highscore').innerText = highScore;
+    // --- INICIALITZACIÓ ---
+    initMap();
 
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        
-        if(id === 'screen-start') {
-            document.getElementById('home-highscore').innerText = localStorage.getItem('calculMentalHighScore') || 0;
-        }
     }
 
-    function startGame(mode) {
-        currentMode = mode;
+    // Genera la llista de botons de nivells
+    function initMap() {
+        showScreen('screen-map');
+        const container = document.getElementById('levels-container');
+        container.innerHTML = '';
+
+        // Comprovem quin és l'últim nivell desbloquejat (sempre el 1 està obert)
+        let highestUnlocked = 1;
+        for (let i = 1; i <= GAME_LEVELS.length; i++) {
+            if (progressData[i] && progressData[i] > 0) highestUnlocked = i + 1;
+        }
+
+        GAME_LEVELS.forEach(lvl => {
+            const isUnlocked = lvl.id <= highestUnlocked;
+            const stars = progressData[lvl.id] || 0;
+            
+            let starsHTML = '';
+            for(let i=1; i<=3; i++) {
+                starsHTML += `<i class="fa-solid fa-star ${i <= stars ? 'active' : ''}"></i>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
+            if(isUnlocked) card.onclick = () => startLevel(lvl.id);
+
+            card.innerHTML = `
+                <div class="level-info">
+                    <h3 style="color: ${isUnlocked ? 'var(--neon-cyan)' : 'var(--text-dim)'}">${lvl.title}</h3>
+                    <p>${lvl.subtitle}</p>
+                    <div class="level-stars">${isUnlocked ? starsHTML : ''}</div>
+                </div>
+                <div class="level-icon">
+                    <i class="fa-solid ${isUnlocked ? 'fa-play' : 'fa-lock'}"></i>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // --- LÒGICA DE JOC ---
+    function startLevel(id) {
+        currentLevel = GAME_LEVELS.find(l => l.id === id);
         score = 0;
         streak = 1;
-        questionCount = 0;
-        updateStatsUI();
+        lives = 3;
+        qCount = 0;
+        currentInput = '';
+        
+        document.getElementById('level-title-ingame').innerText = currentLevel.title;
+        updateHUD();
         showScreen('screen-game');
         nextQuestion();
     }
 
-    function updateStatsUI() {
+    function updateHUD() {
         scoreText.innerText = score;
-        progressText.innerText = `${questionCount}/${maxQuestions}`;
-        streakText.innerText = `🔥 x${streak}`;
+        progressBar.style.width = `${(qCount / MAX_QUESTIONS) * 100}%`;
         
-        // Animació visual del combo
-        streakText.classList.remove('streak-bump');
-        void streakText.offsetWidth; // Trigger reflow
-        if (streak > 1) streakText.classList.add('streak-bump');
+        // Dibuixar cors
+        let heartsHTML = '';
+        for(let i=1; i<=3; i++) {
+            heartsHTML += `<i class="fa-solid fa-heart ${i > lives ? 'empty' : ''}"></i> `;
+        }
+        livesDisplay.innerHTML = heartsHTML;
+
+        // Combo text
+        if (streak > 1) {
+            streakText.innerText = `COMBO x${streak}!`;
+            streakText.classList.add('visible');
+            // Re-trigger animació
+            streakText.classList.remove('bump');
+            void streakText.offsetWidth;
+            streakText.classList.add('bump');
+        } else {
+            streakText.classList.remove('visible');
+        }
     }
 
-    function generateNumber(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
     function nextQuestion() {
-        if (questionCount >= maxQuestions) {
-            endGame();
-            return;
-        }
+        if (qCount >= MAX_QUESTIONS) { finishLevel(true); return; }
+        if (lives <= 0) { finishLevel(false); return; }
 
-        questionCount++;
+        qCount++;
         currentInput = '';
         inputDisplay.innerText = '';
-        updateStatsUI();
+        inputDisplay.style.borderColor = 'var(--neon-cyan)';
+        updateHUD();
 
-        let op = currentMode;
+        let op = currentLevel.op;
         if (op === 'MIX') {
             const ops = ['+', '-', '*'];
             op = ops[Math.floor(Math.random() * ops.length)];
         }
 
         let num1, num2;
-
         if (op === '+') {
-            num1 = generateNumber(2, 50);
-            num2 = generateNumber(2, 50);
+            const m = currentLevel.max || 20;
+            num1 = rand(2, m); num2 = rand(2, m);
             correctAnswer = num1 + num2;
         } else if (op === '-') {
-            num1 = generateNumber(10, 50);
-            num2 = generateNumber(2, num1 - 1); // Evita resultats negatius
+            const m = currentLevel.max || 20;
+            num1 = rand(5, m); num2 = rand(2, num1 - 1);
             correctAnswer = num1 - num2;
         } else if (op === '*') {
-            num1 = generateNumber(2, 10);
-            num2 = generateNumber(2, 10);
+            const m1 = currentLevel.maxM1 || 5;
+            const m2 = currentLevel.maxM2 || 10;
+            // Fem que a vegades el gran estigui a la dreta o a l'esquerra per evitar sempre "2 x 9"
+            if(Math.random() > 0.5) { num1 = rand(2, m1); num2 = rand(2, m2); }
+            else { num1 = rand(2, m2); num2 = rand(2, m1); }
             correctAnswer = num1 * num2;
         }
 
-        // Mostrar 'x' en lloc de '*' a la pantalla per a la multiplicació
-        let displayOp = op;
-        if (op === '*') displayOp = 'x';
-
+        let displayOp = op === '*' ? 'x' : op;
         questionEl.innerText = `${num1} ${displayOp} ${num2}`;
         questionStartTime = Date.now();
     }
 
     function pressKey(key) {
-        if (key === 'C') {
-            currentInput = '';
-        } else {
-            // Evitar números massa llargs
-            if (currentInput.length < 4) {
-                currentInput += key;
-            }
-        }
+        if (key === 'C') { currentInput = ''; } 
+        else { if (currentInput.length < 4) currentInput += key; }
         inputDisplay.innerText = currentInput;
     }
 
     function checkAnswer() {
         if (currentInput === '') return;
-
         const userAnswer = parseInt(currentInput);
         
         if (userAnswer === correctAnswer) {
             // ENCERT!
             const timeTaken = (Date.now() - questionStartTime) / 1000;
+            let pts = 100;
+            if (timeTaken < 5) pts += Math.floor((5 - timeTaken) * 20); // Bonus velocitat
             
-            // Càlcul de punts: Base 100 + bonus si tardes menys de 5 segons
-            let points = 100;
-            if (timeTaken < 5) {
-                points += Math.floor((5 - timeTaken) * 20); 
-            }
+            score += Math.floor(pts * streak);
+            streak++;
             
-            // Aplicar multiplicador de combo
-            score += Math.floor(points * streak);
-            streak++; // Pugem el combo
-            
-            // Animació de "Juice" correcte
-            questionArea.classList.add('success-pop');
+            inputDisplay.style.borderColor = 'var(--neon-green)';
+            inputDisplay.style.color = 'var(--neon-green)';
             setTimeout(() => {
-                questionArea.classList.remove('success-pop');
+                inputDisplay.style.color = 'var(--neon-cyan)';
                 nextQuestion();
             }, 300);
 
         } else {
             // ERROR!
-            streak = 1; // Resetejem el combo
-            updateStatsUI();
+            streak = 1;
+            lives--;
+            updateHUD();
             
-            // Animació de "Juice" error (Shake & Red)
-            container.classList.add('error-shake');
-            currentInput = ''; // Buidem per tornar a intentar-ho
-            inputDisplay.innerText = '';
+            document.getElementById('game-container').classList.add('shake');
+            inputDisplay.style.borderColor = 'var(--neon-pink)';
+            inputDisplay.style.color = 'var(--neon-pink)';
             
             setTimeout(() => {
-                container.classList.remove('error-shake');
+                document.getElementById('game-container').classList.remove('shake');
+                currentInput = '';
+                inputDisplay.innerText = '';
+                inputDisplay.style.color = 'var(--neon-cyan)';
+                inputDisplay.style.borderColor = 'var(--neon-cyan)';
+                if (lives <= 0) nextQuestion(); // Força el Game Over
             }, 400);
         }
     }
 
-    function endGame() {
-        showScreen('screen-end');
-        document.getElementById('final-score').innerText = score;
-        
-        // Comprovar Highscore amb LocalStorage
-        let currentHighScore = parseInt(localStorage.getItem('calculMentalHighScore')) || 0;
-        const hsMsg = document.getElementById('highscore-msg');
-        
-        if (score > currentHighScore) {
-            localStorage.setItem('calculMentalHighScore', score);
-            hsMsg.innerText = "🏆 Nou Rècord!";
-            hsMsg.style.color = "var(--success)";
-            hsMsg.style.fontWeight = "bold";
-        } else {
-            hsMsg.innerText = `Rècord anterior: ${currentHighScore}`;
-            hsMsg.style.color = "#6B7280";
-            hsMsg.style.fontWeight = "normal";
-        }
+    // --- FI DEL NIVELL ---
+    function finishLevel(isWin) {
+        showScreen('screen-result');
+        const titleEl = document.getElementById('result-title');
+        const scoreEl = document.getElementById('result-score');
+        const starsContainer = document.getElementById('result-stars');
+        const msgEl = document.getElementById('result-msg');
+        const btnNext = document.getElementById('btn-next');
 
-        // Llançar confeti!
-        triggerConfetti();
+        if (isWin) {
+            // Càlcul d'estrelles: Base per sobreviure = 1 estrella.
+            // 2 estrelles si fas > 3000 pts. 3 estrelles si fas > 6000 pts.
+            let earnedStars = 1;
+            if (score > 3000) earnedStars = 2;
+            if (score > 6000) earnedStars = 3;
+
+            // Guardem rècord si és millor
+            if (!progressData[currentLevel.id] || earnedStars > progressData[currentLevel.id]) {
+                progressData[currentLevel.id] = earnedStars;
+                localStorage.setItem('calculMentalArcade', JSON.stringify(progressData));
+            }
+
+            titleEl.innerText = "NIVELL SUPERAT!";
+            titleEl.className = "result-title win";
+            scoreEl.innerText = score;
+            msgEl.innerText = "Puntuació aconseguida";
+            btnNext.style.display = "block";
+            btnNext.innerText = currentLevel.id === GAME_LEVELS.length ? "Has guanyat el joc!" : "Següent Nivell";
+
+            // Pintar estrelles
+            starsContainer.innerHTML = `
+                <i class="fa-solid fa-star ${earnedStars >= 1 ? 'active' : ''}"></i>
+                <i class="fa-solid fa-star ${earnedStars >= 2 ? 'active' : ''}"></i>
+                <i class="fa-solid fa-star ${earnedStars >= 3 ? 'active' : ''}"></i>
+            `;
+            triggerConfetti();
+
+        } else {
+            titleEl.innerText = "GAME OVER";
+            titleEl.className = "result-title lose";
+            scoreEl.innerText = score;
+            msgEl.innerText = "Has perdut totes les vides...";
+            starsContainer.innerHTML = `
+                <i class="fa-solid fa-skull" style="color:var(--neon-pink);"></i>
+            `;
+            btnNext.style.display = "block";
+            btnNext.innerText = "Tornar a intentar";
+        }
+    }
+
+    function nextLevelAction() {
+        if (lives <= 0) {
+            startLevel(currentLevel.id); // Reintentar
+        } else {
+            if (currentLevel.id < GAME_LEVELS.length) {
+                startLevel(currentLevel.id + 1); // Següent
+            } else {
+                initMap(); // Ha acabat el joc
+            }
+        }
     }
 
     function triggerConfetti() {
-        var duration = 3 * 1000;
+        var duration = 2.5 * 1000;
         var animationEnd = Date.now() + duration;
-        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-        function randomInRange(min, max) {
-            return Math.random() * (max - min) + min;
-        }
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0, colors: ['#00F0FF', '#FF003C', '#FFE800'] };
 
         var interval = setInterval(function() {
             var timeLeft = animationEnd - Date.now();
-
-            if (timeLeft <= 0) {
-                return clearInterval(interval);
-            }
-
+            if (timeLeft <= 0) return clearInterval(interval);
             var particleCount = 50 * (timeLeft / duration);
-            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-            confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 } }));
         }, 250);
     }
 
-    // Suport per teclat físic
+    // Suport per teclat
     document.addEventListener('keydown', (event) => {
         if (document.getElementById('screen-game').classList.contains('active')) {
-            if (event.key >= '0' && event.key <= '9') {
-                pressKey(event.key);
-            } else if (event.key === 'Backspace' || event.key === 'Delete' || event.key.toLowerCase() === 'c') {
-                pressKey('C');
-            } else if (event.key === 'Enter') {
-                checkAnswer();
-            }
+            if (event.key >= '0' && event.key <= '9') pressKey(event.key);
+            else if (event.key === 'Backspace' || event.key === 'Delete' || event.key.toLowerCase() === 'c') pressKey('C');
+            else if (event.key === 'Enter') checkAnswer();
         }
     });
 
