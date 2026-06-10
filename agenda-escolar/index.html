@@ -22,18 +22,13 @@
             --text-dark: #1e293b;
             --text-muted: #64748b;
             
-            /* Colors de les assignatures */
+            /* Colors assignatures Pastís */
             --catala: #ffadad; --castella: #ffd6a5; --mates: #fdffb6;
             --medi: #caffbf; --angles: #9bf6ff; --plastica: #a0c4ff;
             --valors: #bdb2ff; --religio: #ffc6ff; --tutoria: #e2e8f0;
         }
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Outfit', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
 
         body {
             background-color: var(--bg-canvas);
@@ -44,7 +39,7 @@
             overflow-x: hidden;
         }
 
-        /* --- NAVBAR SUPERIOR --- */
+        /* --- NAVBAR --- */
         .navbar {
             background-color: var(--sidebar-dark);
             color: white;
@@ -56,29 +51,10 @@
             z-index: 10;
         }
 
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #60a5fa;
-            display: flex;
-            align-items: center; 
-            gap: 10px;
-        }
-
+        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 10px; }
         .nav-controls { display: flex; align-items: center; gap: 12px; }
-
-        .select-curs {
-            background: #1e293b; color: white; border: 1px solid #334155;
-            padding: 8px 12px; border-radius: 8px; cursor: pointer; outline: none;
-            font-weight: 600; font-size: 0.95rem;
-        }
-
-        .btn-utility {
-            background: #1e293b; color: white; border: none;
-            padding: 8px 16px; border-radius: 8px; cursor: pointer; 
-            font-weight: 600; transition: background 0.2s;
-        }
-
+        .select-curs { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; cursor: pointer; outline: none; font-weight: 600; }
+        .btn-utility { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .btn-utility:hover { background: #334155; }
 
         /* --- ACTION BAR --- */
@@ -89,211 +65,61 @@
         }
 
         .week-nav { display: flex; align-items: center; gap: 15px; }
-
-        .btn-nav {
-            background: var(--accent-blue); color: white; border: none;
-            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-            transition: transform 0.2s;
-        }
-        .btn-nav:hover { transform: scale(1.05); }
-
-        .week-title { 
-            font-weight: 700; font-size: 1.2rem; min-width: 280px; 
-            text-align: center; color: var(--text-dark); 
-        }
-
+        .btn-nav { background: var(--accent-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
+        .week-title { font-weight: 700; font-size: 1.2rem; min-width: 280px; text-align: center; }
         .action-btns { display: flex; gap: 10px; }
-
-        .btn-main {
-            padding: 12px 24px; border-radius: 12px; border: none;
-            color: white; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background 0.2s;
-        }
-
+        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; color: white; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-save { background: var(--accent-green); }
-        .btn-save:hover { background: #059669; }
-        .btn-clear { background: var(--accent-red); }
-        .btn-clear:hover { background: #dc2626; }
         .btn-img { background: var(--accent-orange); }
-        .btn-img:hover { background: #d97706; }
+        .btn-clear { background: var(--accent-red); }
 
-        /* --- BARRA D'ASSIGNATURES --- */
-        .subjects-bar {
-            padding: 12px 2rem; background: #f8fafc;
-            display: flex; flex-wrap: wrap; gap: 10px; 
-            border-bottom: 1px solid #e2e8f0; align-items: center;
-        }
+        /* --- SUBJECT TAGS --- */
+        .subjects-bar { padding: 12px 2rem; background: #f8fafc; display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e2e8f0; align-items: center; }
+        .tag { padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); user-select: none; transition: 0.2s; }
+        .tag:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tag-catala { background: var(--catala); } .tag-castella { background: var(--castella); } .tag-mates { background: var(--mates); }
+        .tag-medi { background: var(--medi); } .tag-angles { background: var(--angles); } .tag-plastica { background: var(--plastica); }
+        .tag-valors { background: var(--valors); } .tag-religio { background: var(--religio); } .tag-tutoria { background: var(--tutoria); }
 
-        .subjects-label { 
-            font-size: 0.9rem; font-weight: 600; 
-            color: var(--text-muted); margin-right: 10px; 
-        }
-
-        .tag {
-            padding: 8px 16px; border-radius: 25px; font-size: 0.85rem;
-            font-weight: 700; cursor: pointer; border: 1px solid rgba(0,0,0,0.08);
-            transition: transform 0.1s, box-shadow 0.1s; user-select: none;
-        }
-        .tag:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-        .tag-catala { background: var(--catala); }
-        .tag-castella { background: var(--castella); }
-        .tag-mates { background: var(--mates); }
-        .tag-medi { background: var(--medi); }
-        .tag-angles { background: var(--angles); }
-        .tag-plastica { background: var(--plastica); }
-        .tag-valors { background: var(--valors); }
-        .tag-religio { background: var(--religio); }
-        .tag-tutoria { background: var(--tutoria); }
-
-        /* --- LLIBRETA CANVAS --- */
-        .notebook-capture-area {
-            padding: 2rem; flex-grow: 1; display: flex; justify-content: center;
-        }
-
-        .notebook-container {
-            width: 100%; max-width: 1600px; display: grid; grid-template-columns: 1fr; gap: 0;
-        }
-
-        @media (min-width: 1024px) {
-            .notebook-container { grid-template-columns: 1fr 40px 1fr 340px; }
-        }
-
-        .page {
-            background: white; border: 1px solid #cbd5e1; padding: 2rem; 
-            display: flex; flex-direction: column; gap: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        }
-
-        .page-left { border-radius: 20px 0 0 20px; }
-        .page-right { border-radius: 0 20px 20px 0; border-left: none; }
-
-        .spine {
-            background: linear-gradient(90deg, #e2e8f0, #94a3b8, #e2e8f0);
-            display: flex; flex-direction: column; justify-content: space-around;
-            align-items: center; padding: 30px 0;
-        }
-
+        /* --- NOTEBOOK --- */
+        .notebook-capture-area { padding: 2rem; flex-grow: 1; display: flex; justify-content: center; }
+        .notebook-container { width: 100%; max-width: 1600px; display: grid; grid-template-columns: 1fr; }
+        @media (min-width: 1024px) { .notebook-container { grid-template-columns: 1fr 40px 1fr 340px; } }
+        .page { background: white; border: 1px solid #cbd5e1; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .page-left { border-radius: 20px 0 0 20px; } .page-right { border-radius: 0 20px 20px 0; border-left: none; }
+        .spine { background: linear-gradient(90deg, #e2e8f0, #94a3b8, #e2e8f0); display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 30px 0; }
         .ring { width: 45px; height: 14px; background: #334155; border-radius: 10px; border: 1px solid #1e293b; }
 
-        /* --- CAIXES DIÀRIES --- */
-        .day-box {
-            border: 1px solid #e2e8f0; border-radius: 15px;
-            display: flex; flex-direction: column; overflow: hidden;
-            transition: border-color 0.2s;
-        }
-        .day-box:focus-within { border-color: var(--accent-blue); }
+        /* --- DAY BOXES --- */
+        .day-box { border: 1px solid #e2e8f0; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; }
+        .day-header { background: #f8fafc; padding: 12px 18px; font-weight: 700; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
+        .day-date { font-size: 0.85rem; color: var(--text-muted); }
+        .day-body { position: relative; background: linear-gradient(#fff 0%, #fff 96%, #f1f5f9 96%); background-size: 100% 32px; padding: 8px 12px 8px 50px; min-height: 180px; }
+        .day-body::before { content: ''; position: absolute; left: 42px; top: 0; width: 1px; height: 100%; background: #fca5a5; }
+        .day-input { width: 100%; height: 100%; min-height: 164px; background: transparent; border: none; resize: none; font-size: 1.05rem; line-height: 32px; outline: none; color: var(--text-dark); }
+        .weekend { border-color: #fecdd3; } .weekend .day-header { background: #fff1f2; color: #be123c; }
 
-        .day-header {
-            background: #f8fafc; padding: 12px 18px; font-weight: 700;
-            display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0;
-            color: var(--text-dark); font-size: 1rem;
-        }
-
-        .day-date { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
-
-        .day-body {
-            position: relative;
-            background: linear-gradient(#fff 0%, #fff 96%, #f1f5f9 96%);
-            background-size: 100% 32px;
-            padding: 8px 12px 8px 50px; min-height: 180px;
-        }
-
-        .day-body::before {
-            content: ''; position: absolute; left: 42px; top: 0;
-            width: 1px; height: 100%; background: #fca5a5;
-        }
-
-        .day-input {
-            width: 100%; height: 100%; min-height: 164px;
-            background: transparent; border: none; resize: none;
-            font-size: 1.05rem; line-height: 32px;
-            outline: none; color: var(--text-dark);
-        }
-
-        .weekend { border-color: #fecdd3; }
-        .weekend .day-header { background: #fff1f2; color: #be123c; border-bottom-color: #ffe4e6; }
-
-        /* --- SIDEBAR WIDGETS --- */
+        /* --- SIDEBAR --- */
         .sidebar { padding-left: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
-        
-        .widget { 
-            border-radius: 20px; padding: 1.5rem; min-height: 280px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-        }
-        
+        .widget { border-radius: 20px; padding: 1.5rem; min-height: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .widget-notes { background: #fef08a; border: 1px solid #fde047; }
-        .widget-notes h3 { color: #854d0e; }
-        
-        .widget-todo { 
-            background: white; border: 1px solid #bfdbfe; 
-            background-image: linear-gradient(#f0f9ff 1px, transparent 1px), linear-gradient(90deg, #f0f9ff 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        .widget-todo h3 { color: var(--accent-blue); }
-
-        .widget h3 { 
-            margin-bottom: 1rem; font-size: 1.1rem; font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
-            border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 8px;
-        }
-        
-        .widget-textarea { 
-            width: 100%; flex-grow: 1; background: transparent; border: none; 
-            resize: none; outline: none; font-size: 1rem; line-height: 1.5;
-        }
-
-        /* --- SISTEMA DE CHECKBOXES (ALTRES TASQUES) --- */
-        .todo-container { flex-grow: 1; overflow-y: auto; max-height: 220px; }
+        .widget-todo { background: white; border: 1px solid #bfdbfe; background-image: linear-gradient(#f0f9ff 1px, transparent 1px), linear-gradient(90deg, #f0f9ff 1px, transparent 1px); background-size: 20px 20px; }
+        .todo-container { flex-grow: 1; overflow-y: auto; max-height: 250px; }
         .todo-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .todo-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue); }
-        .todo-item input[type="text"] { 
-            background: transparent; border: none; border-bottom: 1px solid transparent; 
-            font-size: 0.95rem; width: 100%; outline: none; padding: 2px 0; color: var(--text-dark);
-        }
-        .todo-item input[type="text"]:focus { border-bottom-color: #cbd5e1; }
+        .todo-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .todo-item input[type="text"] { background: transparent; border: none; border-bottom: 1px solid transparent; font-size: 0.95rem; width: 100%; outline: none; }
         .todo-item.checked input[type="text"] { text-decoration: line-through; color: var(--text-muted); }
-
-        .btn-add-todo {
-            background: var(--accent-blue); color: white; border: none; padding: 6px 12px;
-            border-radius: 8px; font-size: 0.85rem; cursor: pointer; align-self: flex-start;
-            margin-top: 10px; font-weight: 600; transition: background 0.2s;
-        }
-        .btn-add-todo:hover { background: #1d4ed8; }
-
-        /* TOAST NOTIFICACIÓ */
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--sidebar-dark); color: white; padding: 14px 28px;
-            border-radius: 50px; display: none; z-index: 1000; font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: background-color 0.3s;
-        }
-
-        @media print {
-            .navbar, .action-bar, .subjects-bar, .spine, .btn-add-todo { display: none !important; }
-            body { background: white; }
-            .notebook-capture-area { padding: 0; }
-            .notebook-container { grid-template-columns: 1fr 1fr !important; }
-            .sidebar { display: none; }
-        }
+        .btn-add-todo { background: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; align-self: flex-start; margin-top: 10px; font-weight: 600; }
+        
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--sidebar-dark); color: white; padding: 14px 28px; border-radius: 50px; display: none; z-index: 1000; font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <header class="navbar">
-        <div class="navbar-brand">
-            <i class="fa-solid fa-calendar-check"></i> Agenda escolar
-        </div>
+        <div class="navbar-brand"><i class="fa-solid fa-calendar-check"></i> Agenda escolar</div>
         <div class="nav-controls">
-            <!-- Selector de cursos -->
             <select id="cursSelect" class="select-curs" onchange="changeCourseManually()">
-                <option value="2025">Curs 2025-2026</option>
                 <option value="2026">Curs 2026-2027</option>
                 <option value="2027">Curs 2027-2028</option>
                 <option value="2028">Curs 2028-2029</option>
@@ -301,51 +127,37 @@
                 <option value="2030">Curs 2030-2031</option>
             </select>
             <button class="btn-utility" onclick="setToday()">Avui</button>
-            <button class="btn-utility" onclick="toggleFullScreen()" title="Pantalla Completa">
-                <i class="fa-solid fa-expand"></i>
-            </button>
+            <button class="btn-utility" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
         </div>
     </header>
 
-    <!-- ACCIONS DE NAVEGACIÓ -->
     <div class="action-bar">
         <div class="week-nav">
             <button class="btn-nav" onclick="moveWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-            <span class="week-title" id="weekRangeDisplay">Carregant setmana...</span>
+            <span class="week-title" id="weekRangeDisplay">Preparant dates...</span>
             <button class="btn-nav" onclick="moveWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="action-btns">
-            <!-- NOU BOTÓ ESBORRAR -->
-            <button class="btn-main btn-clear" onclick="clearData()">
-                <i class="fa-solid fa-trash-can"></i> Esborrar
-            </button>
-            <button class="btn-main btn-save" onclick="saveData()">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar
-            </button>
-            <button class="btn-main btn-img" id="btnDownload" onclick="downloadPNG()">
-                <i class="fa-solid fa-image"></i> Guardar PNG
-            </button>
+            <button class="btn-main btn-clear" onclick="clearCurrentWeek()"><i class="fa-solid fa-trash"></i> Esborrar</button>
+            <button class="btn-main btn-save" onclick="saveData()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+            <button class="btn-main btn-img" id="btnDownload" onclick="downloadPNG()"><i class="fa-solid fa-image"></i> Guardar PNG</button>
         </div>
     </div>
 
-    <!-- BOTONS INSERCIÓ ASSIGNATURES -->
     <div class="subjects-bar">
-        <span class="subjects-label"><i class="fa-solid fa-bolt"></i> Insereix:</span>
         <div class="tag tag-catala" onclick="insertTag('📚 CATALÀ')">Català</div>
         <div class="tag tag-castella" onclick="insertTag('📖 CASTELLÀ')">Castellà</div>
         <div class="tag tag-mates" onclick="insertTag('📐 MATES')">Mates</div>
         <div class="tag tag-medi" onclick="insertTag('🌍 MEDI')">Medi</div>
-        <div class="tag tag-angles" onclick="insertTag('💬 ANGLÈS (EN)')"><i class="fa-solid fa-comments"></i> Anglès</div>
+        <div class="tag tag-angles" onclick="insertTag('💬🇬🇧 ANGLÈS (EN)')">Anglès</div>
         <div class="tag tag-plastica" onclick="insertTag('🎨 PLÀSTICA')">Plàstica</div>
         <div class="tag tag-valors" onclick="insertTag('🤝 VALORS')">Valors</div>
         <div class="tag tag-religio" onclick="insertTag('⛪ RELIGIÓ')">Religió</div>
         <div class="tag tag-tutoria" onclick="insertTag('💬 TUTORIA')">Tutoria</div>
     </div>
 
-    <!-- CONTENIDOR DE LA LLIBRETA -->
     <div class="notebook-capture-area" id="notebookArea">
         <main class="notebook-container">
-            <!-- Pàgina Esquerra -->
             <section class="page page-left">
                 <div class="day-box">
                     <div class="day-header"><span>DILLUNS</span> <span class="day-date" id="label-dl"></span></div>
@@ -360,15 +172,7 @@
                     <div class="day-body"><textarea class="day-input" id="input-dc"></textarea></div>
                 </div>
             </section>
-
-            <!-- Espiral -->
-            <div class="spine">
-                <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-                <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-                <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-            </div>
-
-            <!-- Pàgina Dreta -->
+            <div class="spine"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
             <section class="page page-right">
                 <div class="day-box">
                     <div class="day-header"><span>DIJOUS</span> <span class="day-date" id="label-dj"></span></div>
@@ -380,331 +184,72 @@
                 </div>
                 <div class="day-box weekend">
                     <div class="day-header"><span>CAP DE SETMANA</span> <span class="day-date" id="label-cs"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-cs" placeholder="Anotacions cap de setmana..."></textarea></div>
+                    <div class="day-body"><textarea class="day-input" id="input-cs"></textarea></div>
                 </div>
             </section>
-
-            <!-- Sidebar Lateral -->
             <aside class="sidebar">
-                <div class="widget widget-notes">
-                    <h3><i class="fa-solid fa-thumbtack"></i> Notes</h3>
-                    <textarea class="widget-textarea" id="input-notes" placeholder="Notes..."></textarea>
-                </div>
-                <div class="widget widget-todo">
-                    <h3><i class="fa-solid fa-check-double"></i> Altres tasques</h3>
-                    <div class="todo-container" id="todoList">
-                        <!-- Generat dinàmicament -->
-                    </div>
-                    <button class="btn-add-todo" onclick="addNewTodo('', false)">+ Afegir tasca</button>
-                </div>
+                <div class="widget widget-notes"><h3><i class="fa-solid fa-thumbtack"></i> Notes</h3><textarea class="day-input" id="input-notes" style="min-height:200px;"></textarea></div>
+                <div class="widget widget-todo"><h3><i class="fa-solid fa-check-double"></i> Altres tasques</h3><div class="todo-container" id="todoList"></div><button class="btn-add-todo" onclick="addNewTodo('', false)">+ Afegir tasca</button></div>
             </aside>
         </main>
     </div>
 
-    <!-- TOAST -->
-    <div id="toast">💾 Dades desades correctament!</div>
+    <div id="toast">💾 Canvis guardats!</div>
 
-    <!-- LÒGICA SCRIPTS -->
     <script>
-        let currentMonday;
-        let lastFocus;
-
-        function safeSetLocal(key, val) {
-            try { localStorage.setItem(key, val); } catch(e) { console.warn('LocalStorage no disponible'); }
-        }
-        function safeGetLocal(key) {
-            try { return localStorage.getItem(key); } catch(e) { return null; }
-        }
-
-        function getMonday(d) {
-            d = new Date(d);
-            let day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(d.setDate(diff));
-        }
-
-        function getStorageKey() {
-            try {
-                let y = currentMonday.getFullYear();
-                let m = String(currentMonday.getMonth() + 1).padStart(2, '0');
-                let d = String(currentMonday.getDate()).padStart(2, '0');
-                return "agenda_pro_" + y + "-" + m + "-" + d;
-            } catch(e) {
-                return "agenda_pro_error";
-            }
-        }
-
-        window.onload = () => {
-            try {
-                let today = new Date();
-                if (today.getFullYear() < 2026) {
-                    currentMonday = getMonday(new Date(2026, 8, 1)); 
-                } else if (today.getFullYear() > 2030) {
-                    currentMonday = getMonday(new Date(2030, 8, 1));
-                } else {
-                    currentMonday = getMonday(today);
-                }
-
-                lastFocus = document.getElementById('input-dl');
-                document.querySelectorAll('textarea').forEach(t => {
-                    t.addEventListener('focus', (e) => lastFocus = e.target);
-                });
-                updateUI();
-            } catch (e) { console.error("Error inicialització:", e); }
-        };
-
-        function changeCourseManually() {
-            try {
-                const y = parseInt(document.getElementById('cursSelect').value);
-                currentMonday = getMonday(new Date(y, 8, 1)); 
-                updateUI();
-            } catch (e) { console.error(e); }
-        }
-
-        function syncCourseDropdown() {
-            try {
-                const month = currentMonday.getMonth();
-                const year = currentMonday.getFullYear();
-                const schoolYear = (month >= 8) ? year : year - 1;
-                const sel = document.getElementById('cursSelect');
-                if (sel) {
-                    let exists = Array.from(sel.options).some(opt => parseInt(opt.value) === schoolYear);
-                    if (exists) sel.value = schoolYear;
-                }
-            } catch(e) { console.error(e); }
-        }
+        let currentMonday; let lastFocus;
+        function getMonday(d) { d = new Date(d); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+        function getStorageKey() { return "agenda_final_" + currentMonday.toISOString().split('T')[0]; }
+        window.onload = () => { currentMonday = getMonday(new Date()); lastFocus = document.getElementById('input-dl'); document.querySelectorAll('textarea').forEach(t => t.addEventListener('focus', (e) => lastFocus = e.target)); updateUI(); };
 
         function updateUI() {
-            try {
-                const days = ['dl','dt','dc','dj','dv'];
-                const opts = { day: 'numeric', month: 'long' };
-                
-                for(let i=0; i<5; i++) {
-                    let d = new Date(currentMonday);
-                    d.setDate(d.getDate() + i);
-                    const el = document.getElementById('label-'+days[i]);
-                    if (el) el.innerText = d.toLocaleDateString('ca-ES', opts);
-                }
-                
-                let sat = new Date(currentMonday); sat.setDate(currentMonday.getDate() + 5);
-                let sun = new Date(currentMonday); sun.setDate(currentMonday.getDate() + 6);
-                const elCs = document.getElementById('label-cs');
-                if (elCs) elCs.innerText = `${sat.getDate()}-${sun.getDate()} ${sun.toLocaleDateString('ca-ES', {month:'long'})}`;
-
-                const elDisplay = document.getElementById('weekRangeDisplay');
-                if (elDisplay) elDisplay.innerText = `Setmana del ${currentMonday.getDate()} al ${sun.getDate()} de ${sun.toLocaleDateString('ca-ES', {month:'long', year:'numeric'})}`;
-                
-                syncCourseDropdown();
-                loadData();
-            } catch (e) { console.error("Error a updateUI:", e); }
+            const days = ['dl','dt','dc','dj','dv'], opts = { day: 'numeric', month: 'long' };
+            for(let i=0; i<5; i++) { let d = new Date(currentMonday); d.setDate(currentMonday.getDate() + i); document.getElementById('label-'+days[i]).innerText = d.toLocaleDateString('ca-ES', opts); }
+            let sat = new Date(currentMonday); sat.setDate(sat.getDate() + 5); let sun = new Date(currentMonday); sun.setDate(sun.getDate() + 6);
+            document.getElementById('label-cs').innerText = `${sat.getDate()}-${sun.getDate()} ${sun.toLocaleDateString('ca-ES', {month:'long'})}`;
+            document.getElementById('weekRangeDisplay').innerText = `Del ${currentMonday.getDate()} al ${sun.getDate()} de ${sun.toLocaleDateString('ca-ES', {month:'long', year:'numeric'})}`;
+            const month = currentMonday.getMonth(), year = currentMonday.getFullYear(), schoolYear = (month >= 8) ? year : year - 1;
+            const sel = document.getElementById('cursSelect'); if (sel) sel.value = schoolYear;
+            loadData();
         }
 
-        function moveWeek(n) {
-            saveData(true);
-            currentMonday.setDate(currentMonday.getDate() + (n * 7));
-            updateUI();
-        }
-
-        function setToday() {
-            saveData(true);
-            currentMonday = getMonday(new Date());
-            updateUI();
-        }
-
-        function insertTag(tag) {
-            try {
-                const area = lastFocus;
-                if (!area || area.tagName !== 'TEXTAREA') return;
-                const start = area.selectionStart;
-                const text = area.value;
-                const content = tag + ": 
-"; 
-                area.value = text.substring(0, start) + content + text.substring(area.selectionEnd);
-                area.focus();
-                area.selectionStart = area.selectionEnd = start + content.length;
-                saveData(true);
-            } catch(e) { console.error(e); }
-        }
-
-        // FUNCIÓ NOVA: ESBORRAR DADES
-        function clearData() {
-            if(confirm("Segur que vols esborrar totes les dades d'aquesta setmana? Aquesta acció no es pot desfer.")) {
-                try {
-                    localStorage.removeItem(getStorageKey());
-                    
-                    ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => {
-                        const el = document.getElementById('input-' + id);
-                        if(el) el.value = "";
-                    });
-                    
-                    const container = document.getElementById('todoList');
-                    if(container) container.innerHTML = '';
-                    addNewTodo("", false);
-                    
-                    const t = document.getElementById('toast');
-                    if (t) {
-                        t.innerHTML = "🗑️ Dades esborrades!";
-                        t.style.backgroundColor = "var(--accent-red)";
-                        t.style.display = 'block';
-                        setTimeout(() => { 
-                            t.style.display = 'none'; 
-                            t.innerHTML = "💾 Dades desades correctament!"; // Tornem al text original
-                            t.style.backgroundColor = "var(--sidebar-dark)";
-                        }, 2000);
-                    }
-                } catch(e) { console.error("Error a l'esborrar:", e); }
-            }
-        }
+        function moveWeek(n) { saveData(true); currentMonday.setDate(currentMonday.getDate() + (n * 7)); updateUI(); }
+        function setToday() { saveData(true); currentMonday = getMonday(new Date()); updateUI(); }
+        function changeCourseManually() { const y = parseInt(document.getElementById('cursSelect').value); currentMonday = getMonday(new Date(y, 8, 1)); updateUI(); }
+        function insertTag(tag) { if (!lastFocus) return; const start = lastFocus.selectionStart, text = lastFocus.value, content = tag + ": \n"; lastFocus.value = text.substring(0, start) + content + text.substring(lastFocus.selectionEnd); lastFocus.focus(); lastFocus.selectionStart = lastFocus.selectionEnd = start + content.length; saveData(true); }
 
         function addNewTodo(text = "", checked = false) {
-            try {
-                const container = document.getElementById('todoList');
-                if (!container) return;
-                
-                const div = document.createElement('div');
-                div.className = 'todo-item' + (checked ? ' checked' : '');
-                
-                const cb = document.createElement('input');
-                cb.type = 'checkbox';
-                cb.checked = checked;
-                cb.onchange = function() { 
-                    div.classList.toggle('checked', cb.checked);
-                    autoSaveTodo(); 
-                };
-                
-                const inputTxt = document.createElement('input');
-                inputTxt.type = 'text';
-                inputTxt.value = text;
-                inputTxt.placeholder = "Nova tasca...";
-                inputTxt.oninput = autoSaveTodo;
-                
-                const btnDel = document.createElement('button');
-                btnDel.innerHTML = '×';
-                btnDel.style.cssText = "background:none; border:none; color:#fca5a5; font-size:1.4rem; cursor:pointer; padding: 0 5px;";
-                btnDel.onclick = function() { div.remove(); autoSaveTodo(); };
-                
-                div.appendChild(cb);
-                div.appendChild(inputTxt);
-                div.appendChild(btnDel);
-                container.appendChild(div);
-            } catch (e) { console.error("Error afegint Todo", e); }
+            const container = document.getElementById('todoList'); const div = document.createElement('div'); div.className = 'todo-item' + (checked ? ' checked' : '');
+            div.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked', this.checked);saveData(true)"><input type="text" value="${text}" placeholder="Nova tasca..." oninput="saveData(true)"><button style="background:none;border:none;color:#fca5a5;cursor:pointer;padding:0 5px;" onclick="this.parentElement.remove();saveData(true)">×</button>`;
+            container.appendChild(div);
         }
 
-        function autoSaveTodo() { saveData(true); }
-
         function saveData(silent = false) {
-            try {
-                const todoItems = [];
-                document.querySelectorAll('.todo-item').forEach(item => {
-                    const cb = item.querySelector('input[type="checkbox"]');
-                    const inputTxt = item.querySelector('input[type="text"]');
-                    if (inputTxt && cb) {
-                        todoItems.push({ text: inputTxt.value, checked: cb.checked });
-                    }
-                });
-
-                const data = {
-                    dl: document.getElementById('input-dl').value,
-                    dt: document.getElementById('input-dt').value,
-                    dc: document.getElementById('input-dc').value,
-                    dj: document.getElementById('input-dj').value,
-                    dv: document.getElementById('input-dv').value,
-                    cs: document.getElementById('input-cs').value,
-                    notes: document.getElementById('input-notes').value,
-                    todos: todoItems
-                };
-
-                safeSetLocal(getStorageKey(), JSON.stringify(data));
-                
-                if(!silent) {
-                    const t = document.getElementById('toast');
-                    if (t) {
-                        t.style.display = 'block';
-                        setTimeout(() => t.style.display = 'none', 2000);
-                    }
-                }
-            } catch (e) { console.error("Error saving:", e); }
+            const todoItems = []; document.querySelectorAll('.todo-item').forEach(item => { todoItems.push({ text: item.querySelector('input[type="text"]').value, checked: item.querySelector('input[type="checkbox"]').checked }); });
+            const data = { dl: document.getElementById('input-dl').value, dt: document.getElementById('input-dt').value, dc: document.getElementById('input-dc').value, dj: document.getElementById('input-dj').value, dv: document.getElementById('input-dv').value, cs: document.getElementById('input-cs').value, notes: document.getElementById('input-notes').value, todos: todoItems };
+            localStorage.setItem(getStorageKey(), JSON.stringify(data));
+            if(!silent) { const t = document.getElementById('toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
         }
 
         function loadData() {
-            try {
-                const container = document.getElementById('todoList');
-                if(container) container.innerHTML = ''; 
-
-                const saved = safeGetLocal(getStorageKey());
-                if (saved) {
-                    const d = JSON.parse(saved);
-                    ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => {
-                        const el = document.getElementById('input-' + id);
-                        if(el) el.value = d[id] || "";
-                    });
-                    
-                    if (d.todos && d.todos.length > 0) {
-                        d.todos.forEach(t => addNewTodo(t.text, t.checked));
-                    } else {
-                        addNewTodo("", false);
-                    }
-                } else {
-                    document.querySelectorAll('.day-input, .widget-textarea').forEach(t => t.value = "");
-                    addNewTodo("", false);
-                }
-            } catch (e) {
-                console.error("Error loading:", e);
-                addNewTodo("", false);
-            }
+            document.getElementById('todoList').innerHTML = ''; const saved = localStorage.getItem(getStorageKey());
+            if (saved) { const d = JSON.parse(saved); ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = d[id] || ""); if (d.todos && d.todos.length > 0) d.todos.forEach(t => addNewTodo(t.text, t.checked)); else addNewTodo("", false); }
+            else { ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = ""); addNewTodo("", false); }
         }
 
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(e => console.error(e));
-            } else {
-                if (document.exitFullscreen) document.exitFullscreen();
-            }
-        }
+        function clearCurrentWeek() { if(confirm("Esborrar dades de la setmana?")) { ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = ""); document.getElementById('todoList').innerHTML = ''; addNewTodo("", false); saveData(true); } }
+        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 
         function downloadPNG() {
-            const btn = document.getElementById('btnDownload');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generant...';
-            
-            try {
-                const area = document.getElementById('notebookArea');
-                html2canvas(area, {
-                    backgroundColor: "#f1f5f9",
-                    scale: 2,
-                    useCORS: true,
-                    onclone: (clonedDoc) => {
-                        clonedDoc.querySelectorAll('textarea').forEach(textarea => {
-                            const div = clonedDoc.createElement('div');
-                            div.innerText = textarea.value;
-                            div.style.fontFamily = "'Outfit', sans-serif";
-                            div.style.fontSize = "1.05rem";
-                            div.style.lineHeight = "32px";
-                            div.style.whiteSpace = "pre-wrap";
-                            div.style.wordBreak = "break-word";
-                            div.style.padding = "8px 12px 8px 0px";
-                            div.style.width = "100%";
-                            div.style.color = "#1e293b";
-                            
-                            textarea.style.display = 'none';
-                            textarea.parentElement.appendChild(div);
-                        });
-                    }
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = getStorageKey() + '.png';
-                    link.href = canvas.toDataURL("image/png");
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    btn.innerHTML = originalHTML;
-                }).catch(err => {
-                    console.error("Error html2canvas:", err);
-                    btn.innerHTML = originalHTML;
-                });
-            } catch(e) {
-                console.error("Falla descàrrega:", e);
-                btn.innerHTML = originalHTML;
-            }
+            const btn = document.getElementById('btnDownload'), originalHTML = btn.innerHTML; btn.innerHTML = '...';
+            html2canvas(document.getElementById('notebookArea'), { backgroundColor: "#f1f5f9", scale: 2, useCORS: true,
+                onclone: (clonedDoc) => {
+                    clonedDoc.querySelectorAll('textarea').forEach(textarea => {
+                        const div = clonedDoc.createElement('div'); div.innerText = textarea.value; div.style.fontFamily = "'Outfit', sans-serif"; div.style.fontSize = "1.05rem"; div.style.lineHeight = "32px"; div.style.whiteSpace = "pre-wrap"; div.style.wordBreak = "break-word"; div.style.padding = "8px 12px 8px 0px"; div.style.width = "100%"; div.style.color = "#1e293b";
+                        textarea.style.display = 'none'; textarea.parentElement.appendChild(div);
+                    });
+                }
+            }).then(canvas => { const link = document.createElement('a'); link.download = 'agenda.png'; link.href = canvas.toDataURL("image/png"); document.body.appendChild(link); link.click(); document.body.removeChild(link); btn.innerHTML = originalHTML; });
         }
     </script>
 </body>
