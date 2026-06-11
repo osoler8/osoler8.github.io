@@ -2,179 +2,103 @@
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda escolar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <style>
-        :root {
-            --bg-canvas: #f1f5f9; --sidebar-dark: #0f172a; --notebook-white: #ffffff;
-            --accent-blue: #2563eb; --accent-green: #10b981; --accent-orange: #f59e0b;
-            --accent-red: #ef4444; --text-dark: #1e293b; --text-muted: #64748b;
-            --catala: #ffadad; --castella: #ffd6a5; --mates: #fdffb6;
-            --medi: #caffbf; --angles: #9bf6ff; --plastica: #a0c4ff;
-            --valors: #bdb2ff; --religio: #ffc6ff; --tutoria: #e2e8f0;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
-        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
-
-        /* --- UI --- */
-        .navbar { background-color: var(--sidebar-dark); color: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 10px; }
-        .nav-controls { display: flex; align-items: center; gap: 12px; }
-        .select-curs { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .btn-utility { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        :root { --bg: #f1f5f9; --blue: #2563eb; --red: #ef4444; --green: #10b981; --orange: #f59e0b; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         
-        .action-bar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-        .btn-nav { background: var(--accent-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; }
-        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; color: white; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .btn-save { background: var(--accent-green); }
-        .btn-img { background: var(--accent-orange); }
-        .btn-clear { background: var(--accent-red); }
-
-        .subjects-bar { padding: 12px 2rem; background: #f8fafc; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .tag { padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); transition: 0.2s; }
-        .tag:hover { transform: translateY(-2px); }
-        .tag-catala { background: var(--catala); } .tag-castella { background: var(--castella); }
-        .tag-mates { background: var(--mates); } .tag-medi { background: var(--medi); }
-        .tag-angles { background: var(--angles); } .tag-plastica { background: var(--plastica); }
-        .tag-valors { background: var(--valors); } .tag-religio { background: var(--religio); } .tag-tutoria { background: var(--tutoria); }
-
-        /* --- LLIBRETA --- */
-        .notebook-capture-area { padding: 2rem; flex-grow: 1; display: flex; justify-content: center; }
-        .notebook-container { width: 100%; max-width: 1600px; display: grid; grid-template-columns: 1fr 40px 1fr 340px; }
-        .page { background: white; border: 1px solid #cbd5e1; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .page-left { border-radius: 20px 0 0 20px; } .page-right { border-radius: 0 20px 20px 0; border-left: none; }
+        .toolbar { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; }
+        button { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: 600; }
         
-        .day-box { border: 1px solid #e2e8f0; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; }
-        .day-header { background: #f8fafc; padding: 12px 18px; font-weight: 700; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
-        .day-body { position: relative; background: linear-gradient(#fff 0%, #fff 96%, #f1f5f9 96%); background-size: 100% 32px; padding: 8px 12px 8px 50px; min-height: 180px; }
-        .day-body::before { content: ''; position: absolute; left: 42px; top: 0; width: 1px; height: 100%; background: #fca5a5; }
-        .day-input { width: 100%; height: 164px; background: transparent; border: none; resize: none; font-size: 1.05rem; line-height: 32px; outline: none; }
+        .subjects { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+        .tag { padding: 8px 14px; background: #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
+        .tag:hover { background: #cbd5e1; }
 
-        .sidebar { padding-left: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
-        .widget { border-radius: 20px; padding: 1.5rem; min-height: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .todo-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .btn-add-todo { background: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+        .agenda-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .day-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; }
+        .day-header { font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        textarea { width: 100%; height: 120px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; font-size: 1rem; }
     </style>
 </head>
 <body>
 
-    <header class="navbar">
-        <div class="navbar-brand"><i class="fa-solid fa-calendar-check"></i> Agenda escolar</div>
-        <div class="nav-controls">
-            <select id="cursSelect" class="select-curs" onchange="changeCourseManually()">
-                <option value="2026">Curs 2026-2027</option>
-                <option value="2027">Curs 2027-2028</option>
-                <option value="2028">Curs 2028-2029</option>
-                <option value="2029">Curs 2029-2030</option>
-                <option value="2030">Curs 2030-2031</option>
-            </select>
-            <button class="btn-utility" onclick="setToday()">Avui</button>
-            <button class="btn-utility" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i></button>
-        </div>
-    </header>
-
-    <div class="action-bar">
-        <div class="week-nav">
-            <button class="btn-nav" onclick="moveWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-            <span class="week-title" id="weekRangeDisplay">Carregant...</span>
-            <button class="btn-nav" onclick="moveWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-        <div class="action-btns">
-            <button class="btn-main btn-clear" onclick="clearCurrentWeek()"><i class="fa-solid fa-trash"></i> Esborrar</button>
-            <button class="btn-main btn-save" onclick="saveData()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
-            <button class="btn-main btn-img" id="btnDownload" onclick="downloadPNG()"><i class="fa-solid fa-image"></i> Guardar PNG</button>
-        </div>
+    <div class="toolbar" id="toolbar">
+        <button style="background:var(--red)" onclick="clearData()"><i class="fa-solid fa-trash"></i> Esborrar</button>
+        <button style="background:var(--green)" onclick="saveData()"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+        <button style="background:var(--orange)" onclick="downloadPNG()"><i class="fa-solid fa-image"></i> PNG</button>
     </div>
 
-    <div class="subjects-bar">
-        <div class="tag tag-catala" onclick="insertTag('📚 CATALÀ')">Català</div>
-        <div class="tag tag-castella" onclick="insertTag('📖 CASTELLÀ')">Castellà</div>
-        <div class="tag tag-mates" onclick="insertTag('📐 MATES')">Mates</div>
-        <div class="tag tag-medi" onclick="insertTag('🌍 MEDI')">Medi</div>
-        <div class="tag tag-angles" onclick="insertTag('ANGLÈS')">Anglès</div>
-        <div class="tag tag-plastica" onclick="insertTag('🎨 PLÀSTICA')">Plàstica</div>
+    <div class="subjects">
+        <div class="tag" onclick="insertTag('📚 CATALÀ')">📚 CATALÀ</div>
+        <div class="tag" onclick="insertTag('📖 CASTELLÀ')">📖 CASTELLÀ</div>
+        <div class="tag" onclick="insertTag('📐 MATES')">📐 MATES</div>
+        <div class="tag" onclick="insertTag('🌍 MEDI')">🌍 MEDI</div>
+        <div class="tag" onclick="insertTag('💬 ANGLÈS')">💬 ANGLÈS</div>
+        <div class="tag" onclick="insertTag('🎨 PLÀSTICA')">🎨 PLÀSTICA</div>
+        <div class="tag" onclick="insertTag('🤝 VALORS')">🤝 VALORS</div>
+        <div class="tag" onclick="insertTag('⛪ RELIGIÓ')">⛪ RELIGIÓ</div>
+        <div class="tag" onclick="insertTag('👤 TUTORIA')">👤 TUTORIA</div>
     </div>
 
-    <div class="notebook-capture-area" id="notebookArea">
-        <main class="notebook-container">
-            <section class="page page-left">
-                <div class="day-box"><div class="day-header"><span>DILLUNS</span> <span id="label-dl"></span></div><div class="day-body"><textarea class="day-input" id="input-dl"></textarea></div></div>
-                <div class="day-box"><div class="day-header"><span>DIMARTS</span> <span id="label-dt"></span></div><div class="day-body"><textarea class="day-input" id="input-dt"></textarea></div></div>
-                <div class="day-box"><div class="day-header"><span>DIMECRES</span> <span id="label-dc"></span></div><div class="day-body"><textarea class="day-input" id="input-dc"></textarea></div></div>
-            </section>
-            <div class="spine"></div>
-            <section class="page page-right">
-                <div class="day-box"><div class="day-header"><span>DIJOUS</span> <span id="label-dj"></span></div><div class="day-body"><textarea class="day-input" id="input-dj"></textarea></div></div>
-                <div class="day-box"><div class="day-header"><span>DIVENDRES</span> <span id="label-dv"></span></div><div class="day-body"><textarea class="day-input" id="input-dv"></textarea></div></div>
-                <div class="day-box"><div class="day-header"><span>CAP DE SETMANA</span> <span id="label-cs"></span></div><div class="day-body"><textarea class="day-input" id="input-cs"></textarea></div></div>
-            </section>
-            <aside class="sidebar">
-                <div class="widget"><h3>Notes</h3><textarea class="widget-textarea" id="input-notes"></textarea></div>
-                <div class="widget"><h3>Tasques</h3><div id="todoList"></div><button class="btn-add-todo" onclick="addNewTodo()">+ Afegir</button></div>
-            </aside>
-        </main>
+    <div class="agenda-grid" id="agendaArea">
+        <div class="day-card"><div class="day-header"><span>Dilluns</span><span id="date-dl"></span></div><textarea id="dl"></textarea></div>
+        <div class="day-card"><div class="day-header"><span>Dimarts</span><span id="date-dt"></span></div><textarea id="dt"></textarea></div>
+        <div class="day-card"><div class="day-header"><span>Dimecres</span><span id="date-dc"></span></div><textarea id="dc"></textarea></div>
+        <div class="day-card"><div class="day-header"><span>Dijous</span><span id="date-dj"></span></div><textarea id="dj"></textarea></div>
+        <div class="day-card"><div class="day-header"><span>Divendres</span><span id="date-dv"></span></div><textarea id="dv"></textarea></div>
     </div>
 
     <script>
-        let currentMonday = new Date();
-        let lastFocus = document.getElementById('input-dl');
-        
-        function getMonday(d) { d = new Date(d); let day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
-        
-        window.onload = () => {
-            currentMonday = getMonday(new Date());
-            updateUI();
-            document.querySelectorAll('textarea').forEach(t => t.addEventListener('focus', (e) => lastFocus = e.target));
-        };
-
-        function updateUI() {
+        function updateDates() {
             const days = ['dl','dt','dc','dj','dv'];
-            for(let i=0; i<5; i++) {
-                let d = new Date(currentMonday); d.setDate(currentMonday.getDate() + i);
-                document.getElementById('label-'+days[i]).innerText = d.toLocaleDateString('ca-ES', {day:'numeric', month:'long'});
-            }
-            document.getElementById('weekRangeDisplay').innerText = "Setmana actual";
-            loadData();
+            days.forEach((id, i) => {
+                let d = new Date(); d.setDate(d.getDate() + (i - d.getDay() + 1));
+                document.getElementById('date-'+id).innerText = d.toLocaleDateString('ca-ES', {day:'numeric', month:'short'});
+            });
         }
 
-        function insertTag(tag) {
-            const start = lastFocus.selectionStart, text = lastFocus.value, content = tag + ": \n";
-            lastFocus.value = text.substring(0, start) + content + text.substring(lastFocus.selectionEnd);
-            lastFocus.focus();
-            saveData(true);
+        function insertTag(text) {
+            const area = document.querySelector('textarea:focus') || document.querySelector('textarea');
+            area.value += (area.value ? "\n" : "") + text + ": ";
+            area.focus();
         }
 
-        function saveData(silent = false) {
-            const data = { dl: document.getElementById('input-dl').value, dt: document.getElementById('input-dt').value, dc: document.getElementById('input-dc').value, dj: document.getElementById('input-dj').value, dv: document.getElementById('input-dv').value, cs: document.getElementById('input-cs').value, notes: document.getElementById('input-notes').value };
-            localStorage.setItem('agenda_data', JSON.stringify(data));
+        function saveData() {
+            const data = { dl: document.getElementById('dl').value, dt: document.getElementById('dt').value, dc: document.getElementById('dc').value, dj: document.getElementById('dj').value, dv: document.getElementById('dv').value };
+            localStorage.setItem('agendaData', JSON.stringify(data));
+            alert("Dades guardades!");
         }
 
         function loadData() {
-            const saved = localStorage.getItem('agenda_data');
+            const saved = localStorage.getItem('agendaData');
             if(saved) {
                 const d = JSON.parse(saved);
-                ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = d[id] || "");
+                ['dl','dt','dc','dj','dv'].forEach(id => document.getElementById(id).value = d[id] || "");
             }
         }
-        
-        function clearCurrentWeek() { if(confirm("Esborrar tot?")) { document.querySelectorAll('textarea').forEach(t => t.value = ""); saveData(true); } }
-        
+
+        function clearData() {
+            if(confirm("Segur que vols esborrar les dades?")) {
+                document.querySelectorAll('textarea').forEach(a => a.value = "");
+                localStorage.removeItem('agendaData');
+            }
+        }
+
         function downloadPNG() {
-            html2canvas(document.getElementById('notebookArea'), {scale: 2}).then(canvas => {
-                const link = document.createElement('a'); link.download = 'agenda.png'; link.href = canvas.toDataURL(); link.click();
+            document.getElementById('toolbar').style.display = 'none';
+            html2canvas(document.body).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'agenda.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                document.getElementById('toolbar').style.display = 'flex';
             });
         }
-        
-        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-        function moveWeek(n) { currentMonday.setDate(currentMonday.getDate() + (n * 7)); updateUI(); }
-        function setToday() { currentMonday = getMonday(new Date()); updateUI(); }
-        function addNewTodo() { const d = document.getElementById('todoList'); d.innerHTML += '<div class="todo-item"><input type="checkbox"> <input type="text"></div>'; }
+
+        window.onload = () => { updateDates(); loadData(); };
     </script>
 </body>
 </html>
