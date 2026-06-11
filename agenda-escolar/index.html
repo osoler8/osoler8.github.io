@@ -12,106 +12,54 @@
 
     <style>
         :root {
-            --bg-canvas: #f1f5f9;
-            --sidebar-dark: #0f172a;
-            --notebook-white: #ffffff;
-            --accent-blue: #2563eb;
-            --accent-green: #10b981;
-            --accent-orange: #f59e0b;
-            --accent-red: #ef4444;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            
-            /* Colors assignatures Pastís */
+            --bg-canvas: #f1f5f9; --sidebar-dark: #0f172a; --notebook-white: #ffffff;
+            --accent-blue: #2563eb; --accent-green: #10b981; --accent-orange: #f59e0b;
+            --accent-red: #ef4444; --text-dark: #1e293b; --text-muted: #64748b;
             --catala: #ffadad; --castella: #ffd6a5; --mates: #fdffb6;
             --medi: #caffbf; --angles: #9bf6ff; --plastica: #a0c4ff;
             --valors: #bdb2ff; --religio: #ffc6ff; --tutoria: #e2e8f0;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-canvas);
-            color: var(--text-dark);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-
-        /* --- NAVBAR --- */
-        .navbar {
-            background-color: var(--sidebar-dark);
-            color: white;
-            padding: 0.8rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-
+        /* --- UI --- */
+        .navbar { background-color: var(--sidebar-dark); color: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .navbar-brand { font-size: 1.5rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 10px; }
         .nav-controls { display: flex; align-items: center; gap: 12px; }
-        .select-curs { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; cursor: pointer; outline: none; font-weight: 600; }
-        .btn-utility { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-        .btn-utility:hover { background: #334155; }
-
-        /* --- ACTION BAR --- */
-        .action-bar {
-            background: white; padding: 1rem 2rem;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 1rem;
-        }
-
-        .week-nav { display: flex; align-items: center; gap: 15px; }
-        .btn-nav { background: var(--accent-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
-        .week-title { font-weight: 700; font-size: 1.2rem; min-width: 280px; text-align: center; }
-        .action-btns { display: flex; gap: 10px; }
-        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; color: white; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .select-curs { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-utility { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        
+        .action-bar { background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .btn-nav { background: var(--accent-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; }
+        .btn-main { padding: 12px 24px; border-radius: 12px; border: none; color: white; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-save { background: var(--accent-green); }
         .btn-img { background: var(--accent-orange); }
         .btn-clear { background: var(--accent-red); }
 
-        /* --- SUBJECT TAGS --- */
-        .subjects-bar { padding: 12px 2rem; background: #f8fafc; display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e2e8f0; align-items: center; }
-        .tag { padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); user-select: none; transition: 0.2s; }
-        .tag:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .tag-catala { background: var(--catala); } .tag-castella { background: var(--castella); } .tag-mates { background: var(--mates); }
-        .tag-medi { background: var(--medi); } .tag-angles { background: var(--angles); } .tag-plastica { background: var(--plastica); }
+        .subjects-bar { padding: 12px 2rem; background: #f8fafc; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .tag { padding: 8px 16px; border-radius: 25px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,0,0,0.08); transition: 0.2s; }
+        .tag:hover { transform: translateY(-2px); }
+        .tag-catala { background: var(--catala); } .tag-castella { background: var(--castella); }
+        .tag-mates { background: var(--mates); } .tag-medi { background: var(--medi); }
+        .tag-angles { background: var(--angles); } .tag-plastica { background: var(--plastica); }
         .tag-valors { background: var(--valors); } .tag-religio { background: var(--religio); } .tag-tutoria { background: var(--tutoria); }
 
-        /* --- NOTEBOOK --- */
+        /* --- LLIBRETA --- */
         .notebook-capture-area { padding: 2rem; flex-grow: 1; display: flex; justify-content: center; }
-        .notebook-container { width: 100%; max-width: 1600px; display: grid; grid-template-columns: 1fr; }
-        @media (min-width: 1024px) { .notebook-container { grid-template-columns: 1fr 40px 1fr 340px; } }
+        .notebook-container { width: 100%; max-width: 1600px; display: grid; grid-template-columns: 1fr 40px 1fr 340px; }
         .page { background: white; border: 1px solid #cbd5e1; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .page-left { border-radius: 20px 0 0 20px; } .page-right { border-radius: 0 20px 20px 0; border-left: none; }
-        .spine { background: linear-gradient(90deg, #e2e8f0, #94a3b8, #e2e8f0); display: flex; flex-direction: column; justify-content: space-around; align-items: center; padding: 30px 0; }
-        .ring { width: 45px; height: 14px; background: #334155; border-radius: 10px; border: 1px solid #1e293b; }
-
-        /* --- DAY BOXES --- */
+        
         .day-box { border: 1px solid #e2e8f0; border-radius: 15px; display: flex; flex-direction: column; overflow: hidden; }
         .day-header { background: #f8fafc; padding: 12px 18px; font-weight: 700; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
-        .day-date { font-size: 0.85rem; color: var(--text-muted); }
         .day-body { position: relative; background: linear-gradient(#fff 0%, #fff 96%, #f1f5f9 96%); background-size: 100% 32px; padding: 8px 12px 8px 50px; min-height: 180px; }
         .day-body::before { content: ''; position: absolute; left: 42px; top: 0; width: 1px; height: 100%; background: #fca5a5; }
-        .day-input { width: 100%; height: 100%; min-height: 164px; background: transparent; border: none; resize: none; font-size: 1.05rem; line-height: 32px; outline: none; color: var(--text-dark); }
-        .weekend { border-color: #fecdd3; } .weekend .day-header { background: #fff1f2; color: #be123c; }
+        .day-input { width: 100%; height: 164px; background: transparent; border: none; resize: none; font-size: 1.05rem; line-height: 32px; outline: none; }
 
-        /* --- SIDEBAR --- */
         .sidebar { padding-left: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
-        .widget { border-radius: 20px; padding: 1.5rem; min-height: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .widget-notes { background: #fef08a; border: 1px solid #fde047; }
-        .widget-todo { background: white; border: 1px solid #bfdbfe; background-image: linear-gradient(#f0f9ff 1px, transparent 1px), linear-gradient(90deg, #f0f9ff 1px, transparent 1px); background-size: 20px 20px; }
-        .todo-container { flex-grow: 1; overflow-y: auto; max-height: 250px; }
+        .widget { border-radius: 20px; padding: 1.5rem; min-height: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .todo-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .todo-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-        .todo-item input[type="text"] { background: transparent; border: none; border-bottom: 1px solid transparent; font-size: 0.95rem; width: 100%; outline: none; }
-        .todo-item.checked input[type="text"] { text-decoration: line-through; color: var(--text-muted); }
-        .btn-add-todo { background: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; align-self: flex-start; margin-top: 10px; font-weight: 600; }
-        
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--sidebar-dark); color: white; padding: 14px 28px; border-radius: 50px; display: none; z-index: 1000; font-weight: 600; }
+        .btn-add-todo { background: var(--accent-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -134,7 +82,7 @@
     <div class="action-bar">
         <div class="week-nav">
             <button class="btn-nav" onclick="moveWeek(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-            <span class="week-title" id="weekRangeDisplay">Preparant dates...</span>
+            <span class="week-title" id="weekRangeDisplay">Carregant...</span>
             <button class="btn-nav" onclick="moveWeek(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
         <div class="action-btns">
@@ -149,108 +97,84 @@
         <div class="tag tag-castella" onclick="insertTag('📖 CASTELLÀ')">Castellà</div>
         <div class="tag tag-mates" onclick="insertTag('📐 MATES')">Mates</div>
         <div class="tag tag-medi" onclick="insertTag('🌍 MEDI')">Medi</div>
-        <div class="tag tag-angles" onclick="insertTag('🇬🇧 ANGLÈS')">Anglès</div>
+        <div class="tag tag-angles" onclick="insertTag('ANGLÈS')">Anglès</div>
         <div class="tag tag-plastica" onclick="insertTag('🎨 PLÀSTICA')">Plàstica</div>
-        <div class="tag tag-valors" onclick="insertTag('🤝 VALORS')">Valors</div>
-        <div class="tag tag-religio" onclick="insertTag('⛪ RELIGIÓ')">Religió</div>
-        <div class="tag tag-tutoria" onclick="insertTag('💬 TUTORIA')">Tutoria</div>
     </div>
 
     <div class="notebook-capture-area" id="notebookArea">
         <main class="notebook-container">
             <section class="page page-left">
-                <div class="day-box">
-                    <div class="day-header"><span>DILLUNS</span> <span class="day-date" id="label-dl"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-dl" placeholder="Escriu els deures..."></textarea></div>
-                </div>
-                <div class="day-box">
-                    <div class="day-header"><span>DIMARTS</span> <span class="day-date" id="label-dt"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-dt"></textarea></div>
-                </div>
-                <div class="day-box">
-                    <div class="day-header"><span>DIMECRES</span> <span class="day-date" id="label-dc"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-dc"></textarea></div>
-                </div>
+                <div class="day-box"><div class="day-header"><span>DILLUNS</span> <span id="label-dl"></span></div><div class="day-body"><textarea class="day-input" id="input-dl"></textarea></div></div>
+                <div class="day-box"><div class="day-header"><span>DIMARTS</span> <span id="label-dt"></span></div><div class="day-body"><textarea class="day-input" id="input-dt"></textarea></div></div>
+                <div class="day-box"><div class="day-header"><span>DIMECRES</span> <span id="label-dc"></span></div><div class="day-body"><textarea class="day-input" id="input-dc"></textarea></div></div>
             </section>
-            <div class="spine"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+            <div class="spine"></div>
             <section class="page page-right">
-                <div class="day-box">
-                    <div class="day-header"><span>DIJOUS</span> <span class="day-date" id="label-dj"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-dj"></textarea></div>
-                </div>
-                <div class="day-box">
-                    <div class="day-header"><span>DIVENDRES</span> <span class="day-date" id="label-dv"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-dv"></textarea></div>
-                </div>
-                <div class="day-box weekend">
-                    <div class="day-header"><span>CAP DE SETMANA</span> <span class="day-date" id="label-cs"></span></div>
-                    <div class="day-body"><textarea class="day-input" id="input-cs"></textarea></div>
-                </div>
+                <div class="day-box"><div class="day-header"><span>DIJOUS</span> <span id="label-dj"></span></div><div class="day-body"><textarea class="day-input" id="input-dj"></textarea></div></div>
+                <div class="day-box"><div class="day-header"><span>DIVENDRES</span> <span id="label-dv"></span></div><div class="day-body"><textarea class="day-input" id="input-dv"></textarea></div></div>
+                <div class="day-box"><div class="day-header"><span>CAP DE SETMANA</span> <span id="label-cs"></span></div><div class="day-body"><textarea class="day-input" id="input-cs"></textarea></div></div>
             </section>
             <aside class="sidebar">
-                <div class="widget widget-notes"><h3><i class="fa-solid fa-thumbtack"></i> Notes</h3><textarea class="day-input" id="input-notes" style="min-height:200px;"></textarea></div>
-                <div class="widget widget-todo"><h3><i class="fa-solid fa-check-double"></i> Altres tasques</h3><div class="todo-container" id="todoList"></div><button class="btn-add-todo" onclick="addNewTodo('', false)">+ Afegir tasca</button></div>
+                <div class="widget"><h3>Notes</h3><textarea class="widget-textarea" id="input-notes"></textarea></div>
+                <div class="widget"><h3>Tasques</h3><div id="todoList"></div><button class="btn-add-todo" onclick="addNewTodo()">+ Afegir</button></div>
             </aside>
         </main>
     </div>
 
-    <div id="toast">💾 Canvis guardats!</div>
-
     <script>
-        let currentMonday; let lastFocus;
-        function getMonday(d) { d = new Date(d); let day = d.getDay(); let diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
-        function getStorageKey() { return "agenda_final_" + currentMonday.toISOString().split('T')[0]; }
-        window.onload = () => { currentMonday = getMonday(new Date()); lastFocus = document.getElementById('input-dl'); document.querySelectorAll('textarea').forEach(t => t.addEventListener('focus', (e) => lastFocus = e.target)); updateUI(); };
+        let currentMonday = new Date();
+        let lastFocus = document.getElementById('input-dl');
+        
+        function getMonday(d) { d = new Date(d); let day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.setDate(diff)); }
+        
+        window.onload = () => {
+            currentMonday = getMonday(new Date());
+            updateUI();
+            document.querySelectorAll('textarea').forEach(t => t.addEventListener('focus', (e) => lastFocus = e.target));
+        };
 
         function updateUI() {
-            const days = ['dl','dt','dc','dj','dv'], opts = { day: 'numeric', month: 'long' };
-            for(let i=0; i<5; i++) { let d = new Date(currentMonday); d.setDate(currentMonday.getDate() + i); document.getElementById('label-'+days[i]).innerText = d.toLocaleDateString('ca-ES', opts); }
-            let sat = new Date(currentMonday); sat.setDate(sat.getDate() + 5); let sun = new Date(currentMonday); sun.setDate(sun.getDate() + 6);
-            document.getElementById('label-cs').innerText = `${sat.getDate()}-${sun.getDate()} ${sun.toLocaleDateString('ca-ES', {month:'long'})}`;
-            document.getElementById('weekRangeDisplay').innerText = `Del ${currentMonday.getDate()} al ${sun.getDate()} de ${sun.toLocaleDateString('ca-ES', {month:'long', year:'numeric'})}`;
-            const month = currentMonday.getMonth(), year = currentMonday.getFullYear(), schoolYear = (month >= 8) ? year : year - 1;
-            const sel = document.getElementById('cursSelect'); if (sel) sel.value = schoolYear;
+            const days = ['dl','dt','dc','dj','dv'];
+            for(let i=0; i<5; i++) {
+                let d = new Date(currentMonday); d.setDate(currentMonday.getDate() + i);
+                document.getElementById('label-'+days[i]).innerText = d.toLocaleDateString('ca-ES', {day:'numeric', month:'long'});
+            }
+            document.getElementById('weekRangeDisplay').innerText = "Setmana actual";
             loadData();
         }
 
-        function moveWeek(n) { saveData(true); currentMonday.setDate(currentMonday.getDate() + (n * 7)); updateUI(); }
-        function setToday() { saveData(true); currentMonday = getMonday(new Date()); updateUI(); }
-        function changeCourseManually() { const y = parseInt(document.getElementById('cursSelect').value); currentMonday = getMonday(new Date(y, 8, 1)); updateUI(); }
-        function insertTag(tag) { if (!lastFocus) return; const start = lastFocus.selectionStart, text = lastFocus.value, content = tag + ": \n"; lastFocus.value = text.substring(0, start) + content + text.substring(lastFocus.selectionEnd); lastFocus.focus(); lastFocus.selectionStart = lastFocus.selectionEnd = start + content.length; saveData(true); }
-
-        function addNewTodo(text = "", checked = false) {
-            const container = document.getElementById('todoList'); const div = document.createElement('div'); div.className = 'todo-item' + (checked ? ' checked' : '');
-            div.innerHTML = `<input type="checkbox" ${checked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked', this.checked);saveData(true)"><input type="text" value="${text}" placeholder="Nova tasca..." oninput="saveData(true)"><button style="background:none;border:none;color:#fca5a5;cursor:pointer;padding:0 5px;" onclick="this.parentElement.remove();saveData(true)">×</button>`;
-            container.appendChild(div);
+        function insertTag(tag) {
+            const start = lastFocus.selectionStart, text = lastFocus.value, content = tag + ": \n";
+            lastFocus.value = text.substring(0, start) + content + text.substring(lastFocus.selectionEnd);
+            lastFocus.focus();
+            saveData(true);
         }
 
         function saveData(silent = false) {
-            const todoItems = []; document.querySelectorAll('.todo-item').forEach(item => { todoItems.push({ text: item.querySelector('input[type="text"]').value, checked: item.querySelector('input[type="checkbox"]').checked }); });
-            const data = { dl: document.getElementById('input-dl').value, dt: document.getElementById('input-dt').value, dc: document.getElementById('input-dc').value, dj: document.getElementById('input-dj').value, dv: document.getElementById('input-dv').value, cs: document.getElementById('input-cs').value, notes: document.getElementById('input-notes').value, todos: todoItems };
-            localStorage.setItem(getStorageKey(), JSON.stringify(data));
-            if(!silent) { const t = document.getElementById('toast'); t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2000); }
+            const data = { dl: document.getElementById('input-dl').value, dt: document.getElementById('input-dt').value, dc: document.getElementById('input-dc').value, dj: document.getElementById('input-dj').value, dv: document.getElementById('input-dv').value, cs: document.getElementById('input-cs').value, notes: document.getElementById('input-notes').value };
+            localStorage.setItem('agenda_data', JSON.stringify(data));
         }
 
         function loadData() {
-            document.getElementById('todoList').innerHTML = ''; const saved = localStorage.getItem(getStorageKey());
-            if (saved) { const d = JSON.parse(saved); ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = d[id] || ""); if (d.todos && d.todos.length > 0) d.todos.forEach(t => addNewTodo(t.text, t.checked)); else addNewTodo("", false); }
-            else { ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = ""); addNewTodo("", false); }
+            const saved = localStorage.getItem('agenda_data');
+            if(saved) {
+                const d = JSON.parse(saved);
+                ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = d[id] || "");
+            }
         }
-
-        function clearCurrentWeek() { if(confirm("Esborrar dades de la setmana?")) { ['dl','dt','dc','dj','dv','cs','notes'].forEach(id => document.getElementById('input-'+id).value = ""); document.getElementById('todoList').innerHTML = ''; addNewTodo("", false); saveData(true); } }
-        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
-
+        
+        function clearCurrentWeek() { if(confirm("Esborrar tot?")) { document.querySelectorAll('textarea').forEach(t => t.value = ""); saveData(true); } }
+        
         function downloadPNG() {
-            const btn = document.getElementById('btnDownload'), originalHTML = btn.innerHTML; btn.innerHTML = '...';
-            html2canvas(document.getElementById('notebookArea'), { backgroundColor: "#f1f5f9", scale: 2, useCORS: true,
-                onclone: (clonedDoc) => {
-                    clonedDoc.querySelectorAll('textarea').forEach(textarea => {
-                        const div = clonedDoc.createElement('div'); div.innerText = textarea.value; div.style.fontFamily = "'Outfit', sans-serif"; div.style.fontSize = "1.05rem"; div.style.lineHeight = "32px"; div.style.whiteSpace = "pre-wrap"; div.style.wordBreak = "break-word"; div.style.padding = "8px 12px 8px 0px"; div.style.width = "100%"; div.style.color = "#1e293b";
-                        textarea.style.display = 'none'; textarea.parentElement.appendChild(div);
-                    });
-                }
-            }).then(canvas => { const link = document.createElement('a'); link.download = 'agenda.png'; link.href = canvas.toDataURL("image/png"); document.body.appendChild(link); link.click(); document.body.removeChild(link); btn.innerHTML = originalHTML; });
+            html2canvas(document.getElementById('notebookArea'), {scale: 2}).then(canvas => {
+                const link = document.createElement('a'); link.download = 'agenda.png'; link.href = canvas.toDataURL(); link.click();
+            });
         }
+        
+        function toggleFullScreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+        function moveWeek(n) { currentMonday.setDate(currentMonday.getDate() + (n * 7)); updateUI(); }
+        function setToday() { currentMonday = getMonday(new Date()); updateUI(); }
+        function addNewTodo() { const d = document.getElementById('todoList'); d.innerHTML += '<div class="todo-item"><input type="checkbox"> <input type="text"></div>'; }
     </script>
 </body>
 </html>
