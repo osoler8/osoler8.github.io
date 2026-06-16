@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missió Escape Room: 6è de Primària</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>La Caixa Forta del Temps ⏳</h1>
+            <div class="stats">
+                <div id="level-status">Repte: <span id="level-num">1</span>/9</div>
+                <div id="timer-box">Temps restant: <span id="timer">15:00</span></div>
+            </div>
+        </header>
+
+        <main id="game-box">
+            <div class="badge" id="subject-badge">Assignatura</div>
+            <h2 id="room-title">Habitació 1: El Laboratori Abandonat</h2>
+            <p id="story-text">Carregant història...</p>
+            
+            <div id="challenge-area">
+                <!-- Zona dinàmica per si vols posar imatges o textos llargs -->
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="answer-input" placeholder="Escriu la resposta aquí..." autocomplete="off">
+                <button id="submit-btn" onclick="checkAnswer()">Introduir Codi 🔓</button>
+            </div>
+            
+            <p id="feedback" class="hidden"></p>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
