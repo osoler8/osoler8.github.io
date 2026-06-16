@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Missió Escape Room: 6è de Primària</title>
+    <title>Missió Escape Room: El Cadenat d'Engranatges</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
         <header>
-            <h1>La Caixa Forta del Temps ⏳</h1>
+            <h1>🔒 L'Enigma dels Engranatges de 6è ⚙️</h1>
             <div class="stats">
-                <div id="level-status">Repte: <span id="level-num">1</span>/9</div>
+                <div id="level-status">Fase: <span id="level-num">1</span>/4</div>
                 <div id="timer-box">Temps restant: <span id="timer">15:00</span></div>
             </div>
         </header>
 
         <main id="game-box">
             <div class="badge" id="subject-badge">Assignatura</div>
-            <h2 id="room-title">Habitació 1: El Laboratori Abandonat</h2>
-            <p id="story-text">Carregant història...</p>
+            <p id="story-text">Carregant misteri...</p>
             
-            <div id="challenge-area">
-                <!-- Zona dinàmica per si vols posar imatges o textos llargs -->
+            <!-- CONTENIDOR DELS ENGRANATGES DEL CADENAT -->
+            <div id="lock-container">
+                <!-- Es generarà dinàmicament amb JavaScript segons la longitud de la resposta -->
             </div>
 
-            <div class="input-area">
-                <input type="text" id="answer-input" placeholder="Escriu la resposta aquí..." autocomplete="off">
-                <button id="submit-btn" onclick="checkAnswer()">Introduir Codi 🔓</button>
+            <div class="action-area">
+                <button id="submit-btn" onclick="checkLock()">Provar Combinació 🔓</button>
             </div>
             
             <p id="feedback" class="hidden"></p>
