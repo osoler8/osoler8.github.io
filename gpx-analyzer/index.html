@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analitzador de Ports GPX</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Analitzador de Ports GPX</h1>
+            <p>Puja la teva ruta en format GPX per analitzar estadístiques, mapa, perfil i detectar ports de muntanya automàticament.</p>
+            <div class="upload-box">
+                <label for="gpxFile" class="file-btn">Seleccionar arxiu GPX</label>
+                <input type="file" id="gpxFile" accept=".gpx">
+                <span id="fileName" class="file-name">Cap arxiu seleccionat</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Resum General -->
+        <section id="summary-section" class="card hidden">
+            <h2>Dades Generals de la Ruta</h2>
+            <div class="stats-grid" id="statsGrid">
+                <!-- Generat dinàmicament -->
+            </div>
+        </section>
+
+        <!-- Mapa -->
+        <section id="map-section" class="card hidden">
+            <h2>Mapa de la Ruta</h2>
+            <div id="map"></div>
+        </section>
+
+        <!-- Gràfica d'Altitud -->
+        <section id="chart-section" class="card hidden">
+            <h2>Perfil d'Altitud</h2>
+            <div class="chart-container">
+                <canvas id="altitudeChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Ports Detectats -->
+        <section id="ports-section" class="card hidden">
+            <h2>Ports de Muntanya Detectats</h2>
+            <div class="table-responsive">
+                <table class="ports-table" id="portsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Inici / Final (km)</th>
+                            <th>Distància</th>
+                            <th>Desnivell</th>
+                            <th>Pendent Mitjà</th>
+                            <th>Pendent Màx.</th>
+                            <th>Punts APM</th>
+                            <th>Categoria</th>
+                        </tr>
+                    </thead>
+                    <tbody id="portsTbody">
+                        <!-- Generat dinàmicament -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <div id="welcome-message" class="welcome-card">
+            <div class="welcome-icon">🚵‍♂️</div>
+            <h3>Comença a analitzar</h3>
+            <p>Utilitza el botó superior per carregar qualsevol arxiu GPX de les teves sortides en bicicleta (Strava, Garmin, etc.). L'eina detectarà automàticament els ports segons el criteri APM i calcularà totes les mètriques.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Analitzador de Ports GPX — Fet amb JavaScript pur i Leaflet/Chart.js</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
