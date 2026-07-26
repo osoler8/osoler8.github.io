@@ -3,179 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Els meus projectes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0f172a; color: white; font-family: sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .glass:hover { transform: translateY(-5px); border-color: #38bdf8; box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.3); }
-        .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    </style>
+    <title>Visualitzador de Rutes GPX</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="min-h-screen py-12 px-4">
-    <div class="max-w-5xl mx-auto">
-        <header class="text-center mb-16">
-            <h1 class="text-5xl font-extrabold mb-4 uppercase tracking-tight">Els meus <span class="gradient-text">projectes</span></h1>
-        </header>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <a href='./agenda-escolar/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Agenda escolar</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>agenda-escolar</p>
-          </a>
-          <a href='./breakout/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>🚀 ESCAPE: Comandant Mr. Math</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>breakout</p>
-          </a>
-          <a href='./calculmental/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Càlcul Mental - Arcade Edition</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>calculmental</p>
-          </a>
-          <a href='./calendari/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>El meu calendari personalitzat</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>calendari</p>
-          </a>
-          <a href='./climber/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>⛰️ EXPEDICIÓ MATEMÀTICA: EL GRAN REPTE ⛰️</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>climber</p>
-          </a>
-          <a href='./coordenadesrobot/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>PCMAT - Laberint matemàtic</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>coordenadesrobot</p>
-          </a>
-          <a href='./deuresestiu/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Generador de propostes lúdiques</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>deuresestiu</p>
-          </a>
-          <a href='./divisions/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Divisions pas a pas</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>divisions</p>
-          </a>
-          <a href='./escapefinal/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Missió Escape Room: El Cadenat d'Engranatges</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>escapefinal</p>
-          </a>
-          <a href='./fraccions/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Visualitzador de fraccions</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>fraccions</p>
-          </a>
-          <a href='./joc-laberint/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Laberint dels Matemàtics</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>joc-laberint</p>
-          </a>
-          <a href='./matesquest5/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>La gesta matemàtica de 5è</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>matesquest5</p>
-          </a>
-          <a href='./matesquest6/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>La gesta matemàtica de 6è</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>matesquest6</p>
-          </a>
-          <a href='./movimentsgeometrics/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Moviments i transformacions geomètriques</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>movimentsgeometrics</p>
-          </a>
-          <a href='./multiplicaciohoritzontal/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Multiplicació horitzontal (CAIXA)</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>multiplicaciohoritzontal</p>
-          </a>
-          <a href='./multiplicaciovertical/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Multiplicació vertical</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>multiplicaciovertical</p>
-          </a>
-          <a href='./operatium/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>OPERATIUM - Matemàtiques Romanes</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>operatium</p>
-          </a>
-          <a href='./pd4laberint/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Joc del Laberint</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>pd4laberint</p>
-          </a>
-          <a href='./restes/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Aprenem a restar, pas a pas</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>restes</p>
-          </a>
-          <a href='./substitucions/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Generador WhatsApp • Planificació setmana</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>substitucions</p>
-          </a>
-          <a href='./taules/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Taules de multiplicar</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>taules</p>
-          </a>
-          <a href='./tipusangles/' target='_blank' class='glass p-8 rounded-2xl flex flex-col items-center justify-center text-center group'>
-              <div class='mb-4 p-4 rounded-full bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors'>
-                  <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'></path></svg>
-              </div>
-              <h3 class='text-xl font-bold text-white'>Tipus d'angles</h3>
-              <p class='text-slate-500 text-xs mt-2 font-mono uppercase tracking-widest'>tipusangles</p>
-          </a>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Mapa Visual GPX</h1>
+            <p>Carrega el teu arxiu per visualitzar la ruta amb colors de pendent i targeta de dades.</p>
+            <div class="upload-box">
+                <input type="file" id="gpxFile" accept=".gpx" class="file-input">
+                <label for="gpxFile" class="file-btn">📁 Seleccionar arxiu GPX</label>
+                <span id="fileName" class="file-name">Cap arxiu seleccionat</span>
+            </div>
         </div>
-        <footer class="mt-20 text-center text-slate-500 text-sm">
-            Actualitzat: 26/07/2026 
-        </footer>
-    </div>
+    </header>
+
+    <main class="container">
+        <section id="appSection" class="app-card hidden">
+            <div class="map-container">
+                <div id="map"></div>
+                <!-- Targeta de dades per a Instagram / Canva -->
+                <div class="data-overlay">
+                    <h2 id="rTitle">Ruta</h2>
+                    <div class="metrics">
+                        <div class="metric">
+                            <span class="m-val" id="mDist">0 km</span>
+                            <span class="m-lab">Distància</span>
+                        </div>
+                        <div class="metric">
+                            <span class="m-val" id="mElev">0 m</span>
+                            <span class="m-lab">Desnivell +</span>
+                        </div>
+                        <div class="metric">
+                            <span class="m-val" id="mMax">0 m</span>
+                            <span class="m-lab">Alt. Màxima</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <button id="centerBtn" class="btn-secondary">Centrar Mapa</button>
+                <p class="hint">💡 Fes una captura d'aquesta zona per utilitzar-la a les teves publicacions o a Canva.</p>
+            </div>
+        </section>
+
+        <div id="welcomeBox" class="welcome-box">
+            <div class="icon">🚵‍♂️</div>
+            <h3>Posa a punt la teva ruta</h3>
+            <p>Utilitza el botó superior per carregar qualsevol fitxer de ruta. Aquesta versió empra un motor professional de lectura.</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Visualitzador GPX Professional</p>
+    </footer>
+
+    <!-- Llibreries externes oficials -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gpxparser/3.0.8/gpxparser.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
