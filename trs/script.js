@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let posElev = 0;
             let maxElev = -Infinity;
 
-            // Intent 1: Utilitzar gpxParser
+            // Intent 1: gpxParser
             try {
                 const gpx = new gpxParser();
                 gpx.parse(gpxText);
@@ -38,20 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalDist = rte.distance.total || 0;
                 }
             } catch (err) {
-                console.warn("gpxParser ha fallat, usant lector directe de backup:", err);
+                console.warn("gpxParser error:", err);
             }
 
-            // Intent 2: Fallback absolut amb Regex si el parser extern no troba punts
+            // Intent 2: Fallback Regex per extraure lat/lon directament si fallés
             if (!points || points.length === 0) {
-                const ptRegex = /<(?:trkpt|rtept|wpt)[^>]*lat=["']([^"']+)["'][^>]*lon=["']([^"']+)["'][^>]*>([\s\S]*?)<\/(?:trkpt|rtept|wpt)>|<(?:trkpt|rtept|wpt)[^>]*lon=["']([^"']+)["'][^>]*lat=["']([^"']+)["'][^>]*>([\s\S]*?)<\/(?:trkpt|rtept|wpt)>/gi;
-                
-                // Regex simple per a punts tancats o oberts
-                const simplePtRegex = /<[^>]*?(?:lat|LAT)=["']([^"']+)["'][^>]*?(?:lon|LON|lng|LNG)=["']([^"']+)["'][^>]*?>/g;
-                
-                let match;
-                // Anem a cercar totes les aparicions de lat i lon al text
                 let latLonRegex = /(?:lat|LAT)\s*=\s*["']([^"']+)["'][\s\S]*?(?:lon|LON|lng|LNG)\s*=\s*["']([^"']+)["']/g;
-                
+                let match;
                 let rawMatches = [];
                 while ((match = latLonRegex.exec(gpxText)) !== null) {
                     let lat = parseFloat(match[1]);
@@ -60,32 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         rawMatches.push({ lat, lon, ele: 0 });
                     }
                 }
-
-                if (rawMatches.length > 0) {
-                    points = rawMatches;
-                }
+                if (rawMatches.length > 0) points = rawMatches;
             }
 
-            // Si tot i així no tenim punts
             if (!points || points.length === 0) {
-                alert("No s'han pogut extreure coordenades d'aquest fitxer. Comprova que contingui dades de ruta vàlides.");
+                alert("No s'han pogut extreure coordenades d'aquest fitxer.");
                 return;
             }
 
-            // Calcular mètriques si venen a zero
+            // Processar punts i mètriques
             let calculatedDist = totalDist;
             let calculatedPosElev = posElev;
             let calculatedMax = maxElev === -Infinity ? 0 : maxElev;
             let prev = null;
 
-            let processedPoints = points.map((p, idx) => {
+            let processedPoints = points.map((p) => {
                 let ele = p.ele !== undefined && p.ele !== null ? parseFloat(p.ele) : 0;
                 if (ele > calculatedMax) calculatedMax = ele;
 
                 let distInc = 0;
                 if (prev) {
                     distInc = getDistanceFromLatLonInKm(prev.lat, prev.lon, p.lat, p.lon);
-                    if (calculatedDist === 0) calculatedDist += distInc * 1000; // en metres
+                    if (calculatedDist === 0) calculatedDist += distInc * 1000;
                     
                     let diff = ele - prev.ele;
                     if (diff > 0 && calculatedPosElev === 0) calculatedPosElev += diff;
@@ -95,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return current;
             });
 
+            // Mostrar secció abans de crear el mapa per evitar el fons gris
             welcomeBox.classList.add('hidden');
             appSection.classList.remove('hidden');
 
@@ -104,7 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('mElev').textContent = `${Math.round(calculatedPosElev)} m`;
             document.getElementById('mMax').textContent = `${Math.round(calculatedMax)} m`;
 
-            initMap(processedPoints);
+            // Petit retard de seguretat per assegurar que el contenidor DOM està visible
+            setTimeout(() => {
+                initMap(processedPoints);
+            }, 100);
         };
 
         reader.readAsText(file);
@@ -127,21 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function initMap(points) {
-        if (map) {
-            map.remove();
+        if (!map) {
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 18
+            }).addTo(map);
+        } else {
+            map.eachLayer((layer) => {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
         }
 
-        map = L.map('map', {
-            zoomControl: false,
-            attributionControl: false
-        });
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 18
-        }).addTo(map);
+        // Forçar a Leaflet a recalcular la mida del contenidor
+        map.invalidateSize();
 
         polylineGroup = L.layerGroup();
-
         let latlngs = points.map(p => [p.lat, p.lon, p.ele]);
 
         for (let i = 1; i < latlngs.length; i++) {
