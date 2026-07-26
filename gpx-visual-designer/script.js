@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const trackData = parseGPX(gpxText);
                 
                 if (trackData.points.length === 0) {
-                    alert("No s'han trobat punts vàlids en aquest arxiu GPX.");
+                    alert("No s'han trobat punts de ruta vàlids en aquest arxiu GPX.");
                     return;
                 }
 
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 initStyledMap(trackData.points);
 
             } catch (error) {
-                console.error(error);
-                alert("Error al llegir l'arxiu GPX.");
+                console.error("Error detallat:", error);
+                alert("Error al llegir l'arxiu GPX. Assegura't que és un format XML/GPX vàlid.");
             }
         };
 
@@ -46,41 +46,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Lector GPX tolerant a qualsevol estructura o etiqueta
     function parseGPX(gpxText) {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(gpxText, "text/xml");
-        const trkpts = xmlDoc.querySelectorAll("trkpt");
         
+        // Busquem punts de pista (trkpt), de ruta (rtept) o waypoints (wpt)
+        let pts = xmlDoc.querySelectorAll("trkpt, rtept, wpt");
+        if (pts.length === 0) {
+            // Intent tolerant a majúscules o arxius estranys
+            pts = xmlDoc.getElementsByTagName("trkpt");
+        }
+
         let points = [];
         let totalDistance = 0;
         let elevationGain = 0;
         let maxElevation = -Infinity;
         let prevPoint = null;
 
-        trkpts.forEach((pt) => {
-            const lat = parseFloat(pt.getAttribute("lat"));
-            const lon = parseFloat(pt.getAttribute("lon"));
-            if (isNaN(lat) || isNaN(lon) || (lat === 0 && lon === 0)) return;
+        for (let i = 0; i < pts.length; i++) {
+            let pt = pts[i];
+            let latAttr = pt.getAttribute("lat") || pt.getAttribute("LAT");
+            let lonAttr = pt.getAttribute("lon") || pt.getAttribute("LON") || pt.getAttribute("lng");
 
-            const eleEl = pt.querySelector("ele");
-            const ele = eleEl ? parseFloat(eleEl.textContent) : 0;
+            if (!latAttr || !lonAttr) continue;
 
-            if (ele > maxElevation) maxElevation = ele;
+            const lat = parseFloat(latAttr);
+            const lon = parseFloat(lonAttr);
+
+            if (isNaN(lat) || isNaN(lon)) continue;
+
+            // Cercar elevació independentment de majúscules/minúscules
+            let eleVal = 0;
+            let eleEl = pt.querySelector("ele, ELEVATION, elevation");
+            if (eleEl) {
+                eleVal = parseFloat(eleEl.textContent) || 0;
+            } else {
+                // Si no està dins del punt, mirem fills directes
+                for (let child of pt.children) {
+                    if (child.nodeName.toLowerCase().includes('ele')) {
+                        eleVal = parseFloat(child.textContent) || 0;
+                        break;
+                    }
+                }
+            }
+
+            if (eleVal > maxElevation) maxElevation = eleVal;
 
             let distIncrement = 0;
             if (prevPoint) {
                 distIncrement = getDistanceFromLatLonInKm(prevPoint.lat, prevPoint.lon, lat, lon);
-                if (distIncrement > 5.0) return;
+                // Si el punt és pràcticament el mateix, l'acceptem igualment per no tallar el mapa
                 totalDistance += distIncrement;
 
-                const diff = ele - prevPoint.ele;
+                const diff = eleVal - prevPoint.ele;
                 if (diff > 0) elevationGain += diff;
             }
 
-            const currentPoint = { lat, lon, ele, distance: totalDistance };
+            const currentPoint = { lat, lon, ele: eleVal, distance: totalDistance };
             points.push(currentPoint);
             prevPoint = currentPoint;
-        });
+        }
 
         return {
             points,
