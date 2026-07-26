@@ -22,29 +22,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 const gpx = new gpxParser();
                 gpx.parse(gpxText);
 
-                const tracks = gpx.tracks;
-                if (!tracks || tracks.length === 0 || !tracks[0].points || tracks[0].points.length === 0) {
-                    alert("No s'han trobat punts de ruta vàlids en aquest fitxer GPX.");
-                    return;
+                // Busquem punts tant en Tracks, Routes o Waypoints per no fallar mai
+                let points = [];
+                let totalDist = 0;
+                let posElev = 0;
+                let maxElev = 0;
+
+                if (gpx.tracks && gpx.tracks.length > 0 && gpx.tracks[0].points.length > 0) {
+                    const trk = gpx.tracks[0];
+                    points = trk.points;
+                    totalDist = trk.distance.total;
+                    posElev = trk.elevation.pos;
+                    maxElev = trk.elevation.max;
+                } else if (gpx.routes && gpx.routes.length > 0 && gpx.routes[0].points.length > 0) {
+                    const rte = gpx.routes[0];
+                    points = rte.points;
+                    totalDist = rte.distance.total || 0;
+                    posElev = 0; // Si és ruta pura, calculem desnivell bàsic
+                    maxElev = Math.max(...points.map(p => p.ele || 0));
+                } else if (gpx.waypoints && gpx.waypoints.length > 0) {
+                    points = gpx.waypoints;
+                    maxElev = Math.max(...points.map(p => p.ele || 0));
                 }
 
-                const track = tracks[0];
-                const points = track.points;
+                if (!points || points.length === 0) {
+                    alert("L'arxiu s'ha obert però no conté cap punt geogràfic de ruta vàlid.");
+                    return;
+                }
 
                 welcomeBox.classList.add('hidden');
                 appSection.classList.remove('hidden');
 
                 const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
                 document.getElementById('rTitle').textContent = cleanName;
-                document.getElementById('mDist').textContent = `${(track.distance.total / 1000).toFixed(1)} km`;
-                document.getElementById('mElev').textContent = `${Math.round(track.elevation.pos)} m`;
-                document.getElementById('mMax').textContent = `${Math.round(track.elevation.max)} m`;
+                document.getElementById('mDist').textContent = `${(totalDist / 1000).toFixed(1)} km`;
+                document.getElementById('mElev').textContent = `${Math.round(posElev)} m`;
+                document.getElementById('mMax').textContent = `${Math.round(maxElev)} m`;
 
                 initMap(points);
 
             } catch (err) {
-                console.error("Error al parsejar el GPX:", err);
-                alert("Error: L'arxiu GPX està corrupte o no té el format adequat.");
+                console.error("Error al parsejar:", err);
+                alert("No s'ha pogut llegir l'arxiu. Comprova que sigui un fitxer GPX estàndard.");
             }
         };
 
@@ -73,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         polylineGroup = L.layerGroup();
 
-        let latlngs = points.map(p => [p.lat, p.lon, p.ele !== undefined ? p.ele : 0]);
+        let latlngs = points.map(p => [p.lat, p.lon, p.ele !== undefined && p.ele !== null ? p.ele : 0]);
 
         for (let i = 1; i < latlngs.length; i++) {
             let p1 = latlngs[i - 1];
@@ -83,10 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let eleDiff = p2[2] - p1[2];
             let grade = distMeters > 0 ? (eleDiff / distMeters) * 100 : 0;
 
-            let color = '#22c55e';
-            if (grade >= 10) color = '#ef4444';
-            else if (grade >= 7) color = '#f97316';
-            else if (grade >= 4) color = '#eab308';
+            let color = '#22c55e'; // Verd
+            if (grade >= 10) color = '#ef4444'; // Vermell
+            else if (grade >= 7) color = '#f97316'; // Taronja
+            else if (grade >= 4) color = '#eab308'; // Groc
 
             let segment = L.polyline([[p1[0], p1[1]], [p2[0], p2[1]]], {
                 color: color,
