@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub Docent - Sales Privades en Temps Real</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Llibreria d'icones (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Gun.js per a la sincronització P2P en temps real -->
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Capçalera -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold flex items-center gap-2">
+                    <i data-lucide="presentation" class="w-8 h-8"></i> Hub de Sales Docents
+                </h1>
+                <p class="text-indigo-200 mt-1">Sales privades col·laboratives en temps real.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contingut Principal (Hub) -->
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 flex-grow w-full" id="mainHub">
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg mb-10">
+            <div class="max-w-xl">
+                <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">
+                    <i data-lucide="lock" class="w-6 h-6"></i> Crea una Sala de Pissarra en Directe
+                </h2>
+                <p class="text-indigo-100 text-sm mb-6">Obre una sala col·laborativa tipus NotebookCast compartint el nom amb els teus alumnes.</p>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="roomNameInput" placeholder="Ex: classe-matematiques-1" 
+                        class="flex-grow px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-white text-sm">
+                    <button id="createRoomBtn" class="px-6 py-3 bg-white text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i> Crear / Entrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Vista de la Sala Privada (Pissarra en temps real) -->
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 flex-grow w-full hidden" id="roomView">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div>
+                <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Sala Activa (En directe)</span>
+                <h2 id="currentRoomTitle" class="text-2xl font-bold text-slate-800">Nom de la sala</h2>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <button id="copyInviteBtn" class="flex-1 sm:flex-none px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-medium rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    <i data-lucide="share-2" class="w-4 h-4"></i> Copiar enllaç
+                </button>
+                <button id="leaveRoomBtn" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-lg text-sm transition flex items-center justify-center gap-2">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Sortir
+                </button>
+            </div>
+        </div>
+
+        <!-- Zona de Pissarra Col·laborativa -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col h-[600px]">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-200 mb-4">
+                <div class="flex items-center gap-2">
+                    <button id="toolPen" class="p-2 bg-indigo-600 text-white rounded-lg transition" title="Llapis"><i data-lucide="pen-tool" class="w-5 h-5"></i></button>
+                    <button id="toolEraser" class="p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition" title="Esborrar"><i data-lucide="eraser" class="w-5 h-5"></i></button>
+                    <input type="color" id="penColor" value="#4f46e5" class="w-9 h-9 p-1 rounded-lg border border-slate-200 cursor-pointer">
+                </div>
+                <button id="clearCanvasBtn" class="px-3 py-1.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 text-sm font-medium rounded-lg transition flex items-center gap-1">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Netejar pissarra
+                </button>
+            </div>
+            <div class="relative flex-grow bg-slate-50 rounded-xl border border-dashed border-slate-300 overflow-hidden cursor-crosshair">
+                <canvas id="whiteboard" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <!-- Peu de pàgina -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
+            <p>Hub Docent col·laboratiu amb Gun.js i GitHub Pages.</p>
+        </div>
+    </footer>
+
+    <!-- LÒGICA DE GUN.JS I LA PISSARRA -->
+    <script>
+        // Inicialitzar Gun connectat a relais públics gratuïts per a la sincronització P2P
+        const gun = Gun({
+            peers: [
+                'https://gun-manhattan.herokuapp.com/gun',
+                'https://relay.peerpad.net/gun'
+            ]
+        });
+
+        const mainHub = document.getElementById('mainHub');
+        const roomView = document.getElementById('roomView');
+        const createRoomBtn = document.getElementById('createRoomBtn');
+        const roomNameInput = document.getElementById('roomNameInput');
+        const currentRoomTitle = document.getElementById('currentRoomTitle');
+        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+        const copyInviteBtn = document.getElementById('copyInviteBtn');
+
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let currentTool = 'pen';
+        let lineColor = '#4f46e5';
+        let currentRoomNode = null;
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        // Comprovar paràmetre de sala a la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomParam = urlParams.get('sala');
+        if (roomParam) {
+            enterRoom(roomParam);
+        }
+
+        createRoomBtn.addEventListener('click', () => {
+            const roomName = roomNameInput.value.trim() || 'sala-' + Math.random().toString(36).substring(2, 7);
+            const newUrl = `${window.location.pathname}?sala=${encodeURIComponent(roomName)}`;
+            window.history.pushState({path: newUrl}, '', newUrl);
+            enterRoom(roomName);
+        });
+
+        leaveRoomBtn.addEventListener('click', () => {
+            const newUrl = window.location.pathname;
+            window.history.pushState({path: newUrl}, '', newUrl);
+            roomView.classList.add('hidden');
+            mainHub.classList.remove('hidden');
+            window.location.reload(); // Recarrega per netejar connexions de sala
+        });
+
+        copyInviteBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(window.location.href);
+            alert("¡Enllaç de la sala copiat al porta-retalls!");
+        });
+
+        function enterRoom(roomName) {
+            mainHub.classList.add('hidden');
+            roomView.classList.remove('hidden');
+            currentRoomTitle.textContent = `Sala: ${roomName}`;
+            setTimeout(resizeCanvas, 50);
+            lucide.createIcons();
+
+            // Configurar node de Gun.js per aquesta sala específica
+            currentRoomNode = gun.get('hub-docent-sales-v1').get(roomName);
+
+            // Escolta d'esdeveniments de dibuix de la resta d'usuaris en temps real
+            currentRoomNode.get('draw').on((data) => {
+                if (!data) return;
+                drawLineOnCanvas(data.x0, data.y0, data.x1, data.y1, data.color, data.size, data.isEraser);
+            });
+
+            // Escolta d'esdeveniments de netejar pissarra
+            currentRoomNode.get('clear').on((data) => {
+                if (data) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+        }
+
+        let lastX = 0;
+        let lastY = 0;
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            lastX = e.offsetX;
+            lastY = e.offsetY;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing || !currentRoomNode) return;
+            const currentX = e.offsetX;
+            const currentY = e.offsetY;
+            const size = currentTool === 'eraser' ? 20 : 3;
+            const color = currentTool === 'eraser' ? '#f8fafc' : lineColor;
+
+            // Dibuixar localment
+            drawLineOnCanvas(lastX, lastY, currentX, currentY, color, size, currentTool === 'eraser');
+
+            // Enviar dades a la resta de participants mitjançant Gun.js
+            currentRoomNode.get('draw').put({
+                x0: lastX,
+                y0: lastY,
+                x1: currentX,
+                y1: currentY,
+                color: color,
+                size: size,
+                isEraser: currentTool === 'eraser',
+                time: Date.now()
+            });
+
+            lastX = currentX;
+            lastY = currentY;
+        });
+
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+        function drawLineOnCanvas(x0, y0, x1, y1, color, size, isEraser) {
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.lineWidth = size;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        document.getElementById('toolPen').addEventListener('click', () => {
+            currentTool = 'pen';
+            document.getElementById('toolPen').className = "p-2 bg-indigo-600 text-white rounded-lg transition";
+            document.getElementById('toolEraser').className = "p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition";
+        });
+
+        document.getElementById('toolEraser').addEventListener('click', () => {
+            currentTool = 'eraser';
+            document.getElementById('toolEraser').className = "p-2 bg-indigo-600 text-white rounded-lg transition";
+            document.getElementById('toolPen').className = "p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition";
+        });
+
+        document.getElementById('penColor').addEventListener('input', (e) => {
+            lineColor = e.target.value;
+        });
+
+        document.getElementById('clearCanvasBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (currentRoomNode) {
+                currentRoomNode.get('clear').put({ timestamp: Date.now() });
+            }
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
