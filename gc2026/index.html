@@ -46,7 +46,7 @@
       background-attachment: fixed;
     }
 
-    /* Textura topogràfica per al nou header flotant */
+    /* Textura topogràfica per al header flotant */
     .header-topo-bg {
       background-image: linear-gradient(rgba(10, 14, 23, 0.88), rgba(10, 14, 23, 0.94)), url('topo.jpg');
       background-size: 500px auto;
@@ -75,13 +75,11 @@
 </head>
 <body class="text-slate-900 font-sans antialiased selection:bg-brand-turquoise selection:text-brand-black">
 
-  <!-- ========================================= -->
-  <!-- NOU HEADER FLOTANT D'ALT IMPACTE          -->
-  <!-- ========================================= -->
+  <!-- HEADER FLOTANT -->
   <div class="sticky top-0 z-50 px-4 sm:px-6 pt-4 pb-2">
     <header class="max-w-7xl mx-auto header-topo-bg backdrop-blur-xl border border-brand-turquoise/40 text-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/40 px-5 sm:px-8 h-20 flex justify-between items-center transition-all duration-300">
       
-      <!-- LOGO AMB RESPLENDOR -->
+      <!-- LOGO -->
       <a href="#" class="flex items-center gap-3 group py-1">
         <div class="relative">
           <div class="absolute -inset-1 bg-brand-turquoise/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -89,7 +87,7 @@
         </div>
       </a>
 
-      <!-- MENÚ AMB INDICADOR DE COMUNITAT -->
+      <!-- MENÚ -->
       <nav class="hidden md:flex items-center gap-8 text-xs font-extrabold uppercase tracking-widest text-slate-300">
         <a href="#quisom" class="hover:text-brand-turquoise transition-colors">Qui som?</a>
         <a href="#comunitat" class="hover:text-brand-turquoise transition-colors flex items-center gap-2">
@@ -100,12 +98,12 @@
         <a href="#collaboradors" class="hover:text-brand-turquoise transition-colors">Col·labora</a>
       </nav>
 
-      <!-- BOTÓ AMB EFECTE GLOW TURQUESA -->
+      <!-- BOTÓ DESCARREGA L'APP -->
       <div class="flex items-center gap-3">
         <a href="#app" class="relative group overflow-hidden rounded-xl p-px font-display font-black text-xs uppercase tracking-wider">
           <span class="absolute inset-0 bg-gradient-to-r from-brand-turquoise via-teal-300 to-brand-turquoise animate-pulse"></span>
           <span class="relative block bg-brand-turquoise group-hover:bg-brand-darkturquoise text-brand-black group-hover:text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-brand-turquoise/30">
-            Aconsegueix l'App 📱
+            Descarrega l'APP 📱
           </span>
         </a>
       </div>
@@ -160,7 +158,7 @@
           </div>
         </div>
 
-        <!-- CAIXA 2 -->
+        <!-- CAIXA 2 (SENSE PUNT) -->
         <div class="relative group h-96 rounded-3xl overflow-hidden shadow-2xl border-2 border-white/80 transform hover:-translate-y-1 transition-all">
           <img 
             src="https://images.unsplash.com/photo-1517649763962-0c6232662c0a?auto=format&fit=crop&w=800&q=80" 
@@ -180,9 +178,8 @@
               <p class="text-slate-300 text-xs font-medium leading-relaxed mb-3">
                 Uneix-te, sols necessites ganes de pedalar en grup i descobrir nous camins.
               </p>
-              <div class="flex gap-2 text-[10px] font-extrabold uppercase tracking-wider text-brand-turquoise border-t border-white/20 pt-3">
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-extrabold uppercase tracking-wider text-brand-turquoise border-t border-white/20 pt-3">
                 <span>✓ Totes les comarques</span>
-                <span>•</span>
                 <span>✓ Tots els nivells</span>
               </div>
             </div>
@@ -337,7 +334,7 @@
 
         <div class="pt-2">
           <a href="#contacte" class="inline-block bg-brand-black hover:bg-slate-800 text-white font-display font-black text-xs uppercase tracking-wider px-7 py-3.5 rounded-xl shadow-xl transition">
-            Descarregar l'App Ara
+            Descarrega l'APP 📱
           </a>
         </div>
       </div>
