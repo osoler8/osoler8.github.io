@@ -3,9 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gravel Catalunya - La comunitat del Gravel a Catalunya</title>
+  <title>Gravel Catalunya | Comunitat & Bikepacking</title>
   <meta name="description" content="Gravel Catalunya és la comunitat més gran del Gravel català. Sortides socials gratuïtes, bikepackings i esdeveniments mentre coneixem el territori.">
   
+  <!-- Enllaç Canònic i SEO -->
+  <link rel="canonical" href="https://www.gravelcatalunya.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.gravelcatalunya.com/" />
+  <meta property="og:title" content="Gravel Catalunya | Comunitat & Bikepacking" />
+  <meta property="og:description" content="Gravel Catalunya és la comunitat més gran del Gravel català. Sortides socials gratuïtes, bikepackings i esdeveniments." />
+  <meta property="og:image" content="https://www.gravelcatalunya.com/logo.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gravel Catalunya | Comunitat & Bikepacking" />
+  <meta name="twitter:description" content="Gravel Catalunya és la comunitat més gran del Gravel català." />
+  <meta name="twitter:image" content="https://www.gravelcatalunya.com/logo.png" />
+
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -37,7 +50,7 @@
   </script>
 
   <style>
-    /* Fons topogràfic continu i suau sense cap tall */
+    /* Fons general fixat */
     body {
       background-image: linear-gradient(rgba(248, 250, 252, 0.92), rgba(248, 250, 252, 0.92)), url('topo.jpg');
       background-repeat: no-repeat;
@@ -158,7 +171,7 @@
           </div>
         </div>
 
-        <!-- CAIXA 2 (SENSE PUNT) -->
+        <!-- CAIXA 2 -->
         <div class="relative group h-96 rounded-3xl overflow-hidden shadow-2xl border-2 border-white/80 transform hover:-translate-y-1 transition-all">
           <img 
             src="https://images.unsplash.com/photo-1517649763962-0c6232662c0a?auto=format&fit=crop&w=800&q=80" 
@@ -413,8 +426,9 @@
 
           <!-- Formulari -->
           <form id="contact-form" class="space-y-4">
+            <!-- WEB3FORMS -->
             <input type="hidden" name="access_key" value="34c3e4dc-6a31-4fc1-99cf-78ced4e84e0e">
-
+            
             <div>
               <label class="block text-xs font-black text-slate-800 uppercase mb-1">Nom complet *</label>
               <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 font-bold focus:bg-white focus:border-brand-turquoise focus:outline-none" placeholder="El teu nom">
@@ -429,9 +443,9 @@
               <label class="block text-xs font-black text-slate-800 uppercase mb-1">Missatge *</label>
               <textarea name="message" rows="4" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 font-bold focus:bg-white focus:border-brand-turquoise focus:outline-none" placeholder="En què et podem ajudar?"></textarea>
             </div>
-            
-            <div class="h-captcha" data-captcha="true"></div>
 
+            <div class="h-captcha" data-captcha="true"></div>
+            
             <button type="submit" id="submit-btn" class="w-full bg-brand-turquoise hover:bg-brand-darkturquoise text-brand-black hover:text-white font-display font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-lg transition">
               Envia el missatge →
             </button>
@@ -452,16 +466,80 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
-  <footer class="bg-brand-black text-slate-500 py-10 px-6 text-center text-xs">
-    <div class="flex justify-center mb-4">
+  <!-- FOOTER AMB ENLLAÇ A TEXTOS LEGALS -->
+  <footer class="bg-brand-black text-slate-500 py-10 px-6 text-center text-xs space-y-3">
+    <div class="flex justify-center mb-2">
       <img src="logo.png" alt="Gravel Catalunya Logo" class="h-12 w-auto object-contain">
     </div>
     <p>Gravel Catalunya &copy; 2026. La comunitat del Gravel a Catalunya.</p>
+    <div class="pt-2">
+      <button onclick="toggleLegalModal()" class="text-slate-400 hover:text-brand-turquoise transition-colors font-bold underline">
+        Textos Legals &amp; Privadesa
+      </button>
+    </div>
   </footer>
 
-  <!-- SCRIPT PER ENVIAR SENSE RECARREGAR I MOSTRAR EL MISSATGE D'ÈXIT -->
+  <!-- ========================================= -->
+  <!-- MODAL / FINESTRA EMERGENT DE TEXTOS LEGALS-->
+  <!-- ========================================= -->
+  <div id="legal-modal" class="fixed inset-0 z-[100] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white text-slate-800 rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative border-2 border-slate-200">
+      
+      <!-- Botó de tancar -->
+      <button onclick="toggleLegalModal()" class="absolute top-5 right-5 w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full flex items-center justify-center font-black text-lg transition">
+        ✕
+      </button>
+
+      <!-- Títol modal -->
+      <h2 class="font-display font-black text-2xl text-brand-black uppercase mb-6 pb-3 border-b border-slate-200">
+        Informació Legal &amp; Privadesa
+      </h2>
+
+      <!-- Contingut dels textos legals -->
+      <div class="space-y-6 text-xs leading-relaxed font-medium text-slate-600">
+        
+        <div>
+          <h3 class="font-display font-black text-sm text-brand-black uppercase mb-2">1. Avís Legal</h3>
+          <p>En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de Serveis de la Societat de la Informació i Comerç Electrònic (LSSI-CE), s'informa que el lloc web <strong>www.gravelcatalunya.com</strong> és titularitat de la comunitat Gravel Catalunya. El portal té com a finalitat oferir informació sobre les nostres activitats, sortides socials i canalitzar la coordinació entre ciclistes.</p>
+        </div>
+
+        <div>
+          <h3 class="font-display font-black text-sm text-brand-black uppercase mb-2">2. Política de Privadesa i Protecció de Dades (RGPD)</h3>
+          <p>De conformitat amb el Reglement General de Protecció de Dades (UE) 2016/679 i la Llei Orgànica 3/2018 (LOPDGDD), us informem que les dades de contacte facilitades a través del formulari (nom i correu electrònic) seran utilitzades únicament per atendre i respondre les consultes o sol·licituds d'informació formulades.</p>
+          <p class="mt-1">Aquestes dades no seran cedides a tercers en cap cas sense el vostre consentiment previ. Podeu exercir els vostres drets d'accés, rectificació, supressió o oposició enviant un correu a través del formulari de contacte d'aquesta web.</p>
+        </div>
+
+        <div>
+          <h3 class="font-display font-black text-sm text-brand-black uppercase mb-2">3. Política de Cookies</h3>
+          <p>Aquest lloc web utilitza exclusivament cookies tècniques i essencials per al seu correcte funcionament i la millora de l'experiència d'usuari. No s'utilitzen cookies de tercers amb fins de perfilat ni publicitaris sense consentiment explícit.</p>
+        </div>
+
+        <div>
+          <h3 class="font-display font-black text-sm text-brand-black uppercase mb-2">4. Propietat Intel·lectual</h3>
+          <p>Tots els continguts d'aquesta pàgina web (marques, dissenys, textos, logos i fotografies) estan protegits per drets de propietat intel·lectual de Gravel Catalunya o dels seus corresponents autors.</p>
+        </div>
+
+      </div>
+
+      <!-- Botó d'acceptar -->
+      <div class="mt-8 pt-4 border-t border-slate-200 text-right">
+        <button onclick="toggleLegalModal()" class="bg-brand-turquoise hover:bg-brand-darkturquoise text-brand-black font-display font-black text-xs uppercase px-6 py-2.5 rounded-xl transition">
+          D'acord / Tancar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCRIPT ENVIAMENT FORMULARI SENSE RECARREGAR I MODAL LEGAL -->
   <script>
+    // Toggle del Modal de Textos Legals
+    function toggleLegalModal() {
+      const modal = document.getElementById('legal-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // Enviament del formulari Web3Forms
     const form = document.getElementById('contact-form');
     const submitBtn = document.getElementById('submit-btn');
     const formSuccess = document.getElementById('form-success');
@@ -500,7 +578,7 @@
       });
     });
   </script>
-  
+
 <script src="https://web3forms.com/client/script.js" async defer></script>
 </body>
 </html>
