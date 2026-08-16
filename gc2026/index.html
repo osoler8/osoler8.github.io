@@ -37,7 +37,7 @@
   </script>
 
   <style>
-    /* Fons general fixat */
+    /* Fons topogràfic continu i suau sense cap tall */
     body {
       background-image: linear-gradient(rgba(248, 250, 252, 0.92), rgba(248, 250, 252, 0.92)), url('topo.jpg');
       background-repeat: no-repeat;
@@ -75,7 +75,7 @@
 </head>
 <body class="text-slate-900 font-sans antialiased selection:bg-brand-turquoise selection:text-brand-black">
 
-  <!-- HEADER FLOTANT -->
+  <!-- HEADER FLOTANT D'ALT IMPACTE -->
   <div class="sticky top-0 z-50 px-4 sm:px-6 pt-4 pb-2">
     <header class="max-w-7xl mx-auto header-topo-bg backdrop-blur-xl border border-brand-turquoise/40 text-white rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/40 px-5 sm:px-8 h-20 flex justify-between items-center transition-all duration-300">
       
@@ -405,13 +405,15 @@
           </div>
         </div>
 
-        <!-- Formulari -->
+        <!-- Formulari + Missatge d'èxit -->
         <div class="lg:col-span-7 p-8 sm:p-10 space-y-5">
           <div>
             <h2 class="font-display font-black text-3xl text-brand-black uppercase">CONTACTA AMB NOSALTRES</h2>
           </div>
 
-          <form action="https://api.web3forms.com/submit" method="POST" class="space-y-4">
+          <!-- Formulari -->
+          <form id="contact-form" class="space-y-4">
+            <!-- RECORDA POSAR EL TEU ACCESS KEY DE WEB3FORMS AQUÍ -->
             <input type="hidden" name="access_key" value="TEU_ACCESS_KEY">
             
             <div>
@@ -429,10 +431,19 @@
               <textarea name="message" rows="4" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-800 font-bold focus:bg-white focus:border-brand-turquoise focus:outline-none" placeholder="En què et podem ajudar?"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-brand-turquoise hover:bg-brand-darkturquoise text-brand-black hover:text-white font-display font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-lg transition">
+            <button type="submit" id="submit-btn" class="w-full bg-brand-turquoise hover:bg-brand-darkturquoise text-brand-black hover:text-white font-display font-black text-xs uppercase tracking-wider py-3.5 rounded-xl shadow-lg transition">
               Envia el missatge →
             </button>
           </form>
+
+          <!-- Targeta de "Missatge enviat" (oculta d'inici) -->
+          <div id="form-success" class="hidden p-6 bg-teal-50 border-2 border-brand-turquoise rounded-2xl text-center space-y-2">
+            <div class="w-12 h-12 bg-brand-turquoise text-brand-black rounded-full flex items-center justify-center mx-auto text-xl font-black">
+              ✓
+            </div>
+            <h3 class="font-display font-black text-xl text-slate-900">Missatge enviat!</h3>
+            <p class="text-sm font-medium text-slate-600">Gràcies per contactar amb Gravel Catalunya. Ens posarem en contacte ben aviat.</p>
+          </div>
         </div>
 
       </div>
@@ -447,6 +458,47 @@
     </div>
     <p>Gravel Catalunya &copy; 2026. La comunitat del Gravel a Catalunya.</p>
   </footer>
+
+  <!-- SCRIPT PER ENVIAR SENSE RECARREGAR I MOSTRAR EL MISSATGE D'ÈXIT -->
+  <script>
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const formSuccess = document.getElementById('form-success');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerText = "S'està enviant...";
+
+      const formData = new FormData(form);
+      const object = Object.fromEntries(formData);
+      const json = JSON.stringify(object);
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: json
+      })
+      .then(async (response) => {
+        if (response.status == 200) {
+          form.classList.add('hidden');
+          formSuccess.classList.remove('hidden');
+        } else {
+          alert("Hi ha hagut un error en enviar el missatge. Torna-ho a provar.");
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Envia el missatge →";
+        }
+      })
+      .catch(error => {
+        alert("Hi ha hagut un error en enviar el missatge.");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Envia el missatge →";
+      });
+    });
+  </script>
 
 </body>
 </html>
