@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Joc de les fitxes | Simuladors d'atzar</title>
+  <title>Joc de les fitxes | Simulador d'atzar</title>
   <style>
     :root {
       --primary-red: #d32f2f;
@@ -43,10 +43,10 @@
     }
 
     h1 {
-      font-size: 2rem;
+      font-size: 1.8rem;
       color: #1b5e20;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .rules-banner {
@@ -251,7 +251,7 @@
       pointer-events: all;
     }
 
-    .winner-text { font-size: 2rem; font-weight: 800; margin-bottom: 10px; }
+    .winner-text { font-size: 1.8rem; font-weight: 800; margin-bottom: 15px; text-align: center; }
     
     canvas#confetti {
       position: absolute;
@@ -276,8 +276,8 @@
     <canvas id="confetti"></canvas>
 
     <header>
-      <h1>Joc de les fitxes</h1>
-      <div class="rules-banner">Objectiu: Primer/a que sumi 10 punts 🏆</div>
+      <h1>Joc de les fitxes | Simulador d'atzar</h1>
+      <div class="rules-banner">Objectiu: Primer/a a 10 punts 🏆</div>
     </header>
 
     <!-- Marcador -->
@@ -320,12 +320,12 @@
 
     <!-- Controls -->
     <div class="controls">
-      <button class="btn-main" id="btnRoll" onclick="tirarFitxes()">🎲 Llançar fitxes!</button>
+      <button class="btn-main" id="btnRoll" onclick="tirarFitxes()">Llançar fitxes!</button>
       
       <div class="sim-buttons">
         <button class="btn-sim" onclick="simular(10)">Simular 10</button>
-        <button class="btn-sim" onclick="simular(20)">Simular 20</button>
-        <button class="btn-sim" onclick="simular(30)">Simular 30</button>
+        <button class="btn-sim" onclick="simular(100)">Simular 100</button>
+        <button class="btn-sim" onclick="simular(1000)">Simular 1.000</button>
         <button class="btn-sim" style="color: #c62828;" onclick="reiniciarPartida()">Reiniciar</button>
       </div>
     </div>
@@ -345,7 +345,7 @@
 
     <!-- Modal Guanyador -->
     <div class="winner-overlay" id="winnerModal">
-      <div class="winner-text" id="winnerText">Ha guanyat el jugador/a A! 🎉</div>
+      <div class="winner-text" id="winnerText">Ha guanyat el/la Jugador/a A! 🎉</div>
       <button class="btn-main" onclick="reiniciarPartida()">Tornar a jugar</button>
     </div>
   </div>
@@ -438,6 +438,11 @@
         document.getElementById('pctB').innerText = pctB + '%';
         document.getElementById('barA').style.width = pctA + '%';
         document.getElementById('barB').style.width = pctB + '%';
+      } else {
+        document.getElementById('pctA').innerText = '50%';
+        document.getElementById('pctB').innerText = '50%';
+        document.getElementById('barA').style.width = '50%';
+        document.getElementById('barB').style.width = '50%';
       }
     }
 
@@ -447,10 +452,10 @@
         const text = document.getElementById('winnerText');
         
         if (scoreA >= 10) {
-          text.innerText = "🎉 Ha guanyat el JUGADOR/A A! (10 punts)";
+          text.innerText = "🎉 Ha guanyat el/la Jugador/a A! (10 punts)";
           text.style.color = "var(--primary-red)";
         } else {
-          text.innerText = "🎉 Ha guanyat el JUGADOR/A B! (10 punts)";
+          text.innerText = "🎉 Ha guanyat el/la Jugador/a B! (10 punts)";
           text.style.color = "var(--primary-blue)";
         }
         
@@ -471,6 +476,8 @@
     function reiniciarPartida() {
       scoreA = 0;
       scoreB = 0;
+      totalRollsA = 0;
+      totalRollsB = 0;
       document.getElementById('coin1').style.transform = 'rotateY(0deg)';
       document.getElementById('coin2').style.transform = 'rotateY(0deg)';
       document.getElementById('winnerModal').classList.remove('active');
