@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursa de Robots amb un Dau</title>
+  <style>
+    :root {
+      --lane-1: #f39c12;
+      --lane-2: #2980b9;
+      --lane-3: #16a085;
+      --lane-4: #8e44ad;
+      --lane-5: #e67e22;
+      --lane-6: #e74c3c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #eef2f7 0%, #dbe3ed 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #2c3e50;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .instructions {
+      background: #ffffff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #555;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      display: inline-block;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 900px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Pista de carreres */
+    .track {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-right: 28px repeating-linear-gradient(
+        45deg,
+        #000,
+        #000 10px,
+        #fff 10px,
+        #fff 20px
+      );
+      padding-right: 10px;
+    }
+
+    .lane {
+      display: flex;
+      align-items: center;
+      height: 60px;
+      background: #f8fafc;
+      border-radius: 10px;
+      position: relative;
+      border-bottom: 2px dashed #cbd5e1;
+    }
+
+    .lane-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      z-index: 2;
+    }
+
+    .lane-1 { background-color: var(--lane-1); }
+    .lane-2 { background-color: var(--lane-2); }
+    .lane-3 { background-color: var(--lane-3); }
+    .lane-4 { background-color: var(--lane-4); }
+    .lane-5 { background-color: var(--lane-5); }
+    .lane-6 { background-color: var(--lane-6); }
+
+    .lane-field {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      margin-left: 10px;
+    }
+
+    /* Robot */
+    .robot {
+      width: 50px;
+      height: 50px;
+      position: absolute;
+      top: 5px;
+      left: 0%;
+      transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    }
+
+    .robot.highlight {
+      animation: bounce 0.4s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.25) translateY(-6px); }
+    }
+
+    /* Tauler de control i Dau */
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-top: 25px;
+      padding-top: 15px;
+      border-top: 2px solid #edf2f7;
+    }
+
+    .dice-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Dau interactiu */
+    .dice {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 0 #cbd5e1, 0 15px 20px rgba(0, 0, 0, 0.15);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      border: 2px solid #e2e8f0;
+    }
+
+    .dice:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 0 #cbd5e1, 0 18px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .dice:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #cbd5e1, 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .dice.rolling {
+      animation: rollAnimation 0.5s ease infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rollAnimation {
+      0% { transform: rotate(0deg) scale(0.9); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      100% { transform: rotate(360deg) scale(0.9); }
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      background-color: #2d3748;
+      border-radius: 50%;
+      align-self: center;
+      justify-self: center;
+      opacity: 0;
+    }
+
+    .dice[data-val="1"] .d5 { opacity: 1; }
+    .dice[data-val="2"] .d1, .dice[data-val="2"] .d9 { opacity: 1; }
+    .dice[data-val="3"] .d1, .dice[data-val="3"] .d5, .dice[data-val="3"] .d9 { opacity: 1; }
+    .dice[data-val="4"] .d1, .dice[data-val="4"] .d3, .dice[data-val="4"] .d7, .dice[data-val="4"] .d9 { opacity: 1; }
+    .dice[data-val="5"] .d1, .dice[data-val="5"] .d3, .dice[data-val="5"] .d5, .dice[data-val="5"] .d7, .dice[data-val="5"] .d9 { opacity: 1; }
+    .dice[data-val="6"] .d1, .dice[data-val="6"] .d3, .dice[data-val="6"] .d4, .dice[data-val="6"] .d6, .dice[data-val="6"] .d7, .dice[data-val="6"] .d9 { opacity: 1; }
+
+    .status-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 6px 16px;
+      border-radius: 12px;
+    }
+
+    .btn-reset {
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+      transition: background 0.2s;
+    }
+
+    .btn-reset:hover {
+      background-color: #2563eb;
+    }
+
+    /* Modal Guanyador */
+    .modal {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      border-radius: 16px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 10;
+    }
+
+    .modal.active {
+      display: flex;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal h2 {
+      font-size: 2.2rem;
+      margin-bottom: 12px;
+    }
+
+    footer {
+      margin-top: 25px;
+      font-size: 0.95rem;
+      color: #475569;
+      font-weight: 600;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🏁 Cursa de Robots amb un Dau 🏁</h1>
+    <div class="instructions">
+      En clicar, el dau dona un número de l'<strong>1 al 6</strong>. Només avança el robot corresponent!
+    </div>
+  </header>
+
+  <div class="game-container">
+    <div class="track" id="track">
+      <!-- Generat dinàmicament per JS -->
+    </div>
+
+    <div class="controls">
+      <div class="dice-section">
+        <div class="dice" id="dice" data-val="1" onclick="rollDice()">
+          <div class="dot d1"></div><div></div><div class="dot d3"></div>
+          <div class="dot d4"></div><div class="dot d5"></div><div class="dot d6"></div>
+          <div class="dot d7"></div><div></div><div class="dot d9"></div>
+        </div>
+        <div class="status-badge" id="diceStatus">Clica el dau per començar!</div>
+      </div>
+
+      <button class="btn-reset" onclick="resetGame()">Reiniciar cursa</button>
+    </div>
+
+    <!-- Modal de victòria -->
+    <div class="modal" id="winModal">
+      <h2 id="winnerText">🏆 Ha guanyat el Robot 1! 🏆</h2>
+      <p style="margin-bottom: 20px;">Enhorabona al campió!</p>
+      <button class="btn-reset" onclick="resetGame()">Tornar a jugar</button>
+    </div>
+  </div>
+
+  <footer>
+    PD5 PCMAT - Creat per Oriol Soler
+  </footer>
+
+  <script>
+    const TOTAL_ROBOTS = 6;
+    const STEPS_TO_WIN = 8;
+    let positions = Array(TOTAL_ROBOTS).fill(0);
+    let isRolling = false;
+    let gameOver = false;
+
+    // So senzill sintetitzat amb Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, duration) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // Gràfic SVG del robot
+    function getRobotSVG() {
+      return `
+      <svg viewBox="0 0 100 100" width="100%" height="100%">
+        <!-- Eruga / Rodes -->
+        <rect x="15" y="75" width="70" height="20" rx="8" fill="#334155"/>
+        <circle cx="28" cy="85" r="5" fill="#94a3b8"/>
+        <circle cx="50" cy="85" r="5" fill="#94a3b8"/>
+        <circle cx="72" cy="85" r="5" fill="#94a3b8"/>
+        <!-- Cos -->
+        <rect x="22" y="38" width="56" height="40" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+        <!-- Pantalla / Ulls -->
+        <rect x="28" y="44" width="44" height="24" rx="6" fill="#0f172a"/>
+        <ellipse cx="40" cy="56" rx="5" ry="6" fill="#38bdf8"/>
+        <ellipse cx="60" cy="56" rx="5" ry="6" fill="#38bdf8"/>
+        <!-- Antena -->
+        <line x1="50" y1="38" x2="50" y2="20" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="50" cy="18" r="5" fill="#ef4444"/>
+      </svg>`;
+    }
+
+    // Inicialitzar els carrils
+    const track = document.getElementById('track');
+    for (let i = 1; i <= TOTAL_ROBOTS; i++) {
+      const lane = document.createElement('div');
+      lane.className = 'lane';
+      lane.innerHTML = `
+        <div class="lane-badge lane-${i}">${i}</div>
+        <div class="lane-field" id="field-${i}">
+          <div class="robot" id="robot-${i}">
+            ${getRobotSVG()}
+          </div>
+        </div>
+      `;
+      track.appendChild(lane);
+    }
+
+    // Tirar el dau
+    function rollDice() {
+      if (isRolling || gameOver) return;
+      isRolling = true;
+
+      const dice = document.getElementById('dice');
+      const status = document.getElementById('diceStatus');
+      dice.classList.add('rolling');
+      status.innerText = 'Tirant el dau...';
+      playBeep(400, 0.1);
+
+      let counter = 0;
+      const interval = setInterval(() => {
+        dice.setAttribute('data-val', Math.floor(Math.random() * 6) + 1);
+        counter++;
+        if (counter > 8) {
+          clearInterval(interval);
+          const finalVal = Math.floor(Math.random() * 6) + 1;
+          dice.setAttribute('data-val', finalVal);
+          dice.classList.remove('rolling');
+          isRolling = false;
+          status.innerHTML = `Dau: <strong>${finalVal}</strong> → Avança el robot ${finalVal}!`;
+          playBeep(600, 0.15);
+          advanceRobot(finalVal);
+        }
+      }, 50);
+    }
+
+    // Avançar el robot corresponent
+    function advanceRobot(robotIndex) {
+      const idx = robotIndex - 1;
+      positions[idx]++;
+
+      const robotEl = document.getElementById(`robot-${robotIndex}`);
+      robotEl.classList.add('highlight');
+      setTimeout(() => robotEl.classList.remove('highlight'), 400);
+
+      const maxPct = 88; 
+      const pct = Math.min((positions[idx] / STEPS_TO_WIN) * maxPct, maxPct);
+      robotEl.style.left = pct + '%';
+
+      if (positions[idx] >= STEPS_TO_WIN) {
+        gameOver = true;
+        setTimeout(() => {
+          document.getElementById('winnerText').innerText = `🏆 Ha guanyat el Robot ${robotIndex}! 🏆`;
+          document.getElementById('winModal').classList.add('active');
+          playBeep(800, 0.4);
+        }, 500);
+      }
+    }
+
+    // Reiniciar joc
+    function resetGame() {
+      positions = Array(TOTAL_ROBOTS).fill(0);
+      gameOver = false;
+      isRolling = false;
+
+      for (let i = 1; i <= TOTAL_ROBOTS; i++) {
+        const robotEl = document.getElementById(`robot-${i}`);
+        robotEl.style.left = '0%';
+      }
+
+      document.getElementById('dice').setAttribute('data-val', '1');
+      document.getElementById('diceStatus').innerText = 'Clica el dau per començar!';
+      document.getElementById('winModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>
