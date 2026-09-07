@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simuladors de probabilitat</title>
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --accent: #b08928;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #212529;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px 20px 0 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      flex: 1;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--primary);
+      font-size: 2rem;
+      letter-spacing: -0.5px;
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 25px;
+      perspective: 1200px;
+    }
+
+    .tool-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 22px 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #e9ecef;
+      text-align: center;
+    }
+
+    .stage {
+      height: 175px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 900px;
+      position: relative;
+      margin: 10px 0;
+    }
+
+    /* ------------------- MONEDA (CARA DE PERSONA I CREU 'X') ------------------- */
+    .coin-3d {
+      width: 115px;
+      height: 115px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.3, 1);
+    }
+
+    .coin-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        inset 0 0 0 4px #8c6d23,
+        inset 0 0 0 7px #ffd166,
+        inset 0 0 14px rgba(0,0,0,0.45),
+        0 10px 20px rgba(0,0,0,0.2);
+      border: 2px dashed rgba(95, 68, 8, 0.6);
+    }
+
+    .coin-front {
+      background: radial-gradient(circle at 35% 35%, #fff1b0, #d4a737 60%, #9e7519 100%);
+      color: #573e05;
+    }
+
+    .coin-back {
+      background: radial-gradient(circle at 35% 35%, #fff1b0, #cfa02f 60%, #8c640f 100%);
+      color: #573e05;
+      transform: rotateY(180deg);
+    }
+
+    .coin-svg {
+      width: 58px;
+      height: 58px;
+      fill: #573e05;
+      stroke: #573e05;
+      filter: drop-shadow(1px 1px 0 rgba(255,255,255,0.7));
+    }
+
+    .coin-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
+    }
+
+    /* ------------------- DAU 3D ------------------- */
+    .dice-3d {
+      width: 76px;
+      height: 76px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-25deg) rotateY(-35deg);
+      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.3, 1);
+    }
+    .dice-face {
+      position: absolute;
+      width: 76px;
+      height: 76px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #dcdcdc;
+      display: grid;
+      padding: 9px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .dot {
+      width: 13px;
+      height: 13px;
+      background-color: #2b2b2b;
+      border-radius: 50%;
+      justify-self: center;
+      align-self: center;
+    }
+    .df-front  { transform: rotateY(0deg) translateZ(38px); display: flex; justify-content: center; align-items: center; }
+    .df-front .dot { width: 17px; height: 17px; background: #d90429; }
+    
+    .df-back   { transform: rotateY(180deg) translateZ(38px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    
+    .df-right  { transform: rotateY(90deg) translateZ(38px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .df-right .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-right .dot:nth-child(2) { grid-area: 2 / 2; }
+    .df-right .dot:nth-child(3) { grid-area: 3 / 3; }
+    
+    .df-left   { transform: rotateY(-90deg) translateZ(38px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    
+    .df-top    { transform: rotateX(90deg) translateZ(38px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+    .df-top .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-top .dot:nth-child(2) { grid-area: 1 / 3; }
+    .df-top .dot:nth-child(3) { grid-area: 2 / 2; }
+    .df-top .dot:nth-child(4) { grid-area: 3 / 1; }
+    .df-top .dot:nth-child(5) { grid-area: 3 / 3; }
+
+    /* Cara del 2 amb els dos punts en diagonal */
+    .df-bottom { 
+      transform: rotateX(-90deg) translateZ(38px); 
+      grid-template-columns: 1fr 1fr; 
+      grid-template-rows: 1fr 1fr; 
+    }
+    .df-bottom .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-bottom .dot:nth-child(2) { grid-area: 2 / 2; }
+
+    /* ------------------- BOSSA TRANSLÚCIDA AMB BOLES VISIBLES ------------------- */
+    .bag-container {
+      width: 125px;
+      height: 130px;
+      position: relative;
+      cursor: pointer;
+    }
+    .bag-body {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 40% 30%, rgba(224, 169, 109, 0.45), rgba(156, 102, 52, 0.7));
+      backdrop-filter: blur(2px);
+      border: 2px solid rgba(140, 90, 40, 0.5);
+      border-radius: 45% 45% 50% 50% / 60% 60% 40% 40%;
+      box-shadow: inset 0 -6px 14px rgba(0,0,0,0.25), 0 8px 18px rgba(0,0,0,0.15);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s;
+    }
+    .bag-tie {
+      width: 46px;
+      height: 10px;
+      background: #5c3412;
+      position: absolute;
+      top: 10px;
+      border-radius: 5px;
+      z-index: 4;
+    }
+
+    .inside-balls {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .mini-ball {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      position: absolute;
+      box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), inset 2px 2px 5px rgba(255,255,255,0.4), 0 3px 6px rgba(0,0,0,0.2);
+    }
+    .mini-ball.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91818); }
+    .mini-ball.blue { background: radial-gradient(circle at 30% 30%, #4ea8de, #0056b3); }
+
+    .b-pos1 { bottom: 20px; left: 24px; }  /* Vermella */
+    .b-pos2 { bottom: 18px; left: 51px; }  /* Blava */
+    .b-pos3 { bottom: 22px; right: 22px; } /* Vermella */
+    .b-pos4 { bottom: 42px; left: 36px; }  /* Vermella */
+    .b-pos5 { bottom: 40px; right: 35px; } /* Blava */
+
+    .ball-extract {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      position: absolute;
+      top: 45px;
+      left: 38px;
+      opacity: 0;
+      z-index: 10;
+      transform: scale(0.3) translateY(0);
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: inset -6px -6px 12px rgba(0,0,0,0.4), inset 6px 6px 12px rgba(255,255,255,0.4), 0 8px 16px rgba(0,0,0,0.3);
+    }
+    .ball-extract.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91818); }
+    .ball-extract.blue { background: radial-gradient(circle at 30% 30%, #4ea8de, #0056b3); }
+    .ball-extract.pop {
+      opacity: 1;
+      transform: scale(1.15) translateY(-70px);
+    }
+
+    /* Controls */
+    .controls { margin-top: 8px; }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s, transform 0.1s;
+      margin: 3px;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn:hover { background: #1b4332; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #495057; }
+
+    .progress {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .history-chips {
+      min-height: 38px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .chip {
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: #e9ecef;
+      color: #333;
+    }
+    .chip.red { background: #f8d7da; color: #842029; }
+    .chip.blue { background: #cfe2ff; color: #084298; }
+
+    .summary-box {
+      font-size: 0.85rem;
+      text-align: left;
+      background: #f8f9fa;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+      min-height: 65px;
+      border: 1px solid #e9ecef;
+    }
+
+    /* Peu de pàgina */
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #495057;
+      border-top: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Simuladors de probabilitat</h1>
+  </header>
+
+  <div class="tools-grid">
+    <!-- Moneda -->
+    <div class="tool-card">
+      <div>
+        <h3>🪙 Moneda</h3>
+        <div class="stage">
+          <div class="coin-3d" id="coin-mesh">
+            <div class="coin-face coin-front">
+              <svg class="coin-svg" viewBox="0 0 24 24">
+                <path d="M12 2a5 5 0 0 0-5 5c0 1.95 1.12 3.63 2.76 4.46C7.03 12.48 5 15.02 5 18v2h14v-2c0-2.98-2.03-5.52-4.76-6.54C15.88 10.63 17 8.95 17 7a5 5 0 0 0-5-5zm0 2c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 8c3.31 0 6 2.69 6 6H6c0-3.31 2.69-6 6-6z"/>
+              </svg>
+              <div class="coin-label">CARA</div>
+            </div>
+            <div class="coin-face coin-back">
+              <svg class="coin-svg" viewBox="0 0 24 24">
+                <path stroke-width="2.8" stroke-linecap="round" d="M6 6L18 18M6 18L18 6"/>
+              </svg>
+              <div class="coin-label">CREU</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="progress" id="coin-count">Llençaments: 0 / 10</div>
+        <div class="controls">
+          <button class="btn" onclick="flipCoin()">Llençar</button>
+          <button class="btn btn-secondary" onclick="run10(flipCoin, 'coin')">Fer-ne 10</button>
+          <button class="btn btn-secondary" onclick="reset('coin')">Reiniciar</button>
+        </div>
+        <div class="history-chips" id="coin-history"></div>
+        <div class="summary-box" id="coin-summary">Fes clic a "Llençar" per començar.</div>
+      </div>
+    </div>
+
+    <!-- Dau -->
+    <div class="tool-card">
+      <div>
+        <h3>🎲 Dau</h3>
+        <div class="stage">
+          <div class="dice-3d" id="dice-mesh">
+            <div class="dice-face df-front"><span class="dot"></span></div>
+            <div class="dice-face df-back">
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="dice-face df-right">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="dice-face df-left">
+              <span class="dot"></span><span class="dot"></span>
+            </div>
+            <div class="dice-face df-top">
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <!-- Cara del 2 corregida amb dos punts en diagonal -->
+            <div class="dice-face df-bottom">
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="progress" id="dice-count">Tirades: 0 / 10</div>
+        <div class="controls">
+          <button class="btn" onclick="rollDice()">Tirar</button>
+          <button class="btn btn-secondary" onclick="run10(rollDice, 'dice')">Fer-ne 10</button>
+          <button class="btn btn-secondary" onclick="reset('dice')">Reiniciar</button>
+        </div>
+        <div class="history-chips" id="dice-history"></div>
+        <div class="summary-box" id="dice-summary">Fes clic a "Tirar" per llançar el dau.</div>
+      </div>
+    </div>
+
+    <!-- Bossa -->
+    <div class="tool-card">
+      <div>
+        <h3>🎒 Bossa (3 vermelles, 2 blaves)</h3>
+        <div class="stage">
+          <div class="bag-container" onclick="drawBall()">
+            <div class="bag-body" id="bag-body">
+              <div class="bag-tie"></div>
+              <div class="inside-balls">
+                <div class="mini-ball red b-pos1"></div>
+                <div class="mini-ball blue b-pos2"></div>
+                <div class="mini-ball red b-pos3"></div>
+                <div class="mini-ball red b-pos4"></div>
+                <div class="mini-ball blue b-pos5"></div>
+              </div>
+              <div class="ball-extract" id="ball-mesh"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="progress" id="bag-count">Extraccions: 0 / 10</div>
+        <div class="controls">
+          <button class="btn" onclick="drawBall()">Treure bola</button>
+          <button class="btn btn-secondary" onclick="run10(drawBall, 'bag')">Fer-ne 10</button>
+          <button class="btn btn-secondary" onclick="reset('bag')">Reiniciar</button>
+        </div>
+        <div class="history-chips" id="bag-history"></div>
+        <div class="summary-box" id="bag-summary">Fes clic per extreure una bola a l'atzar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  PD5 PCMAT - Creat per Oriol Soler
+</footer>
+
+<script>
+  const data = {
+    coin: { count: 0, results: [], totalRot: 0 },
+    dice: { count: 0, results: [] },
+    bag: { count: 0, results: [] }
+  };
+
+  const diceRotations = {
+    1: { x: 0,   y: 0 },
+    2: { x: 90,  y: 0 },
+    3: { x: 0,   y: -90 },
+    4: { x: 0,   y: 90 },
+    5: { x: -90, y: 0 },
+    6: { x: 0,   y: 180 }
+  };
+
+  function flipCoin() {
+    if (data.coin.count >= 10) return;
+    const isCara = Math.random() < 0.5;
+    const result = isCara ? 'Cara' : 'Creu';
+
+    data.coin.count++;
+    data.coin.results.push(result);
+
+    data.coin.totalRot += 1440 + (isCara ? 0 : 180);
+    const mesh = document.getElementById('coin-mesh');
+    mesh.style.transform = `rotateY(${data.coin.totalRot}deg) translateY(-25px) scale(1.1)`;
+    
+    setTimeout(() => {
+      mesh.style.transform = `rotateY(${data.coin.totalRot}deg) translateY(0px) scale(1)`;
+    }, 600);
+
+    updateView('coin');
+  }
+
+  function rollDice() {
+    if (data.dice.count >= 10) return;
+    const res = Math.floor(Math.random() * 6) + 1;
+
+    data.dice.count++;
+    data.dice.results.push(res);
+
+    const rot = diceRotations[res];
+    const mesh = document.getElementById('dice-mesh');
+    
+    mesh.style.transform = `scale(1.2) rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
+    setTimeout(() => {
+      mesh.style.transform = `scale(1) rotateX(${rot.x}deg) rotateY(${rot.y}deg)`;
+    }, 600);
+
+    updateView('dice');
+  }
+
+  function drawBall() {
+    if (data.bag.count >= 10) return;
+    const pool = ['Vermella', 'Vermella', 'Vermella', 'Blava', 'Blava'];
+    const res = pool[Math.floor(Math.random() * pool.length)];
+
+    data.bag.count++;
+    data.bag.results.push(res);
+
+    const ball = document.getElementById('ball-mesh');
+    const bag = document.getElementById('bag-body');
+    
+    ball.className = 'ball-extract ' + (res === 'Vermella' ? 'red' : 'blue');
+    bag.style.transform = 'scale(0.94) rotate(-5deg)';
+    
+    setTimeout(() => {
+      ball.classList.add('pop');
+      bag.style.transform = 'scale(1) rotate(0deg)';
+    }, 100);
+
+    setTimeout(() => {
+      ball.classList.remove('pop');
+    }, 900);
+
+    updateView('bag');
+  }
+
+  function run10(fn, type) {
+    reset(type);
+    let i = 0;
+    const interval = setInterval(() => {
+      fn();
+      i++;
+      if (i >= 10) clearInterval(interval);
+    }, 380);
+  }
+
+  function updateView(type) {
+    const item = data[type];
+    document.getElementById(`${type}-count`).textContent = `Total: ${item.count} / 10`;
+
+    const chipsDiv = document.getElementById(`${type}-history`);
+    chipsDiv.innerHTML = '';
+    item.results.forEach(r => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      if (r === 'Vermella') chip.classList.add('red');
+      if (r === 'Blava') chip.classList.add('blue');
+      chip.textContent = r;
+      chipsDiv.appendChild(chip);
+    });
+
+    const counts = {};
+    item.results.forEach(r => counts[r] = (counts[r] || 0) + 1);
+
+    let summary = '';
+    for (const [k, v] of Object.entries(counts)) {
+      const pct = ((v / item.count) * 100).toFixed(0);
+      summary += `• <strong>${k}</strong>: ${v} cops (${pct}%)<br>`;
+    }
+    if (item.count === 10) summary += '✨ <em>10 repeticions assolides!</em>';
+    document.getElementById(`${type}-summary`).innerHTML = summary;
+  }
+
+  function reset(type) {
+    data[type].count = 0;
+    data[type].results = [];
+    document.getElementById(`${type}-count`).textContent = `Total: 0 / 10`;
+    document.getElementById(`${type}-history`).innerHTML = '';
+    document.getElementById(`${type}-summary`).textContent = 'Preparat per començar.';
+
+    if (type === 'coin') {
+      data.coin.totalRot = 0;
+      document.getElementById('coin-mesh').style.transform = 'rotateY(0deg)';
+    }
+    if (type === 'dice') {
+      document.getElementById('dice-mesh').style.transform = 'rotateX(-25deg) rotateY(-35deg)';
+    }
+  }
+</script>
+
+</body>
+</html>
