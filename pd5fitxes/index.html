@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Joc de les Fitxes | Probabilitat</title>
+  <title>Joc de les fitxes | Probabilitat</title>
   <style>
     :root {
       --primary-red: #d32f2f;
@@ -276,20 +276,20 @@
     <canvas id="confetti"></canvas>
 
     <header>
-      <h1>Joc de les Fitxes</h1>
-      <div class="rules-banner">Objectiu: Primer a 10 punts 🏆</div>
+      <h1>Joc de les fitxes</h1>
+      <div class="rules-banner">Objectiu: Primer/a que sumi 10 punts 🏆</div>
     </header>
 
     <!-- Marcador -->
     <div class="scoreboard">
       <div class="player-card jugador-a">
-        <div class="player-title">JUGADOR A</div>
+        <div class="player-title">JUGADOR/A A</div>
         <div class="target-info">Guanya amb Vermell + Vermell</div>
         <div class="score" id="scoreA">0</div>
       </div>
 
       <div class="player-card jugador-b">
-        <div class="player-title">JUGADOR B</div>
+        <div class="player-title">JUGADOR/A B</div>
         <div class="target-info">Guanya amb Vermell + Blau</div>
         <div class="score" id="scoreB">0</div>
       </div>
@@ -345,7 +345,7 @@
 
     <!-- Modal Guanyador -->
     <div class="winner-overlay" id="winnerModal">
-      <div class="winner-text" id="winnerText">Ha guanyat el Jugador A! 🎉</div>
+      <div class="winner-text" id="winnerText">Ha guanyat el jugador/a A! 🎉</div>
       <button class="btn-main" onclick="reiniciarPartida()">Tornar a jugar</button>
     </div>
   </div>
@@ -447,10 +447,10 @@
         const text = document.getElementById('winnerText');
         
         if (scoreA >= 10) {
-          text.innerText = "🎉 Ha guanyat el JUGADOR A! (10 punts)";
+          text.innerText = "🎉 Ha guanyat el JUGADOR/A A! (10 punts)";
           text.style.color = "var(--primary-red)";
         } else {
-          text.innerText = "🎉 Ha guanyat el JUGADOR B! (10 punts)";
+          text.innerText = "🎉 Ha guanyat el JUGADOR/A B! (10 punts)";
           text.style.color = "var(--primary-blue)";
         }
         
