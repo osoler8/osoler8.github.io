@@ -3,200 +3,252 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cursa de Robots amb un Dau</title>
+  <title>Cursa de robots amb daus</title>
   <style>
     :root {
-      --lane-1: #f39c12;
-      --lane-2: #2980b9;
-      --lane-3: #16a085;
-      --lane-4: #8e44ad;
-      --lane-5: #e67e22;
-      --lane-6: #e74c3c;
+      --bg-main: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-dark: #1e293b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       user-select: none;
     }
 
     body {
-      background: linear-gradient(135deg, #eef2f7 0%, #dbe3ed 100%);
-      min-height: 100vh;
+      background: var(--bg-main);
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 20px 10px;
+      padding: 10px 14px;
+      overflow: hidden;
     }
 
+    /* Barra superior compacta */
     header {
-      text-align: center;
-      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 12px;
+      margin-bottom: 8px;
     }
 
-    h1 {
-      font-size: 2rem;
-      color: #2c3e50;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+    .title-area h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .instructions {
-      background: #ffffff;
-      padding: 10px 20px;
+    .mode-switch {
+      display: flex;
+      background: #e2e8f0;
+      padding: 3px;
+      border-radius: 24px;
+      gap: 3px;
+    }
+
+    .btn-mode {
+      background: transparent;
+      border: none;
+      padding: 6px 14px;
       border-radius: 20px;
-      margin-top: 8px;
-      font-size: 0.95rem;
-      color: #555;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .game-container {
-      width: 100%;
-      max-width: 900px;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      position: relative;
+    .btn-mode.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Cos principal en 2 columnes */
+    .main-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 12px;
+      min-height: 0;
     }
 
     /* Pista de carreres */
-    .track {
-      position: relative;
+    .track-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      border-right: 28px repeating-linear-gradient(
+      position: relative;
+      border-right: 24px repeating-linear-gradient(
         45deg,
-        #000,
-        #000 10px,
-        #fff 10px,
-        #fff 20px
+        #0f172a,
+        #0f172a 8px,
+        #f8fafc 8px,
+        #f8fafc 16px
       );
-      padding-right: 10px;
+    }
+
+    .track {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
+      height: 100%;
     }
 
     .lane {
       display: flex;
       align-items: center;
-      height: 60px;
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 8px;
       position: relative;
-      border-bottom: 2px dashed #cbd5e1;
+      border-bottom: 1px dashed #cbd5e1;
+      height: 100%;
+      min-height: 24px;
     }
 
     .lane-badge {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
+      width: 32px;
+      height: 80%;
+      max-height: 34px;
+      border-radius: 6px;
       color: white;
-      font-size: 1.5rem;
+      font-size: 1rem;
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-left: 8px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      margin-left: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
       z-index: 2;
+      flex-shrink: 0;
     }
-
-    .lane-1 { background-color: var(--lane-1); }
-    .lane-2 { background-color: var(--lane-2); }
-    .lane-3 { background-color: var(--lane-3); }
-    .lane-4 { background-color: var(--lane-4); }
-    .lane-5 { background-color: var(--lane-5); }
-    .lane-6 { background-color: var(--lane-6); }
 
     .lane-field {
       flex: 1;
       height: 100%;
       position: relative;
-      margin-left: 10px;
+      margin-left: 8px;
     }
 
     /* Robot */
     .robot {
-      width: 50px;
-      height: 50px;
+      height: 90%;
+      aspect-ratio: 1/1;
       position: absolute;
-      top: 5px;
+      top: 5%;
       left: 0%;
-      transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+      transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18));
+      z-index: 3;
     }
 
     .robot.highlight {
-      animation: bounce 0.4s ease;
+      animation: pulse 0.35s ease;
     }
 
-    @keyframes bounce {
+    @keyframes pulse {
       0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.25) translateY(-6px); }
+      50% { transform: scale(1.3) translateY(-4px); }
     }
 
-    /* Tauler de control i Dau */
-    .controls {
+    /* Panell lateral de control */
+    .side-panel {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
       display: flex;
-      justify-content: space-around;
+      flex-direction: column;
       align-items: center;
-      margin-top: 25px;
-      padding-top: 15px;
-      border-top: 2px solid #edf2f7;
+      justify-content: space-between;
     }
 
-    .dice-section {
+    .panel-info {
+      text-align: center;
+      width: 100%;
+    }
+
+    .instructions-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    /* Secció Daus */
+    .dice-action-area {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
+      margin: 10px 0;
     }
 
-    /* Dau interactiu */
-    .dice {
-      width: 80px;
-      height: 80px;
-      background: white;
+    .dice-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 6px;
       border-radius: 16px;
-      box-shadow: 0 8px 0 #cbd5e1, 0 15px 20px rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s;
+    }
+
+    .dice-container:active {
+      transform: scale(0.97);
+    }
+
+    .dice-plus {
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #94a3b8;
+    }
+
+    .dice {
+      width: 62px;
+      height: 62px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 6px 0 #cbd5e1, 0 10px 15px rgba(0, 0, 0, 0.1);
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      padding: 10px;
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
+      padding: 8px;
       border: 2px solid #e2e8f0;
     }
 
-    .dice:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 0 #cbd5e1, 0 18px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .dice:active {
-      transform: translateY(4px);
-      box-shadow: 0 4px 0 #cbd5e1, 0 8px 12px rgba(0, 0, 0, 0.15);
-    }
-
     .dice.rolling {
-      animation: rollAnimation 0.5s ease infinite;
-      pointer-events: none;
+      animation: diceRoll 0.45s infinite linear;
     }
 
-    @keyframes rollAnimation {
-      0% { transform: rotate(0deg) scale(0.9); }
-      50% { transform: rotate(180deg) scale(1.1); }
-      100% { transform: rotate(360deg) scale(0.9); }
+    @keyframes diceRoll {
+      0% { transform: rotate(0deg) scale(0.95); }
+      50% { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(0.95); }
     }
 
     .dot {
-      width: 14px;
-      height: 14px;
-      background-color: #2d3748;
+      width: 11px;
+      height: 11px;
+      background-color: #0f172a;
       border-radius: 50%;
       align-self: center;
       justify-self: center;
@@ -211,29 +263,53 @@
     .dice[data-val="6"] .d1, .dice[data-val="6"] .d3, .dice[data-val="6"] .d4, .dice[data-val="6"] .d6, .dice[data-val="6"] .d7, .dice[data-val="6"] .d9 { opacity: 1; }
 
     .status-badge {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      color: #334155;
+      color: #0f172a;
       background: #f1f5f9;
-      padding: 6px 16px;
-      border-radius: 12px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      text-align: center;
+      width: 100%;
+      border: 1px solid #e2e8f0;
     }
 
-    .btn-reset {
-      background-color: #3b82f6;
-      color: white;
+    /* Botó llançar & reiniciar */
+    .panel-actions {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .btn {
       border: none;
-      padding: 10px 20px;
-      font-size: 1rem;
+      padding: 10px;
+      font-size: 0.95rem;
       font-weight: 700;
       border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
-      transition: background 0.2s;
+      transition: all 0.15s;
+    }
+
+    .btn-roll {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-roll:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-reset {
+      background: #f1f5f9;
+      color: #64748b;
     }
 
     .btn-reset:hover {
-      background-color: #2563eb;
+      background: #e2e8f0;
+      color: #334155;
     }
 
     /* Modal Guanyador */
@@ -241,13 +317,13 @@
       display: none;
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.75);
-      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 14px;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       color: white;
-      z-index: 10;
+      z-index: 20;
     }
 
     .modal.active {
@@ -256,56 +332,95 @@
     }
 
     @keyframes popIn {
-      from { opacity: 0; transform: scale(0.8); }
+      from { opacity: 0; transform: scale(0.85); }
       to { opacity: 1; transform: scale(1); }
     }
 
     .modal h2 {
-      font-size: 2.2rem;
-      margin-bottom: 12px;
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
 
+    /* Peu de pàgina */
     footer {
-      margin-top: 25px;
-      font-size: 0.95rem;
-      color: #475569;
+      font-size: 0.8rem;
+      color: #64748b;
       font-weight: 600;
       text-align: center;
+      padding-top: 6px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        height: auto;
+        overflow-y: auto;
+      }
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .track {
+        min-height: 400px;
+      }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🏁 Cursa de Robots amb un Dau 🏁</h1>
-    <div class="instructions">
-      En clicar, el dau dona un número de l'<strong>1 al 6</strong>. Només avança el robot corresponent!
+    <div class="title-area">
+      <h1>🏁 Cursa de robots</h1>
+    </div>
+    <div class="mode-switch">
+      <button id="btnMode1" class="btn-mode active" onclick="setDiceCount(1)">1 dau (6 robots)</button>
+      <button id="btnMode2" class="btn-mode" onclick="setDiceCount(2)">2 daus (12 robots)</button>
     </div>
   </header>
 
-  <div class="game-container">
-    <div class="track" id="track">
-      <!-- Generat dinàmicament per JS -->
+  <div class="main-layout">
+    <!-- Tauler de carreres -->
+    <div class="track-card">
+      <div class="track" id="track"></div>
+      
+      <!-- Modal victòria -->
+      <div class="modal" id="winModal">
+        <h2 id="winnerText">🏆 Guanyador! 🏆</h2>
+        <p style="margin-bottom: 20px; font-size: 1.05rem;">El robot ha creuat la línia de meta!</p>
+        <button class="btn btn-roll" onclick="resetGame()">Tornar a jugar</button>
+      </div>
     </div>
 
-    <div class="controls">
-      <div class="dice-section">
-        <div class="dice" id="dice" data-val="1" onclick="rollDice()">
-          <div class="dot d1"></div><div></div><div class="dot d3"></div>
-          <div class="dot d4"></div><div class="dot d5"></div><div class="dot d6"></div>
-          <div class="dot d7"></div><div></div><div class="dot d9"></div>
+    <!-- Tauler de comandament lateral -->
+    <div class="side-panel">
+      <div class="panel-info">
+        <div class="instructions-box" id="instructionsText">
+          En clicar, el dau mostrarà un número de l'<strong>1 al 6</strong>. Només avançarà el robot corresponent.
         </div>
+      </div>
+
+      <div class="dice-action-area">
+        <div class="dice-container" onclick="rollDice()">
+          <div class="dice" id="dice1" data-val="1">
+            <div class="dot d1"></div><div></div><div class="dot d3"></div>
+            <div class="dot d4"></div><div class="dot d5"></div><div class="dot d6"></div>
+            <div class="dot d7"></div><div></div><div class="dot d9"></div>
+          </div>
+
+          <span class="dice-plus" id="dicePlus" style="display: none;">+</span>
+
+          <div class="dice" id="dice2" data-val="1" style="display: none;">
+            <div class="dot d1"></div><div></div><div class="dot d3"></div>
+            <div class="dot d4"></div><div class="dot d5"></div><div class="dot d6"></div>
+            <div class="dot d7"></div><div></div><div class="dot d9"></div>
+          </div>
+        </div>
+
         <div class="status-badge" id="diceStatus">Clica el dau per començar!</div>
       </div>
 
-      <button class="btn-reset" onclick="resetGame()">Reiniciar cursa</button>
-    </div>
-
-    <!-- Modal de victòria -->
-    <div class="modal" id="winModal">
-      <h2 id="winnerText">🏆 Ha guanyat el Robot 1! 🏆</h2>
-      <p style="margin-bottom: 20px;">Enhorabona al campió!</p>
-      <button class="btn-reset" onclick="resetGame()">Tornar a jugar</button>
+      <div class="panel-actions">
+        <button class="btn btn-roll" onclick="rollDice()">🎲 Llançar dau</button>
+        <button class="btn btn-reset" onclick="resetGame()">Reiniciar cursa</button>
+      </div>
     </div>
   </div>
 
@@ -314,13 +429,19 @@
   </footer>
 
   <script>
-    const TOTAL_ROBOTS = 6;
+    const COLORS = [
+      '#ea580c', '#0284c7', '#16a34a', '#9333ea', '#f59e0b', '#dc2626',
+      '#059669', '#475569', '#d97706', '#0d9488', '#2563eb', '#7c3aed'
+    ];
+
+    let diceCount = 1;
+    let totalRobots = 6;
     const STEPS_TO_WIN = 8;
-    let positions = Array(TOTAL_ROBOTS).fill(0);
+    let positions = [];
     let isRolling = false;
     let gameOver = false;
 
-    // So senzill sintetitzat amb Web Audio API
+    // So generat per Web Audio API
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playBeep(freq, duration) {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -328,7 +449,7 @@
       const gain = audioCtx.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -336,109 +457,153 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    // Gràfic SVG del robot
     function getRobotSVG() {
       return `
       <svg viewBox="0 0 100 100" width="100%" height="100%">
-        <!-- Eruga / Rodes -->
-        <rect x="15" y="75" width="70" height="20" rx="8" fill="#334155"/>
-        <circle cx="28" cy="85" r="5" fill="#94a3b8"/>
-        <circle cx="50" cy="85" r="5" fill="#94a3b8"/>
-        <circle cx="72" cy="85" r="5" fill="#94a3b8"/>
-        <!-- Cos -->
-        <rect x="22" y="38" width="56" height="40" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
-        <!-- Pantalla / Ulls -->
-        <rect x="28" y="44" width="44" height="24" rx="6" fill="#0f172a"/>
-        <ellipse cx="40" cy="56" rx="5" ry="6" fill="#38bdf8"/>
-        <ellipse cx="60" cy="56" rx="5" ry="6" fill="#38bdf8"/>
-        <!-- Antena -->
+        <rect x="15" y="74" width="70" height="20" rx="8" fill="#334155"/>
+        <circle cx="28" cy="84" r="5" fill="#94a3b8"/>
+        <circle cx="50" cy="84" r="5" fill="#94a3b8"/>
+        <circle cx="72" cy="84" r="5" fill="#94a3b8"/>
+        <rect x="20" y="38" width="60" height="38" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>
+        <rect x="28" y="44" width="44" height="22" rx="6" fill="#0f172a"/>
+        <ellipse cx="40" cy="55" rx="5" ry="6" fill="#38bdf8"/>
+        <ellipse cx="60" cy="55" rx="5" ry="6" fill="#38bdf8"/>
         <line x1="50" y1="38" x2="50" y2="20" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
         <circle cx="50" cy="18" r="5" fill="#ef4444"/>
       </svg>`;
     }
 
-    // Inicialitzar els carrils
-    const track = document.getElementById('track');
-    for (let i = 1; i <= TOTAL_ROBOTS; i++) {
-      const lane = document.createElement('div');
-      lane.className = 'lane';
-      lane.innerHTML = `
-        <div class="lane-badge lane-${i}">${i}</div>
-        <div class="lane-field" id="field-${i}">
-          <div class="robot" id="robot-${i}">
-            ${getRobotSVG()}
-          </div>
-        </div>
-      `;
-      track.appendChild(lane);
+    function setDiceCount(count) {
+      if (isRolling) return;
+      diceCount = count;
+      totalRobots = count === 1 ? 6 : 12;
+
+      document.getElementById('btnMode1').classList.toggle('active', count === 1);
+      document.getElementById('btnMode2').classList.toggle('active', count === 2);
+
+      const d2 = document.getElementById('dice2');
+      const plus = document.getElementById('dicePlus');
+      const info = document.getElementById('instructionsText');
+
+      if (count === 1) {
+        d2.style.display = 'none';
+        plus.style.display = 'none';
+        info.innerHTML = "En clicar, el dau mostrarà un número de l'<strong>1 al 6</strong>. Només avançarà el robot corresponent.";
+      } else {
+        d2.style.display = 'grid';
+        plus.style.display = 'inline';
+        info.innerHTML = "En clicar, es tiren <strong>2 daus</strong>. La <strong>suma</strong> de les dues cares fa avançar el robot corresponent (del 2 al 12).";
+      }
+
+      setupGame();
     }
 
-    // Tirar el dau
+    function setupGame() {
+      positions = Array(totalRobots).fill(0);
+      gameOver = false;
+      isRolling = false;
+
+      const track = document.getElementById('track');
+      track.innerHTML = '';
+
+      for (let i = 1; i <= totalRobots; i++) {
+        const lane = document.createElement('div');
+        lane.className = 'lane';
+        const color = COLORS[(i - 1) % COLORS.length];
+
+        lane.innerHTML = `
+          <div class="lane-badge" style="background-color: ${color};">${i}</div>
+          <div class="lane-field" id="field-${i}">
+            <div class="robot" id="robot-${i}">
+              ${getRobotSVG()}
+            </div>
+          </div>
+        `;
+        track.appendChild(lane);
+      }
+
+      document.getElementById('dice1').setAttribute('data-val', '1');
+      document.getElementById('dice2').setAttribute('data-val', '1');
+      document.getElementById('diceStatus').innerText = 'Clica el dau per començar!';
+      document.getElementById('winModal').classList.remove('active');
+    }
+
     function rollDice() {
       if (isRolling || gameOver) return;
       isRolling = true;
 
-      const dice = document.getElementById('dice');
+      const d1 = document.getElementById('dice1');
+      const d2 = document.getElementById('dice2');
       const status = document.getElementById('diceStatus');
-      dice.classList.add('rolling');
-      status.innerText = 'Tirant el dau...';
-      playBeep(400, 0.1);
+
+      d1.classList.add('rolling');
+      if (diceCount === 2) d2.classList.add('rolling');
+
+      status.innerText = 'Tirant...';
+      playBeep(380, 0.08);
 
       let counter = 0;
       const interval = setInterval(() => {
-        dice.setAttribute('data-val', Math.floor(Math.random() * 6) + 1);
+        d1.setAttribute('data-val', Math.floor(Math.random() * 6) + 1);
+        if (diceCount === 2) {
+          d2.setAttribute('data-val', Math.floor(Math.random() * 6) + 1);
+        }
         counter++;
+
         if (counter > 8) {
           clearInterval(interval);
-          const finalVal = Math.floor(Math.random() * 6) + 1;
-          dice.setAttribute('data-val', finalVal);
-          dice.classList.remove('rolling');
+          const val1 = Math.floor(Math.random() * 6) + 1;
+          d1.setAttribute('data-val', val1);
+          d1.classList.remove('rolling');
+
+          let resultNumber = val1;
+
+          if (diceCount === 2) {
+            const val2 = Math.floor(Math.random() * 6) + 1;
+            d2.setAttribute('data-val', val2);
+            d2.classList.remove('rolling');
+            resultNumber = val1 + val2;
+            status.innerHTML = `🎲 <strong>${val1} + ${val2} = ${resultNumber}</strong><br>Avança el robot ${resultNumber}!`;
+          } else {
+            status.innerHTML = `🎲 Ha sortit el <strong>${val1}</strong>!<br>Avança el robot ${val1}!`;
+          }
+
           isRolling = false;
-          status.innerHTML = `Dau: <strong>${finalVal}</strong> → Avança el robot ${finalVal}!`;
           playBeep(600, 0.15);
-          advanceRobot(finalVal);
+          advanceRobot(resultNumber);
         }
-      }, 50);
+      }, 45);
     }
 
-    // Avançar el robot corresponent
     function advanceRobot(robotIndex) {
+      if (robotIndex < 1 || robotIndex > totalRobots) return;
+
       const idx = robotIndex - 1;
       positions[idx]++;
 
       const robotEl = document.getElementById(`robot-${robotIndex}`);
       robotEl.classList.add('highlight');
-      setTimeout(() => robotEl.classList.remove('highlight'), 400);
+      setTimeout(() => robotEl.classList.remove('highlight'), 350);
 
-      const maxPct = 88; 
+      const maxPct = 86;
       const pct = Math.min((positions[idx] / STEPS_TO_WIN) * maxPct, maxPct);
       robotEl.style.left = pct + '%';
 
       if (positions[idx] >= STEPS_TO_WIN) {
         gameOver = true;
         setTimeout(() => {
-          document.getElementById('winnerText').innerText = `🏆 Ha guanyat el Robot ${robotIndex}! 🏆`;
+          document.getElementById('winnerText').innerText = `🏆 Ha guanyat el robot ${robotIndex}! 🏆`;
           document.getElementById('winModal').classList.add('active');
-          playBeep(800, 0.4);
-        }, 500);
+          playBeep(780, 0.35);
+        }, 400);
       }
     }
 
-    // Reiniciar joc
     function resetGame() {
-      positions = Array(TOTAL_ROBOTS).fill(0);
-      gameOver = false;
-      isRolling = false;
-
-      for (let i = 1; i <= TOTAL_ROBOTS; i++) {
-        const robotEl = document.getElementById(`robot-${i}`);
-        robotEl.style.left = '0%';
-      }
-
-      document.getElementById('dice').setAttribute('data-val', '1');
-      document.getElementById('diceStatus').innerText = 'Clica el dau per començar!';
-      document.getElementById('winModal').classList.remove('active');
+      setupGame();
     }
+
+    window.onload = () => setupGame();
   </script>
 </body>
 </html>
