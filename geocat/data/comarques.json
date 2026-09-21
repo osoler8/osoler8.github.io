@@ -1,0 +1,296 @@
+[
+  {
+    "nom": "Alt Camp",
+    "capital": "Valls",
+    "lat": 41.286,
+    "lon": 1.25,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Alt Empordà",
+    "capital": "Figueres",
+    "lat": 42.266,
+    "lon": 2.961,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Alt Penedès",
+    "capital": "Vilafranca del Penedès",
+    "lat": 41.346,
+    "lon": 1.697,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Alt Urgell",
+    "capital": "La Seu d'Urgell",
+    "lat": 42.357,
+    "lon": 1.458,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Alta Ribagorça",
+    "capital": "El Pont de Suert",
+    "lat": 42.408,
+    "lon": 0.741,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Anoia",
+    "capital": "Igualada",
+    "lat": 41.581,
+    "lon": 1.617,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Bages",
+    "capital": "Manresa",
+    "lat": 41.728,
+    "lon": 1.826,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Baix Camp",
+    "capital": "Reus",
+    "lat": 41.156,
+    "lon": 1.107,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Baix Ebre",
+    "capital": "Tortosa",
+    "lat": 40.812,
+    "lon": 0.521,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Baix Empordà",
+    "capital": "La Bisbal d'Empordà",
+    "lat": 41.959,
+    "lon": 3.039,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Baix Llobregat",
+    "capital": "Sant Feliu de Llobregat",
+    "lat": 41.384,
+    "lon": 2.05,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Baix Penedès",
+    "capital": "El Vendrell",
+    "lat": 41.22,
+    "lon": 1.535,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Barcelonès",
+    "capital": "Barcelona",
+    "lat": 41.387,
+    "lon": 2.17,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Berguedà",
+    "capital": "Berga",
+    "lat": 42.104,
+    "lon": 1.846,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Cerdanya",
+    "capital": "Puigcerdà",
+    "lat": 42.432,
+    "lon": 1.927,
+    "prov": "Girona/Lleida"
+  },
+  {
+    "nom": "Conca de Barberà",
+    "capital": "Montblanc",
+    "lat": 41.376,
+    "lon": 1.163,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Garraf",
+    "capital": "Vilanova i la Geltrú",
+    "lat": 41.224,
+    "lon": 1.725,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Garrigues",
+    "capital": "Les Borges Blanques",
+    "lat": 41.522,
+    "lon": 0.869,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Garrotxa",
+    "capital": "Olot",
+    "lat": 42.181,
+    "lon": 2.49,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Gironès",
+    "capital": "Girona",
+    "lat": 41.983,
+    "lon": 2.824,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Maresme",
+    "capital": "Mataró",
+    "lat": 41.539,
+    "lon": 2.444,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Moianès",
+    "capital": "Moià",
+    "lat": 41.812,
+    "lon": 2.097,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Montsià",
+    "capital": "Amposta",
+    "lat": 40.709,
+    "lon": 0.579,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Noguera",
+    "capital": "Balaguer",
+    "lat": 41.791,
+    "lon": 0.805,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Osona",
+    "capital": "Vic",
+    "lat": 41.93,
+    "lon": 2.254,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Pallars Jussà",
+    "capital": "Tremp",
+    "lat": 42.167,
+    "lon": 0.895,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Pallars Sobirà",
+    "capital": "Sort",
+    "lat": 42.411,
+    "lon": 1.129,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Pla d'Urgell",
+    "capital": "Mollerussa",
+    "lat": 41.631,
+    "lon": 0.895,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Pla de l'Estany",
+    "capital": "Banyoles",
+    "lat": 42.119,
+    "lon": 2.766,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Priorat",
+    "capital": "Falset",
+    "lat": 41.145,
+    "lon": 0.82,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Ribera d'Ebre",
+    "capital": "Móra d'Ebre",
+    "lat": 41.092,
+    "lon": 0.641,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Ripollès",
+    "capital": "Ripoll",
+    "lat": 42.201,
+    "lon": 2.191,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Segarra",
+    "capital": "Cervera",
+    "lat": 41.671,
+    "lon": 1.272,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Segrià",
+    "capital": "Lleida",
+    "lat": 41.617,
+    "lon": 0.623,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Selva",
+    "capital": "Santa Coloma de Farners",
+    "lat": 41.864,
+    "lon": 2.663,
+    "prov": "Girona"
+  },
+  {
+    "nom": "Solsonès",
+    "capital": "Solsona",
+    "lat": 41.994,
+    "lon": 1.517,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Tarragonès",
+    "capital": "Tarragona",
+    "lat": 41.118,
+    "lon": 1.244,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Terra Alta",
+    "capital": "Gandesa",
+    "lat": 41.052,
+    "lon": 0.439,
+    "prov": "Tarragona"
+  },
+  {
+    "nom": "Urgell",
+    "capital": "Tàrrega",
+    "lat": 41.646,
+    "lon": 1.14,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Val d'Aran",
+    "capital": "Vielha e Mijaran",
+    "lat": 42.702,
+    "lon": 0.795,
+    "prov": "Lleida"
+  },
+  {
+    "nom": "Vallès Occidental",
+    "capital": "Sabadell / Terrassa",
+    "lat": 41.543,
+    "lon": 2.109,
+    "prov": "Barcelona"
+  },
+  {
+    "nom": "Vallès Oriental",
+    "capital": "Granollers",
+    "lat": 41.608,
+    "lon": 2.288,
+    "prov": "Barcelona"
+  }
+]
