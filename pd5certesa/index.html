@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCMAT PD5 - Escala de Certesa</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- Google Fonts Outfit & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'system-ui', 'sans-serif'],
+                        mono: ['Space Grotesk', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#1d4ed8',
+                            cyan: '#0284c7',
+                            emerald: '#059669',
+                            amber: '#d97706',
+                            rose: '#e11d48',
+                            dark: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(#cbd5e1 0.75px, transparent 0.75px), 
+                radial-gradient(#e2e8f0 0.75px, #f8fafc 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .btn-bento {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.1);
+        }
+        .btn-bento:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0 0 rgba(0, 0, 0, 0.12);
+        }
+        .btn-bento:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .certainty-card {
+            touch-action: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            user-select: none;
+        }
+        .certainty-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+        .certainty-card.selected {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+            transform: scale(1.03);
+            box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.25);
+            background-color: #eff6ff !important;
+        }
+
+        .spectrum-bar-custom {
+            height: 22px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, 
+                #ef4444 0%, 
+                #f97316 20%, 
+                #f59e0b 40%, 
+                #3b82f6 65%, 
+                #10b981 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .pinned-card {
+            position: absolute;
+            transition: left 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.25s ease, transform 0.25s ease;
+            z-index: 10;
+        }
+        .pinned-card:hover {
+            z-index: 40;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        /* --- ANIMACIONS SIMULADES PER A LES TARGETES --- */
+        @keyframes rollDice {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-25deg) scale(1.15) translateY(-3px); }
+            50% { transform: rotate(20deg) scale(0.95); }
+            75% { transform: rotate(-10deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        @keyframes coinFlip {
+            0% { transform: perspective(400px) rotateY(0deg); }
+            50% { transform: perspective(400px) rotateY(180deg) scale(1.2) translateY(-4px); }
+            100% { transform: perspective(400px) rotateY(360deg); }
+        }
+
+        @keyframes sunRise {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4)); }
+            50% { transform: translateY(-4px) scale(1.2); filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8)); }
+        }
+
+        @keyframes cloudRain {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px) scale(1.08); }
+        }
+
+        @keyframes bagShake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-12deg) scale(1.05); }
+            40% { transform: rotate(12deg) scale(1.05); }
+            60% { transform: rotate(-8deg); }
+            80% { transform: rotate(8deg); }
+        }
+
+        @keyframes rainbowGlow {
+            0%, 100% { transform: scale(1); filter: saturate(1); }
+            50% { transform: scale(1.15) translateY(-2px); filter: saturate(1.8) drop-shadow(0 0 6px rgba(56, 189, 248, 0.6)); }
+        }
+
+        @keyframes denyShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px) rotate(-5deg); }
+            40%, 80% { transform: translateX(4px) rotate(5deg); }
+        }
+
+        .anim-dice:hover, .certainty-card.selected .anim-dice {
+            display: inline-block;
+            animation: rollDice 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+        }
+
+        .anim-coin:hover, .certainty-card.selected .anim-coin {
+            display: inline-block;
+            animation: coinFlip 0.8s ease-in-out infinite;
+        }
+
+        .anim-sun:hover, .certainty-card.selected .anim-sun {
+            display: inline-block;
+            animation: sunRise 1.2s ease-in-out infinite;
+        }
+
+        .anim-rain:hover, .certainty-card.selected .anim-rain {
+            display: inline-block;
+            animation: cloudRain 0.9s ease-in-out infinite;
+        }
+
+        .anim-bag:hover, .certainty-card.selected .anim-bag {
+            display: inline-block;
+            animation: bagShake 0.6s ease-in-out infinite;
+        }
+
+        .anim-rainbow:hover, .certainty-card.selected .anim-rainbow {
+            display: inline-block;
+            animation: rainbowGlow 1.2s ease-in-out infinite;
+        }
+
+        .anim-deny:hover, .certainty-card.selected .anim-deny {
+            display: inline-block;
+            animation: denyShake 0.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen text-slate-800 w-full overflow-x-hidden">
+
+    <!-- Barra d'estat de revisió integrada amb l'estil PCMAT PD5 -->
+    <div id="sharedNotice" class="hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white text-xs sm:text-sm font-bold py-2.5 px-4 shadow-md z-50 border-b-2 border-blue-900">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-base backdrop-blur-sm">
+                    <i class="fa-solid fa-graduation-cap text-cyan-300"></i>
+                </span>
+                <span><strong>Tasca entregada, revisió docent:</strong> Estàs veient el treball rebut d'un alumne.</span>
+            </div>
+            <button onclick="clearSharedData()" class="btn-bento bg-white text-blue-900 hover:bg-blue-50 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5 ml-auto sm:ml-0">
+                <i class="fa-solid fa-rotate-left text-blue-600"></i>
+                <span>Restablir activitat buida</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Capçalera Principal -->
+    <header class="bg-white/95 backdrop-blur-md border-b-2 border-slate-200/80 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-md border-b-4 border-blue-800 shrink-0">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-black uppercase tracking-widest text-blue-600">PCMAT PD5</span>
+                    <h1 class="font-extrabold text-xl sm:text-2xl text-slate-900 leading-none">Escala de Certesa</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="generateShareableLink()" class="btn-bento bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl border-b-4 border-emerald-800 flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Enviar tasca</span>
+                </button>
+
+                <button onclick="openEditorModal()" class="btn-bento bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold px-3.5 py-2.5 rounded-xl border border-slate-300 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-600"></i>
+                    <span class="hidden sm:inline">Afirmacions</span>
+                </button>
+
+                <button onclick="resetCards()" class="btn-bento bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold px-3 py-2.5 rounded-xl border border-slate-300 flex items-center gap-1.5" title="Reiniciar activitat">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-5 flex-grow w-full space-y-5 overflow-hidden">
+
+        <!-- Marcador Gran de Progrés i Resultats -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center text-blue-600 text-2xl font-black shrink-0">
+                    <i class="fa-solid fa-cubes-stacked"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Targetes situades</span>
+                    <div class="flex items-baseline gap-2">
+                        <span id="placedCountBig" class="text-3xl font-black text-slate-900 font-mono">0</span>
+                        <span id="totalCountBig" class="text-lg font-bold text-slate-400 font-mono">/ 9</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full mt-1.5 overflow-hidden">
+                        <div id="progressBar" class="bg-blue-600 h-full rounded-full transition-all duration-300 w-0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-2xl font-black shrink-0">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="flex-grow min-w-0">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Puntuació / Encerts</span>
+                    <div class="flex items-baseline gap-2">
+                        <span id="scoreTextBig" class="text-3xl font-black text-emerald-600 font-mono">--</span>
+                        <span id="scoreBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Pendent</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1 truncate">Comprova la teva posició en qualsevol moment</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 border-2 border-slate-200/90 shadow-sm flex flex-col justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Distingeix el tipus</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="p-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 text-xs font-bold flex flex-col">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-calculator"></i> Càlcul</span>
+                        <span class="text-[10px] font-normal text-sky-700 leading-tight mt-0.5">Probabilitat matemàtica exacta</span>
+                    </div>
+                    <div class="p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex flex-col">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-cloud-sun"></i> Estimació</span>
+                        <span class="text-[10px] font-normal text-amber-700 leading-tight mt-0.5">Depèn de factors contextuals</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Eix Continu de Certesa (0% - 100%) -->
+        <section class="bg-white rounded-3xl p-4 sm:p-6 border-2 border-slate-200/90 shadow-sm space-y-4 overflow-hidden">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-blue-600 inline-block animate-pulse"></span>
+                    <h2 class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">EIX CONTINU DE CERTESA (0% → 100%)</h2>
+                </div>
+                <div class="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-xl border border-blue-100 flex items-center gap-1.5">
+                    <i class="fa-regular fa-hand-pointer"></i>
+                    <span>Tria una targeta de sota i fes clic a la línia per situar-la</span>
+                </div>
+            </div>
+
+            <!-- Contenidor de la Línia i Indicadors amb padding de seguretat -->
+            <div class="pt-2 pb-4 select-none px-1 sm:px-2">
+                <div id="spectrumTrack" onclick="handleTrackClick(event)" class="spectrum-bar-custom cursor-crosshair group relative w-full">
+                    <div id="aimIndicator" class="hidden absolute top-0 -translate-x-1/2 -top-2 w-1 h-8 bg-slate-900 pointer-events-none rounded-full shadow-lg z-20">
+                        <span id="aimValue" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow">50%</span>
+                    </div>
+                </div>
+
+                <!-- Percentatges de referència adaptats a mòbil -->
+                <div class="relative w-full h-10 mt-2 text-[11px] sm:text-xs font-bold">
+                    <div class="absolute left-0 flex flex-col items-start">
+                        <div class="h-2.5 w-0.5 bg-rose-500 mb-1 ml-0.5"></div>
+                        <span class="text-rose-600 font-black">0% <span class="hidden sm:inline">Impossible</span></span>
+                    </div>
+                    <div class="absolute left-[25%] -translate-x-1/2 flex flex-col items-center">
+                        <div class="h-2.5 w-0.5 bg-orange-400 mb-1"></div>
+                        <span class="text-slate-600 font-mono">25%</span>
+                    </div>
+                    <div class="absolute left-[50%] -translate-x-1/2 flex flex-col items-center">
+                        <div class="h-3.5 w-1 bg-amber-500 mb-1 rounded-full"></div>
+                        <span class="text-slate-900 font-extrabold whitespace-nowrap">Equitatiu (50%)</span>
+                    </div>
+                    <div class="absolute left-[75%] -translate-x-1/2 flex flex-col items-center">
+                        <div class="h-2.5 w-0.5 bg-blue-500 mb-1"></div>
+                        <span class="text-slate-600 font-mono">75%</span>
+                    </div>
+                    <div class="absolute right-0 flex flex-col items-end">
+                        <div class="h-2.5 w-0.5 bg-emerald-500 mb-1 mr-0.5"></div>
+                        <span class="text-emerald-600 font-black">100% <span class="hidden sm:inline">Segur</span></span>
+                    </div>
+                </div>
+
+                <!-- Zona de Targetes Situades amb contenció de desbordament -->
+                <div id="pinnedCardsArea" class="relative w-full min-h-[220px] mt-4 p-2 rounded-2xl bg-slate-50/70 border-2 border-dashed border-slate-200 overflow-hidden">
+                    <!-- S'injecten amb JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Banc de Targetes Pendents -->
+        <section class="bg-white rounded-3xl p-5 sm:p-6 border-2 border-slate-200/90 shadow-sm space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-box-archive text-blue-600 text-lg"></i>
+                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base uppercase tracking-wider">
+                        Banc de targetes pendents
+                    </h3>
+                    <span id="remainingBadge" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-black font-mono">9</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-xs text-slate-500 flex-wrap">
+                    <span class="hidden sm:inline">Filtra:</span>
+                    <button onclick="filterBank('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg font-bold bg-blue-600 text-white">Totes</button>
+                    <button onclick="filterBank('calcul')" id="btnFilterCalcul" class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Targetes de càlcul</button>
+                    <button onclick="filterBank('estimacio')" id="btnFilterEstimacio" class="px-2.5 py-1 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Targetes d'estimació</button>
+                </div>
+            </div>
+
+            <div id="cardBank" class="border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/80 min-h-[130px] flex flex-wrap gap-3 items-center justify-start custom-scroll" onclick="deselectIfBankClick(event)">
+                <!-- Targetes injectades per JS -->
+            </div>
+        </section>
+
+        <!-- Botonera d'Accions -->
+        <section class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-3xl border-2 border-slate-200/90 shadow-sm">
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="checkAnswers()" class="btn-bento bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-6 py-3 rounded-2xl border-b-4 border-blue-800 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-circle-check text-base"></i>
+                    <span>Comprovar Respostes</span>
+                </button>
+                <button onclick="giveHint()" class="btn-bento bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-4 py-3 rounded-2xl border border-amber-300 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                    <span>Demanar pista</span>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="showSolution()" class="btn-bento bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-3 rounded-2xl border border-slate-300 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-eye text-blue-600"></i>
+                    <span>Veure solució</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal d'Ajust Fi de Percentatge -->
+    <div id="percentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-slate-100 space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-percent text-blue-600"></i> Ajustar percentatge
+                </h3>
+                <button onclick="closePercentModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p id="percentCardText" class="text-sm font-bold text-slate-800 bg-blue-50 p-3 rounded-2xl border border-blue-100">---</p>
+
+            <div class="space-y-4 text-center">
+                <div id="sliderValueDisplay" class="text-4xl font-black text-blue-600 font-mono">50%</div>
+                <input type="range" id="percentSlider" min="0" max="100" value="50" oninput="updateSliderDisplay(this.value)" class="w-full accent-blue-600 h-3 bg-slate-200 rounded-lg cursor-pointer">
+                
+                <div class="flex justify-center gap-1.5 flex-wrap text-xs font-mono">
+                    <button onclick="setSliderValue(0)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">0%</button>
+                    <button onclick="setSliderValue(17)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">17% (1/6)</button>
+                    <button onclick="setSliderValue(25)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">25%</button>
+                    <button onclick="setSliderValue(50)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">50%</button>
+                    <button onclick="setSliderValue(75)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">75%</button>
+                    <button onclick="setSliderValue(100)" class="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 rounded-lg font-bold">100%</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2">
+                <button onclick="returnToBankFromModal()" class="text-xs text-rose-600 hover:underline font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Tornar al banc
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closePercentModal()" class="px-4 py-2 rounded-xl text-slate-600 text-xs font-bold hover:bg-slate-100">Cancel·lar</button>
+                    <button onclick="applyPercentModal()" class="btn-bento bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'Argumentació i Factors -->
+    <div id="noteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-comment-dots text-amber-500"></i> Argumentar i factors d'estimació
+                </h3>
+                <button onclick="closeNoteModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p id="noteCardText" class="text-sm font-bold text-slate-800 bg-amber-50/80 p-3 rounded-2xl border border-amber-200">---</p>
+            
+            <div id="factorSuggestionsBox" class="space-y-2 bg-amber-50/50 p-3 rounded-2xl border border-amber-200">
+                <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders"></i> Quins factors influeixen en aquesta estimació?
+                </span>
+                <div id="factorTagsContainer" class="flex flex-wrap gap-1.5 pt-1"></div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Per què has escollit aquesta certesa?</label>
+                <textarea id="noteInput" rows="3" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm focus:border-blue-500 focus:outline-none" placeholder="Escriu les teves raons, hipòtesis o factors que condicionen el resultat..."></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeNoteModal()" class="px-4 py-2 rounded-xl text-slate-600 text-xs font-bold hover:bg-slate-100">Tancar</button>
+                <button onclick="saveNote()" class="btn-bento px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Desar argument</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'Edició de Targetes (Docent) -->
+    <div id="editorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-100">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <h3 class="font-extrabold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-600"></i> Personalitzar afirmacions (PCMAT PD5)
+                </h3>
+                <button onclick="closeEditorModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 custom-scroll text-sm">
+                <p class="text-xs text-slate-500">
+                    Pots afegir, eliminar o adaptar les afirmacions proposades a l'aula o al dossier de treball.
+                </p>
+
+                <div id="editCardsList" class="space-y-3"></div>
+
+                <button onclick="addCardField()" class="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-colors flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-plus"></i> Afegir nova afirmació
+                </button>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
+                <button onclick="closeEditorModal()" class="px-4 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-200 text-xs">Cancel·lar</button>
+                <button onclick="saveCustomStatements()" class="btn-bento px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs">Desar canvis</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Compartició (Enviar tasca) -->
+    <div id="shareModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-slate-100 space-y-4 text-center">
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="font-extrabold text-xl text-slate-900">Enllaç de tasca generat!</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Tota la teva feina s'ha empaquetat a l'enllaç. L'hem copiat al portapapers. Només l'has d'<strong>enganxar (Ctrl+V)</strong> al Classroom, Moodle o correu per lliurar la teva tasca al professor.
+            </p>
+            <input type="text" id="shareUrlInput" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-700 outline-none select-all text-center font-mono">
+            <button onclick="closeShareModal()" class="btn-bento w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs">
+                Fet
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast de Notificació -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 flex items-center gap-3 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-blue-400 text-lg"></i>
+        <span id="toastMessage" class="text-sm font-bold">Notificació</span>
+    </div>
+
+    <script>
+        function utf8ToBase64(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+        }
+
+        function base64ToUtf8(str) {
+            return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
+        const defaultCards = [
+            { id: "c1", type: "calcul", text: "Treure un 6 amb un dau normal", icon: "🎲", animClass: "anim-dice", targetValue: 17, minValid: 10, maxValid: 25, hint: "CÀLCUL: Hi ha 1 cara favorable de 6 totals (1/6 ≈ 16.7%).", explanation: "1/6 = 16.7% (Càlcul matemàtic teòric)." },
+            { id: "c2", type: "calcul", text: "Treure vermell de la bossa de l’act.1", icon: "🛍️", animClass: "anim-bag", targetValue: 75, minValid: 65, maxValid: 85, hint: "CÀLCUL: A la bossa de l'activitat 1 hi ha majoria de boles vermelles (75%).", explanation: "75% segons la composició de la bossa." },
+            { id: "c3", type: "calcul", text: "Treure cara en llançar una moneda", icon: "🪙", animClass: "anim-coin", targetValue: 50, minValid: 40, maxValid: 60, hint: "CÀLCUL: Hi ha 2 opcions equiprobables (cara o creu), 50%.", explanation: "Exactament 50% (Càlcul matemàtic)." },
+            { id: "c4", type: "calcul", text: "El sol sortirà demà", icon: "☀️", animClass: "anim-sun", targetValue: 100, minValid: 95, maxValid: 100, hint: "CÀLCUL / DETERMINISTA: Fet astronòmicament segur (100%).", explanation: "100% Segur." },
+            { id: "c5", type: "estimacio", text: "Demà plourà", icon: "🌧️", animClass: "anim-rain", targetValue: 25, minValid: 5, maxValid: 75, suggestedFactors: ["Previsió del temps", "Època de l'any (estació)", "Zona / Clima local", "Presència de núvols"], hint: "ESTIMACIÓ: Depèn del mapa del temps, l'estació de l'any i la zona.", explanation: "Estimació variable segons factors meteorològics." },
+            { id: "c6", type: "calcul", text: "Treure un número parell amb un dau", icon: "🎲", animClass: "anim-dice", targetValue: 50, minValid: 40, maxValid: 60, hint: "CÀLCUL: Hi ha 3 nombres parells (2, 4, 6) de 6 possibles (50%).", explanation: "3 de 6 = 50% (Càlcul matemàtic)." },
+            { id: "c7", type: "calcul", text: "Treure un 7 amb un dau de l’1 al 6", icon: "🚫", animClass: "anim-deny", targetValue: 0, minValid: 0, maxValid: 5, hint: "CÀLCUL: En un dau d'1 a 6 no hi ha cap 7 (0%).", explanation: "0% Impossible." },
+            { id: "c8", type: "estimacio", text: "Veuré avui un arc de Sant Martí", icon: "🌈", animClass: "anim-rainbow", targetValue: 15, minValid: 0, maxValid: 50, suggestedFactors: ["Pluja i sol simultanis", "Si estaré a l'exterior", "Hora del dia / Posició del sol"], hint: "ESTIMACIÓ: Cal que plogui i faci sol alhora i estar a l'aire lliure.", explanation: "Estimació variable segons factors d'observació." },
+            { id: "c9", type: "estimacio", text: "El trimestre vinent tothom aprovarà les matemàtiques", icon: "📐", animClass: "anim-sun", targetValue: 30, minValid: 5, maxValid: 80, suggestedFactors: ["Esforç i estudi de la classe", "Dificultat dels temes", "Assistència a classe", "Treball en equip"], hint: "ESTIMACIÓ: Depèn de l'esforç, estudi i atenció de cada alumne.", explanation: "Estimació dependent de factors personals i acadèmics." }
+        ];
+
+        let cards = JSON.parse(JSON.stringify(defaultCards));
+        let cardPercentages = {};
+        let cardNotes = {};
+        let cardFactors = {};
+        let selectedCardId = null;
+        let activeNoteCardId = null;
+        let modalEditingCardId = null;
+        let currentFilter = 'all';
+
+        window.onload = function() {
+            checkUrlParameters();
+            initTrackHover();
+            window.addEventListener('resize', renderSpectrumLine);
+        };
+
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Lectura adaptada al paràmetre ?treball=
+            const dataParam = urlParams.get('treball') || urlParams.get('work');
+
+            if (dataParam) {
+                try {
+                    const decodedJson = base64ToUtf8(decodeURIComponent(dataParam));
+                    const decoded = JSON.parse(decodedJson);
+                    
+                    if (decoded && decoded.cards) {
+                        cards = decoded.cards;
+                        cardPercentages = decoded.percentages || {};
+                        cardNotes = decoded.notes || {};
+                        cardFactors = decoded.factors || {};
+                        
+                        document.getElementById('sharedNotice').classList.remove('hidden');
+                        renderAll();
+                        showToast("Tasca carregada en Mode Revisió", "success");
+                        return;
+                    }
+                } catch(e) {
+                    console.error("Error carregant les dades de l'enllaç:", e);
+                    showToast("No s'ha pogut interpretar l'enllaç de la tasca.", "warning");
+                }
+            }
+            resetCards();
+        }
+
+        function clearSharedData() {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            document.getElementById('sharedNotice').classList.add('hidden');
+            cards = JSON.parse(JSON.stringify(defaultCards));
+            resetCards();
+        }
+
+        function initTrackHover() {
+            const track = document.getElementById('spectrumTrack');
+            const indicator = document.getElementById('aimIndicator');
+            const aimValue = document.getElementById('aimValue');
+
+            track.addEventListener('mousemove', (e) => {
+                const rect = track.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                let pct = Math.round((clickX / rect.width) * 100);
+                pct = Math.max(0, Math.min(100, pct));
+
+                indicator.classList.remove('hidden');
+                indicator.style.left = `${pct}%`;
+                aimValue.innerText = `${pct}%`;
+            });
+
+            track.addEventListener('mouseleave', () => {
+                indicator.classList.add('hidden');
+            });
+        }
+
+        function generateShareableLink() {
+            const payload = {
+                cards: cards,
+                percentages: cardPercentages,
+                notes: cardNotes,
+                factors: cardFactors
+            };
+
+            try {
+                const jsonString = JSON.stringify(payload);
+                const encodedB64 = utf8ToBase64(jsonString);
+                const safeEncoded = encodeURIComponent(encodedB64);
+                
+                // Generació amb ?treball=
+                const shareUrl = `${window.location.origin}${window.location.pathname}?treball=${safeEncoded}`;
+
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    document.getElementById('shareUrlInput').value = shareUrl;
+                    document.getElementById('shareModal').classList.remove('hidden');
+                }).catch(() => {
+                    document.getElementById('shareUrlInput').value = shareUrl;
+                    document.getElementById('shareModal').classList.remove('hidden');
+                });
+            } catch (e) {
+                console.error("Error generant l'enllaç", e);
+                showToast("Error en generar l'enllaç compartit.", "warning");
+            }
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function resetCards() {
+            cardPercentages = {};
+            cardFactors = {};
+            cards.forEach(c => {
+                cardPercentages[c.id] = null;
+                if (!cardFactors[c.id]) cardFactors[c.id] = [];
+            });
+            selectedCardId = null;
+            document.getElementById('scoreTextBig').innerText = '--';
+            document.getElementById('scoreBadge').innerText = 'Pendent';
+            document.getElementById('scoreBadge').className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
+            renderAll();
+        }
+
+        function filterBank(type) {
+            currentFilter = type;
+            const btnAll = document.getElementById('btnFilterAll');
+            const btnCalc = document.getElementById('btnFilterCalcul');
+            const btnEst = document.getElementById('btnFilterEstimacio');
+
+            [btnAll, btnCalc, btnEst].forEach(btn => {
+                btn.className = "px-2.5 py-1 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-700";
+            });
+
+            if (type === 'all') btnAll.className = "px-2.5 py-1 rounded-lg font-bold bg-blue-600 text-white";
+            if (type === 'calcul') btnCalc.className = "px-2.5 py-1 rounded-lg font-bold bg-blue-600 text-white";
+            if (type === 'estimacio') btnEst.className = "px-2.5 py-1 rounded-lg font-bold bg-blue-600 text-white";
+
+            renderBank();
+        }
+
+        function renderAll() {
+            renderBank();
+            renderSpectrumLine();
+            updateProgress();
+        }
+
+        function renderBank() {
+            const bankEl = document.getElementById('cardBank');
+            bankEl.innerHTML = '';
+
+            let pendingCards = cards.filter(c => cardPercentages[c.id] === null || cardPercentages[c.id] === undefined);
+            document.getElementById('remainingBadge').innerText = pendingCards.length;
+
+            if (currentFilter !== 'all') {
+                pendingCards = pendingCards.filter(c => c.type === currentFilter);
+            }
+
+            if (pendingCards.length === 0) {
+                bankEl.innerHTML = `<div class="text-xs font-bold text-slate-400 italic w-full text-center py-6 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i> No hi ha targetes pendents en aquest filtre!
+                </div>`;
+                return;
+            }
+
+            pendingCards.forEach(card => {
+                const isSelected = selectedCardId === card.id;
+                const isCalcul = card.type === 'calcul';
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `certainty-card bg-white p-3 rounded-2xl border-2 ${isSelected ? 'border-blue-600' : 'border-slate-200'} shadow-sm flex items-center gap-3 w-full sm:w-auto max-w-xs text-xs font-semibold cursor-pointer ${isSelected ? 'selected' : ''}`;
+                
+                cardDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    selectCard(card.id);
+                };
+
+                const badgeBg = isCalcul ? 'bg-sky-100 text-sky-800 border-sky-200' : 'bg-amber-100 text-amber-800 border-amber-200';
+                const badgeLabel = isCalcul ? 'Càlcul' : 'Estimació';
+
+                cardDiv.innerHTML = `
+                    <span class="text-2xl shrink-0 inline-block ${card.animClass || ''}">${card.icon || '📌'}</span>
+                    <div class="flex-grow min-w-0">
+                        <div class="font-extrabold text-slate-800 truncate">${card.text}</div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeBg} inline-block mt-1">${badgeLabel}</span>
+                    </div>
+                `;
+                bankEl.appendChild(cardDiv);
+            });
+        }
+
+        function renderSpectrumLine() {
+            const area = document.getElementById('pinnedCardsArea');
+            area.innerHTML = '';
+
+            const pinnedCards = cards.filter(c => cardPercentages[c.id] !== null && cardPercentages[c.id] !== undefined);
+
+            if (pinnedCards.length === 0) {
+                area.innerHTML = `<div class="text-xs font-bold text-slate-400 italic w-full text-center py-10 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-arrow-up text-lg text-blue-400"></i> Fes clic sobre la línia per situar la teva primera targeta!
+                </div>`;
+                return;
+            }
+
+            const groups = {};
+            pinnedCards.forEach(card => {
+                const pct = cardPercentages[card.id];
+                const key = Math.round(pct / 5) * 5; 
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(card);
+            });
+
+            pinnedCards.forEach(card => {
+                const pct = cardPercentages[card.id];
+                const isCalcul = card.type === 'calcul';
+                const hasNote = cardNotes[card.id] && cardNotes[card.id].trim().length > 0;
+                
+                const key = Math.round(pct / 5) * 5;
+                const indexInGroup = groups[key].indexOf(card);
+                const topOffset = 10 + (indexInGroup * 68);
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `pinned-card bg-white p-2.5 rounded-2xl border-2 ${isCalcul ? 'border-sky-400' : 'border-amber-400'} shadow-md hover:shadow-xl text-xs w-[170px] sm:w-[195px] max-w-[45vw]`;
+                
+                cardDiv.style.top = `${topOffset}px`;
+                if (pct <= 15) {
+                    cardDiv.style.left = `${pct}%`;
+                    cardDiv.style.transform = 'translateX(0)';
+                } else if (pct >= 85) {
+                    cardDiv.style.left = `${pct}%`;
+                    cardDiv.style.transform = 'translateX(-100%)';
+                } else {
+                    cardDiv.style.left = `${pct}%`;
+                    cardDiv.style.transform = 'translateX(-50%)';
+                }
+
+                cardDiv.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center gap-1">
+                            <span class="font-black text-white text-[10px] sm:text-[11px] font-mono ${isCalcul ? 'bg-sky-600' : 'bg-amber-600'} px-2 py-0.5 rounded-lg shadow-sm">${pct}%</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="openNoteModal('${card.id}')" title="Argumentar certesa" class="${hasNote ? 'text-amber-500 font-bold' : 'text-slate-400'} hover:text-amber-600 p-0.5">
+                                    <i class="fa-solid fa-comment-dots text-xs sm:text-sm"></i>
+                                </button>
+                                <button onclick="openPercentModalForCard('${card.id}')" title="Ajustar percentatge" class="text-slate-400 hover:text-blue-600 p-0.5">
+                                    <i class="fa-solid fa-pen text-[10px] sm:text-xs"></i>
+                                </button>
+                                <button onclick="unpinCard('${card.id}')" title="Tornar al banc" class="text-slate-400 hover:text-rose-500 p-0.5">
+                                    <i class="fa-solid fa-xmark text-xs sm:text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="font-extrabold text-slate-800 text-[11px] leading-tight line-clamp-2">
+                            <span class="inline-block ${card.animClass || ''}">${card.icon || ''}</span> ${card.text}
+                        </p>
+                        ${hasNote ? `<p class="text-[9px] sm:text-[10px] text-amber-700 italic truncate bg-amber-50 px-1 py-0.5 rounded border border-amber-200"><i class="fa-solid fa-quote-left text-[7px]"></i> ${cardNotes[card.id]}</p>` : ''}
+                    </div>
+                `;
+                area.appendChild(cardDiv);
+            });
+
+            let maxInGroup = 1;
+            Object.values(groups).forEach(arr => {
+                if (arr.length > maxInGroup) maxInGroup = arr.length;
+            });
+            area.style.minHeight = `${Math.max(220, maxInGroup * 80 + 20)}px`;
+        }
+
+        function selectCard(id) {
+            selectedCardId = id;
+            renderBank();
+        }
+
+        function deselectIfBankClick(e) {
+            if (e.target.id === 'cardBank') {
+                selectedCardId = null;
+                renderBank();
+            }
+        }
+
+        function handleTrackClick(event) {
+            const track = document.getElementById('spectrumTrack');
+            const rect = track.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            let percentage = Math.round((clickX / rect.width) * 100);
+            percentage = Math.max(0, Math.min(100, percentage));
+
+            if (selectedCardId) {
+                cardPercentages[selectedCardId] = percentage;
+                const activeId = selectedCardId;
+                selectedCardId = null;
+                renderAll();
+                
+                const card = cards.find(c => c.id === activeId);
+                if (card && card.type === 'estimacio') {
+                    openNoteModal(activeId);
+                }
+            } else {
+                showToast("Primer clica una targeta del banc de sota!", "info");
+            }
+        }
+
+        function unpinCard(id) {
+            cardPercentages[id] = null;
+            renderAll();
+        }
+
+        function openPercentModalForCard(id) {
+            modalEditingCardId = id;
+            const card = cards.find(c => c.id === id);
+            const currentPct = cardPercentages[id] !== null ? cardPercentages[id] : 50;
+            
+            document.getElementById('percentCardText').innerText = `${card.icon || ''} ${card.text}`;
+            document.getElementById('percentSlider').value = currentPct;
+            updateSliderDisplay(currentPct);
+            document.getElementById('percentModal').classList.remove('hidden');
+        }
+
+        function updateSliderDisplay(val) {
+            document.getElementById('sliderValueDisplay').innerText = `${val}%`;
+        }
+
+        function setSliderValue(val) {
+            document.getElementById('percentSlider').value = val;
+            updateSliderDisplay(val);
+        }
+
+        function applyPercentModal() {
+            if (modalEditingCardId) {
+                const val = parseInt(document.getElementById('percentSlider').value, 10);
+                cardPercentages[modalEditingCardId] = val;
+                closePercentModal();
+                renderAll();
+            }
+        }
+
+        function returnToBankFromModal() {
+            if (modalEditingCardId) {
+                unpinCard(modalEditingCardId);
+                closePercentModal();
+            }
+        }
+
+        function closePercentModal() {
+            modalEditingCardId = null;
+            document.getElementById('percentModal').classList.add('hidden');
+        }
+
+        function openNoteModal(id) {
+            activeNoteCardId = id;
+            const card = cards.find(c => c.id === id);
+            document.getElementById('noteCardText').innerText = `${card.icon || ''} ${card.text} (${cardPercentages[id]}%)`;
+            document.getElementById('noteInput').value = cardNotes[id] || '';
+
+            const suggestionsBox = document.getElementById('factorSuggestionsBox');
+            const tagsContainer = document.getElementById('factorTagsContainer');
+            tagsContainer.innerHTML = '';
+
+            if (card.suggestedFactors && card.suggestedFactors.length > 0) {
+                suggestionsBox.classList.remove('hidden');
+                card.suggestedFactors.forEach(factor => {
+                    const isSelected = (cardFactors[id] || []).includes(factor);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `text-[11px] px-2.5 py-1 rounded-lg border font-bold transition-all ${isSelected ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-amber-800 border-amber-300 hover:bg-amber-100'}`;
+                    btn.innerText = factor;
+                    btn.onclick = () => toggleFactorTag(id, factor, btn);
+                    tagsContainer.appendChild(btn);
+                });
+            } else {
+                suggestionsBox.classList.add('hidden');
+            }
+
+            document.getElementById('noteModal').classList.remove('hidden');
+        }
+
+        function toggleFactorTag(cardId, factor, btn) {
+            if (!cardFactors[cardId]) cardFactors[cardId] = [];
+            const idx = cardFactors[cardId].indexOf(factor);
+            if (idx > -1) {
+                cardFactors[cardId].splice(idx, 1);
+                btn.className = "text-[11px] px-2.5 py-1 rounded-lg border font-bold transition-all bg-white text-amber-800 border-amber-300 hover:bg-amber-100";
+            } else {
+                cardFactors[cardId].push(factor);
+                btn.className = "text-[11px] px-2.5 py-1 rounded-lg border font-bold transition-all bg-amber-600 text-white border-amber-600";
+            }
+        }
+
+        function saveNote() {
+            if (activeNoteCardId) {
+                cardNotes[activeNoteCardId] = document.getElementById('noteInput').value;
+                closeNoteModal();
+                renderSpectrumLine();
+                showToast("Argument desat correctament", "success");
+            }
+        }
+
+        function closeNoteModal() {
+            activeNoteCardId = null;
+            document.getElementById('noteModal').classList.add('hidden');
+        }
+
+        function updateProgress() {
+            const placedCount = cards.filter(c => cardPercentages[c.id] !== null && cardPercentages[c.id] !== undefined).length;
+            const total = cards.length;
+            
+            document.getElementById('placedCountBig').innerText = placedCount;
+            document.getElementById('totalCountBig').innerText = `/ ${total}`;
+            
+            const pctBar = total > 0 ? (placedCount / total) * 100 : 0;
+            document.getElementById('progressBar').style.width = `${pctBar}%`;
+        }
+
+        function checkAnswers() {
+            const placedCards = cards.filter(c => cardPercentages[c.id] !== null && cardPercentages[c.id] !== undefined);
+            if (placedCards.length === 0) {
+                showToast("Encara no has situat cap targeta a la línia!", "warning");
+                return;
+            }
+
+            let correctCount = 0;
+            placedCards.forEach(card => {
+                const userVal = cardPercentages[card.id];
+                if (userVal >= card.minValid && userVal <= card.maxValid) {
+                    correctCount++;
+                }
+            });
+
+            document.getElementById('scoreTextBig').innerText = `${correctCount} / ${placedCards.length}`;
+            const badge = document.getElementById('scoreBadge');
+
+            if (correctCount === cards.length && cards.length > 0) {
+                badge.innerText = "Excel·lent!";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                showToast("Molt bona feina! Totes les afirmacions estan ben situades!", "success");
+            } else {
+                badge.innerText = "Revisat";
+                badge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800";
+                showToast(`Has encertat ${correctCount} de les ${placedCards.length} targetes situades.`, "info");
+            }
+        }
+
+        function giveHint() {
+            const pending = cards.filter(c => cardPercentages[c.id] === null || cardPercentages[c.id] === undefined);
+            if (pending.length > 0) {
+                const card = pending[0];
+                showToast(`Pista per "${card.text}": ${card.hint}`, "info");
+            } else {
+                showToast("Ja has situat totes les targetes! Clica 'Comprovar Respostes'.", "info");
+            }
+        }
+
+        function showSolution() {
+            cards.forEach(card => {
+                cardPercentages[card.id] = card.targetValue;
+            });
+            renderAll();
+            checkAnswers();
+            showToast("Solució teòrica suggerida aplicada.", "info");
+        }
+
+        function openEditorModal() {
+            const list = document.getElementById('editCardsList');
+            list.innerHTML = '';
+
+            cards.forEach((card, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200";
+                row.innerHTML = `
+                    <input type="text" value="${card.icon || ''}" class="w-10 p-1.5 text-center border rounded-lg text-sm" placeholder="Icona" id="editIcon_${idx}">
+                    <input type="text" value="${card.text}" class="flex-grow p-1.5 border rounded-lg text-sm font-semibold" placeholder="Text de l'afirmació" id="editText_${idx}">
+                    <select id="editType_${idx}" class="p-1.5 border rounded-lg text-xs font-bold bg-white">
+                        <option value="calcul" ${card.type === 'calcul' ? 'selected' : ''}>Càlcul</option>
+                        <option value="estimacio" ${card.type === 'estimacio' ? 'selected' : ''}>Estimació</option>
+                    </select>
+                    <input type="number" min="0" max="100" value="${card.targetValue}" class="w-14 p-1.5 border rounded-lg text-xs font-bold text-center font-mono" title="% Teòric" id="editTarget_${idx}">
+                    <button onclick="removeCardField(${idx})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('editorModal').classList.remove('hidden');
+        }
+
+        function addCardField() {
+            const newCard = {
+                id: "custom_" + Date.now(),
+                type: "calcul",
+                text: "Nova afirmació...",
+                icon: "⚡",
+                animClass: "anim-sun",
+                targetValue: 50,
+                minValid: 40,
+                maxValid: 60,
+                hint: "Pista per a la nova afirmació",
+                explanation: "Explicació teòrica"
+            };
+            cards.push(newCard);
+            openEditorModal();
+        }
+
+        function removeCardField(idx) {
+            cards.splice(idx, 1);
+            openEditorModal();
+        }
+
+        function saveCustomStatements() {
+            cards.forEach((card, idx) => {
+                const iconInput = document.getElementById(`editIcon_${idx}`);
+                const textInput = document.getElementById(`editText_${idx}`);
+                const typeInput = document.getElementById(`editType_${idx}`);
+                const targetInput = document.getElementById(`editTarget_${idx}`);
+
+                if (textInput) {
+                    card.icon = iconInput.value || '📌';
+                    card.text = textInput.value;
+                    card.type = typeInput.value;
+                    const val = parseInt(targetInput.value, 10) || 50;
+                    card.targetValue = val;
+                    card.minValid = Math.max(0, val - 10);
+                    card.maxValid = Math.min(100, val + 10);
+                }
+            });
+
+            closeEditorModal();
+            resetCards();
+
+            // Sincronitza la barra d'adreces amb el paràmetre ?treball=
+            const payload = {
+                cards: cards,
+                percentages: cardPercentages,
+                notes: cardNotes,
+                factors: cardFactors
+            };
+            const jsonString = JSON.stringify(payload);
+            const encodedB64 = utf8ToBase64(jsonString);
+            const newUrl = `${window.location.pathname}?treball=${encodeURIComponent(encodedB64)}`;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+
+            document.getElementById('sharedNotice').classList.remove('hidden');
+            showToast("Afirmacions desades i enllaç ?treball= preparat!", "success");
+        }
+
+        function closeEditorModal() {
+            document.getElementById('editorModal').classList.add('hidden');
+        }
+
+        function showToast(msg, type = "info") {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+
+            msgEl.innerText = msg;
+            
+            if (type === 'success') {
+                iconEl.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            } else if (type === 'warning') {
+                iconEl.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
+            } else {
+                iconEl.className = "fa-solid fa-circle-info text-blue-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
