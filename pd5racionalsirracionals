@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PCMAT - Nombres irracionals i racionals</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            title: ['Fredoka', 'sans-serif'],
+            body: ['Quicksand', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    h1, h2, h3, .font-fun {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+    .pulse-soft {
+      animation: pulseSoft 2s infinite ease-in-out;
+    }
+    @keyframes pulseSoft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    canvas {
+      touch-action: none;
+    }
+    .badge-pop {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #confettiCanvas {
+      pointer-events: none !important;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .magic-cut-anim {
+      animation: magicCut 0.4s ease-out;
+    }
+    @keyframes magicCut {
+      0% { transform: translateY(-12px) scale(1.15); opacity: 0; }
+      70% { transform: translateY(2px) scale(0.95); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-b from-sky-100 via-indigo-50 to-pink-50 min-h-screen text-slate-800 pb-16 relative">
+
+  <!-- Header principal -->
+  <header class="max-w-5xl mx-auto px-4 pt-7 pb-3 text-center">
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-950 tracking-tight drop-shadow-sm">
+      PCMAT - Nombres irracionals i racionals
+    </h1>
+    <p class="text-sm sm:text-base text-slate-600 font-semibold max-w-2xl mx-auto mt-2">
+      Tenen decimals infinits... però un grup té un <span class="text-blue-600 font-bold underline decoration-wavy decoration-cyan-400">tall màgic</span> a la recta i l'altre és un <span class="text-pink-600 font-bold underline decoration-wavy decoration-orange-400">misteri infinit</span>!
+    </p>
+
+    <!-- Botó compacte d'ajuda -->
+    <div class="mt-3 flex justify-center">
+      <button onclick="openTheoryModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 rounded-full text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all active:scale-95 text-slate-700">
+        <span class="text-amber-600 text-sm">💡</span>
+        <span>Guia: nombres racionals i nombres irracionals</span>
+      </button>
+    </div>
+
+    <!-- Pestanyes de navegació -->
+    <div class="flex flex-wrap justify-center gap-2.5 mt-5">
+      <button id="tabExplore" onclick="switchMode('explore')" class="px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-indigo-600 text-white flex items-center gap-2 ring-2 ring-indigo-400 ring-offset-2">
+        <span>🔬</span> Laboratori de la recta
+      </button>
+      <button id="tabFamous" onclick="switchMode('famous')" class="px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-white hover:bg-purple-50 text-slate-700 flex items-center gap-2 border border-slate-200">
+        <span>👑</span> Nombres matemàtics coneguts
+      </button>
+      <button id="tabGame" onclick="switchMode('game')" class="px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-white hover:bg-yellow-50 text-slate-700 flex items-center gap-2 border border-slate-200">
+        <span>⭐</span> El repte: caça un número
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 space-y-6">
+
+    <!-- SECCIÓ 1: LABORATORI DE LA RECTA -->
+    <section id="sectionExplore" class="space-y-6">
+
+      <!-- Targetes dels dos equips -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Targeta: Equip racional periòdic -->
+        <div class="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden border-4 border-white">
+          <div class="absolute -right-4 -bottom-4 text-7xl opacity-15 select-none font-bold">✂️</div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">El tall màgic de fracció</span>
+            <span class="text-xs font-semibold opacity-90">a/b d'enters</span>
+          </div>
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <span>✂️</span> Equip racional periòdic
+          </h2>
+          <p class="text-sm text-cyan-50 mt-1 mb-4 leading-snug">
+            Tenen decimals infinits repetits (<span class="font-mono bg-white/25 px-1 rounded">0,333...</span>), però <b>tenen un tall màgic</b>: dividim la unitat en parts iguals i queden clavats al mil·límetre!
+          </p>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="pickLabNumber('1/3')" class="group bg-white hover:bg-cyan-50 text-blue-900 p-2.5 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-xl">1/3</span>
+              <span class="block text-xs font-normal text-slate-500 font-sans">0,333...</span>
+            </button>
+            <button onclick="pickLabNumber('2/3')" class="group bg-white hover:bg-cyan-50 text-blue-900 p-2.5 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-xl">2/3</span>
+              <span class="block text-xs font-normal text-slate-500 font-sans">0,666...</span>
+            </button>
+            <button onclick="pickLabNumber('1/6')" class="group bg-white hover:bg-cyan-50 text-blue-900 p-2.5 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-xl">1/6</span>
+              <span class="block text-xs font-normal text-slate-500 font-sans">0,166...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Targeta: Equip irracional -->
+        <div class="bg-gradient-to-br from-pink-500 to-orange-500 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden border-4 border-white">
+          <div class="absolute -right-4 -bottom-4 text-7xl opacity-15 select-none font-bold">🔍</div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">Sense cicle repetitiu</span>
+            <span class="text-xs font-semibold opacity-90">Decimals infinits</span>
+          </div>
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <span>🔍</span> Equip irracional
+          </h2>
+          <p class="text-sm text-pink-50 mt-1 mb-4 leading-snug">
+            Infinits decimals <b>sense cap període</b>. Cap fracció senzilla entre dos nombres enters pot situar-los amb un tall exacte!
+          </p>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="pickLabNumber('pi')" class="group bg-white hover:bg-pink-50 text-pink-900 p-2 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-lg">π (Pi)</span>
+              <span class="block text-[11px] font-normal text-slate-500 font-sans">3,1415...</span>
+            </button>
+            <button onclick="pickLabNumber('e')" class="group bg-white hover:bg-pink-50 text-pink-900 p-2 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-lg">e (Euler)</span>
+              <span class="block text-[11px] font-normal text-slate-500 font-sans">2,7182...</span>
+            </button>
+            <button onclick="pickLabNumber('sqrt2')" class="group bg-white hover:bg-pink-50 text-pink-900 p-2 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-lg">√2</span>
+              <span class="block text-[11px] font-normal text-slate-500 font-sans">1,4142...</span>
+            </button>
+            <button onclick="pickLabNumber('phi')" class="group bg-white hover:bg-pink-50 text-pink-900 p-2 rounded-2xl text-center shadow-md transition-all active:scale-95 font-fun font-bold">
+              <span class="block text-lg">Φ (Or)</span>
+              <span class="block text-[11px] font-normal text-slate-500 font-sans">1,6180...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caixa del laboratori interactiu -->
+      <div class="bg-white rounded-3xl p-5 shadow-xl border border-indigo-100 flex flex-col gap-4">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="flex items-center gap-3">
+            <div id="badgeNumberType" class="px-4 py-1.5 rounded-xl font-fun font-bold text-white text-sm sm:text-base shadow-sm bg-blue-500">
+              1/3 · Equip racional periòdic
+            </div>
+            <div class="text-slate-600 font-bold text-xs sm:text-sm" id="targetDecimalPreview">
+              Valor: <span class="font-mono text-indigo-700 font-extrabold">0,33333...</span>
+            </div>
+          </div>
+
+          <div id="actionContainer" class="flex gap-2"></div>
+        </div>
+
+        <div class="relative w-full h-52 sm:h-60 bg-gradient-to-b from-sky-50/50 to-white rounded-2xl border-2 border-dashed border-indigo-200 overflow-hidden" id="canvasWrapper">
+          <canvas id="mainCanvas" class="w-full h-full block"></canvas>
+          
+          <div id="liveBubble" class="absolute top-3 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur px-4 py-2 rounded-2xl shadow-lg border border-indigo-200 flex items-center gap-2 pointer-events-none transition-all transform duration-300">
+            <span id="bubbleIcon" class="text-2xl">✂️</span>
+            <span id="bubbleText" class="text-xs sm:text-sm font-bold text-indigo-900">Prem el botó per activar el tall màgic!</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-500 px-2">
+          <span>🖐️ Arrossega per la recta per moure't</span>
+          <div class="flex items-center gap-2">
+            <button onclick="zoomStep(0.7)" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl transition-all font-medium">🔍+ Més a prop</button>
+            <button onclick="zoomStep(1.4)" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-xl transition-all font-medium">🔍- Més lluny</button>
+            <button onclick="resetZoomCenter()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl transition-all font-medium">🎯 Centrar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Targeta explicativa inferior -->
+      <div id="explanationCard" class="bg-white rounded-3xl p-5 shadow-md border-l-8 border-blue-500 flex flex-col sm:flex-row items-center gap-4">
+        <div id="cardIconLarge" class="text-5xl bg-blue-50 p-3 rounded-2xl">✂️</div>
+        <div>
+          <h3 id="cardTitle" class="text-xl font-bold font-fun text-blue-900">Com el trobem a la recta?</h3>
+          <p id="cardDescription" class="text-slate-600 text-sm sm:text-base mt-1 font-medium">
+            Tot i que té decimals infinits, podem fer el tall màgic dividint el segment en 3 trossos iguals i situar-lo amb precisió absoluta!
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓ 2: NOMBRES MATEMÀTICS CONEGUTS -->
+    <section id="sectionFamous" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-purple-200">
+        <div class="text-center max-w-2xl mx-auto mb-8">
+          <span class="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full uppercase tracking-wider mb-2">
+            Històries i curiositats matemàtiques
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-fun font-bold text-purple-950">
+            Els números més famosos del món
+          </h2>
+          <p class="text-slate-600 font-semibold text-sm sm:text-base mt-2">
+            Són les estrelles de les matemàtiques! Nombres de l'<b>Equip irracional</b> cèlebres que tenen infinits decimals i sorprenents secrets a la vida real:
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- Targeta Pi -->
+          <div class="bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-4xl sm:text-5xl font-fun font-bold text-pink-600">π</span>
+                <span class="px-2.5 py-1 bg-pink-100 text-pink-700 text-xs font-bold rounded-xl">Equip irracional</span>
+              </div>
+              <h3 class="text-xl font-fun font-bold text-pink-900 mt-2">El nombre Pi (≈ 3,14159...)</h3>
+              <p class="text-slate-700 text-sm mt-2 leading-relaxed font-medium">
+                🛞 <b>La roda màgica:</b> Si agafes qualsevol cercle (una moneda, una pizza o una roda de bicicleta) i divideixes la vora pel seu diàmetre, sempre surt <b>π</b>! Té infinits decimals i ningú hi ha trobat mai cap patró repetitiu.
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-pink-200/60 flex justify-between items-center text-xs text-pink-800 font-bold">
+              <span>Festa mundial: 14 de març (3/14)</span>
+              <button onclick="tryNumberInLab('pi')" class="text-pink-600 underline hover:text-pink-800">Veure a la recta 🔬</button>
+            </div>
+          </div>
+
+          <!-- Targeta Nombre d'or -->
+          <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-4xl sm:text-5xl font-fun font-bold text-amber-600">Φ</span>
+                <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-xl">Equip irracional</span>
+              </div>
+              <h3 class="text-xl font-fun font-bold text-amber-900 mt-2">El nombre d'or Phi (≈ 1,61803...)</h3>
+              <p class="text-slate-700 text-sm mt-2 leading-relaxed font-medium">
+                🌻 <b>La proporció de la natura:</b> Apareix a les espirals dels gira-sols, a les closques dels cargols de mar i a les pintures més belles. És conegut com el número de l'harmonia i la bellesa visual!
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-amber-200/60 flex justify-between items-center text-xs text-amber-800 font-bold">
+              <span>Sèrie de Fibonacci (1, 1, 2, 3, 5, 8...)</span>
+              <button onclick="tryNumberInLab('phi')" class="text-amber-700 underline hover:text-amber-900">Veure a la recta 🔬</button>
+            </div>
+          </div>
+
+          <!-- Targeta Arrel de 2 -->
+          <div class="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-4xl sm:text-5xl font-fun font-bold text-orange-600">√2</span>
+                <span class="px-2.5 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-xl">Equip irracional</span>
+              </div>
+              <h3 class="text-xl font-fun font-bold text-orange-900 mt-2">Arrel quadrada de 2 (≈ 1,41421...)</h3>
+              <p class="text-slate-700 text-sm mt-2 leading-relaxed font-medium">
+                📐 <b>El secret de Pitàgores:</b> Si dibuixes un quadrat amb costats d'1 cm, la diagonal que creua d'una cantonada a l'altra mesura exactament <b>√2</b>. Va deixar els matemàtics de l'antiga Grècia bocabadats perquè no es podia escriure amb cap fracció!
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-orange-200/60 flex justify-between items-center text-xs text-orange-800 font-bold">
+              <span>Teorema de Pitàgores (1² + 1² = 2)</span>
+              <button onclick="tryNumberInLab('sqrt2')" class="text-orange-700 underline hover:text-orange-900">Veure a la recta 🔬</button>
+            </div>
+          </div>
+
+          <!-- Targeta Nombre e d'Euler -->
+          <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex justify-between items-start">
+                <span class="text-4xl sm:text-5xl font-fun font-bold text-emerald-600">e</span>
+                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl">Equip irracional</span>
+              </div>
+              <h3 class="text-xl font-fun font-bold text-emerald-900 mt-2">El nombre e d'Euler (≈ 2,71828...)</h3>
+              <p class="text-slate-700 text-sm mt-2 leading-relaxed font-medium">
+                🌱 <b>El número del creixement natural:</b> Batejat pel gran matemàtic Leonhard Euler. Explica a quina velocitat es reprodueixen els bacteris, com creixen els arbres o com es multipliquen els estalvis. Té decimals infinits sense cap patró repetitiu!
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-emerald-200/60 flex justify-between items-center text-xs text-emerald-800 font-bold">
+              <span>Constant matemàtica d'Euler</span>
+              <button onclick="tryNumberInLab('e')" class="text-emerald-700 underline hover:text-emerald-900">Veure a la recta 🔬</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓ 3: EL REPTE: CAÇA UN NÚMERO -->
+    <section id="sectionGame" class="hidden space-y-6">
+      
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-yellow-200 relative overflow-hidden">
+        
+        <!-- Canvas de confeti transparent i protegit -->
+        <canvas id="confettiCanvas"></canvas>
+
+        <!-- Barra de progrés i marcador -->
+        <div class="grid grid-cols-3 items-center gap-2 max-w-xl mx-auto mb-6 bg-amber-50 px-4 py-2.5 rounded-2xl border border-amber-200">
+          <div class="text-left font-fun text-sm sm:text-base font-bold text-amber-900">
+            Pregunta <span id="roundCounter" class="text-amber-600 text-lg">1</span>/10
+          </div>
+          <div class="text-center font-fun text-base sm:text-lg font-bold text-amber-900 flex items-center justify-center gap-1">
+            <span>⭐</span> <span id="gameScore" class="text-xl text-amber-600">0</span> punts
+          </div>
+          <div class="text-right font-fun text-sm sm:text-base font-bold text-orange-700 flex items-center justify-end gap-1">
+            <span>🔥</span> Ratxa: <span id="gameStreak" class="text-lg">0</span>
+          </div>
+        </div>
+
+        <!-- Targeta de la pregunta actual -->
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+          <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full uppercase tracking-wider">
+            Investigació a la recta
+          </span>
+
+          <h2 id="quizQuestionPrompt" class="text-lg sm:text-xl font-bold text-slate-800">
+            A quin equip pertany aquest número? Es pot col·locar fent un tall màgic de fracció?
+          </h2>
+
+          <!-- Número gran del repte -->
+          <div class="bg-gradient-to-r from-slate-50 via-indigo-50/50 to-slate-50 py-5 px-6 rounded-3xl border border-indigo-100 shadow-inner my-3">
+            <div id="quizSymbol" class="text-5xl sm:text-6xl font-fun font-extrabold text-indigo-900 drop-shadow-sm">
+              4/9
+            </div>
+            <div id="quizDecimals" class="text-lg sm:text-xl font-mono text-slate-600 font-bold mt-2">
+              0,444444...
+            </div>
+            <div id="quizHint" class="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
+              (Decimals periòdics que es repeteixen sense parar)
+            </div>
+          </div>
+
+          <!-- Opcions amb la 'E' majúscula -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto pt-2">
+            <button id="btnChooseRational" onclick="submitAnswer('racional')" class="group p-5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl shadow-lg transition-all active:scale-95 flex flex-col items-center gap-2">
+              <span class="text-4xl group-hover:scale-110 transition-transform">✂️</span>
+              <span class="font-fun text-xl font-bold">Equip racional periòdic</span>
+              <span class="text-xs font-semibold text-cyan-100">Es pot col·locar amb un tall màgic!</span>
+            </button>
+
+            <button id="btnChooseIrrational" onclick="submitAnswer('irracional')" class="group p-5 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white rounded-2xl shadow-lg transition-all active:scale-95 flex flex-col items-center gap-2">
+              <span class="text-4xl group-hover:scale-110 transition-transform">🔍</span>
+              <span class="font-fun text-xl font-bold">Equip irracional</span>
+              <span class="text-xs font-semibold text-pink-100">Decimals infinits sense patró repetitiu!</span>
+            </button>
+          </div>
+
+          <!-- Caixa de feedback de resposta -->
+          <div id="quizFeedback" class="hidden mt-6 p-4 rounded-2xl max-w-lg mx-auto font-bold text-sm sm:text-base border shadow-sm badge-pop text-left">
+          </div>
+
+          <!-- Botó per passar a la següent pregunta -->
+          <div class="pt-2">
+            <button id="nextQuestionBtn" onclick="nextQuizQuestion()" class="hidden px-7 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-fun font-bold text-lg shadow-lg transition-all active:scale-95 mx-auto flex items-center justify-center gap-2">
+              <span>Següent número!</span> <span>➡️</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pantalla de resum final -->
+      <div id="quizResultsCard" class="hidden bg-white rounded-3xl p-8 shadow-xl border-4 border-yellow-300 text-center max-w-lg mx-auto space-y-4">
+        <div class="text-6xl">🏆</div>
+        <h3 class="text-3xl font-fun font-bold text-indigo-900">Ronda completada!</h3>
+        <p class="text-slate-600 font-semibold">
+          Has aconseguit <span id="finalScore" class="text-indigo-600 font-bold text-xl">0</span> punts de 100 possibles!
+        </p>
+        <p id="finalFeedbackMessage" class="text-sm text-slate-700 font-medium"></p>
+        <button onclick="restartQuiz()" class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-fun font-bold text-lg shadow-md hover:brightness-105 active:scale-95 transition-all">
+          Tornar a jugar una ronda nova! 🔄
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: GUIA DELS NOMBRES (INFOGRÀFICA I VISUAL) -->
+  <div id="theoryModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] shadow-2xl border-4 border-indigo-200 flex flex-col overflow-hidden animate-fadeIn">
+      
+      <!-- Capçalera modal amb títol exacte requerit -->
+      <div class="bg-gradient-to-r from-indigo-700 via-blue-600 to-indigo-800 p-4 sm:p-5 text-white flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl sm:text-4xl">📚</span>
+          <div>
+            <h3 class="text-lg sm:text-2xl font-fun font-bold leading-tight">Guia: nombres racionals i nombres irracionals</h3>
+            <p class="text-xs sm:text-sm text-indigo-100 font-medium hidden sm:block">Descobreix el superpoder del tall màgic i el misteri de la lupa!</p>
+          </div>
+        </div>
+        <button onclick="closeTheoryModal()" class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-xl flex items-center justify-center transition-all active:scale-95">
+          ✕
+        </button>
+      </div>
+
+      <!-- Contingut interactiu amb scroll intern -->
+      <div class="p-4 sm:p-6 overflow-y-auto custom-scroll space-y-6 text-slate-700">
+        
+        <!-- BLOC 1: NOMBRES RACIONALS (INTERACTIU AMB TALL MÀGIC) -->
+        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-3xl p-5 border-2 border-blue-200 shadow-sm space-y-4">
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="text-3xl bg-blue-100 p-2 rounded-2xl">✂️</span>
+              <div>
+                <h4 class="text-xl sm:text-2xl font-fun font-bold text-blue-950">
+                  Nombres Racionals (<span class="font-mono text-blue-600 font-extrabold">ℚ</span>)
+                </h4>
+                <p class="text-xs sm:text-sm font-semibold text-blue-800">
+                  El secret: <b>es poden escriure com una fracció exacta a / b</b>
+                </p>
+              </div>
+            </div>
+            <span class="bg-blue-600 text-white text-xs font-bold font-fun px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
+              Tall màgic a la recta!
+            </span>
+          </div>
+
+          <!-- MINI SIMULADOR INTERACTIU DE TALL MÀGIC -->
+          <div class="bg-white rounded-2xl p-4 border border-blue-200 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>✨</span> <b>Prova el tall màgic!</b> Tria com vols partir la unitat:
+              </span>
+              <div class="flex gap-1.5">
+                <button onclick="sliceDemo(2, '1/2', '0,5', 'Decimal exacte')" id="sliceBtn2" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-blue-400 bg-blue-500 text-white transition-all">
+                  En 2 (1/2)
+                </button>
+                <button onclick="sliceDemo(3, '1/3', '0,333...', 'Periòdic pur')" id="sliceBtn3" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-blue-200 bg-white text-blue-800 hover:bg-blue-50 transition-all">
+                  En 3 (1/3)
+                </button>
+                <button onclick="sliceDemo(4, '3/4', '0,75', 'Decimal exacte')" id="sliceBtn4" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-blue-200 bg-white text-blue-800 hover:bg-blue-50 transition-all">
+                  En 4 (3/4)
+                </button>
+              </div>
+            </div>
+
+            <!-- Barra visual dividida pel tall màgic -->
+            <div class="relative w-full h-12 bg-sky-100 rounded-xl border-2 border-blue-300 overflow-hidden flex" id="chocolateBar">
+              <!-- Generat per JS -->
+            </div>
+
+            <div class="bg-blue-50 rounded-xl p-2.5 text-xs sm:text-sm text-blue-900 font-semibold flex items-center justify-between" id="sliceFeedback">
+              <span>🎯 <b>1/2 = 0,5:</b> Dividim exactament en 2 meitats iguals. El tall màgic cau al lloc clavat!</span>
+              <span class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-xs font-bold">Tall màgic clavat!</span>
+            </div>
+          </div>
+
+          <!-- 3 TARGETES VISUALS INFOGRÀFIQUES -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            
+            <div class="bg-white p-3.5 rounded-2xl border-2 border-cyan-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-2xl">🛑</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-100 px-2 py-0.5 rounded-md">Es para!</span>
+                </div>
+                <h5 class="font-fun font-bold text-cyan-950 text-base">Decimals exactes</h5>
+                <p class="text-xs text-slate-600 mt-1 font-medium leading-relaxed">
+                  Tenen pocs decimals i <b>s'acaben</b> ràpidament sense continuar fins a l'infinit.
+                </p>
+              </div>
+              <div class="mt-3 pt-2 border-t border-cyan-100 text-center font-mono font-bold text-cyan-800 text-xs bg-cyan-50/70 py-1 rounded-lg">
+                1/2 = 0,5 · 3/4 = 0,75
+              </div>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-2xl border-2 border-blue-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-2xl">🔁</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">Tren repetitiu</span>
+                </div>
+                <h5 class="font-fun font-bold text-blue-950 text-base">Periòdics purs</h5>
+                <p class="text-xs text-slate-600 mt-1 font-medium leading-relaxed">
+                  Després de la coma, el mateix patró <b>es repeteix per sempre</b>!
+                </p>
+              </div>
+              <div class="mt-3 pt-2 border-t border-blue-100 text-center font-mono font-bold text-blue-800 text-xs bg-blue-50/70 py-1 rounded-lg">
+                1/3 = 0,<span class="underline decoration-blue-500 font-extrabold">333</span>...
+              </div>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-2xl border-2 border-indigo-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-2xl">🕵️‍♂️</span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">Té un intrús!</span>
+                </div>
+                <h5 class="font-fun font-bold text-indigo-950 text-base">Periòdics mixtos</h5>
+                <p class="text-xs text-slate-600 mt-1 font-medium leading-relaxed">
+                  Hi ha una xifra "intrusa" i després comença la festa del patró repetit.
+                </p>
+              </div>
+              <div class="mt-3 pt-2 border-t border-indigo-100 text-center font-mono font-bold text-indigo-800 text-xs bg-indigo-50/70 py-1 rounded-lg">
+                1/6 = 0,1<span class="underline decoration-indigo-500 font-extrabold">666</span>...
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- BLOC 2: NOMBRES IRRACIONALS (INTERACTIU) -->
+        <div class="bg-gradient-to-br from-pink-50 to-orange-50 rounded-3xl p-5 border-2 border-pink-200 shadow-sm space-y-4">
+          
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-pink-200 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="text-3xl bg-pink-100 p-2 rounded-2xl">🔍</span>
+              <div>
+                <h4 class="text-xl sm:text-2xl font-fun font-bold text-pink-950">
+                  Nombres Irracionals (<span class="font-mono text-pink-600 font-extrabold">𝕀</span>)
+                </h4>
+                <p class="text-xs sm:text-sm font-semibold text-pink-800">
+                  El misteri: <b>decimals infinits que NO es repeteixen mai en cap patró!</b>
+                </p>
+              </div>
+            </div>
+            <span class="bg-pink-600 text-white text-xs font-bold font-fun px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
+              Sense fracció d'enters!
+            </span>
+          </div>
+
+          <!-- LA LUPA IMPOSSIBLE INTERACTIVA -->
+          <div class="bg-white rounded-2xl p-4 border border-pink-200 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>🔎</span> <b>La lupa impossible:</b> Tria una estrella matemàtica i fes zoom:
+              </span>
+              <div class="flex gap-1.5">
+                <button onclick="demoIrrational('pi')" id="irrDemoPi" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-400 bg-pink-500 text-white transition-all">
+                  π (Pi)
+                </button>
+                <button onclick="demoIrrational('sqrt2')" id="irrDemoSqrt2" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-200 bg-white text-pink-800 hover:bg-pink-50 transition-all">
+                  √2
+                </button>
+                <button onclick="demoIrrational('phi')" id="irrDemoPhi" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-200 bg-white text-pink-800 hover:bg-pink-50 transition-all">
+                  Φ (Or)
+                </button>
+                <button onclick="demoIrrational('e')" id="irrDemoE" class="px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-200 bg-white text-pink-800 hover:bg-pink-50 transition-all">
+                  e (Euler)
+                </button>
+              </div>
+            </div>
+
+            <!-- Visor de la lupa amb carrusel de decimals infinits -->
+            <div class="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 rounded-xl p-3 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-pink-500/20 border-2 border-pink-400 flex items-center justify-center text-2xl animate-pulse">
+                  🔍
+                </div>
+                <div>
+                  <span id="irrDemoName" class="text-xs text-pink-300 font-bold uppercase tracking-wider block font-fun">π (Nombre Pi)</span>
+                  <div id="irrDemoDigits" class="font-mono text-base sm:text-lg font-extrabold text-amber-300 tracking-wider">
+                    3,141592653589793...
+                  </div>
+                </div>
+              </div>
+              <button onclick="spinIrrationalZoom()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white text-xs font-fun font-bold rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-1.5">
+                <span>Més decimals! ➕</span>
+              </button>
+            </div>
+
+            <div class="bg-pink-50 rounded-xl p-2.5 text-xs sm:text-sm text-pink-900 font-semibold flex items-center justify-between" id="irrFeedback">
+              <span>🧐 <b>Com s'ubica a la recta?</b> Com que no té cap patró ni fracció senzilla, l'hem d'anar aproximant amb la lupa!</span>
+              <span class="bg-pink-200 text-pink-900 px-2 py-0.5 rounded-lg text-xs font-bold">Sense fi</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BLOC 3: RESUM COMPARATIU VISUAL -->
+        <div class="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-2xl">⚡</span>
+            <h4 class="text-lg sm:text-xl font-fun font-bold text-slate-900">
+              Duel a la recta numèrica: Racionals vs Irracionals
+            </h4>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            <!-- Targeta resum Racionals -->
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 border border-blue-200 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="font-fun font-bold text-blue-900 text-lg flex items-center gap-1.5">
+                  <span>✂️</span> Equip racional periòdic
+                </span>
+                <span class="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">ℚ</span>
+              </div>
+              
+              <ul class="text-xs sm:text-sm space-y-2 font-semibold text-slate-700">
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✓</span>
+                  <span><b>Té fracció a / b?</b> SÍ, sempre entre dos enters.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✓</span>
+                  <span><b>Patró repetitiu?</b> SÍ (té període o s'acaba).</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">📍</span>
+                  <span><b>A la recta numèrica:</b> Es clava fent el tall màgic en parts iguals!</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Targeta resum Irracionals -->
+            <div class="bg-gradient-to-br from-pink-50 to-orange-50 rounded-2xl p-4 border border-pink-200 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="font-fun font-bold text-pink-900 text-lg flex items-center gap-1.5">
+                  <span>🔍</span> Equip irracional
+                </span>
+                <span class="bg-pink-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">𝕀</span>
+              </div>
+              
+              <ul class="text-xs sm:text-sm space-y-2 font-semibold text-slate-700">
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs">✕</span>
+                  <span><b>Té fracció a / b?</b> NO, mai entre enters senzills.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs">✕</span>
+                  <span><b>Patró repetitiu?</b> NO, xifres variades i sense patró.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-pink-100 text-pink-800 flex items-center justify-center font-bold text-xs">🔎</span>
+                  <span><b>A la recta numèrica:</b> S'aproxima fent zoom decimal continu!</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Peu de la modal -->
+      <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end">
+        <button onclick="closeTheoryModal()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-fun font-bold rounded-2xl shadow-md transition-all active:scale-95 text-sm sm:text-base flex items-center gap-2">
+          <span>Tot clar! Tornar al joc</span> <span>👍</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Sintetitzador d'àudio autònom amb Web Audio API
+    let audioCtx = null;
+    function playSound(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'cut') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.14);
+          osc.start(now);
+          osc.stop(now + 0.14);
+        } else if (type === 'zoom') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(260, now);
+          osc.frequency.exponentialRampToValueAtTime(540, now + 0.18);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'correct') {
+          [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'sine';
+            o.frequency.value = f;
+            g.gain.setValueAtTime(0.08, now + i * 0.07);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.28);
+            o.start(now + i * 0.07);
+            o.stop(now + i * 0.07 + 0.28);
+          });
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(140, now + 0.22);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        }
+      } catch (e) {
+        // Mode silenciós
+      }
+    }
+
+    // Modal de teoria i interactius de la modal
+    function openTheoryModal() {
+      document.getElementById('theoryModal').classList.remove('hidden');
+      sliceDemo(2, '1/2', '0,5', 'Decimal exacte');
+      demoIrrational('pi');
+    }
+    function closeTheoryModal() {
+      document.getElementById('theoryModal').classList.add('hidden');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeTheoryModal();
+    });
+
+    // Simulador interactiu del tall màgic a la modal
+    function sliceDemo(parts, fraction, decStr, typeStr) {
+      playSound('cut');
+      [2, 3, 4].forEach(p => {
+        const btn = document.getElementById(`sliceBtn${p}`);
+        if (p === parts) {
+          btn.className = 'px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-blue-400 bg-blue-500 text-white transition-all';
+        } else {
+          btn.className = 'px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-blue-200 bg-white text-blue-800 hover:bg-blue-50 transition-all';
+        }
+      });
+
+      const bar = document.getElementById('chocolateBar');
+      bar.innerHTML = '';
+
+      for (let i = 0; i < parts; i++) {
+        const chunk = document.createElement('div');
+        chunk.className = 'h-full flex-1 flex items-center justify-center font-fun font-bold text-xs sm:text-sm text-blue-900 border-r-2 border-dashed border-blue-400 bg-gradient-to-b from-sky-200 to-cyan-300 relative';
+        if (i === parts - 1) chunk.classList.remove('border-r-2');
+        
+        // Efecte de tall màgic amb espurnes i tisores
+        chunk.innerHTML = `
+          <span class="magic-cut-anim">1/${parts}</span>
+          ${i === 0 ? `<span class="absolute -top-1 -right-2 text-sm">✨</span>` : ''}
+        `;
+        bar.appendChild(chunk);
+      }
+
+      document.getElementById('sliceFeedback').innerHTML = `
+        <span>🎯 <b>${fraction} = ${decStr}:</b> Dividim el segment en ${parts} bocins iguals. El tall màgic cau a la marca exacta!</span>
+        <span class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded-lg text-xs font-bold">${typeStr}</span>
+      `;
+    }
+
+    // Simulador interactiu de la lupa per a irracionals a la modal
+    const IRR_DATA = {
+      'pi': { name: 'π (Nombre Pi)', digits: '3,14159265358979323846...', note: 'La circumferència dividida pel diàmetre.' },
+      'sqrt2': { name: '√2 (Arrel quadrada de 2)', digits: '1,41421356237309504880...', note: 'La diagonal d\'un quadrat d\'1x1.' },
+      'phi': { name: 'Φ (Nombre d\'or)', digits: '1,61803398874989484820...', note: 'Les espirals de les flors i la bellesa de l\'art.' },
+      'e': { name: 'e (Euler)', digits: '2,71828182845904523536...', note: 'El ritme de creixement de la natura i els bacteris.' }
+    };
+
+    let currentIrrKey = 'pi';
+    let irrStep = 0;
+
+    function demoIrrational(key) {
+      currentIrrKey = key;
+      irrStep = 0;
+      ['pi', 'sqrt2', 'phi', 'e'].forEach(k => {
+        const btn = document.getElementById(`irrDemo${k.charAt(0).toUpperCase() + k.slice(1)}`);
+        if (btn) {
+          if (k === key) {
+            btn.className = 'px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-400 bg-pink-500 text-white transition-all';
+          } else {
+            btn.className = 'px-2.5 py-1 text-xs font-fun font-bold rounded-xl border border-pink-200 bg-white text-pink-800 hover:bg-pink-50 transition-all';
+          }
+        }
+      });
+
+      const data = IRR_DATA[key];
+      document.getElementById('irrDemoName').textContent = data.name;
+      document.getElementById('irrDemoDigits').textContent = data.digits.slice(0, 18) + '...';
+      document.getElementById('irrFeedback').innerHTML = `
+        <span>🧐 <b>${data.name}:</b> ${data.note} Cap fracció exacta el clava!</span>
+        <span class="bg-pink-200 text-pink-900 px-2 py-0.5 rounded-lg text-xs font-bold">Misteri infinit</span>
+      `;
+    }
+
+    function spinIrrationalZoom() {
+      playSound('zoom');
+      irrStep++;
+      const data = IRR_DATA[currentIrrKey];
+      const digitsArr = [
+        data.digits.slice(0, 10) + '...',
+        data.digits.slice(0, 15) + '...',
+        data.digits.slice(0, 20) + '...',
+        data.digits
+      ];
+      document.getElementById('irrDemoDigits').textContent = digitsArr[irrStep % digitsArr.length];
+    }
+
+    // Dades per al laboratori de la recta
+    const LAB_NUMBERS = {
+      '1/3': {
+        name: '1/3',
+        type: 'racional',
+        val: 1/3,
+        denom: 3,
+        decimalStr: '0,33333333...',
+        description: 'Nombre de l\'Equip racional periòdic pur. Tot i tenir decimals infinits, podem fer el tall màgic dividint el segment en 3 trossos iguals i situar-lo exactament!',
+        cutBtnText: 'Tall màgic en 3 parts! ✂️'
+      },
+      '2/3': {
+        name: '2/3',
+        type: 'racional',
+        val: 2/3,
+        denom: 3,
+        decimalStr: '0,66666666...',
+        description: 'Nombre de l\'Equip racional periòdic. Dividim la unitat en 3 parts iguals i agafem la 2a marca. Posició clavada!',
+        cutBtnText: 'Tall màgic en 3 parts! ✂️'
+      },
+      '1/6': {
+        name: '1/6',
+        type: 'racional',
+        val: 1/6,
+        denom: 6,
+        decimalStr: '0,16666666...',
+        description: 'Nombre de l\'Equip racional periòdic mixt. Comença amb un 1 i després es repeteix el 6. Es resol fent el tall màgic en 6 parts idèntiques.',
+        cutBtnText: 'Tall màgic en 6 parts! ✂️'
+      },
+      'pi': {
+        name: 'π (Pi)',
+        type: 'irracional',
+        val: Math.PI,
+        denom: null,
+        decimalStr: '3,14159265...',
+        description: 'Nombre de l\'Equip irracional conegut per les circumferències. Els decimals són infinits i no es repeteixen mai en cap cicle periòdic.',
+        cutBtnText: 'Lupa de decimals 🔍'
+      },
+      'e': {
+        name: 'e (Euler)',
+        type: 'irracional',
+        val: Math.E,
+        denom: null,
+        decimalStr: '2,71828182...',
+        description: 'Nombre de l\'Equip irracional anomenat per Euler. Governa el creixement continu a la natura. Té infinits decimals sense cap patró repetitiu!',
+        cutBtnText: 'Lupa de decimals 🔍'
+      },
+      'sqrt2': {
+        name: '√2',
+        type: 'irracional',
+        val: Math.SQRT2,
+        denom: null,
+        decimalStr: '1,41421356...',
+        description: 'Nombre de l\'Equip irracional. És la diagonal d\'un quadrat d\'1x1. Cap fracció senzilla entre dos nombres enters pot donar el seu valor exacte.',
+        cutBtnText: 'Lupa de decimals 🔍'
+      },
+      'phi': {
+        name: 'Φ (Nombre d\'or)',
+        type: 'irracional',
+        val: 1.6180339887,
+        denom: null,
+        decimalStr: '1,61803398...',
+        description: 'Nombre de l\'Equip irracional que apareix a les flors i a l\'art. Té decimals infinits sense cap repetició.',
+        cutBtnText: 'Lupa de decimals 🔍'
+      }
+    };
+
+    // Banc de preguntes per al repte
+    const QUIZ_BANK = [
+      {
+        symbol: '1/3',
+        decimals: '0,333333...',
+        hint: 'Decimals infinits que repeteixen el 3',
+        type: 'racional',
+        explanation: '1/3 = 0,333... pertany a l\'Equip racional periòdic. El podem ubicar exactament fent el tall màgic dividint la unitat en 3 trossos iguals!'
+      },
+      {
+        symbol: '2/3',
+        decimals: '0,666666...',
+        hint: 'Decimals infinits que repeteixen el 6',
+        type: 'racional',
+        explanation: '2/3 = 0,666... pertany a l\'Equip racional periòdic. Fent el tall màgic de 3 parts a la unitat en prenem exactament 2!'
+      },
+      {
+        symbol: '1/6',
+        decimals: '0,166666...',
+        hint: 'Comença per 1 i després es repeteix el 6',
+        type: 'racional',
+        explanation: '1/6 = 0,166... pertany a l\'Equip racional periòdic (mixt). Es col·loca amb precisió fent el tall màgic en 6 parts.'
+      },
+      {
+        symbol: '4/9',
+        decimals: '0,444444...',
+        hint: 'El 4 es repeteix sense fi',
+        type: 'racional',
+        explanation: '4/9 = 0,444... pertany a l\'Equip racional periòdic. Prové directament de partir la unitat amb el tall màgic de 9 parts iguals.'
+      },
+      {
+        symbol: '5/6',
+        decimals: '0,833333...',
+        hint: 'Comença per 8 i després es repeteix el 3',
+        type: 'racional',
+        explanation: '5/6 = 0,833... pertany a l\'Equip racional periòdic (mixt). Es troba fent el tall màgic de 6 subdivisions iguals a la recta.'
+      },
+      {
+        symbol: '7/9',
+        decimals: '0,777777...',
+        hint: 'El dígit 7 es repeteix infinitament',
+        type: 'racional',
+        explanation: '7/9 = 0,777... pertany a l\'Equip racional periòdic. Ubicació exacta en el 7è tall de 9!'
+      },
+      {
+        symbol: '2/5',
+        decimals: '0,4',
+        hint: 'Fracció senzilla exacta',
+        type: 'racional',
+        explanation: '2/5 = 0,4 pertany a l\'Equip racional (decimal exacte). Dividim la unitat en 5 parts iguals amb el tall màgic i en prenem 2.'
+      },
+      {
+        symbol: '3/4',
+        decimals: '0,75',
+        hint: 'Tres quartes parts',
+        type: 'racional',
+        explanation: '3/4 = 0,75 pertany a l\'Equip racional. Fem el tall màgic dividint el segment en 4 bocins i el trobem de seguida!'
+      },
+      {
+        symbol: 'π (Pi)',
+        decimals: '3,14159265...',
+        hint: 'El nombre més famós del cercle',
+        type: 'irracional',
+        explanation: 'π és el rei de l\'Equip irracional: els seus decimals són infinits i mai tenen cap patró repetitiu!'
+      },
+      {
+        symbol: 'e (Euler)',
+        decimals: '2,71828182...',
+        hint: 'Nombre famós del creixement de la natura',
+        type: 'irracional',
+        explanation: 'El nombre e d\'Euler pertany a l\'Equip irracional: té decimals infinits que no formen cap període cíclic.'
+      },
+      {
+        symbol: '√2',
+        decimals: '1,41421356...',
+        hint: 'Diagonal d\'un quadrat d\'1x1',
+        type: 'irracional',
+        explanation: '√2 pertany a l\'Equip irracional: té infinits decimals no periòdics. No hi ha cap fracció simple que el clavi!'
+      },
+      {
+        symbol: 'Φ (Nombre d\'or)',
+        decimals: '1,61803398...',
+        hint: 'Proporció àuria de la natura i l\'art',
+        type: 'irracional',
+        explanation: 'El nombre d\'or Φ pertany a l\'Equip irracional: té decimals infinits sense cicle repetitiu.'
+      },
+      {
+        symbol: '√3',
+        decimals: '1,73205080...',
+        hint: 'Arrel quadrada no exacta',
+        type: 'irracional',
+        explanation: '√3 pertany a l\'Equip irracional: decimals infinits sense cap repetició regular.'
+      },
+      {
+        symbol: '√5',
+        decimals: '2,23606797...',
+        hint: 'Arrel quadrada no exacta',
+        type: 'irracional',
+        explanation: '√5 pertany a l\'Equip irracional: mai trobarem un període ni una fracció exacta senzilla.'
+      }
+    ];
+
+    // Variables d'estat del laboratori
+    let currentLabKey = '1/3';
+    let animCutProgress = 0;
+    let isCutting = false;
+    let zoomLevel = 1.0;
+    let centerValue = 1/3;
+    let isZoomingIrrational = false;
+    let irrationalZoomCount = 0;
+
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('canvasWrapper');
+    let isDragging = false;
+    let dragStartX = 0;
+
+    function resizeCanvas() {
+      const rect = wrapper.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      drawNumberLine();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function getVisibleRange() {
+      const span = 2.4 * zoomLevel;
+      return {
+        min: centerValue - span / 2,
+        max: centerValue + span / 2
+      };
+    }
+
+    function valToScreen(val) {
+      const w = wrapper.clientWidth;
+      const { min, max } = getVisibleRange();
+      return ((val - min) / (max - min)) * w;
+    }
+
+    function drawNumberLine() {
+      const w = wrapper.clientWidth;
+      const h = wrapper.clientHeight;
+      const midY = h * 0.58;
+      const item = LAB_NUMBERS[currentLabKey];
+
+      ctx.clearRect(0, 0, w, h);
+
+      const { min, max } = getVisibleRange();
+      const range = max - min;
+
+      // Cinta de particions per a racionals
+      if (item.type === 'racional' && animCutProgress > 0) {
+        const x0 = valToScreen(0);
+        const x1 = valToScreen(1);
+        const den = item.denom;
+        const partWidth = (x1 - x0) / den;
+
+        for (let i = 0; i < den; i++) {
+          const sliceX = x0 + i * partWidth;
+          const colors = ['#93c5fd', '#67e8f9', '#a5f3fc', '#bfdbfe', '#bae6fd'];
+          ctx.fillStyle = colors[i % colors.length];
+          ctx.globalAlpha = 0.5 * animCutProgress;
+          
+          const barH = 26;
+          ctx.fillRect(sliceX + 2, midY - barH - 8, (partWidth - 4) * animCutProgress, barH);
+          
+          if (animCutProgress > 0.8 && partWidth > 28) {
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = '#0369a1';
+            ctx.font = 'bold 11px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`1/${den}`, sliceX + partWidth / 2, midY - 14);
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Eix horitzontal
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(10, midY);
+      ctx.lineTo(w - 10, midY);
+      ctx.stroke();
+
+      // Fletxa de l'extrem dret
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.moveTo(w - 8, midY);
+      ctx.lineTo(w - 20, midY - 6);
+      ctx.lineTo(w - 20, midY + 6);
+      ctx.fill();
+
+      // Marques numèriques
+      let tickStep = 1;
+      if (range < 1.2) tickStep = 0.5;
+      if (range < 0.6) tickStep = 0.1;
+      if (range < 0.15) tickStep = 0.02;
+
+      const firstTick = Math.floor(min / tickStep) * tickStep;
+
+      for (let t = firstTick; t <= max + tickStep; t += tickStep) {
+        const sx = valToScreen(t);
+        if (sx < -40 || sx > w + 40) continue;
+
+        const isInt = Math.abs(Math.round(t) - t) < 0.0001;
+        const tickHeight = isInt ? 22 : 12;
+
+        ctx.strokeStyle = isInt ? '#1e293b' : '#94a3b8';
+        ctx.lineWidth = isInt ? 3 : 1.5;
+        ctx.beginPath();
+        ctx.moveTo(sx, midY - tickHeight / 2);
+        ctx.lineTo(sx, midY + tickHeight / 2);
+        ctx.stroke();
+
+        if (isInt || range < 1.5) {
+          ctx.fillStyle = isInt ? '#0f172a' : '#64748b';
+          ctx.font = isInt ? 'bold 15px Fredoka, sans-serif' : '12px Quicksand, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(Number(t.toFixed(3)), sx, midY + 26);
+        }
+      }
+
+      // Talls màgics animats
+      if (item.type === 'racional' && animCutProgress > 0) {
+        const den = item.denom;
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 4]);
+
+        for (let p = 0; p <= den; p++) {
+          const fx = p / den;
+          const sx = valToScreen(fx);
+          ctx.beginPath();
+          ctx.moveTo(sx, midY - 32);
+          ctx.lineTo(sx, midY + 12);
+          ctx.stroke();
+
+          if (animCutProgress >= 1 && p > 0 && p < den) {
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('✂️', sx, midY - 36);
+          }
+        }
+        ctx.setLineDash([]);
+      }
+
+      // Indicador del nombre seleccionat
+      const targetX = valToScreen(item.val);
+      const isRacional = item.type === 'racional';
+      const color = isRacional ? '#0284c7' : '#ec4899';
+
+      ctx.strokeStyle = isRacional ? 'rgba(2, 132, 199, 0.4)' : 'rgba(236, 72, 153, 0.4)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(targetX, 25);
+      ctx.lineTo(targetX, midY - 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = isRacional ? 'rgba(6, 182, 212, 0.25)' : 'rgba(249, 115, 22, 0.25)';
+      ctx.beginPath();
+      ctx.arc(targetX, midY, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(targetX, midY, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Globus flotant sobre el número
+      const bubbleW = 110;
+      const bubbleH = 34;
+      const bY = 16;
+      ctx.fillStyle = color;
+      roundRect(ctx, targetX - bubbleW / 2, bY, bubbleW, bubbleH, 12);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(targetX, bY + bubbleH + 6);
+      ctx.lineTo(targetX - 6, bY + bubbleH);
+      ctx.lineTo(targetX + 6, bY + bubbleH);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px Fredoka, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.name, targetX, bY + 22);
+
+      if (isZoomingIrrational) {
+        ctx.save();
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(targetX, midY, 32, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(targetX + 22, midY + 22);
+        ctx.lineTo(targetX + 42, midY + 42);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y + radius, x, y);
+      ctx.closePath();
+    }
+
+    function pickLabNumber(key) {
+      currentLabKey = key;
+      const item = LAB_NUMBERS[key];
+      centerValue = item.val;
+      zoomLevel = 1.0;
+      animCutProgress = 0;
+      isZoomingIrrational = false;
+
+      const isRacional = item.type === 'racional';
+      const badge = document.getElementById('badgeNumberType');
+      badge.textContent = `${item.name} · ${isRacional ? 'Equip racional periòdic' : 'Equip irracional'}`;
+      badge.className = `px-4 py-1.5 rounded-xl font-fun font-bold text-white text-sm sm:text-base shadow-sm ${
+        isRacional ? 'bg-gradient-to-r from-blue-600 to-cyan-500' : 'bg-gradient-to-r from-pink-600 to-orange-500'
+      }`;
+
+      document.getElementById('targetDecimalPreview').innerHTML = `
+        Valor: <span class="font-mono ${isRacional ? 'text-blue-700' : 'text-pink-700'} font-extrabold">${item.decimalStr}</span>
+      `;
+
+      const actionBox = document.getElementById('actionContainer');
+      if (isRacional) {
+        actionBox.innerHTML = `
+          <button onclick="triggerCutAnimation()" class="pulse-soft bg-blue-600 hover:bg-blue-700 text-white font-fun font-bold px-4 py-2 rounded-2xl shadow-md transition-all active:scale-95 flex items-center gap-2">
+            <span>${item.cutBtnText}</span>
+          </button>
+        `;
+      } else {
+        actionBox.innerHTML = `
+          <button onclick="triggerIrrationalZoom()" class="pulse-soft bg-pink-600 hover:bg-pink-700 text-white font-fun font-bold px-4 py-2 rounded-2xl shadow-md transition-all active:scale-95 flex items-center gap-2">
+            <span>${item.cutBtnText}</span>
+          </button>
+        `;
+      }
+
+      const bubbleIcon = document.getElementById('bubbleIcon');
+      const bubbleText = document.getElementById('bubbleText');
+      if (isRacional) {
+        bubbleIcon.textContent = '✂️';
+        bubbleText.textContent = `Té ${item.denom} parts exactes! Clica el botó per activar el tall màgic.`;
+      } else {
+        bubbleIcon.textContent = '🔍';
+        bubbleText.textContent = `Infinits decimals sense repetició! Clica la lupa per investigar.`;
+      }
+
+      const card = document.getElementById('explanationCard');
+      card.className = `bg-white rounded-3xl p-5 shadow-md border-l-8 ${isRacional ? 'border-blue-500' : 'border-pink-500'} flex flex-col sm:flex-row items-center gap-4`;
+      document.getElementById('cardIconLarge').textContent = isRacional ? '✂️' : '🔍';
+      document.getElementById('cardIconLarge').className = `text-5xl p-3 rounded-2xl ${isRacional ? 'bg-blue-50' : 'bg-pink-50'}`;
+      document.getElementById('cardTitle').textContent = isRacional ? 'Truc trobat: El tall màgic!' : 'El gran misteri: Decimals sense fi!';
+      document.getElementById('cardTitle').className = `text-xl font-bold font-fun ${isRacional ? 'text-blue-900' : 'text-pink-900'}`;
+      document.getElementById('cardDescription').textContent = item.description;
+
+      drawNumberLine();
+    }
+
+    function triggerCutAnimation() {
+      if (isCutting) return;
+      isCutting = true;
+      animCutProgress = 0;
+      playSound('cut');
+
+      const start = performance.now();
+      const duration = 650;
+
+      function step(now) {
+        const elapsed = now - start;
+        animCutProgress = Math.min(1, elapsed / duration);
+        drawNumberLine();
+
+        if (animCutProgress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          isCutting = false;
+          playSound('correct');
+          const item = LAB_NUMBERS[currentLabKey];
+          document.getElementById('bubbleIcon').textContent = '🎉';
+          document.getElementById('bubbleText').textContent = `El tall màgic el clava en la partició exacta de ${item.denom}!`;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function triggerIrrationalZoom() {
+      const item = LAB_NUMBERS[currentLabKey];
+      isZoomingIrrational = true;
+      playSound('zoom');
+
+      const targetZoom = zoomLevel * 0.45;
+      const initialZoom = zoomLevel;
+      const start = performance.now();
+      const duration = 600;
+
+      function step(now) {
+        const elapsed = now - start;
+        const progress = Math.min(1, elapsed / duration);
+        zoomLevel = initialZoom + (targetZoom - initialZoom) * progress;
+        centerValue = item.val;
+        drawNumberLine();
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          irrationalZoomCount++;
+          const previewSub = item.val.toString().slice(0, 5 + irrationalZoomCount);
+          document.getElementById('bubbleIcon').textContent = '🧐';
+          document.getElementById('bubbleText').textContent = `Més a prop: ${previewSub}... Mai s'acaben ni es repeteixen en període!`;
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function zoomStep(factor) {
+      zoomLevel = Math.max(0.02, Math.min(8.0, zoomLevel * factor));
+      drawNumberLine();
+    }
+
+    function resetZoomCenter() {
+      const item = LAB_NUMBERS[currentLabKey];
+      centerValue = item.val;
+      zoomLevel = 1.0;
+      drawNumberLine();
+    }
+
+    function tryNumberInLab(key) {
+      switchMode('explore');
+      pickLabNumber(key);
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+
+    // Esdeveniments d'arrossegament de la recta
+    wrapper.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+    });
+
+    window.addEventListener('mouseup', () => isDragging = false);
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const deltaPx = e.clientX - dragStartX;
+      dragStartX = e.clientX;
+      const range = (2.4 * zoomLevel);
+      const deltaVal = (deltaPx / wrapper.clientWidth) * range;
+      centerValue -= deltaVal;
+      drawNumberLine();
+    });
+
+    wrapper.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => isDragging = false);
+
+    wrapper.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      const deltaPx = e.touches[0].clientX - dragStartX;
+      dragStartX = e.touches[0].clientX;
+      const range = (2.4 * zoomLevel);
+      const deltaVal = (deltaPx / wrapper.clientWidth) * range;
+      centerValue -= deltaVal;
+      drawNumberLine();
+    }, { passive: true });
+
+    // Gestió del confeti
+    const confCanvas = document.getElementById('confettiCanvas');
+    const confCtx = confCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimationId = null;
+
+    function clearConfetti() {
+      if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+      }
+      confettiParticles = [];
+      if (confCanvas && confCtx) {
+        confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      }
+    }
+
+    function triggerConfetti() {
+      clearConfetti();
+      confCanvas.width = confCanvas.parentElement.clientWidth;
+      confCanvas.height = confCanvas.parentElement.clientHeight;
+
+      for (let i = 0; i < 40; i++) {
+        confettiParticles.push({
+          x: confCanvas.width / 2,
+          y: confCanvas.height * 0.35,
+          vx: (Math.random() - 0.5) * 9,
+          vy: (Math.random() - 0.85) * 9,
+          size: Math.random() * 7 + 4,
+          color: ['#06b6d4', '#3b82f6', '#ec4899', '#facc15', '#10b981'][Math.floor(Math.random() * 5)],
+          rot: Math.random() * 360,
+          life: 55
+        });
+      }
+      runConfettiLoop();
+    }
+
+    function runConfettiLoop() {
+      confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+      
+      confettiParticles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.rot += 5;
+        p.life--;
+
+        confCtx.save();
+        confCtx.translate(p.x, p.y);
+        confCtx.rotate((p.rot * Math.PI) / 180);
+        confCtx.fillStyle = p.color;
+        confCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        confCtx.restore();
+      });
+
+      confettiParticles = confettiParticles.filter(p => p.life > 0);
+
+      if (confettiParticles.length > 0) {
+        confettiAnimationId = requestAnimationFrame(runConfettiLoop);
+      } else {
+        clearConfetti();
+      }
+    }
+
+    // Lògica del Quiz (El repte: caça un número)
+    let quizRound = 1;
+    const TOTAL_QUIZ_ROUNDS = 10;
+    let quizScore = 0;
+    let quizStreak = 0;
+    let quizAnswered = false;
+    let quizDeck = [];
+    let currentQuizItem = null;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function switchMode(mode) {
+      clearConfetti();
+
+      const exploreSec = document.getElementById('sectionExplore');
+      const famousSec = document.getElementById('sectionFamous');
+      const gameSec = document.getElementById('sectionGame');
+
+      const tabExplore = document.getElementById('tabExplore');
+      const tabFamous = document.getElementById('tabFamous');
+      const tabGame = document.getElementById('tabGame');
+
+      exploreSec.classList.add('hidden');
+      famousSec.classList.add('hidden');
+      gameSec.classList.add('hidden');
+
+      tabExplore.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-white hover:bg-indigo-50 text-slate-700 flex items-center gap-2 border border-slate-200';
+      tabFamous.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-white hover:bg-purple-50 text-slate-700 flex items-center gap-2 border border-slate-200';
+      tabGame.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-white hover:bg-yellow-50 text-slate-700 flex items-center gap-2 border border-slate-200';
+
+      if (mode === 'explore') {
+        exploreSec.classList.remove('hidden');
+        tabExplore.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-indigo-600 text-white flex items-center gap-2 ring-2 ring-indigo-400 ring-offset-2';
+        resizeCanvas();
+      } else if (mode === 'famous') {
+        famousSec.classList.remove('hidden');
+        tabFamous.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-purple-600 text-white flex items-center gap-2 ring-2 ring-purple-400 ring-offset-2';
+      } else {
+        gameSec.classList.remove('hidden');
+        tabGame.className = 'px-4 py-2 rounded-2xl font-fun text-base sm:text-lg font-bold transition-all shadow-md bg-amber-500 text-white flex items-center gap-2 ring-2 ring-amber-300 ring-offset-2';
+        if (quizDeck.length === 0) {
+          startNewQuizRound();
+        }
+      }
+    }
+
+    function startNewQuizRound() {
+      clearConfetti();
+      quizRound = 1;
+      quizScore = 0;
+      quizStreak = 0;
+      quizDeck = shuffleArray(QUIZ_BANK);
+      document.getElementById('gameScore').textContent = '0';
+      document.getElementById('gameStreak').textContent = '0';
+      document.getElementById('quizResultsCard').classList.add('hidden');
+      loadQuizQuestion();
+    }
+
+    function loadQuizQuestion() {
+      clearConfetti();
+      quizAnswered = false;
+      document.getElementById('roundCounter').textContent = quizRound;
+      currentQuizItem = quizDeck[(quizRound - 1) % quizDeck.length];
+
+      document.getElementById('quizSymbol').textContent = currentQuizItem.symbol;
+      document.getElementById('quizDecimals').textContent = currentQuizItem.decimals;
+      document.getElementById('quizHint').textContent = `(${currentQuizItem.hint})`;
+
+      const fb = document.getElementById('quizFeedback');
+      fb.className = 'hidden';
+      document.getElementById('nextQuestionBtn').classList.add('hidden');
+
+      const btnRat = document.getElementById('btnChooseRational');
+      const btnIrr = document.getElementById('btnChooseIrrational');
+      btnRat.disabled = false;
+      btnIrr.disabled = false;
+      btnRat.classList.remove('opacity-40');
+      btnIrr.classList.remove('opacity-40');
+    }
+
+    function submitAnswer(userChoice) {
+      if (quizAnswered) return;
+      quizAnswered = true;
+
+      const isCorrect = userChoice === currentQuizItem.type;
+      const fb = document.getElementById('quizFeedback');
+      const btnRat = document.getElementById('btnChooseRational');
+      const btnIrr = document.getElementById('btnChooseIrrational');
+
+      btnRat.disabled = true;
+      btnIrr.disabled = true;
+
+      if (userChoice === 'racional') {
+        btnIrr.classList.add('opacity-40');
+      } else {
+        btnRat.classList.add('opacity-40');
+      }
+
+      fb.classList.remove('hidden');
+
+      if (isCorrect) {
+        quizScore += 10;
+        quizStreak++;
+        playSound('correct');
+        triggerConfetti();
+        fb.className = 'mt-6 p-4 rounded-2xl max-w-lg mx-auto font-bold text-sm sm:text-base bg-emerald-100 border border-emerald-300 text-emerald-900 badge-pop';
+        fb.innerHTML = `
+          <div class="flex items-center gap-2 text-lg mb-1">
+            <span>🎉</span> <span>Genial, has encertat!</span>
+          </div>
+          <p class="font-normal text-emerald-800">${currentQuizItem.explanation}</p>
+        `;
+      } else {
+        clearConfetti();
+        quizStreak = 0;
+        playSound('error');
+        fb.className = 'mt-6 p-4 rounded-2xl max-w-lg mx-auto font-bold text-sm sm:text-base bg-rose-100 border border-rose-300 text-rose-900 badge-pop';
+        fb.innerHTML = `
+          <div class="flex items-center gap-2 text-lg mb-1">
+            <span>❌</span> <span>Aquesta vegada no!</span>
+          </div>
+          <p class="font-normal text-rose-800">Pertany a l'<b>${currentQuizItem.type === 'racional' ? 'Equip racional periòdic' : 'Equip irracional'}</b>. ${currentQuizItem.explanation}</p>
+        `;
+      }
+
+      document.getElementById('gameScore').textContent = quizScore;
+      document.getElementById('gameStreak').textContent = quizStreak;
+
+      const nextBtn = document.getElementById('nextQuestionBtn');
+      nextBtn.classList.remove('hidden');
+      if (quizRound >= TOTAL_QUIZ_ROUNDS) {
+        nextBtn.innerHTML = '<span>Veure el resultat final!</span> <span>🏆</span>';
+      } else {
+        nextBtn.innerHTML = '<span>Següent número!</span> <span>➡️</span>';
+      }
+    }
+
+    function nextQuizQuestion() {
+      clearConfetti();
+      if (quizRound >= TOTAL_QUIZ_ROUNDS) {
+        showFinalResults();
+      } else {
+        quizRound++;
+        loadQuizQuestion();
+      }
+    }
+
+    function showFinalResults() {
+      clearConfetti();
+      document.getElementById('quizResultsCard').classList.remove('hidden');
+      document.getElementById('finalScore').textContent = quizScore;
+      const msg = document.getElementById('finalFeedbackMessage');
+
+      if (quizScore >= 90) {
+        msg.textContent = '🌟 Extraordinari! Ets un gran caçador de nombres racionals i irracionals a la recta!';
+        triggerConfetti();
+        playSound('correct');
+      } else if (quizScore >= 60) {
+        msg.textContent = '👏 Molt bona feina! Reconeixes molt bé els patrons periòdics i els decimals no periòdics!';
+      } else {
+        msg.textContent = '💪 Bon esforç! Recorda: si els decimals es repeteixen (com 0,333...), és de l\'Equip racional periòdic i té tall màgic!';
+      }
+    }
+
+    function restartQuiz() {
+      clearConfetti();
+      startNewQuizRound();
+    }
+
+    // Inicialització en carregar la pàgina
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      pickLabNumber('1/3');
+    });
+  </script>
+</body>
+</html>
