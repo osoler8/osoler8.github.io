@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simuladors d'atzar</title>
+  <title>Simuladors de probabilitat</title>
   <style>
     :root {
       --primary: #2d6a4f;
@@ -128,63 +128,81 @@
       text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
     }
 
-    /* ------------------- DAU 3D ------------------- */
+    /* ------------------- DAU 3D AMB LES 6 CARES ESTÀNDARD ------------------- */
     .dice-3d {
-      width: 76px;
-      height: 76px;
+      width: 80px;
+      height: 80px;
       position: relative;
       transform-style: preserve-3d;
       transform: rotateX(-25deg) rotateY(-35deg);
       transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
+
     .dice-face {
       position: absolute;
-      width: 76px;
-      height: 76px;
+      width: 80px;
+      height: 80px;
       background: #ffffff;
       border-radius: 12px;
       border: 1px solid #dcdcdc;
       display: grid;
-      padding: 9px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 8px;
       box-shadow: inset 0 0 10px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
     }
+
     .dot {
-      width: 13px;
-      height: 13px;
+      width: 14px;
+      height: 14px;
       background-color: #2b2b2b;
       border-radius: 50%;
       justify-self: center;
       align-self: center;
     }
-    .df-front  { transform: rotateY(0deg) translateZ(38px); display: flex; justify-content: center; align-items: center; }
-    .df-front .dot { width: 17px; height: 17px; background: #d90429; }
-    
-    .df-back   { transform: rotateY(180deg) translateZ(38px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
-    
-    .df-right  { transform: rotateY(90deg) translateZ(38px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+
+    /* Posicionament de les cares en l'espai 3D */
+    .df-front  { transform: rotateY(0deg) translateZ(40px); }
+    .df-back   { transform: rotateY(180deg) translateZ(40px); }
+    .df-right  { transform: rotateY(90deg) translateZ(40px); }
+    .df-left   { transform: rotateY(-90deg) translateZ(40px); }
+    .df-top    { transform: rotateX(90deg) translateZ(40px); }
+    .df-bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+    /* Cara 1: vermell central */
+    .df-front .dot { width: 18px; height: 18px; background: #d90429; grid-area: 2 / 2; }
+
+    /* Cara 2: diagonal superior-esquerra i inferior-dreta */
+    .df-bottom .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-bottom .dot:nth-child(2) { grid-area: 3 / 3; }
+
+    /* Cara 3: diagonal completa */
     .df-right .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-right .dot:nth-child(2) { grid-area: 2 / 2; }
     .df-right .dot:nth-child(3) { grid-area: 3 / 3; }
-    
-    .df-left   { transform: rotateY(-90deg) translateZ(38px); grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-    
-    .df-top    { transform: rotateX(90deg) translateZ(38px); grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+
+    /* Cara 4: 4 cantonades */
+    .df-left .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-left .dot:nth-child(2) { grid-area: 1 / 3; }
+    .df-left .dot:nth-child(3) { grid-area: 3 / 1; }
+    .df-left .dot:nth-child(4) { grid-area: 3 / 3; }
+
+    /* Cara 5: 4 cantonades + punt central */
     .df-top .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-top .dot:nth-child(2) { grid-area: 1 / 3; }
     .df-top .dot:nth-child(3) { grid-area: 2 / 2; }
     .df-top .dot:nth-child(4) { grid-area: 3 / 1; }
     .df-top .dot:nth-child(5) { grid-area: 3 / 3; }
 
-    /* Cara del 2 amb els dos punts en diagonal */
-    .df-bottom { 
-      transform: rotateX(-90deg) translateZ(38px); 
-      grid-template-columns: 1fr 1fr; 
-      grid-template-rows: 1fr 1fr; 
-    }
-    .df-bottom .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-bottom .dot:nth-child(2) { grid-area: 2 / 2; }
+    /* Cara 6: dues columnes de 3 punts */
+    .df-back .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-back .dot:nth-child(2) { grid-area: 2 / 1; }
+    .df-back .dot:nth-child(3) { grid-area: 3 / 1; }
+    .df-back .dot:nth-child(4) { grid-area: 1 / 3; }
+    .df-back .dot:nth-child(5) { grid-area: 2 / 3; }
+    .df-back .dot:nth-child(6) { grid-area: 3 / 3; }
 
-    /* ------------------- BOSSA TRANSLÚCIDA AMB BOLES VISIBLES ------------------- */
+    /* ------------------- BOSSA TRANSLÚCIDA AMB BOLES ------------------- */
     .bag-container {
       width: 125px;
       height: 130px;
@@ -233,11 +251,11 @@
     .mini-ball.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91818); }
     .mini-ball.blue { background: radial-gradient(circle at 30% 30%, #4ea8de, #0056b3); }
 
-    .b-pos1 { bottom: 20px; left: 24px; }  /* Vermella */
-    .b-pos2 { bottom: 18px; left: 51px; }  /* Blava */
-    .b-pos3 { bottom: 22px; right: 22px; } /* Vermella */
-    .b-pos4 { bottom: 42px; left: 36px; }  /* Vermella */
-    .b-pos5 { bottom: 40px; right: 35px; } /* Blava */
+    .b-pos1 { bottom: 20px; left: 24px; }
+    .b-pos2 { bottom: 18px; left: 51px; }
+    .b-pos3 { bottom: 22px; right: 22px; }
+    .b-pos4 { bottom: 42px; left: 36px; }
+    .b-pos5 { bottom: 40px; right: 35px; }
 
     .ball-extract {
       width: 48px;
@@ -330,7 +348,7 @@
 
 <div class="container">
   <header>
-    <h1>Simuladors d'atzar</h1>
+    <h1>Simuladors de probabilitat</h1>
   </header>
 
   <div class="tools-grid">
@@ -356,14 +374,14 @@
         </div>
       </div>
       <div>
-        <div class="progress" id="coin-count">Llançaments: 0 / 10</div>
+        <div class="progress" id="coin-count">Llençaments: 0 / 10</div>
         <div class="controls">
-          <button class="btn" onclick="flipCoin()">Llançar</button>
+          <button class="btn" onclick="flipCoin()">Llençar</button>
           <button class="btn btn-secondary" onclick="run10(flipCoin, 'coin')">Fer-ne 10</button>
           <button class="btn btn-secondary" onclick="reset('coin')">Reiniciar</button>
         </div>
         <div class="history-chips" id="coin-history"></div>
-        <div class="summary-box" id="coin-summary">Fes clic a "Llançar" per començar.</div>
+        <div class="summary-box" id="coin-summary">Fes clic a "Llençar" per començar.</div>
       </div>
     </div>
 
@@ -373,24 +391,34 @@
         <h3>🎲 Dau</h3>
         <div class="stage">
           <div class="dice-3d" id="dice-mesh">
-            <div class="dice-face df-front"><span class="dot"></span></div>
+            <!-- Cara 1 (Davant) -->
+            <div class="dice-face df-front">
+              <span class="dot"></span>
+            </div>
+            <!-- Cara 6 (Darrere) -->
             <div class="dice-face df-back">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
             </div>
+            <!-- Cara 3 (Dreta) -->
             <div class="dice-face df-right">
-              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            </div>
-            <div class="dice-face df-left">
-              <span class="dot"></span><span class="dot"></span>
-            </div>
-            <div class="dice-face df-top">
-              <span class="dot"></span><span class="dot"></span>
-              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
               <span class="dot"></span>
             </div>
-            <!-- Cara del 2 corregida amb dos punts en diagonal -->
+            <!-- Cara 4 (Esquerra) -->
+            <div class="dice-face df-left">
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
+            </div>
+            <!-- Cara 5 (Dalt) -->
+            <div class="dice-face df-top">
+              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
+            </div>
+            <!-- Cara 2 (Baix) -->
             <div class="dice-face df-bottom">
               <span class="dot"></span>
               <span class="dot"></span>
