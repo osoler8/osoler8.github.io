@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MATELÒGIC - El joc matemàtic diari</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              red: '#e63946',
+              redHover: '#d62839',
+              blue: '#48bfe3',
+              blueDark: '#0077b6',
+              bg: '#f8fafc',
+              slate: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea {
+      user-select: auto;
+    }
+
+    .hex-cell {
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s ease, opacity 0.15s ease;
+    }
+    .hex-cell:active {
+      transform: scale(0.92);
+      filter: brightness(0.9);
+    }
+    .hex-cell.used {
+      opacity: 0.35 !important;
+      pointer-events: none !important;
+      transform: scale(0.96);
+    }
+
+    .key-3d {
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1), 0 6px 12px rgba(0, 0, 0, 0.05);
+      transition: all 0.12s ease;
+    }
+    .key-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .honeycomb-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .hex-row {
+      display: flex;
+      gap: 8px;
+    }
+    .hex-row-offset {
+      margin-top: -16px;
+      margin-bottom: -16px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor-blink {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .animate-shake {
+      animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: pop 0.25s ease-out forwards;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-brand-bg text-slate-800 min-h-screen flex flex-col justify-between items-center font-sans antialiased overflow-x-hidden selection:bg-brand-blue selection:text-white">
+
+  <!-- TOAST NOTIFICACIONS FLOTANTS -->
+  <div id="toast-container" class="fixed top-5 z-50 flex flex-col gap-2 items-center pointer-events-none w-full max-w-sm px-4"></div>
+
+  <!-- CAPÇALERA AMB LOGO -->
+  <header class="w-full max-w-lg border-b border-slate-200/80 bg-white/80 backdrop-blur-md sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2">
+      <button onclick="openModal('info-modal')" aria-label="Com jugar" class="w-9 h-9 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </button>
+      <button onclick="openModal('solutions-modal')" aria-label="Solucions trobades" class="w-9 h-9 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+      </button>
+    </div>
+
+    <!-- LOGO GEOMÈTRIC -->
+    <div class="flex items-center gap-1.5 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+      <div class="flex items-center tracking-tighter font-extrabold text-2xl">
+        <span class="text-slate-900">MATE</span>
+        <span class="text-brand-blue flex items-center">
+          L
+          <svg class="w-6 h-6 inline-block mx-[-2px] text-brand-red fill-current transform -rotate-12 transition-transform hover:rotate-45 duration-300" viewBox="0 0 24 24">
+            <path d="M12 2L3 7.5v9L12 22l9-5.5v-9L12 2zm0 3.8l6 3.7v5.5l-6 3.7-6-3.7v-5.5l6-3.7z"/>
+          </svg>
+          GIC
+        </span>
+      </div>
+    </div>
+
+    <!-- BOTÓ DE COMPARTIR / ESTADÍSTIQUES -->
+    <div class="flex items-center gap-2">
+      <button onclick="openModal('share-modal')" aria-label="Compartir" class="w-9 h-9 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDOR PRINCIPAL -->
+  <main class="w-full max-w-md flex-1 flex flex-col items-center justify-start px-4 pt-3 pb-4 gap-2.5">
+
+    <!-- DATA I NÚMERO DE REPTE (DIA DE L'ANY CORRELATIU) -->
+    <div class="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-wider text-slate-400 px-2">
+      <span id="challenge-day-label">Repte Núm. ---</span>
+      <span id="challenge-date-label">-- / -- / ----</span>
+    </div>
+
+    <!-- OBJECTIU DIARI (TARGET CARD) -->
+    <div class="w-full bg-gradient-to-br from-white to-slate-50 border border-slate-200/90 rounded-2xl p-3 shadow-sm flex items-center justify-between">
+      <div class="flex flex-col">
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Número Objectiu</span>
+        <div class="flex items-baseline gap-2">
+          <span id="target-value" class="text-3xl font-black text-slate-900 tracking-tight font-mono">--</span>
+          <span class="text-xs text-brand-blueDark font-bold bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full">Meta d'avui</span>
+        </div>
+      </div>
+      <div class="text-right">
+        <span class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Puntuació</span>
+        <div class="text-xl font-black text-brand-red font-mono"><span id="score-counter">0</span> <span class="text-xs font-bold text-slate-400">pts</span></div>
+      </div>
+    </div>
+
+    <!-- PANTALLA DISPLAY D'ENTRADA DE L'EXPRESSIÓ -->
+    <div class="w-full relative mt-0.5">
+      <div id="display-container" class="w-full h-14 bg-white border-2 border-slate-200 rounded-2xl px-4 flex items-center justify-center font-mono text-2xl font-bold tracking-widest text-slate-800 shadow-inner overflow-x-auto whitespace-nowrap transition-all duration-200">
+        <span id="display-text" class="text-slate-800"></span>
+        <span id="display-cursor" class="w-2.5 h-6 bg-brand-red ml-1 rounded-sm cursor-blink inline-block"></span>
+      </div>
+      <div id="target-feedback" class="absolute -top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 uppercase border border-slate-200">
+        OPERACIÓ
+      </div>
+    </div>
+
+    <!-- RUSC D'HEXÀGONS (2-3-2)[cite: 1] -->
+    <div class="honeycomb-grid my-1 select-none">
+      
+      <!-- Fila 1 (2 hexàgons blaus) -->
+      <div class="hex-row">
+        <button id="hex-0" onclick="handleHexClick(0)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+        <button id="hex-1" onclick="handleHexClick(1)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+      </div>
+
+      <!-- Fila 2 (3 hexàgons: Blau - VERMELL CENTRAL - Blau) -->
+      <div class="hex-row hex-row-offset z-10">
+        <button id="hex-2" onclick="handleHexClick(2)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+        
+        <button id="hex-center" onclick="handleHexCenterClick()" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-red text-white flex flex-col items-center justify-center font-mono text-3xl font-black transition-all hover:bg-brand-redHover active:scale-95 shadow-lg border-2 border-red-300 ring-2 ring-red-400/40">
+          <span id="center-val">-</span>
+        </button>
+        
+        <button id="hex-3" onclick="handleHexClick(3)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+      </div>
+
+      <!-- Fila 3 (2 hexàgons blaus) -->
+      <div class="hex-row">
+        <button id="hex-4" onclick="handleHexClick(4)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+        <button id="hex-5" onclick="handleHexClick(5)" class="hex-cell key-3d w-20 h-20 md:w-22 md:h-22 bg-brand-blue text-white flex items-center justify-center font-mono text-3xl font-black transition-all hover:bg-sky-400 active:scale-95 shadow-md">
+          -
+        </button>
+      </div>
+    </div>
+
+    <!-- TECLAT D'OPERADORS MATEMÀTICS -->
+    <div class="w-full grid grid-cols-6 gap-1.5 max-w-sm mt-0.5">
+      <button onclick="appendChar('+')" class="key-3d h-11 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold text-xl rounded-xl flex items-center justify-center transition-all">+</button>
+      <button onclick="appendChar('-')" class="key-3d h-11 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold text-xl rounded-xl flex items-center justify-center transition-all">−</button>
+      <button onclick="appendChar('×')" class="key-3d h-11 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold text-xl rounded-xl flex items-center justify-center transition-all">×</button>
+      <button onclick="appendChar('÷')" class="key-3d h-11 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold text-xl rounded-xl flex items-center justify-center transition-all">÷</button>
+      <button onclick="appendChar('(')" class="key-3d h-11 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-mono font-bold text-lg rounded-xl flex items-center justify-center transition-all">(</button>
+      <button onclick="appendChar(')')" class="key-3d h-11 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-mono font-bold text-lg rounded-xl flex items-center justify-center transition-all">)</button>
+    </div>
+
+    <!-- BOTONS D'ACCIÓ[cite: 1] -->
+    <div class="w-full grid grid-cols-3 gap-2.5 max-w-sm mt-1">
+      <button onclick="handleDelete()" class="key-3d h-12 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-sm rounded-full flex items-center justify-center transition-all shadow-sm">
+        Suprimeix
+      </button>
+
+      <button onclick="shuffleOuterHexagons()" title="Baralla les posicions" class="key-3d h-12 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-lg rounded-full flex items-center justify-center transition-all shadow-sm group">
+        <svg class="w-5 h-5 text-slate-600 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </button>
+
+      <button onclick="handleSubmit()" class="key-3d h-12 bg-brand-red hover:bg-brand-redHover text-white font-bold text-sm rounded-full flex items-center justify-center transition-all shadow-md">
+        Introdueix
+      </button>
+    </div>
+
+    <!-- RESUM DE PROGRESSIÓ -->
+    <div class="mt-1 text-center">
+      <p class="text-sm font-semibold text-slate-600">
+        Has trobat <span id="solutions-count" class="font-extrabold text-brand-red">0</span> de <span id="total-solutions-count" class="font-extrabold text-slate-800">--</span> operacions vàlides.
+      </p>
+      <button onclick="openModal('solutions-modal')" class="text-xs text-brand-blueDark font-bold hover:underline mt-0.5 inline-block">
+        Mostra les solucions trobades &rarr;
+      </button>
+    </div>
+
+  </main>
+
+  <!-- PEU DE PÀGINA -->
+  <footer class="w-full text-center py-3 text-xs text-slate-400 border-t border-slate-200/60 bg-white">
+    <div class="max-w-md mx-auto flex items-center justify-center gap-3">
+      <span>Matelògic</span>
+      <span>•</span>
+      <a href="javascript:void(0)" onclick="openModal('info-modal')" class="hover:text-slate-600 underline">Com es juga?</a>
+      <span>•</span>
+      <span>Nou repte cada dia</span>
+    </div>
+  </footer>
+
+  <!-- MODAL: COM JUGAR -->
+  <div id="info-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-pop">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h3 class="text-lg font-black text-slate-900">Com jugar a Matelògic?</h3>
+        <button onclick="closeModal('info-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none">&times;</button>
+      </div>
+      <div class="text-sm text-slate-600 space-y-2.5">
+        <p>L'objectiu és trobar operacions aritmètiques que tinguin com a resultat exacte el <strong>Número Objectiu</strong> del dia.</p>
+        <div class="bg-red-50 border-l-4 border-brand-red p-2.5 rounded-r-lg text-xs text-red-900 font-medium">
+          <strong>Regla clau:</strong> Cada operació ha d'utilitzar obligatòriament el <strong>número central vermell</strong> almenys una vegada!
+        </div>
+        <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-600">
+          <li><strong>Regla de Xifres:</strong> Cada número del rusc només es pot fer servir com a màxim <strong>un sol cop</strong> per operació.</li>
+          <li>Només s'admet aritmètica entera positiva (sense passos negatius ni divisions amb decimals).</li>
+          <li>Utilitza els operadors +, −, ×, ÷ i els parèntesis.</li>
+          <li>Cada operació vàlida et donarà punts segons la seva quantitat de números.</li>
+          <li><strong>Cada dia a les 00:00h</strong> es genera un repte nou idèntic per a tothom.</li>
+        </ul>
+      </div>
+      <button onclick="closeModal('info-modal')" class="w-full py-2.5 rounded-xl bg-brand-red text-white font-bold text-sm hover:bg-brand-redHover transition-colors mt-2">
+        Ho he entès!
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: LLISTA DE SOLUCIONS TROBADES -->
+  <div id="solutions-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 max-h-[85vh] animate-pop">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-black text-slate-900">Solucions descobertes</h3>
+          <p class="text-xs text-slate-400 font-medium">Repte d'avui</p>
+        </div>
+        <button onclick="closeModal('solutions-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none">&times;</button>
+      </div>
+
+      <div id="solutions-list-container" class="overflow-y-auto max-h-60 pr-1 flex flex-col gap-2"></div>
+
+      <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-600">
+        <span>Operacions vàlides: <span id="modal-total-count" class="text-brand-red font-black">0</span></span>
+        <span>Puntuació: <span id="modal-total-score" class="text-brand-red font-black">0</span> pts</span>
+      </div>
+
+      <button onclick="closeModal('solutions-modal')" class="w-full py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-colors">
+        Tanca
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: COMPARTIR / ESTADÍSTIQUES -->
+  <div id="share-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 text-center animate-pop">
+      <div class="flex justify-end">
+        <button onclick="closeModal('share-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none">&times;</button>
+      </div>
+      
+      <div class="w-14 h-14 bg-red-50 text-brand-red rounded-full flex items-center justify-center mx-auto text-2xl font-black">
+        ∑
+      </div>
+
+      <div>
+        <h3 class="text-xl font-black text-slate-900">Comparteix el teu èxit</h3>
+        <p class="text-xs text-slate-500 mt-1">Demostra la teva habilitat matemàtica amb amics!</p>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-left font-mono text-xs text-slate-700 space-y-1">
+        <p class="font-bold text-slate-900">Matelògic <span id="share-modal-num">#000</span></p>
+        <p>🎯 Objectiu: <span id="share-modal-target">0</span></p>
+        <p>✨ Operacions vàlides: <span id="share-modal-count">0</span></p>
+        <p>🏆 Punts: <span id="share-modal-score">0</span></p>
+      </div>
+
+      <button onclick="copyShareText()" id="copy-btn" class="w-full py-3 rounded-xl bg-brand-red text-white font-bold text-sm hover:bg-brand-redHover transition-colors shadow-md flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+        <span>Copia el resultat</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       PROTECCIÓ ANTI-CÒPIA BÀSICA (DISSUASIÓ)
+       ========================================================================= */
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keydown', e => {
+      if (e.keyCode === 123 || 
+         (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+         (e.ctrlKey && e.keyCode === 85)) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    /* =========================================================================
+       1. GENERADOR DETERMINISTA DE REPTES DIARIS
+       ========================================================================= */
+    class SeededRandom {
+      constructor(seed) {
+        this.m = 0x80000000;
+        this.a = 1103515245;
+        this.c = 12345;
+        this.state = seed ? seed : Math.floor(Math.random() * (this.m - 1));
+      }
+      nextInt() {
+        this.state = (this.a * this.state + this.c) % this.m;
+        return this.state;
+      }
+      nextFloat() {
+        return this.nextInt() / (this.m - 1);
+      }
+      range(min, max) {
+        return Math.floor(min + this.nextFloat() * (max - min + 1));
+      }
+    }
+
+    // Calcula el dia correlatiu de l'any actual (format 001 - 365/366)
+    function getDayMeta() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+
+      // 1 de gener a les 00:00h en hora local
+      const startOfYear = new Date(year, 0, 1);
+      const diffMs = now - startOfYear;
+      const dayOfYear = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+      const formattedDayOfYear = String(dayOfYear).padStart(3, '0');
+
+      return {
+        seed: parseInt(`${year}${month}${day}`, 10),
+        formattedDate: `${day}/${month}/${year}`,
+        dateKey: `${year}-${month}-${day}`,
+        challengeNum: formattedDayOfYear
+      };
+    }
+
+    /* =========================================================================
+       2. CERCA EXACTA I HUMANA DE SOLUCIONS (SENSE INFLACIÓ)
+       ========================================================================= */
+    function trobarSolucionsPossibles(pool, centerDigit, target) {
+      const conjuntsSolucio = new Set();
+
+      function resoldre(elements) {
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          if (el.val === target && el.numsUsats.includes(centerDigit)) {
+            const clau = [...el.numsUsats].sort().join(',');
+            conjuntsSolucio.add(clau);
+          }
+        }
+
+        if (elements.length <= pool.length - 4) return;
+
+        for (let i = 0; i < elements.length; i++) {
+          for (let j = 0; j < elements.length; j++) {
+            if (i === j) continue;
+
+            const a = elements[i];
+            const b = elements[j];
+
+            if (a.val < b.val) continue;
+
+            const restants = elements.filter((_, idx) => idx !== i && idx !== j);
+            const fusionats = [...a.numsUsats, ...b.numsUsats];
+
+            const ops = [];
+
+            // Suma
+            ops.push({ val: a.val + b.val, numsUsats: fusionats });
+
+            // Multiplicació (evitant multiplicar per 1)
+            if (b.val > 1) {
+              ops.push({ val: a.val * b.val, numsUsats: fusionats });
+            }
+
+            // Resta positiva estricta
+            if (a.val - b.val > 0 && a.val !== b.val) {
+              ops.push({ val: a.val - b.val, numsUsats: fusionats });
+            }
+
+            // Divisió entera (evitant dividir per 1)
+            if (b.val > 1 && a.val % b.val === 0) {
+              ops.push({ val: a.val / b.val, numsUsats: fusionats });
+            }
+
+            for (const op of ops) {
+              resoldre([...restants, op]);
+            }
+          }
+        }
+      }
+
+      const elementsInicials = pool.map(n => ({
+        val: n,
+        numsUsats: [n]
+      }));
+
+      resoldre(elementsInicials);
+      return Math.min(Math.max(conjuntsSolucio.size, 5), 25);
+    }
+
+    function generateDailyChallenge() {
+      const meta = getDayMeta();
+      const rng = new SeededRandom(meta.seed);
+
+      const allDigits = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      for (let i = allDigits.length - 1; i > 0; i--) {
+        const j = rng.range(0, i);
+        [allDigits[i], allDigits[j]] = [allDigits[j], allDigits[i]];
+      }
+
+      const centerDigit = allDigits[0];
+      const outerDigits = allDigits.slice(1, 7);
+      const pool = [centerDigit, ...outerDigits];
+
+      const possibleTargets = [
+        (centerDigit + outerDigits[0]) * outerDigits[1],
+        (centerDigit * outerDigits[2]) + outerDigits[3],
+        (outerDigits[0] + outerDigits[1]) * centerDigit,
+        Math.abs(outerDigits[0] * outerDigits[1] - centerDigit)
+      ].filter(n => n >= 15 && n <= 85);
+
+      const target = possibleTargets.length > 0 
+        ? possibleTargets[rng.range(0, possibleTargets.length - 1)]
+        : 24;
+
+      const totalPossibles = trobarSolucionsPossibles(pool, centerDigit, target);
+
+      return {
+        meta,
+        center: centerDigit,
+        outer: outerDigits,
+        target: target,
+        totalSolutions: totalPossibles
+      };
+    }
+
+    /* =========================================================================
+       3. ESTAT I PERSISTÈNCIA VINCULADA AMB PURGA AUTOMÀTICA
+       ========================================================================= */
+    const DAILY_GAME = generateDailyChallenge();
+    let tokens = [];
+    let usedHexIds = new Set();
+    let outerPositions = [...DAILY_GAME.outer];
+    
+    let gameState = {
+      solutions: [],
+      score: 0
+    };
+
+    const CURRENT_CHALLENGE_ID = `matelogic_d${DAILY_GAME.meta.challengeNum}_t${DAILY_GAME.target}_c${DAILY_GAME.center}`;
+
+    function autoPurgeOldChallenges() {
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('matelogic_') && key !== CURRENT_CHALLENGE_ID) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      } catch (e) {
+        console.warn("Error en la purga automàtica:", e);
+      }
+    }
+
+    function loadSavedProgress() {
+      autoPurgeOldChallenges();
+      try {
+        const raw = localStorage.getItem(CURRENT_CHALLENGE_ID);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.challengeId === CURRENT_CHALLENGE_ID && Array.isArray(parsed.solutions)) {
+            gameState.solutions = parsed.solutions;
+            gameState.score = parsed.score || 0;
+          } else {
+            localStorage.removeItem(CURRENT_CHALLENGE_ID);
+          }
+        }
+      } catch (e) {
+        console.warn("Error en carregar progrés:", e);
+      }
+    }
+
+    function persistProgress() {
+      try {
+        const payload = {
+          challengeId: CURRENT_CHALLENGE_ID,
+          target: DAILY_GAME.target,
+          center: DAILY_GAME.center,
+          solutions: gameState.solutions,
+          score: gameState.score,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(CURRENT_CHALLENGE_ID, JSON.stringify(payload));
+      } catch (e) {
+        console.warn("Error en desar progrés:", e);
+      }
+    }
+
+    /* =========================================================================
+       4. GESTIÓ DE LA INTERFÍCIE
+       ========================================================================= */
+    function initUI() {
+      document.getElementById('challenge-day-label').innerText = `Repte Núm. ${DAILY_GAME.meta.challengeNum}`;
+      document.getElementById('challenge-date-label').innerText = DAILY_GAME.meta.formattedDate;
+      document.getElementById('target-value').innerText = DAILY_GAME.target;
+      document.getElementById('center-val').innerText = DAILY_GAME.center;
+      document.getElementById('total-solutions-count').innerText = DAILY_GAME.totalSolutions;
+
+      renderOuterHexagons();
+      loadSavedProgress();
+      updateScoreboard();
+    }
+
+    function renderOuterHexagons() {
+      outerPositions.forEach((val, idx) => {
+        const btn = document.getElementById(`hex-${idx}`);
+        if (btn) {
+          btn.innerText = val;
+          const hexId = `hex-${idx}`;
+          if (usedHexIds.has(hexId)) {
+            btn.classList.add('used');
+          } else {
+            btn.classList.remove('used');
+          }
+        }
+      });
+
+      const centerBtn = document.getElementById('hex-center');
+      if (usedHexIds.has('hex-center')) {
+        centerBtn.classList.add('used');
+      } else {
+        centerBtn.classList.remove('used');
+      }
+    }
+
+    function shuffleOuterHexagons() {
+      for (let i = outerPositions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [outerPositions[i], outerPositions[j]] = [outerPositions[j], outerPositions[i]];
+      }
+      renderOuterHexagons();
+      showToast("Dígits barallats!", "info");
+    }
+
+    function updateDisplay() {
+      const textElem = document.getElementById('display-text');
+      textElem.innerText = tokens.map(t => t.display).join(' ');
+    }
+
+    function appendChar(char) {
+      if (tokens.length >= 20) {
+        showToast("Operació massa llarga", "warning");
+        return;
+      }
+
+      let normalized = char;
+      let displayChar = char;
+      if (char === '×' || char === '*') { normalized = '*'; displayChar = '×'; }
+      if (char === '÷' || char === '/') { normalized = '/'; displayChar = '÷'; }
+      if (char === '−' || char === '-') { normalized = '-'; displayChar = '−'; }
+
+      tokens.push({
+        type: 'op',
+        val: normalized,
+        display: displayChar,
+        id: null
+      });
+      updateDisplay();
+    }
+
+    function handleHexClick(index) {
+      const hexId = `hex-${index}`;
+      if (usedHexIds.has(hexId)) return;
+
+      const lastToken = tokens[tokens.length - 1];
+      if (lastToken && lastToken.type === 'num') {
+        showToast("Cal posar un operador (+, −, ×, ÷) entre nombres", "warning");
+        return;
+      }
+
+      const val = outerPositions[index];
+      tokens.push({
+        type: 'num',
+        val: val.toString(),
+        display: val.toString(),
+        id: hexId
+      });
+      usedHexIds.add(hexId);
+      renderOuterHexagons();
+      updateDisplay();
+    }
+
+    function handleHexCenterClick() {
+      const hexId = 'hex-center';
+      if (usedHexIds.has(hexId)) return;
+
+      const lastToken = tokens[tokens.length - 1];
+      if (lastToken && lastToken.type === 'num') {
+        showToast("Cal posar un operador (+, −, ×, ÷) entre nombres", "warning");
+        return;
+      }
+
+      const val = DAILY_GAME.center;
+      tokens.push({
+        type: 'num',
+        val: val.toString(),
+        display: val.toString(),
+        id: hexId
+      });
+      usedHexIds.add(hexId);
+      renderOuterHexagons();
+      updateDisplay();
+    }
+
+    function handleDelete() {
+      const last = tokens.pop();
+      if (last && last.id) {
+        usedHexIds.delete(last.id);
+        renderOuterHexagons();
+      }
+      updateDisplay();
+    }
+
+    /* =========================================================================
+       5. AVALUACIÓ MATEMÀTICA SEGURA I EXACTA
+       ========================================================================= */
+    function avaluarOperacio(tokensArr) {
+      if (tokensArr.length === 0) throw new Error("Escriu una operació");
+
+      const rawExpr = tokensArr.map(t => t.val).join('');
+
+      let balance = 0;
+      for (const ch of rawExpr) {
+        if (ch === '(') balance++;
+        if (ch === ')') balance--;
+        if (balance < 0) throw new Error("Parèntesis mal tancats");
+      }
+      if (balance !== 0) throw new Error("Parèntesis desquadrats");
+
+      let resultat;
+      try {
+        resultat = Function(`'use strict'; return (${rawExpr});`)();
+      } catch (e) {
+        throw new Error("Sintaxi matemàtica no vàlida");
+      }
+
+      if (typeof resultat !== 'number' || isNaN(resultat) || !isFinite(resultat)) {
+        throw new Error("Operació no vàlida");
+      }
+      if (!Number.isInteger(resultat)) {
+        throw new Error("Només s'admeten divisions exactes (enters)");
+      }
+      if (resultat <= 0) {
+        throw new Error("Només s'admeten resultats positius (> 0)");
+      }
+
+      return resultat;
+    }
+
+    function handleSubmit() {
+      const displayContainer = document.getElementById('display-container');
+
+      if (tokens.length === 0) {
+        showToast("Escriu una operació primer", "warning");
+        return;
+      }
+
+      const haUsatCentral = tokens.some(t => t.id === 'hex-center');
+      if (!haUsatCentral) {
+        shakeElement(displayContainer);
+        showToast(`Falta el dígit central obligatori (${DAILY_GAME.center})!`, "error");
+        return;
+      }
+
+      const expressioVisual = tokens.map(t => t.display).join(' ');
+
+      if (gameState.solutions.some(s => s.expression === expressioVisual)) {
+        shakeElement(displayContainer);
+        showToast("Ja havies trobat aquesta operació!", "warning");
+        return;
+      }
+
+      try {
+        const valorCalculat = avaluarOperacio(tokens);
+
+        if (valorCalculat !== DAILY_GAME.target) {
+          shakeElement(displayContainer);
+          showToast(`Dóna ${valorCalculat}, no pas ${DAILY_GAME.target}`, "error");
+          return;
+        }
+
+        const numsUsats = tokens.filter(t => t.type === 'num').length;
+        const punts = 5 + (numsUsats * 3);
+
+        gameState.solutions.push({
+          expression: expressioVisual,
+          points: punts,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        gameState.score += punts;
+
+        persistProgress();
+        updateScoreboard();
+
+        showToast(`Operació vàlida! +${punts} pts`, "success");
+
+        tokens = [];
+        usedHexIds.clear();
+        renderOuterHexagons();
+        updateDisplay();
+
+      } catch (err) {
+        shakeElement(displayContainer);
+        showToast(err.message || "Operació no vàlida", "error");
+      }
+    }
+
+    function updateScoreboard() {
+      document.getElementById('solutions-count').innerText = gameState.solutions.length;
+      document.getElementById('score-counter').innerText = gameState.score;
+      document.getElementById('modal-total-count').innerText = gameState.solutions.length;
+      document.getElementById('modal-total-score').innerText = gameState.score;
+
+      const listContainer = document.getElementById('solutions-list-container');
+      listContainer.innerHTML = '';
+
+      if (gameState.solutions.length === 0) {
+        listContainer.innerHTML = `
+          <div class="py-8 text-center text-slate-400 text-xs">
+            Encara no has trobat cap operació vàlida avui.<br>Comença a combinar nombres!
+          </div>
+        `;
+      } else {
+        gameState.solutions.slice().reverse().forEach((sol, index) => {
+          const item = document.createElement('div');
+          item.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-mono font-bold text-slate-700";
+          item.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[10px]">#${gameState.solutions.length - index}</span>
+              <span>${sol.expression} = <span class="text-brand-blueDark">${DAILY_GAME.target}</span></span>
+            </div>
+            <span class="text-brand-red font-black">+${sol.points} pts</span>
+          `;
+          listContainer.appendChild(item);
+        });
+      }
+    }
+
+    /* =========================================================================
+       6. NOTIFICACIONS I ANIMACIONS
+       ========================================================================= */
+    function showToast(message, type = "info") {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      const bgStyles = {
+        success: "bg-emerald-600 text-white border-emerald-700",
+        error: "bg-brand-red text-white border-red-700",
+        warning: "bg-amber-500 text-white border-amber-600",
+        info: "bg-slate-800 text-white border-slate-900"
+      };
+
+      toast.className = `${bgStyles[type] || bgStyles.info} border px-4 py-2.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2 transform transition-all duration-300 translate-y-[-10px] opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => toast.classList.remove('translate-y-[-10px]', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-10px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    function shakeElement(el) {
+      el.classList.remove('animate-shake');
+      void el.offsetWidth;
+      el.classList.add('animate-shake');
+    }
+
+    /* =========================================================================
+       7. MODALS I COMPARTICIÓ
+       ========================================================================= */
+    function openModal(id) {
+      if (id === 'share-modal') {
+        document.getElementById('share-modal-num').innerText = `#${DAILY_GAME.meta.challengeNum}`;
+        document.getElementById('share-modal-target').innerText = DAILY_GAME.target;
+        document.getElementById('share-modal-count').innerText = gameState.solutions.length;
+        document.getElementById('share-modal-score').innerText = gameState.score;
+      }
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function copyShareText() {
+      const shareText = `Matelògic #${DAILY_GAME.meta.challengeNum} (${DAILY_GAME.meta.formattedDate})\n🎯 Objectiu: ${DAILY_GAME.target}\n✨ Operacions vàlides: ${gameState.solutions.length}\n🏆 Punts acumulats: ${gameState.score}\n\nJuga tu també!`;
+
+      const textArea = document.createElement("textarea");
+      textArea.value = shareText;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        const btn = document.getElementById('copy-btn');
+        btn.innerHTML = `<span>Copiat al porta-retalls!</span>`;
+        btn.classList.remove('bg-brand-red');
+        btn.classList.add('bg-emerald-600');
+
+        setTimeout(() => {
+          btn.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+            <span>Copia el resultat</span>
+          `;
+          btn.classList.remove('bg-emerald-600');
+          btn.classList.add('bg-brand-red');
+        }, 2200);
+
+        showToast("Resultat copiat per compartir!", "success");
+      } catch (err) {
+        showToast("No s'ha pogut copiar automàticament", "error");
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const openModals = document.querySelectorAll('[id$="-modal"]:not(.hidden)');
+      if (openModals.length > 0) {
+        if (e.key === 'Escape') openModals.forEach(m => m.classList.add('hidden'));
+        return;
+      }
+
+      if (e.key >= '0' && e.key <= '9') {
+        const val = parseInt(e.key);
+        if (val === DAILY_GAME.center && !usedHexIds.has('hex-center')) {
+          handleHexCenterClick();
+        } else {
+          const idx = outerPositions.indexOf(val);
+          if (idx !== -1 && !usedHexIds.has(`hex-${idx}`)) {
+            handleHexClick(idx);
+          }
+        }
+      } else if (['+', '-', '*', '/', '(', ')'].includes(e.key)) {
+        appendChar(e.key);
+      } else if (e.key === 'Backspace') {
+        handleDelete();
+      } else if (e.key === 'Enter') {
+        handleSubmit();
+      } else if (e.key.toLowerCase() === ' ') {
+        shuffleOuterHexagons();
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', initUI);
+  </script>
+</body>
+</html>
