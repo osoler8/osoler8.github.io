@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>PCMAT - Missió Atzar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card-bg: #ffffff;
+      --primary: #4f46e5;
+      --accent: #f59e0b;
+      --text: #0f172a;
+      --radius: 18px;
+
+      /* Colors de l'escala de probabilitat */
+      --c-impossible: #64748b;
+      --c-poc: #ea580c;
+      --c-equitatiu: #ca8a04;
+      --c-probable: #2563eb;
+      --c-molt: #7c3aed;
+      --c-segur: #059669;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(0.5rem, 2vw, 1rem);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .badge-title {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.2rem 0.8rem;
+      border-radius: 999px;
+      font-size: clamp(0.72rem, 1.8vw, 0.82rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-bottom: 0.25rem;
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 1.85rem);
+      font-weight: 700;
+      color: #1e1b4b;
+      line-height: 1.2;
+    }
+
+    /* Tauler de puntuació adaptable */
+    .game-dashboard {
+      width: 100%;
+      max-width: 860px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+      font-weight: 700;
+    }
+
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #ffffff;
+      padding: 0.25rem 0.65rem;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4f46e5, #059669);
+      transition: width 0.3s ease;
+      border-radius: 999px;
+    }
+
+    /* Targeta central adaptable */
+    .card-stage {
+      width: 100%;
+      max-width: 760px;
+      margin-bottom: 0.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: clamp(1rem, 3vw, 1.4rem) clamp(0.9rem, 3vw, 1.5rem);
+      text-align: center;
+      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+      border: 2px solid #e2e8f0;
+      min-height: 145px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      position: relative;
+      animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .card .icon-wrapper {
+      width: clamp(50px, 12vw, 60px);
+      height: clamp(50px, 12vw, 60px);
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.8rem, 5vw, 2.3rem);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .card .statement {
+      font-size: clamp(1.05rem, 3.2vw, 1.3rem);
+      font-weight: 700;
+      line-height: 1.35;
+      color: #0f172a;
+      max-width: 650px;
+    }
+
+    .btn-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1.5px solid #fde68a;
+      border-radius: 999px;
+      padding: 0.35rem 0.95rem;
+      font-size: clamp(0.8rem, 2vw, 0.88rem);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      margin-top: 0.2rem;
+    }
+
+    .btn-hint:hover {
+      background: #fde68a;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(245, 158, 11, 0.25);
+    }
+
+    /* Feedback */
+    .feedback-box {
+      width: 100%;
+      max-width: 860px;
+      min-height: 48px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 0.55rem 0.85rem;
+      font-size: clamp(0.85rem, 2.3vw, 0.95rem);
+      text-align: center;
+      opacity: 0;
+      transition: all 0.2s ease;
+      line-height: 1.35;
+    }
+
+    .feedback-box.visible {
+      opacity: 1;
+    }
+
+    .feedback-box.correct {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 2px solid #10b981;
+    }
+
+    .feedback-box.incorrect {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+    }
+
+    /* Tauler de probabilitat */
+    .probability-board {
+      width: 100%;
+      max-width: 860px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: var(--radius);
+      padding: clamp(0.6rem, 2vw, 0.85rem);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .scale-guide {
+      display: flex;
+      justify-content: space-between;
+      font-size: clamp(0.72rem, 1.8vw, 0.8rem);
+      font-weight: 700;
+      color: #64748b;
+      padding: 0 0.25rem;
+    }
+
+    .continuous-line {
+      height: 8px;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(
+        to right,
+        var(--c-impossible) 0%,
+        var(--c-poc) 25%,
+        var(--c-equitatiu) 50%,
+        var(--c-probable) 72%,
+        var(--c-molt) 88%,
+        var(--c-segur) 100%
+      );
+    }
+
+    /* BOTONERA RESPONSIVE */
+    .buttons-track {
+      display: grid;
+      gap: 0.45rem;
+      width: 100%;
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    @media (max-width: 840px) {
+      .buttons-track {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 580px) {
+      .buttons-track {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .btn-choice {
+      border: none;
+      border-radius: 14px;
+      padding: 0.75rem 0.25rem 0.65rem 0.25rem;
+      min-height: 52px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      transition: all 0.1s ease;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+
+    .btn-choice .btn-title {
+      font-size: clamp(0.82rem, 2vw, 0.9rem);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .btn-choice .btn-pct {
+      background: rgba(0, 0, 0, 0.22);
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      font-size: clamp(0.7rem, 1.8vw, 0.75rem);
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Relleus 3D */
+    .b-impossible { background: var(--c-impossible); box-shadow: 0 4px 0 #475569; }
+    .b-poc { background: var(--c-poc); box-shadow: 0 4px 0 #9a3412; }
+    .b-equitatiu { background: var(--c-equitatiu); box-shadow: 0 4px 0 #854d0e; }
+    .b-probable { background: var(--c-probable); box-shadow: 0 4px 0 #1e40af; }
+    .b-molt { background: var(--c-molt); box-shadow: 0 4px 0 #5b21b6; }
+    .b-segur { background: var(--c-segur); box-shadow: 0 4px 0 #065f46; }
+
+    .btn-choice:hover:not(:disabled) { transform: translateY(-2px); }
+    .btn-choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+    .btn-choice:disabled { opacity: 0.65; cursor: not-allowed; filter: grayscale(15%); }
+
+    /* Botó Següent */
+    .btn-next {
+      margin-top: 0.75rem;
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem clamp(1.5rem, 5vw, 2.4rem);
+      border-radius: 14px;
+      font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 4px 0 #b45309;
+      transition: all 0.15s ease;
+    }
+
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #b45309; }
+    .btn-next:active { transform: translateY(2px); box-shadow: 0 2px 0 #b45309; }
+
+    /* MODAL D'AJUDA GRÀFICA RESPONSIVE */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: clamp(0.5rem, 3vw, 1.25rem);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: clamp(16px, 3vw, 24px);
+      max-width: 630px;
+      width: 100%;
+      padding: clamp(1.1rem, 3vw, 1.75rem);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 3px solid #6366f1;
+      animation: popIn 0.22s ease-out;
+      text-align: center;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 0.4rem;
+    }
+
+    .modal-header h2 {
+      font-size: clamp(1.15rem, 3vw, 1.35rem);
+      color: #1e1b4b;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-align: left;
+    }
+
+    .btn-close-modal {
+      background: #f1f5f9;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-close-modal:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    .visual-tool-grid {
+      display: grid;
+      grid-template-columns: 145px 1fr;
+      gap: 1.1rem;
+      align-items: center;
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 16px;
+      border: 2px solid #e2e8f0;
+      margin-bottom: 0.85rem;
+    }
+
+    .chart-container {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-container svg {
+      transform: rotate(-90deg);
+      border-radius: 50%;
+      overflow: visible;
+    }
+
+    .slice-segment {
+      cursor: pointer;
+      transition: stroke-width 0.2s ease, opacity 0.2s ease, stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slice-segment:hover {
+      stroke-width: 8;
+      opacity: 0.95;
+    }
+
+    .chart-center-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      text-align: center;
+    }
+
+    .center-pct {
+      font-size: clamp(1.15rem, 3vw, 1.35rem);
+      font-weight: 800;
+      line-height: 1;
+      color: #1e1b4b;
+    }
+
+    .center-sub {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .visual-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      text-align: left;
+    }
+
+    .metric-badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.2rem 0.65rem;
+      border-radius: 8px;
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      font-weight: 700;
+      width: fit-content;
+    }
+
+    .modal-bar-wrap {
+      width: 100%;
+    }
+
+    .modal-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+
+    .modal-bar-track {
+      height: 12px;
+      background: #cbd5e1;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-bar-fill {
+      height: 100%;
+      background: #4f46e5;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .interactive-legends {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: clamp(0.75rem, 2vw, 0.82rem);
+      font-weight: 700;
+      color: #334155;
+      padding: 0.25rem 0.45rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .legend-row:hover, .legend-row.active {
+      background: #e2e8f0;
+      transform: translateX(3px);
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hint-explanation-card {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
+      color: #1e3a8a;
+      text-align: left;
+      margin-bottom: 0.65rem;
+      font-size: clamp(0.85rem, 2.3vw, 0.95rem);
+      line-height: 1.45;
+    }
+
+    .hint-step {
+      margin-bottom: 0.45rem;
+    }
+
+    .hint-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .hint-prompt-footer {
+      font-size: clamp(0.78rem, 2vw, 0.88rem);
+      color: #475569;
+      font-weight: 700;
+      background: #f1f5f9;
+      padding: 0.45rem;
+      border-radius: 8px;
+    }
+
+    /* Modal apilat en pantalles petites */
+    @media (max-width: 600px) {
+      .visual-tool-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 0.85rem;
+        padding: 0.85rem;
+      }
+      .visual-metrics {
+        text-align: center;
+        align-items: center;
+      }
+      .interactive-legends {
+        width: 100%;
+      }
+      .legend-row {
+        justify-content: center;
+      }
+    }
+
+    /* Pantalla Final */
+    .results-screen {
+      display: none;
+      background: #ffffff;
+      color: var(--text);
+      padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2rem);
+      border-radius: var(--radius);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      border: 3px solid #4f46e5;
+      animation: popIn 0.3s ease;
+    }
+
+    .results-screen h2 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      color: #1e1b4b;
+      margin-bottom: 0.4rem;
+    }
+
+    .rank-badge {
+      font-size: clamp(2.5rem, 6vw, 3.2rem);
+      margin-bottom: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge-title">PCMAT PD5</div>
+    <h1>Missió Atzar 🎯</h1>
+  </header>
+
+  <!-- Tauler de Puntuació -->
+  <div class="game-dashboard" id="gameDashboard">
+    <div class="stats-row">
+      <div class="stat-box">🎯 Targeta: <span id="currentCardNum" style="color: #4f46e5;">1</span>/<span id="totalCardsNum">0</span></div>
+      <div class="stat-box">⭐ Punts: <span id="score" style="color: #d97706;">0</span></div>
+      <div class="stat-box">🔥 Ratxa: <span id="streak" style="color: #ea580c;">0</span></div>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Zona de la Targeta -->
+  <div class="card-stage" id="cardStage">
+    <div class="card" id="cardElement">
+      <div class="icon-wrapper" id="cardIcon">🎲</div>
+      <div class="statement" id="cardText">Carregant repte...</div>
+      <button class="btn-hint" onclick="openVisualHintModal()">💡 Pista percentual (Gràfica)</button>
+    </div>
+  </div>
+
+  <!-- Feedback Educatiu -->
+  <div class="feedback-box" id="feedback"></div>
+
+  <!-- Tauler i Botonera -->
+  <div class="probability-board" id="boardContainer">
+    <div class="scale-guide">
+      <span>Cap opció (0%)</span>
+      <span>Equitatiu (50%)</span>
+      <span>Segur que passa (100%)</span>
+    </div>
+    
+    <div class="continuous-line"></div>
+
+    <div class="buttons-track" id="choicesGrid">
+      <button class="btn-choice b-impossible" onclick="makeGuess('impossible')">
+        <span class="btn-title">Impossible</span>
+        <span class="btn-pct">0%</span>
+      </button>
+
+      <button class="btn-choice b-poc" onclick="makeGuess('poc_probable')">
+        <span class="btn-title">Poc probable</span>
+        <span class="btn-pct">&lt; 50%</span>
+      </button>
+
+      <button class="btn-choice b-equitatiu" onclick="makeGuess('equitatiu')">
+        <span class="btn-title">Equitatiu</span>
+        <span class="btn-pct">50%</span>
+      </button>
+
+      <button class="btn-choice b-probable" onclick="makeGuess('probable')">
+        <span class="btn-title">Probable</span>
+        <span class="btn-pct">&gt; 50%</span>
+      </button>
+
+      <button class="btn-choice b-molt" onclick="makeGuess('molt_probable')">
+        <span class="btn-title">Molt probable</span>
+        <span class="btn-pct">80% - 99%</span>
+      </button>
+
+      <button class="btn-choice b-segur" onclick="makeGuess('segur')">
+        <span class="btn-title">Segur</span>
+        <span class="btn-pct">100%</span>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn-next" id="nextBtn" onclick="nextCard()">Següent Repte ➔</button>
+
+  <!-- MODAL D'AJUDA GRÀFICA RESPONSIVE -->
+  <div class="modal-overlay" id="hintModal" onclick="checkCloseModal(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📊 Anàlisi gràfica de la probabilitat</h2>
+        <button class="btn-close-modal" onclick="toggleHintModal(false)" aria-label="Tancar finestra">✕</button>
+      </div>
+
+      <div class="visual-tool-grid">
+        <div class="chart-container">
+          <svg width="140" height="140" viewBox="0 0 42 42">
+            <circle id="pieBg" class="slice-segment" cx="21" cy="21" r="15.91549430918954" fill="#ffffff" stroke="#cbd5e1" stroke-width="6.5"
+                    stroke-dasharray="100 0" stroke-dashoffset="0"
+                    onmouseenter="hoverSegment('against')" onmouseleave="hoverSegment('reset')"></circle>
+            <circle id="pieFill" class="slice-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4f46e5" stroke-width="6.5"
+                    stroke-dasharray="0 100" stroke-dashoffset="0" stroke-linecap="butt"
+                    onmouseenter="hoverSegment('favor')" onmouseleave="hoverSegment('reset')"></circle>
+          </svg>
+
+          <div class="chart-center-info">
+            <span class="center-pct" id="centerPct">0%</span>
+            <span class="center-sub" id="centerSub">A favor</span>
+          </div>
+        </div>
+
+        <div class="visual-metrics">
+          <div>
+            <span style="font-size: 0.78rem; font-weight:700; color:#64748b;">FRACCIÓ DE CASOS:</span>
+            <div class="metric-badge" id="modalFraction">0 / 6</div>
+          </div>
+
+          <div class="modal-bar-wrap">
+            <div class="modal-bar-label">
+              <span>0% (Mai)</span>
+              <span id="modalPercentDisplay" style="color: #4f46e5; font-size: 0.95rem; font-weight: 700;">0%</span>
+              <span>100% (Sempre)</span>
+            </div>
+            <div class="modal-bar-track">
+              <div class="modal-bar-fill" id="modalBarFill"></div>
+            </div>
+          </div>
+
+          <div class="interactive-legends">
+            <div class="legend-row" id="legFavor" onmouseenter="hoverSegment('favor')" onmouseleave="hoverSegment('reset')">
+              <span class="legend-dot" id="legendDotFavor" style="background: #4f46e5;"></span>
+              <span id="legendTextFavor">Casos a favor: <strong>0%</strong></span>
+            </div>
+            <div class="legend-row" id="legAgainst" onmouseenter="hoverSegment('against')" onmouseleave="hoverSegment('reset')">
+              <span class="legend-dot" style="background: #cbd5e1;"></span>
+              <span id="legendTextAgainst">Casos en contra / resta: <strong>100%</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hint-explanation-card" id="hintModalExplanation"></div>
+
+      <div class="hint-prompt-footer">
+        👉 Toca la rodona o les barres per analitzar les dades i decideix la teva resposta!
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla Final -->
+  <div class="results-screen" id="resultsScreen">
+    <div class="rank-badge" id="rankMedal">🏆</div>
+    <h2>Missió superada!</h2>
+    <p style="margin-bottom: 1.25rem; color: #64748b; font-size: 1.05rem;" id="rankComment">Ets un/a crack de la probabilitat!</p>
+    <div style="font-size: 2.2rem; font-weight: 700; color: #4f46e5; margin-bottom: 1.5rem;" id="finalScore">0 punts</div>
+    <button class="btn-next" style="display:inline-block;" onclick="restartGame()">Tornar a jugar 🔄</button>
+  </div>
+
+  <script>
+    const database = [
+      // 1. IMPOSSIBLE (0%)
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau normal de 6 cares i treure un 7.", 
+        category: "impossible", 
+        pct: 0,
+        fraction: "0 / 6 cares",
+        step1: "<strong>1. Casos possibles:</strong> El dau només té 6 cares (de l'1 al 6).",
+        step2: "<strong>2. Casos favorables:</strong> Cap cara té el número 7 (0 cares favorables). La fracció és 0/6.",
+        step3: "<strong>3. Percentatge:</strong> Representa exactament el <strong>0%</strong> (el gràfic i la barra estan buits, no passarà mai).",
+        reason: "Un dau només té números de l'1 al 6. No hi ha cap 7!" 
+      },
+      { 
+        icon: "🫕", 
+        text: "Que una olla amb aigua de l'aixeta bulli a la cuina quan només està a 20 °C de temperatura.", 
+        category: "impossible", 
+        pct: 0,
+        fraction: "0 oportunitats",
+        step1: "<strong>1. Temperatura d'ebullició:</strong> En condicions habituals a la cuina, l'aigua líquida necessita escalfar-se fins a 100 °C per començar a bullir.",
+        step2: "<strong>2. Estat a 20 °C:</strong> A 20 °C l'aigua està tèbia o a temperatura ambient, mai en ebullició (0 casos possibles).",
+        step3: "<strong>3. Percentatge:</strong> <strong>0% de probabilitat</strong> absoluta perquè les lleis de la ciència impedeixen que bulli tan freda.",
+        reason: "L'aigua a pressió ambiental necessita arribar a 100 °C per bullir; a 20 °C no bull mai." 
+      },
+      { 
+        icon: "📅", 
+        text: "Que el mes de febrer tingui 32 dies aquest any.", 
+        category: "impossible", 
+        pct: 0,
+        fraction: "0 / 32 dies",
+        step1: "<strong>1. Regla del calendari:</strong> Febrer té 28 dies en anys normals i 29 en anys de traspàs.",
+        step2: "<strong>2. Casos favorables:</strong> Mai arriba als 30 dies, i encara menys als 32 (0 dies favorables).",
+        step3: "<strong>3. Percentatge:</strong> <strong>0%</strong>. No hi ha cap opció que aquest esdeveniment succeeixi.",
+        reason: "Febrer té com a màxim 29 dies, mai 32!" 
+      },
+      { 
+        icon: "🧊", 
+        text: "Deixar un glaçó sota el sol calent d'agost i que no es desfaci gens.", 
+        category: "impossible", 
+        pct: 0,
+        fraction: "0 oportunitats",
+        step1: "<strong>1. Lleis de la ciència:</strong> El gel necessita estar a 0 °C o menys per mantenir-se sòlid.",
+        step2: "<strong>2. Condicions:</strong> A l'agost la temperatura ambient supera amb escreix aquesta xifra.",
+        step3: "<strong>3. Percentatge:</strong> <strong>0%</strong>. El gel es fon obligatòriament per transmissió tèrmica.",
+        reason: "La calor fon el gel de manera física obligatòria." 
+      },
+
+      // 2. POC PROBABLE (< 50%)
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau de 6 cares i que surti exactament el número 1.", 
+        category: "poc_probable", 
+        pct: 16.6,
+        fraction: "1 / 6 cares",
+        step1: "<strong>1. Casos possibles:</strong> Hi ha 6 resultats possibles (1, 2, 3, 4, 5, 6).",
+        step2: "<strong>2. Casos favorables:</strong> Només 1 cara té el número 1 (1 cas a favor vs. 5 en contra).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 1 de cada 6 equival a un <strong>16,6%</strong>, una porció que queda <strong>molt per sota de la meitat (50%)</strong>.",
+        reason: "Només tens 1 opció a favor de 6 possibles (menys del 17%)." 
+      },
+      { 
+        icon: "🪙", 
+        text: "Llançar una moneda a l'aire 4 vegades seguides i que surti 'cara' totes 4 vegades.", 
+        category: "poc_probable", 
+        pct: 6.25,
+        fraction: "1 / 16 combinacions",
+        step1: "<strong>1. Combinacions possibles:</strong> En tirar 4 monedes hi ha 16 combinacions possibles (2 × 2 × 2 × 2 = 16).",
+        step2: "<strong>2. Cas favorable:</strong> Només una única combinació és l'encert absolut (Cara-Cara-Cara-Cara).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 1 de 16 és només el <strong>6,25%</strong>: una porció molt petita del gràfic, clarament per sota de la meitat.",
+        reason: "Només hi ha 1 combinació favorable de 16 possibles (al voltant d'un 6%)." 
+      },
+      { 
+        icon: "⚡", 
+        text: "Que et caigui un llamp a sobre mentre camines pel carrer durant una tempesta.", 
+        category: "poc_probable", 
+        pct: 0.1,
+        fraction: "1 / 1.000.000",
+        step1: "<strong>1. Possibilitat física:</strong> És possible que passi, ja que les descàrregues elèctriques arriben a terra.",
+        step2: "<strong>2. Estadística real:</strong> La probabilitat calculada pels científics és de prop d'1 persona per cada milió d'habitants.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> El percentatge és ínfim (menys del <strong>0,001%</strong>), per tant no és impossible però passa en casos molt estranys.",
+        reason: "És un fet físicament possible però estadísticament raríssim." 
+      },
+      { 
+        icon: "🎂", 
+        text: "Trobar algú desconegut pel carrer que faci els anys el mateix dia que tu.", 
+        category: "poc_probable", 
+        pct: 0.27,
+        fraction: "1 / 365 dies",
+        step1: "<strong>1. Casos totals:</strong> Un any habitual té 365 dies diferents.",
+        step2: "<strong>2. La teva data:</strong> Només 1 d'aquests 365 dies coincideix amb el teu aniversari.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 1 dividit entre 365 és només el <strong>0,27%</strong> (clarament menys de la meitat del cercle).",
+        reason: "L'any té 365 dies; coincidir el mateix dia és molt poc freqüent." 
+      },
+
+      // 3. EQUITATIU (50%)
+      { 
+        icon: "🪙", 
+        text: "Llançar una moneda a l'aire i que surti cara.", 
+        category: "equitatiu", 
+        pct: 50,
+        fraction: "1 / 2 cares",
+        step1: "<strong>1. Casos possibles:</strong> La moneda només té 2 cares (cara o creu).",
+        step2: "<strong>2. Simetria:</strong> Cap de les dues cares té avantatge sobre l'altra (1 cas favorable de 2).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 1 de 2 és exactament la meitat: el <strong>50%</strong> del cercle acolorit i el <strong>50%</strong> blanc (empat total).",
+        reason: "Només hi ha dues cares idènticament possibles (50% i 50%)." 
+      },
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau de 6 cares i que surti un número parell.", 
+        category: "equitatiu", 
+        pct: 50,
+        fraction: "3 / 6 cares",
+        step1: "<strong>1. Classificació del dau:</strong> Té 6 cares amb els nombres 1, 2, 3, 4, 5 i 6.",
+        step2: "<strong>2. Casos favorables:</strong> Els parells són el 2, el 4 i el 6 (en total 3 números). Els senars en són 3 més (1, 3, 5).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 3 de 6 és exactament la fracció 1/2, que equival al <strong>50% de probabilitat</strong>.",
+        reason: "Hi ha 3 parells i 3 senars: la meitat exacta dels números." 
+      },
+      { 
+        icon: "👶", 
+        text: "Que el nadó que està a punt de néixer d'una mestra sigui un nen.", 
+        category: "equitatiu", 
+        pct: 50,
+        fraction: "1 / 2 opcions",
+        step1: "<strong>1. Determinació biològica:</strong> L'atzar dels cromosomes fa que hi hagi dues possibilitats principals (nen o nena).",
+        step2: "<strong>2. Proporció:</strong> La natura equilibra pràcticament en 1 a 1 aquests naixements a nivell global.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> Tens exactament 1 opció de 2, és a dir, un <strong>50% de probabilitat</strong>.",
+        reason: "La proporció natural de naixements de nen o nena és pràcticament del 50%." 
+      },
+      { 
+        icon: "🃏", 
+        text: "Agafar a cegues una carta d'una baralla francesa i que sigui de color vermell.", 
+        category: "equitatiu", 
+        pct: 50,
+        fraction: "26 / 52 cartes",
+        step1: "<strong>1. Composició de la baralla:</strong> La baralla té 52 cartes en total.",
+        step2: "<strong>2. Repartiment de colors:</strong> Exactament 26 cartes són vermelles (cors i diamants) i 26 són negres (piques i trèvols).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 26 dividit entre 52 és igual a 0,5, és a dir, un <strong>50% exacte</strong> (la meitat de la baralla).",
+        reason: "Exactament 26 cartes són vermelles i 26 negres (50%)." 
+      },
+
+      // 4. PROBABLE (> 50%)
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau de 6 cares i treure un número més gran que 2.", 
+        category: "probable", 
+        pct: 66.6,
+        fraction: "4 / 6 cares",
+        step1: "<strong>1. Casos favorables:</strong> Els números més grans que 2 són el 3, el 4, el 5 i el 6 (4 cares a favor vs. 2 en contra).",
+        step2: "<strong>2. Fracció simplificada:</strong> 4/6 equival a 2/3 de totes les cares possibles.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> Representa el <strong>66,7%</strong> del gràfic: <strong>supera clarament la meitat (50%)</strong>, però encara deixa opció a fallar.",
+        reason: "Tens 4 números a favor de 6 possibles (més del 66%)." 
+      },
+      { 
+        icon: "🧦", 
+        text: "Treure un mitjó blau d'un calaix on hi ha 7 mitjons blaus i 3 de grocs.", 
+        category: "probable", 
+        pct: 70,
+        fraction: "7 / 10 mitjons",
+        step1: "<strong>1. Total d'objectes:</strong> 7 mitjons blaus + 3 mitjons grocs = 10 mitjons en total.",
+        step2: "<strong>2. Casos favorables:</strong> 7 dels 10 mitjons compleixen la condició de ser blaus.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> La porció acolorida cobreix el <strong>70%</strong> del cercle: <strong>està per sobre de la meitat (50%)</strong>, fent que la tria sigui molt favorable.",
+        reason: "El 70% dels mitjons del calaix són blaus (7 de cada 10)." 
+      },
+      { 
+        icon: "🍬", 
+        text: "Agafar un caramel de maduixa d'una bossa que en té 8 de maduixa i 2 de llimona.", 
+        category: "probable", 
+        pct: 80,
+        fraction: "8 / 10 caramels",
+        step1: "<strong>1. Total de caramels:</strong> 8 + 2 = 10 caramels dins de la bossa.",
+        step2: "<strong>2. Casos favorables:</strong> 8 caramels són de maduixa (8 de cada 10).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> Representa exactament el <strong>80%</strong> del cercle: molt per sobre de la meitat (50%).",
+        reason: "8 de cada 10 caramels són de maduixa (80%)." 
+      },
+      { 
+        icon: "🟢", 
+        text: "Treure una bola verda d'una bossa que té 6 boles verdes i 2 de vermelles.", 
+        category: "probable", 
+        pct: 75,
+        fraction: "6 / 8 boles",
+        step1: "<strong>1. Total de boles:</strong> 6 verdes + 2 vermelles = 8 boles a la bossa.",
+        step2: "<strong>2. Fracció irreducible:</strong> 6/8 simplificat dividint entre 2 ens dona 3/4 (tres de cada quatre boles són verdes).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> El <strong>75%</strong> del cercle queda acolorit: supera amb claredat la barrera del 50%.",
+        reason: "3 de cada 4 boles són verdes (el 75% del total)." 
+      },
+
+      // 5. MOLT PROBABLE (80% - 99%)
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau de 6 cares i que NO surti el número 6.", 
+        category: "molt_probable", 
+        pct: 83.3,
+        fraction: "5 / 6 cares",
+        step1: "<strong>1. Cares que et serveixen:</strong> L'1, el 2, el 3, el 4 i el 5 (5 cares a favor!).",
+        step2: "<strong>2. L'única cara que et fa perdre:</strong> Només el número 6 (1 sola cara en contra).",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 5 de 6 és un <strong>83,3%</strong> del cercle: és gairebé la totalitat del pastís, només queda un petit bocí sense pintar.",
+        reason: "Tens 5 cares a favor de 6 possibles (més del 83%)." 
+      },
+      { 
+        icon: "🎟️", 
+        text: "Comprar 95 paperetes d'un sorteig on només se'n venen 100 en total.", 
+        category: "molt_probable", 
+        pct: 95,
+        fraction: "95 / 100 butlletes",
+        step1: "<strong>1. Participació total:</strong> Hi ha 100 paperetes numerades de l'1 al 100.",
+        step2: "<strong>2. Les teves paperetes:</strong> En tens 95 a la butxaca, mentre que la resta de la gent només en té 5 en total.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> Tens el <strong>95%</strong> de la circumferència acolorida: és quasi una certesa absoluta guanyar.",
+        reason: "Tens 95 de les 100 butlletes del sorteig (el 95%)." 
+      },
+      { 
+        icon: "🌧️", 
+        text: "Que plogui si el cel està completament negre, fa vent i ja comencen a caure gotes.", 
+        category: "molt_probable", 
+        pct: 92,
+        fraction: "92 / 100 indicadors",
+        step1: "<strong>1. Condicions del temps:</strong> Núvols baixos carregats d'aigua, humitat saturada i primeres gotes tocant el terra.",
+        step2: "<strong>2. Previsió física:</strong> Només un canvi sobtat i poc habitual de corrent d'aire podria aturar la tempesta.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> Els meteoròlegs assignen en aquest cas més d'un <strong>90% de probabilitat</strong>.",
+        reason: "Totes les evidències atmosfèriques fan el ruixat quasi segur." 
+      },
+      { 
+        icon: "✏️", 
+        text: "Treure un llapis d'un estoig que conté 49 llapis de fusta i només 1 bolígraf.", 
+        category: "molt_probable", 
+        pct: 98,
+        fraction: "49 / 50 objectes",
+        step1: "<strong>1. Contingut de l'estoig:</strong> Hi ha 50 estris en total dins l'estoig.",
+        step2: "<strong>2. Proporció:</strong> 49 són llapis i només 1 és bolígraf.",
+        step3: "<strong>3. Comparació amb el 50%:</strong> 49 de 50 equival al <strong>98%</strong>: pràcticament tot l'estoig són llapis.",
+        reason: "El 98% del material escolar de l'estoig són llapis." 
+      },
+
+      // 6. SEGUR (100%)
+      { 
+        icon: "☀️", 
+        text: "Que demà al matí el Sol surti per l'est.", 
+        category: "segur", 
+        pct: 100,
+        fraction: "Certesa física total",
+        step1: "<strong>1. Rotació planetària:</strong> La Terra gira sobre el seu eix constantment sense frenar.",
+        step2: "<strong>2. Històric de fets:</strong> Ha sortit per l'est durant milions d'anys cada matí.",
+        step3: "<strong>3. Percentatge:</strong> <strong>100%</strong> de possibilitat. El cercle i la barra estan completament plens (no hi ha marge d'error).",
+        reason: "La Terra continua girant: és una certesa astronòmica absoluta." 
+      },
+      { 
+        icon: "🎲", 
+        text: "Tirar un dau de 6 cares i treure un número més petit que 7.", 
+        category: "segur", 
+        pct: 100,
+        fraction: "6 / 6 cares",
+        step1: "<strong>1. Resultats que compleixen la condició:</strong> L'1, el 2, el 3, el 4, el 5 i el 6 (tots són inferiors a 7).",
+        step2: "<strong>2. Casos favorables:</strong> Les 6 cares compleixen la condició sense que cap en quedi fora.",
+        step3: "<strong>3. Percentatge:</strong> 6 de 6 equival al <strong>100%</strong>: passarà sempre, no hi ha cap possibilitat de fallar.",
+        reason: "Totes les cares del dau compleixen la regla (6 de 6)." 
+      },
+      { 
+        icon: "🎂", 
+        text: "Tenir un any més d'edat just l'endemà del teu aniversari.", 
+        category: "segur", 
+        pct: 100,
+        fraction: "100% matemàtic",
+        step1: "<strong>1. Concepte temporal:</strong> Un aniversari marca exactament el pas d'un cicle sencer de 365 dies.",
+        step2: "<strong>2. Còmput de l'edat:</strong> Per definició lògica i matemàtica, sumar aquest cicle fa créixer la teva edat en una unitat.",
+        step3: "<strong>3. Percentatge:</strong> <strong>100%</strong> de certesa lògica.",
+        reason: "Complir anys és exactament sumar un any a la teva edat." 
+      },
+      { 
+        icon: "🍎", 
+        text: "Deixar anar una poma a l'aire i que caigui directament cap a terra.", 
+        category: "segur", 
+        pct: 100,
+        fraction: "100% gravetat",
+        step1: "<strong>1. Llei de Newton:</strong> La massa de la Terra genera una força d'atracció cap al seu centre.",
+        step2: "<strong>2. Comportament dels objectes:</strong> Si no hi ha cap suport ni força ascendent que la sostingui, l'objecte cau.",
+        step3: "<strong>3. Percentatge:</strong> <strong>100%</strong> garantit per les lleis de la física terrestre.",
+        reason: "La gravetat terrestre fa caure els cossos al 100%." 
+      }
+    ];
+
+    const categoryLabels = {
+      impossible: "Impossible (0%)",
+      poc_probable: "Poc probable (< 50%)",
+      equitatiu: "Equitatiu (50%)",
+      probable: "Probable (> 50%)",
+      molt_probable: "Molt probable (80-99%)",
+      segur: "Segur (100%)"
+    };
+
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let streak = 0;
+    let currentPctFavor = 0;
+    let currentThemeColor = '#4f46e5';
+
+    function shuffle(array) {
+      return array.slice().sort(() => Math.random() - 0.5);
+    }
+
+    function initGame() {
+      questions = shuffle(database);
+      currentIndex = 0;
+      score = 0;
+      streak = 0;
+      document.getElementById('totalCardsNum').textContent = questions.length;
+      document.getElementById('resultsScreen').style.display = 'none';
+      document.getElementById('cardStage').style.display = 'block';
+      document.getElementById('boardContainer').style.display = 'flex';
+      document.getElementById('gameDashboard').style.display = 'flex';
+      updateUI();
+      showCard();
+    }
+
+    function updateUI() {
+      document.getElementById('currentCardNum').textContent = currentIndex + 1;
+      document.getElementById('score').textContent = score;
+      document.getElementById('streak').textContent = streak;
+      
+      const progress = ((currentIndex) / questions.length) * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+
+    function showCard() {
+      const q = questions[currentIndex];
+      const card = document.getElementById('cardElement');
+      
+      card.style.animation = 'none';
+      card.offsetHeight;
+      card.style.animation = 'popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+      document.getElementById('cardIcon').textContent = q.icon;
+      document.getElementById('cardText').textContent = q.text;
+      
+      const feedback = document.getElementById('feedback');
+      feedback.className = 'feedback-box';
+      feedback.textContent = '';
+      
+      document.getElementById('nextBtn').style.display = 'none';
+      
+      const buttons = document.querySelectorAll('.btn-choice');
+      buttons.forEach(btn => btn.disabled = false);
+    }
+
+    function makeGuess(userChoice) {
+      const q = questions[currentIndex];
+      const feedback = document.getElementById('feedback');
+      const buttons = document.querySelectorAll('.btn-choice');
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (userChoice === q.category) {
+        score += 10 + (streak * 2);
+        streak += 1;
+        feedback.className = 'feedback-box visible correct';
+        feedback.innerHTML = `<div>✨ <strong>Molt bé!</strong> És <u>${categoryLabels[q.category]}</u>.<br><span style="font-weight: 500; font-size: 0.9em; display: inline-block; margin-top: 3px;">${q.reason}</span></div>`;
+      } else {
+        streak = 0;
+        feedback.className = 'feedback-box visible incorrect';
+        feedback.innerHTML = `<div>❌ <strong>Gairebé!</strong> La resposta era <u>${categoryLabels[q.category]}</u>.<br><span style="font-weight: 500; font-size: 0.9em; display: inline-block; margin-top: 3px;">${q.reason}</span></div>`;
+      }
+
+      updateUI();
+      document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+
+    function nextCard() {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        updateUI();
+        showCard();
+      } else {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('cardStage').style.display = 'none';
+      document.getElementById('boardContainer').style.display = 'none';
+      document.getElementById('feedback').className = 'feedback-box';
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('gameDashboard').style.display = 'none';
+
+      const results = document.getElementById('resultsScreen');
+      results.style.display = 'block';
+      
+      const medal = document.getElementById('rankMedal');
+      const comment = document.getElementById('rankComment');
+      
+      if (score >= 200) {
+        medal.textContent = "🥇";
+        comment.textContent = "Ets un/a crack de la probabilitat!";
+      } else if (score >= 120) {
+        medal.textContent = "🥈";
+        comment.textContent = "Molt bona feina! Has demostrat un gran domini de l'atzar!";
+      } else {
+        medal.textContent = "🥉";
+        comment.textContent = "Molt bon esforç! T'animes a tornar a provar per millorar la teva marca?";
+      }
+
+      document.getElementById('finalScore').textContent = `${score} punts`;
+    }
+
+    function restartGame() {
+      initGame();
+    }
+
+    /* OBRIR I RENDERITZAR L'EINA AMB ANIMACIÓ I INTERACTIVITAT */
+    function openVisualHintModal() {
+      const q = questions[currentIndex];
+      currentPctFavor = Math.round(q.pct);
+      const pctAgainst = 100 - currentPctFavor;
+
+      const pieFill = document.getElementById('pieFill');
+      const pieBg = document.getElementById('pieBg');
+      const barFill = document.getElementById('modalBarFill');
+      const dotFavor = document.getElementById('legendDotFavor');
+
+      // Tria color segons la categoria
+      if (q.pct === 0) currentThemeColor = 'var(--c-impossible)';
+      else if (q.pct < 50) currentThemeColor = 'var(--c-poc)';
+      else if (q.pct === 50) currentThemeColor = 'var(--c-equitatiu)';
+      else if (q.pct < 80) currentThemeColor = 'var(--c-probable)';
+      else if (q.pct < 100) currentThemeColor = 'var(--c-molt)';
+      else currentThemeColor = 'var(--c-segur)';
+
+      // Colors inicials
+      pieFill.setAttribute('stroke', currentThemeColor);
+      dotFavor.style.background = currentThemeColor;
+      barFill.style.background = currentThemeColor;
+
+      // Reseteig previ per activar l'animació fluida
+      pieFill.setAttribute('stroke-dasharray', `0 100`);
+      barFill.style.width = `0%`;
+
+      // Textos de mètriques
+      document.getElementById('modalFraction').textContent = q.fraction;
+      document.getElementById('modalPercentDisplay').textContent = `${currentPctFavor}%`;
+      document.getElementById('modalPercentDisplay').style.color = currentThemeColor;
+
+      document.getElementById('legendTextFavor').innerHTML = `Casos a favor: <strong>${currentPctFavor}%</strong>`;
+      document.getElementById('legendTextAgainst').innerHTML = `Casos en contra / resta: <strong>${pctAgainst}%</strong>`;
+
+      updateCenterDisplay(currentPctFavor, "A favor", currentThemeColor);
+
+      // Explicació detallada pas a pas
+      const explanationCard = document.getElementById('hintModalExplanation');
+      explanationCard.innerHTML = `
+        <div class="hint-step">${q.step1}</div>
+        <div class="hint-step">${q.step2}</div>
+        <div class="hint-step">${q.step3}</div>
+      `;
+
+      toggleHintModal(true);
+
+      // Inicia l'animació de càrrega visual
+      setTimeout(() => {
+        pieFill.setAttribute('stroke-dasharray', `${q.pct} ${100 - q.pct}`);
+        barFill.style.width = `${q.pct}%`;
+      }, 50);
+    }
+
+    function updateCenterDisplay(pct, label, color) {
+      const centerPct = document.getElementById('centerPct');
+      const centerSub = document.getElementById('centerSub');
+      centerPct.textContent = `${pct}%`;
+      centerPct.style.color = color;
+      centerSub.textContent = label;
+    }
+
+    /* Gestió de l'efecte de ratolí / hover */
+    function hoverSegment(type) {
+      const pieFill = document.getElementById('pieFill');
+      const pieBg = document.getElementById('pieBg');
+      const legFavor = document.getElementById('legFavor');
+      const legAgainst = document.getElementById('legAgainst');
+
+      if (type === 'favor') {
+        pieFill.style.strokeWidth = "8.5";
+        pieBg.style.strokeWidth = "6.5";
+        legFavor.classList.add('active');
+        legAgainst.classList.remove('active');
+        updateCenterDisplay(currentPctFavor, "A favor", currentThemeColor);
+      } else if (type === 'against') {
+        pieBg.style.strokeWidth = "8.5";
+        pieFill.style.strokeWidth = "6.5";
+        legAgainst.classList.add('active');
+        legFavor.classList.remove('active');
+        updateCenterDisplay(100 - currentPctFavor, "En contra", "#64748b");
+      } else {
+        pieFill.style.strokeWidth = "6.5";
+        pieBg.style.strokeWidth = "6.5";
+        legFavor.classList.remove('active');
+        legAgainst.classList.remove('active');
+        updateCenterDisplay(currentPctFavor, "A favor", currentThemeColor);
+      }
+    }
+
+    function toggleHintModal(show) {
+      const modal = document.getElementById('hintModal');
+      if (show) {
+        modal.classList.add('open');
+      } else {
+        modal.classList.remove('open');
+      }
+    }
+
+    function checkCloseModal(e) {
+      if (e.target.id === 'hintModal') {
+        toggleHintModal(false);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        toggleHintModal(false);
+      }
+    });
+
+    window.onload = initGame;
+  </script>
+</body>
+</html>
