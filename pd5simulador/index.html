@@ -2,86 +2,409 @@
 <html lang="ca">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Simuladors de probabilitat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2d6a4f;
-      --accent: #b08928;
-      --bg: #f4f6f9;
-      --card-bg: #ffffff;
-      --text: #212529;
+      --primary: #15803d;
+      --primary-dark: #166534;
+      --primary-gradient: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-border: #e2e8f0;
+      --surface-card: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-gold: #d97706;
+      --danger: #ef4444;
+      --blue: #2563eb;
     }
 
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 20px 20px 0 20px;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(34, 197, 94, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(37, 99, 235, 0.06) 0px, transparent 50%);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      flex: 1;
-      width: 100%;
-    }
-
+    /* CAPÇALERA */
     header {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--primary);
-      font-size: 2rem;
-      letter-spacing: -0.5px;
-    }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-      gap: 25px;
-      perspective: 1200px;
-    }
-
-    .tool-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 22px 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 14px 20px;
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       justify-content: space-between;
-      border: 1px solid #e9ecef;
-      text-align: center;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
-    .stage {
-      height: 175px;
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* PESTANYES SELECTORES */
+    .tab-selector {
+      display: flex;
+      background: #e2e8f0;
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    @media (min-width: 768px) {
+      .tab-selector {
+        width: auto;
+      }
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 14px;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      perspective: 900px;
-      position: relative;
-      margin: 10px 0;
+      gap: 6px;
+      font-size: 0.85rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
     }
 
-    /* ------------------- MONEDA (CARA DE PERSONA I CREU 'X') ------------------- */
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* CONTINGUT PRINCIPAL */
+    main {
+      flex: 1;
+      display: flex;
+      padding: 20px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .tool-view {
+      display: none;
+      flex: 1;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .tool-view.active {
+      display: grid;
+    }
+
+    @media (min-width: 992px) {
+      .tool-view {
+        grid-template-columns: 380px 1fr;
+        gap: 24px;
+      }
+    }
+
+    /* PANELL 3D */
+    .sim-panel {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 24px 20px;
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      gap: 15px;
+    }
+
+    .panel-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .panel-header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .stage {
+      flex: 1;
+      min-height: 200px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    /* PANELL RESULTATS */
+    .stats-panel {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .stats-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--surface-border);
+      padding-bottom: 14px;
+    }
+
+    .stats-header h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-main);
+    }
+
+    .counter-badge {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: #ecfdf5;
+      padding: 6px 14px;
+      border-radius: 30px;
+      border: 1px solid #a7f3d0;
+    }
+
+    /* GRÀFICS DE BARRES DINÀMICS */
+    .chart-container {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 24px 14px 14px 14px;
+      background: var(--surface-card);
+      border-radius: 18px;
+      border: 1px solid var(--surface-border);
+      min-height: 240px;
+      overflow-x: auto;
+    }
+
+    .bar-col {
+      flex: 1;
+      min-width: 48px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bar-wrapper {
+      width: 100%;
+      max-width: 65px;
+      height: 170px;
+      display: flex;
+      align-items: flex-end;
+      background: #e2e8f0;
+      border-radius: 10px 10px 4px 4px;
+      padding: 3px;
+    }
+
+    .bar {
+      width: 100%;
+      background: var(--primary-gradient);
+      border-radius: 8px 8px 3px 3px;
+      min-height: 4px;
+      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+    }
+
+    .bar.bar-coin-cara {
+      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+    }
+    .bar.bar-coin-creu {
+      background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+      box-shadow: 0 2px 8px rgba(100, 116, 139, 0.2);
+    }
+    .bar.bar-red {
+      background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    }
+    .bar.bar-blue {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    }
+
+    .bar-value {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .bar-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .bar-pct {
+      font-size: 0.75rem;
+      color: #334155;
+      font-weight: 700;
+      background: #ffffff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--surface-border);
+    }
+
+    /* BOTONERA */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr) auto;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn {
+      background: #f1f5f9;
+      color: var(--text-main);
+      border: 1px solid var(--surface-border);
+      padding: 10px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0) scale(0.96);
+    }
+
+    .btn-main {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.2);
+    }
+    .btn-main:hover {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      box-shadow: 0 6px 16px rgba(21, 128, 61, 0.3);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .btn-danger:hover {
+      background: #fca5a5;
+      color: #ffffff;
+    }
+
+    /* HISTORIAL */
+    .recent-history {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: none;
+    }
+    .recent-history::-webkit-scrollbar { display: none; }
+
+    .history-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid var(--surface-border);
+      white-space: nowrap;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .chip.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .chip.blue { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ------------------- ELEMENTS 3D ------------------- */
     .coin-3d {
-      width: 115px;
-      height: 115px;
+      width: 120px;
+      height: 120px;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.3, 1);
+      transition: transform 0.8s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
-
     .coin-face {
       position: absolute;
       width: 100%;
@@ -93,108 +416,86 @@
       align-items: center;
       justify-content: center;
       box-shadow: 
-        inset 0 0 0 4px #8c6d23,
-        inset 0 0 0 7px #ffd166,
-        inset 0 0 14px rgba(0,0,0,0.45),
-        0 10px 20px rgba(0,0,0,0.2);
-      border: 2px dashed rgba(95, 68, 8, 0.6);
+        inset 0 0 0 5px #b45309,
+        inset 0 0 0 8px #fef08a,
+        inset 0 0 15px rgba(0, 0, 0, 0.3),
+        0 10px 20px rgba(0, 0, 0, 0.15);
+      border: 2px dashed rgba(180, 83, 9, 0.6);
     }
-
     .coin-front {
-      background: radial-gradient(circle at 35% 35%, #fff1b0, #d4a737 60%, #9e7519 100%);
-      color: #573e05;
+      background: radial-gradient(circle at 35% 35%, #fffbeb, #fbbf24 60%, #d97706 100%);
+      color: #451a03;
     }
-
     .coin-back {
-      background: radial-gradient(circle at 35% 35%, #fff1b0, #cfa02f 60%, #8c640f 100%);
-      color: #573e05;
+      background: radial-gradient(circle at 35% 35%, #fffbeb, #f59e0b 60%, #b45309 100%);
+      color: #451a03;
       transform: rotateY(180deg);
     }
-
     .coin-svg {
-      width: 58px;
-      height: 58px;
-      fill: #573e05;
-      stroke: #573e05;
-      filter: drop-shadow(1px 1px 0 rgba(255,255,255,0.7));
+      width: 60px;
+      height: 60px;
+      fill: #451a03;
+      stroke: #451a03;
+      filter: drop-shadow(1px 1px 0 rgba(255, 255, 255, 0.6));
     }
-
     .coin-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 800;
       letter-spacing: 2px;
-      text-transform: uppercase;
       margin-top: 4px;
-      text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
     }
 
-    /* ------------------- DAU 3D AMB LES 6 CARES ESTÀNDARD ------------------- */
     .dice-3d {
-      width: 80px;
-      height: 80px;
+      width: 86px;
+      height: 86px;
       position: relative;
       transform-style: preserve-3d;
       transform: rotateX(-25deg) rotateY(-35deg);
-      transition: transform 1.2s cubic-bezier(0.2, 0.85, 0.3, 1);
+      transition: transform 0.8s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
-
     .dice-face {
       position: absolute;
-      width: 80px;
-      height: 80px;
+      width: 86px;
+      height: 86px;
       background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid #dcdcdc;
+      border-radius: 16px;
+      border: 1px solid #cbd5e1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      padding: 8px;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.08);
+      padding: 10px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.1);
     }
-
     .dot {
-      width: 14px;
-      height: 14px;
-      background-color: #2b2b2b;
+      width: 15px;
+      height: 15px;
+      background-color: #1e293b;
       border-radius: 50%;
       justify-self: center;
       align-self: center;
     }
+    .df-front  { transform: rotateY(0deg) translateZ(43px); }
+    .df-back   { transform: rotateY(180deg) translateZ(43px); }
+    .df-right  { transform: rotateY(90deg) translateZ(43px); }
+    .df-left   { transform: rotateY(-90deg) translateZ(43px); }
+    .df-top    { transform: rotateX(90deg) translateZ(43px); }
+    .df-bottom { transform: rotateX(-90deg) translateZ(43px); }
 
-    /* Posicionament de les cares en l'espai 3D */
-    .df-front  { transform: rotateY(0deg) translateZ(40px); }
-    .df-back   { transform: rotateY(180deg) translateZ(40px); }
-    .df-right  { transform: rotateY(90deg) translateZ(40px); }
-    .df-left   { transform: rotateY(-90deg) translateZ(40px); }
-    .df-top    { transform: rotateX(90deg) translateZ(40px); }
-    .df-bottom { transform: rotateX(-90deg) translateZ(40px); }
-
-    /* Cara 1: vermell central */
-    .df-front .dot { width: 18px; height: 18px; background: #d90429; grid-area: 2 / 2; }
-
-    /* Cara 2: diagonal superior-esquerra i inferior-dreta */
+    .df-front .dot { width: 20px; height: 20px; background: #ef4444; grid-area: 2 / 2; }
     .df-bottom .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-bottom .dot:nth-child(2) { grid-area: 3 / 3; }
-
-    /* Cara 3: diagonal completa */
     .df-right .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-right .dot:nth-child(2) { grid-area: 2 / 2; }
     .df-right .dot:nth-child(3) { grid-area: 3 / 3; }
-
-    /* Cara 4: 4 cantonades */
     .df-left .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-left .dot:nth-child(2) { grid-area: 1 / 3; }
     .df-left .dot:nth-child(3) { grid-area: 3 / 1; }
     .df-left .dot:nth-child(4) { grid-area: 3 / 3; }
-
-    /* Cara 5: 4 cantonades + punt central */
     .df-top .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-top .dot:nth-child(2) { grid-area: 1 / 3; }
     .df-top .dot:nth-child(3) { grid-area: 2 / 2; }
     .df-top .dot:nth-child(4) { grid-area: 3 / 1; }
     .df-top .dot:nth-child(5) { grid-area: 3 / 3; }
-
-    /* Cara 6: dues columnes de 3 punts */
     .df-back .dot:nth-child(1) { grid-area: 1 / 1; }
     .df-back .dot:nth-child(2) { grid-area: 2 / 1; }
     .df-back .dot:nth-child(3) { grid-area: 3 / 1; }
@@ -202,21 +503,19 @@
     .df-back .dot:nth-child(5) { grid-area: 2 / 3; }
     .df-back .dot:nth-child(6) { grid-area: 3 / 3; }
 
-    /* ------------------- BOSSA TRANSLÚCIDA AMB BOLES ------------------- */
     .bag-container {
-      width: 125px;
-      height: 130px;
+      width: 135px;
+      height: 140px;
       position: relative;
-      cursor: pointer;
     }
     .bag-body {
       width: 100%;
       height: 100%;
-      background: radial-gradient(circle at 40% 30%, rgba(224, 169, 109, 0.45), rgba(156, 102, 52, 0.7));
+      background: radial-gradient(circle at 40% 30%, rgba(245, 158, 11, 0.25), rgba(180, 83, 9, 0.45));
       backdrop-filter: blur(2px);
-      border: 2px solid rgba(140, 90, 40, 0.5);
+      border: 2px solid rgba(217, 119, 6, 0.4);
       border-radius: 45% 45% 50% 50% / 60% 60% 40% 40%;
-      box-shadow: inset 0 -6px 14px rgba(0,0,0,0.25), 0 8px 18px rgba(0,0,0,0.15);
+      box-shadow: inset 0 -6px 14px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1);
       position: relative;
       display: flex;
       justify-content: center;
@@ -224,15 +523,14 @@
       transition: transform 0.2s;
     }
     .bag-tie {
-      width: 46px;
-      height: 10px;
-      background: #5c3412;
+      width: 50px;
+      height: 12px;
+      background: #78350f;
       position: absolute;
       top: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
       z-index: 4;
     }
-
     .inside-balls {
       position: absolute;
       width: 100%;
@@ -242,120 +540,75 @@
       pointer-events: none;
     }
     .mini-ball {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       position: absolute;
-      box-shadow: inset -3px -3px 6px rgba(0,0,0,0.4), inset 2px 2px 5px rgba(255,255,255,0.4), 0 3px 6px rgba(0,0,0,0.2);
+      box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.3), inset 2px 2px 4px rgba(255, 255, 255, 0.6), 0 3px 6px rgba(0, 0, 0, 0.15);
     }
-    .mini-ball.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91818); }
-    .mini-ball.blue { background: radial-gradient(circle at 30% 30%, #4ea8de, #0056b3); }
+    .mini-ball.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); }
+    .mini-ball.blue { background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); }
 
-    .b-pos1 { bottom: 20px; left: 24px; }
-    .b-pos2 { bottom: 18px; left: 51px; }
-    .b-pos3 { bottom: 22px; right: 22px; }
-    .b-pos4 { bottom: 42px; left: 36px; }
-    .b-pos5 { bottom: 40px; right: 35px; }
+    .b-pos1 { bottom: 22px; left: 24px; }
+    .b-pos2 { bottom: 20px; left: 54px; }
+    .b-pos3 { bottom: 24px; right: 24px; }
+    .b-pos4 { bottom: 48px; left: 38px; }
+    .b-pos5 { bottom: 46px; right: 38px; }
 
     .ball-extract {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       position: absolute;
       top: 45px;
-      left: 38px;
+      left: 41px;
       opacity: 0;
       z-index: 10;
       transform: scale(0.3) translateY(0);
-      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: inset -6px -6px 12px rgba(0,0,0,0.4), inset 6px 6px 12px rgba(255,255,255,0.4), 0 8px 16px rgba(0,0,0,0.3);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.6), 0 8px 16px rgba(0, 0, 0, 0.2);
     }
-    .ball-extract.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91818); }
-    .ball-extract.blue { background: radial-gradient(circle at 30% 30%, #4ea8de, #0056b3); }
+    .ball-extract.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); }
+    .ball-extract.blue { background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); }
     .ball-extract.pop {
       opacity: 1;
-      transform: scale(1.15) translateY(-70px);
+      transform: scale(1.2) translateY(-75px);
     }
 
-    /* Controls */
-    .controls { margin-top: 8px; }
-    .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 9px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.2s, transform 0.1s;
-      margin: 3px;
-    }
-    .btn:active { transform: scale(0.96); }
-    .btn:hover { background: #1b4332; }
-    .btn-secondary { background: #6c757d; }
-    .btn-secondary:hover { background: #495057; }
-
-    .progress {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: var(--primary);
-      margin-bottom: 8px;
-    }
-
-    .history-chips {
-      min-height: 38px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      justify-content: center;
-      margin: 10px 0;
-    }
-    .chip {
-      padding: 4px 8px;
-      border-radius: 10px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      background: #e9ecef;
-      color: #333;
-    }
-    .chip.red { background: #f8d7da; color: #842029; }
-    .chip.blue { background: #cfe2ff; color: #084298; }
-
-    .summary-box {
-      font-size: 0.85rem;
-      text-align: left;
-      background: #f8f9fa;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border-left: 4px solid var(--primary);
-      min-height: 65px;
-      border: 1px solid #e9ecef;
-    }
-
-    /* Peu de pàgina */
+    /* PEU DE PÀGINA */
     footer {
-      margin-top: 40px;
-      padding: 20px;
+      padding: 16px 20px;
       text-align: center;
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: #495057;
-      border-top: 1px solid #dee2e6;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-top: 1px solid var(--surface-border);
+      background: #ffffff;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
   <header>
-    <h1>Simuladors de probabilitat</h1>
+    <div class="brand-title">
+      <span>🎲 Simuladors de probabilitat</span>
+    </div>
+    <div class="tab-selector">
+      <button class="tab-btn active" onclick="switchTab(this, 'coin')">🪙 Moneda</button>
+      <button class="tab-btn" onclick="switchTab(this, 'dice')">🎲 Dau</button>
+      <button class="tab-btn" onclick="switchTab(this, 'bag')">🎒 Bossa</button>
+    </div>
   </header>
 
-  <div class="tools-grid">
-    <!-- Moneda -->
-    <div class="tool-card">
-      <div>
-        <h3>🪙 Moneda</h3>
+  <main>
+    <!-- VISTA MONEDA -->
+    <div class="tool-view active" id="view-coin">
+      <div class="sim-panel">
+        <div class="panel-header">
+          <h2>Moneda equilibrada</h2>
+          <p><strong>Què hauria de passar?</strong><br>Tenim la meitat de possibilitats per a cadascuna: 50% Cara i 50% Creu.</p>
+        </div>
+        
         <div class="stage">
           <div class="coin-3d" id="coin-mesh">
             <div class="coin-face coin-front">
@@ -372,78 +625,155 @@
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="progress" id="coin-count">Llençaments: 0 / 10</div>
+
         <div class="controls">
-          <button class="btn" onclick="flipCoin()">Llençar</button>
-          <button class="btn btn-secondary" onclick="run10(flipCoin, 'coin')">Fer-ne 10</button>
-          <button class="btn btn-secondary" onclick="reset('coin')">Reiniciar</button>
+          <button class="btn btn-main" onclick="simulateCoin(1)">+1</button>
+          <button class="btn" onclick="simulateCoin(10)">+10</button>
+          <button class="btn" onclick="simulateCoin(100)">+100</button>
+          <button class="btn" onclick="simulateCoin(1000)">+1000</button>
+          <button class="btn btn-danger" onclick="resetExp('coin')" title="Tornar a començar">↺</button>
         </div>
-        <div class="history-chips" id="coin-history"></div>
-        <div class="summary-box" id="coin-summary">Fes clic a "Llençar" per començar.</div>
+      </div>
+
+      <div class="stats-panel">
+        <div class="stats-header">
+          <h3>Què ha passat realment?</h3>
+          <span class="counter-badge" id="coin-total">0 tirades fetes</span>
+        </div>
+
+        <div class="chart-container">
+          <div class="bar-col">
+            <span class="bar-value" id="val-coin-Cara">0</span>
+            <div class="bar-wrapper">
+              <div class="bar bar-coin-cara" id="bar-coin-Cara" style="height: 0%;"></div>
+            </div>
+            <span class="bar-label">👑 CARA</span>
+            <span class="bar-pct" id="pct-coin-Cara">0%</span>
+          </div>
+
+          <div class="bar-col">
+            <span class="bar-value" id="val-coin-Creu">0</span>
+            <div class="bar-wrapper">
+              <div class="bar bar-coin-creu" id="bar-coin-Creu" style="height: 0%;"></div>
+            </div>
+            <span class="bar-label">✖️ CREU</span>
+            <span class="bar-pct" id="pct-coin-Creu">0%</span>
+          </div>
+        </div>
+
+        <div class="recent-history">
+          <span class="history-title">Últimes:</span>
+          <div id="coin-recent" style="display:flex; gap:6px;"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Dau -->
-    <div class="tool-card">
-      <div>
-        <h3>🎲 Dau</h3>
+    <!-- VISTA DAU -->
+    <div class="tool-view" id="view-dice">
+      <div class="sim-panel">
+        <div class="panel-header">
+          <h2>Dau de 6 cares</h2>
+          <p><strong>Què hauria de passar?</strong><br>Tots els números tenen la mateixa oportunitat de sortir (1 de cada 6).</p>
+        </div>
+
         <div class="stage">
           <div class="dice-3d" id="dice-mesh">
-            <!-- Cara 1 (Davant) -->
-            <div class="dice-face df-front">
-              <span class="dot"></span>
-            </div>
-            <!-- Cara 6 (Darrere) -->
+            <div class="dice-face df-front"><span class="dot"></span></div>
             <div class="dice-face df-back">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
             </div>
-            <!-- Cara 3 (Dreta) -->
             <div class="dice-face df-right">
-              <span class="dot"></span>
-              <span class="dot"></span>
-              <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
-            <!-- Cara 4 (Esquerra) -->
             <div class="dice-face df-left">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
             </div>
-            <!-- Cara 5 (Dalt) -->
             <div class="dice-face df-top">
               <span class="dot"></span><span class="dot"></span>
-              <span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span>
             </div>
-            <!-- Cara 2 (Baix) -->
             <div class="dice-face df-bottom">
               <span class="dot"></span>
               <span class="dot"></span>
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="progress" id="dice-count">Tirades: 0 / 10</div>
+
         <div class="controls">
-          <button class="btn" onclick="rollDice()">Tirar</button>
-          <button class="btn btn-secondary" onclick="run10(rollDice, 'dice')">Fer-ne 10</button>
-          <button class="btn btn-secondary" onclick="reset('dice')">Reiniciar</button>
+          <button class="btn btn-main" onclick="simulateDice(1)">+1</button>
+          <button class="btn" onclick="simulateDice(10)">+10</button>
+          <button class="btn" onclick="simulateDice(100)">+100</button>
+          <button class="btn" onclick="simulateDice(1000)">+1000</button>
+          <button class="btn btn-danger" onclick="resetExp('dice')" title="Tornar a començar">↺</button>
         </div>
-        <div class="history-chips" id="dice-history"></div>
-        <div class="summary-box" id="dice-summary">Fes clic a "Tirar" per llançar el dau.</div>
+      </div>
+
+      <div class="stats-panel">
+        <div class="stats-header">
+          <h3>Què ha passat realment?</h3>
+          <span class="counter-badge" id="dice-total">0 tirades fetes</span>
+        </div>
+
+        <div class="chart-container">
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-1">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-1" style="height: 0%;"></div></div>
+            <span class="bar-label">⚀ 1</span>
+            <span class="bar-pct" id="pct-dice-1">0%</span>
+          </div>
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-2">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-2" style="height: 0%;"></div></div>
+            <span class="bar-label">⚁ 2</span>
+            <span class="bar-pct" id="pct-dice-2">0%</span>
+          </div>
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-3">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-3" style="height: 0%;"></div></div>
+            <span class="bar-label">⚂ 3</span>
+            <span class="bar-pct" id="pct-dice-3">0%</span>
+          </div>
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-4">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-4" style="height: 0%;"></div></div>
+            <span class="bar-label">⚃ 4</span>
+            <span class="bar-pct" id="pct-dice-4">0%</span>
+          </div>
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-5">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-5" style="height: 0%;"></div></div>
+            <span class="bar-label">⚄ 5</span>
+            <span class="bar-pct" id="pct-dice-5">0%</span>
+          </div>
+          <div class="bar-col">
+            <span class="bar-value" id="val-dice-6">0</span>
+            <div class="bar-wrapper"><div class="bar" id="bar-dice-6" style="height: 0%;"></div></div>
+            <span class="bar-label">⚅ 6</span>
+            <span class="bar-pct" id="pct-dice-6">0%</span>
+          </div>
+        </div>
+
+        <div class="recent-history">
+          <span class="history-title">Últimes:</span>
+          <div id="dice-recent" style="display:flex; gap:6px;"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Bossa -->
-    <div class="tool-card">
-      <div>
-        <h3>🎒 Bossa (3 vermelles, 2 blaves)</h3>
+    <!-- VISTA BOSSA -->
+    <div class="tool-view" id="view-bag">
+      <div class="sim-panel">
+        <div class="panel-header">
+          <h2>Bossa de boles</h2>
+          <p><strong>Què hauria de passar?</strong><br>És més fàcil treure una vermella perquè n'hi ha 3, i blaves només 2.</p>
+        </div>
+
         <div class="stage">
-          <div class="bag-container" onclick="drawBall()">
+          <div class="bag-container">
             <div class="bag-body" id="bag-body">
               <div class="bag-tie"></div>
               <div class="inside-balls">
@@ -457,157 +787,241 @@
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="progress" id="bag-count">Extraccions: 0 / 10</div>
+
         <div class="controls">
-          <button class="btn" onclick="drawBall()">Treure bola</button>
-          <button class="btn btn-secondary" onclick="run10(drawBall, 'bag')">Fer-ne 10</button>
-          <button class="btn btn-secondary" onclick="reset('bag')">Reiniciar</button>
+          <button class="btn btn-main" onclick="simulateBag(1)">+1</button>
+          <button class="btn" onclick="simulateBag(10)">+10</button>
+          <button class="btn" onclick="simulateBag(100)">+100</button>
+          <button class="btn" onclick="simulateBag(1000)">+1000</button>
+          <button class="btn btn-danger" onclick="resetExp('bag')" title="Tornar a començar">↺</button>
         </div>
-        <div class="history-chips" id="bag-history"></div>
-        <div class="summary-box" id="bag-summary">Fes clic per extreure una bola a l'atzar.</div>
+      </div>
+
+      <div class="stats-panel">
+        <div class="stats-header">
+          <h3>Què ha passat realment?</h3>
+          <span class="counter-badge" id="bag-total">0 boles tretes</span>
+        </div>
+
+        <div class="chart-container">
+          <div class="bar-col">
+            <span class="bar-value" id="val-bag-Vermella">0</span>
+            <div class="bar-wrapper">
+              <div class="bar bar-red" id="bar-bag-Vermella" style="height: 0%;"></div>
+            </div>
+            <span class="bar-label">🔴 VERMELLA</span>
+            <span class="bar-pct" id="pct-bag-Vermella">0%</span>
+          </div>
+
+          <div class="bar-col">
+            <span class="bar-value" id="val-bag-Blava">0</span>
+            <div class="bar-wrapper">
+              <div class="bar bar-blue" id="bar-bag-Blava" style="height: 0%;"></div>
+            </div>
+            <span class="bar-label">🔵 BLAVA</span>
+            <span class="bar-pct" id="pct-bag-Blava">0%</span>
+          </div>
+        </div>
+
+        <div class="recent-history">
+          <span class="history-title">Últimes:</span>
+          <div id="bag-recent" style="display:flex; gap:6px;"></div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+  </main>
 
-<footer>
-  PD5 PCMAT - Creat per Oriol Soler
-</footer>
+  <footer>
+    PD5 PCMAT - Creat per Oriol Soler
+  </footer>
 
-<script>
-  const data = {
-    coin: { count: 0, results: [], totalRot: 0 },
-    dice: { count: 0, results: [] },
-    bag: { count: 0, results: [] }
-  };
+  <script>
+    const stats = {
+      coin: { total: 0, Cara: 0, Creu: 0, recent: [] },
+      dice: { total: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, recent: [] },
+      bag: { total: 0, Vermella: 0, Blava: 0, recent: [] }
+    };
 
-  const diceRotations = {
-    1: { x: 0,   y: 0 },
-    2: { x: 90,  y: 0 },
-    3: { x: 0,   y: -90 },
-    4: { x: 0,   y: 90 },
-    5: { x: -90, y: 0 },
-    6: { x: 0,   y: 180 }
-  };
+    let coinRot = 0;
+    const diceRotations = {
+      1: { x: 0,   y: 0 },
+      2: { x: 90,  y: 0 },
+      3: { x: 0,   y: -90 },
+      4: { x: 0,   y: 90 },
+      5: { x: -90, y: 0 },
+      6: { x: 0,   y: 180 }
+    };
 
-  function flipCoin() {
-    if (data.coin.count >= 10) return;
-    const isCara = Math.random() < 0.5;
-    const result = isCara ? 'Cara' : 'Creu';
+    function switchTab(btn, tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tool-view').forEach(v => v.classList.remove('active'));
 
-    data.coin.count++;
-    data.coin.results.push(result);
-
-    data.coin.totalRot += 1440 + (isCara ? 0 : 180);
-    const mesh = document.getElementById('coin-mesh');
-    mesh.style.transform = `rotateY(${data.coin.totalRot}deg) translateY(-25px) scale(1.1)`;
-    
-    setTimeout(() => {
-      mesh.style.transform = `rotateY(${data.coin.totalRot}deg) translateY(0px) scale(1)`;
-    }, 600);
-
-    updateView('coin');
-  }
-
-  function rollDice() {
-    if (data.dice.count >= 10) return;
-    const res = Math.floor(Math.random() * 6) + 1;
-
-    data.dice.count++;
-    data.dice.results.push(res);
-
-    const rot = diceRotations[res];
-    const mesh = document.getElementById('dice-mesh');
-    
-    mesh.style.transform = `scale(1.2) rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
-    setTimeout(() => {
-      mesh.style.transform = `scale(1) rotateX(${rot.x}deg) rotateY(${rot.y}deg)`;
-    }, 600);
-
-    updateView('dice');
-  }
-
-  function drawBall() {
-    if (data.bag.count >= 10) return;
-    const pool = ['Vermella', 'Vermella', 'Vermella', 'Blava', 'Blava'];
-    const res = pool[Math.floor(Math.random() * pool.length)];
-
-    data.bag.count++;
-    data.bag.results.push(res);
-
-    const ball = document.getElementById('ball-mesh');
-    const bag = document.getElementById('bag-body');
-    
-    ball.className = 'ball-extract ' + (res === 'Vermella' ? 'red' : 'blue');
-    bag.style.transform = 'scale(0.94) rotate(-5deg)';
-    
-    setTimeout(() => {
-      ball.classList.add('pop');
-      bag.style.transform = 'scale(1) rotate(0deg)';
-    }, 100);
-
-    setTimeout(() => {
-      ball.classList.remove('pop');
-    }, 900);
-
-    updateView('bag');
-  }
-
-  function run10(fn, type) {
-    reset(type);
-    let i = 0;
-    const interval = setInterval(() => {
-      fn();
-      i++;
-      if (i >= 10) clearInterval(interval);
-    }, 380);
-  }
-
-  function updateView(type) {
-    const item = data[type];
-    document.getElementById(`${type}-count`).textContent = `Total: ${item.count} / 10`;
-
-    const chipsDiv = document.getElementById(`${type}-history`);
-    chipsDiv.innerHTML = '';
-    item.results.forEach(r => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      if (r === 'Vermella') chip.classList.add('red');
-      if (r === 'Blava') chip.classList.add('blue');
-      chip.textContent = r;
-      chipsDiv.appendChild(chip);
-    });
-
-    const counts = {};
-    item.results.forEach(r => counts[r] = (counts[r] || 0) + 1);
-
-    let summary = '';
-    for (const [k, v] of Object.entries(counts)) {
-      const pct = ((v / item.count) * 100).toFixed(0);
-      summary += `• <strong>${k}</strong>: ${v} cops (${pct}%)<br>`;
+      btn.classList.add('active');
+      document.getElementById(`view-${tab}`).classList.add('active');
     }
-    if (item.count === 10) summary += '✨ <em>10 repeticions assolides!</em>';
-    document.getElementById(`${type}-summary`).innerHTML = summary;
-  }
 
-  function reset(type) {
-    data[type].count = 0;
-    data[type].results = [];
-    document.getElementById(`${type}-count`).textContent = `Total: 0 / 10`;
-    document.getElementById(`${type}-history`).innerHTML = '';
-    document.getElementById(`${type}-summary`).textContent = 'Preparat per començar.';
+    // ---------------- MONEDA ----------------
+    function simulateCoin(n) {
+      let lastResult = '';
+      for (let i = 0; i < n; i++) {
+        const res = Math.random() < 0.5 ? 'Cara' : 'Creu';
+        stats.coin[res]++;
+        stats.coin.total++;
+        stats.coin.recent.unshift(res);
+        lastResult = res;
+      }
+      if (stats.coin.recent.length > 15) stats.coin.recent.length = 15;
 
-    if (type === 'coin') {
-      data.coin.totalRot = 0;
-      document.getElementById('coin-mesh').style.transform = 'rotateY(0deg)';
+      coinRot += 1080 + (lastResult === 'Cara' ? 0 : 180);
+      const mesh = document.getElementById('coin-mesh');
+      mesh.style.transform = `rotateY(${coinRot}deg) translateY(-25px) scale(1.08)`;
+      setTimeout(() => {
+        mesh.style.transform = `rotateY(${coinRot}deg) translateY(0px) scale(1)`;
+      }, 500);
+
+      updateCoinUI();
     }
-    if (type === 'dice') {
-      document.getElementById('dice-mesh').style.transform = 'rotateX(-25deg) rotateY(-35deg)';
-    }
-  }
-</script>
 
+    function updateCoinUI() {
+      const { total, Cara, Creu, recent } = stats.coin;
+      document.getElementById('coin-total').textContent = `${total} tirades fetes`;
+
+      const pctCara = total ? ((Cara / total) * 100).toFixed(1) : 0;
+      const pctCreu = total ? ((Creu / total) * 100).toFixed(1) : 0;
+
+      document.getElementById('val-coin-Cara').textContent = Cara;
+      document.getElementById('pct-coin-Cara').textContent = `${pctCara}%`;
+      document.getElementById('bar-coin-Cara').style.height = `${pctCara}%`;
+
+      document.getElementById('val-coin-Creu').textContent = Creu;
+      document.getElementById('pct-coin-Creu').textContent = `${pctCreu}%`;
+      document.getElementById('bar-coin-Creu').style.height = `${pctCreu}%`;
+
+      renderRecent('coin', recent);
+    }
+
+    // ---------------- DAU ----------------
+    function simulateDice(n) {
+      let lastRoll = 1;
+      for (let i = 0; i < n; i++) {
+        const roll = Math.floor(Math.random() * 6) + 1;
+        stats.dice[roll]++;
+        stats.dice.total++;
+        stats.dice.recent.unshift(roll);
+        lastRoll = roll;
+      }
+      if (stats.dice.recent.length > 15) stats.dice.recent.length = 15;
+
+      const rot = diceRotations[lastRoll];
+      const mesh = document.getElementById('dice-mesh');
+      mesh.style.transform = `scale(1.15) rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
+      setTimeout(() => {
+        mesh.style.transform = `scale(1) rotateX(${rot.x}deg) rotateY(${rot.y}deg)`;
+      }, 500);
+
+      updateDiceUI();
+    }
+
+    function updateDiceUI() {
+      const { total, recent } = stats.dice;
+      document.getElementById('dice-total').textContent = `${total} tirades fetes`;
+
+      let maxVal = 0;
+      for (let i = 1; i <= 6; i++) {
+        if (stats.dice[i] > maxVal) maxVal = stats.dice[i];
+      }
+
+      for (let i = 1; i <= 6; i++) {
+        const val = stats.dice[i];
+        const pct = total ? ((val / total) * 100).toFixed(1) : 0;
+        const barHeight = maxVal > 0 ? (val / maxVal) * 100 : 0;
+
+        document.getElementById(`val-dice-${i}`).textContent = val;
+        document.getElementById(`pct-dice-${i}`).textContent = `${pct}%`;
+        document.getElementById(`bar-dice-${i}`).style.height = `${barHeight}%`;
+      }
+
+      renderRecent('dice', recent);
+    }
+
+    // ---------------- BOSSA ----------------
+    function simulateBag(n) {
+      const pool = ['Vermella', 'Vermella', 'Vermella', 'Blava', 'Blava'];
+      let lastExtract = 'Vermella';
+
+      for (let i = 0; i < n; i++) {
+        const item = pool[Math.floor(Math.random() * pool.length)];
+        stats.bag[item]++;
+        stats.bag.total++;
+        stats.bag.recent.unshift(item);
+        lastExtract = item;
+      }
+      if (stats.bag.recent.length > 15) stats.bag.recent.length = 15;
+
+      const ball = document.getElementById('ball-mesh');
+      const bag = document.getElementById('bag-body');
+
+      ball.className = 'ball-extract ' + (lastExtract === 'Vermella' ? 'red' : 'blue');
+      bag.style.transform = 'scale(0.92) rotate(-6deg)';
+
+      setTimeout(() => {
+        ball.classList.add('pop');
+        bag.style.transform = 'scale(1) rotate(0deg)';
+      }, 50);
+
+      setTimeout(() => {
+        ball.classList.remove('pop');
+      }, 650);
+
+      updateBagUI();
+    }
+
+    function updateBagUI() {
+      const { total, Vermella, Blava, recent } = stats.bag;
+      document.getElementById('bag-total').textContent = `${total} boles tretes`;
+
+      const pctRed = total ? ((Vermella / total) * 100).toFixed(1) : 0;
+      const pctBlue = total ? ((Blava / total) * 100).toFixed(1) : 0;
+
+      document.getElementById('val-bag-Vermella').textContent = Vermella;
+      document.getElementById('pct-bag-Vermella').textContent = `${pctRed}%`;
+      document.getElementById('bar-bag-Vermella').style.height = `${pctRed}%`;
+
+      document.getElementById('val-bag-Blava').textContent = Blava;
+      document.getElementById('pct-bag-Blava').textContent = `${pctBlue}%`;
+      document.getElementById('bar-bag-Blava').style.height = `${pctBlue}%`;
+
+      renderRecent('bag', recent);
+    }
+
+    function renderRecent(type, list) {
+      const container = document.getElementById(`${type}-recent`);
+      container.innerHTML = '';
+      list.forEach(val => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        if (val === 'Vermella') chip.classList.add('red');
+        if (val === 'Blava') chip.classList.add('blue');
+        chip.textContent = val;
+        container.appendChild(chip);
+      });
+    }
+
+    function resetExp(type) {
+      if (type === 'coin') {
+        stats.coin = { total: 0, Cara: 0, Creu: 0, recent: [] };
+        coinRot = 0;
+        document.getElementById('coin-mesh').style.transform = 'rotateY(0deg)';
+        updateCoinUI();
+      } else if (type === 'dice') {
+        stats.dice = { total: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, recent: [] };
+        document.getElementById('dice-mesh').style.transform = 'rotateX(-25deg) rotateY(-35deg)';
+        updateDiceUI();
+      } else if (type === 'bag') {
+        stats.bag = { total: 0, Vermella: 0, Blava: 0, recent: [] };
+        updateBagUI();
+      }
+    }
+  </script>
 </body>
 </html>
