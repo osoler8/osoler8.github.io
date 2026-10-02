@@ -605,8 +605,8 @@
     <div class="tool-view active" id="view-coin">
       <div class="sim-panel">
         <div class="panel-header">
-          <h2>Moneda equilibrada</h2>
-          <p><strong>Què hauria de passar?</strong><br>Tenim la meitat de possibilitats per a cadascuna: 50% Cara i 50% Creu.</p>
+          <h2>Moneda</h2>
+          <p>Mateixes opcions: <strong>50% Cara i 50% Creu</strong></p>
         </div>
         
         <div class="stage">
@@ -631,14 +631,14 @@
           <button class="btn" onclick="simulateCoin(10)">+10</button>
           <button class="btn" onclick="simulateCoin(100)">+100</button>
           <button class="btn" onclick="simulateCoin(1000)">+1000</button>
-          <button class="btn btn-danger" onclick="resetExp('coin')" title="Tornar a començar">↺</button>
+          <button class="btn btn-danger" onclick="resetExp('coin')" title="Reiniciar">↺</button>
         </div>
       </div>
 
       <div class="stats-panel">
         <div class="stats-header">
-          <h3>Què ha passat realment?</h3>
-          <span class="counter-badge" id="coin-total">0 tirades fetes</span>
+          <h3>Resultats reals</h3>
+          <span class="counter-badge" id="coin-total">0 tirades</span>
         </div>
 
         <div class="chart-container">
@@ -672,8 +672,8 @@
     <div class="tool-view" id="view-dice">
       <div class="sim-panel">
         <div class="panel-header">
-          <h2>Dau de 6 cares</h2>
-          <p><strong>Què hauria de passar?</strong><br>Tots els números tenen la mateixa oportunitat de sortir (1 de cada 6).</p>
+          <h2>Dau</h2>
+          <p>Tots els números tenen la <strong>mateixa opció (1 de 6)</strong></p>
         </div>
 
         <div class="stage">
@@ -697,8 +697,7 @@
               <span class="dot"></span>
             </div>
             <div class="dice-face df-bottom">
-              <span class="dot"></span>
-              <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
             </div>
           </div>
         </div>
@@ -708,14 +707,14 @@
           <button class="btn" onclick="simulateDice(10)">+10</button>
           <button class="btn" onclick="simulateDice(100)">+100</button>
           <button class="btn" onclick="simulateDice(1000)">+1000</button>
-          <button class="btn btn-danger" onclick="resetExp('dice')" title="Tornar a començar">↺</button>
+          <button class="btn btn-danger" onclick="resetExp('dice')" title="Reiniciar">↺</button>
         </div>
       </div>
 
       <div class="stats-panel">
         <div class="stats-header">
-          <h3>Què ha passat realment?</h3>
-          <span class="counter-badge" id="dice-total">0 tirades fetes</span>
+          <h3>Resultats reals</h3>
+          <span class="counter-badge" id="dice-total">0 tirades</span>
         </div>
 
         <div class="chart-container">
@@ -768,8 +767,8 @@
     <div class="tool-view" id="view-bag">
       <div class="sim-panel">
         <div class="panel-header">
-          <h2>Bossa de boles</h2>
-          <p><strong>Què hauria de passar?</strong><br>És més fàcil treure una vermella perquè n'hi ha 3, i blaves només 2.</p>
+          <h2>Bossa</h2>
+          <p>Més opcions de vermella: <strong>🔴 3 vermelles i 🔵 2 blaves</strong></p>
         </div>
 
         <div class="stage">
@@ -793,14 +792,14 @@
           <button class="btn" onclick="simulateBag(10)">+10</button>
           <button class="btn" onclick="simulateBag(100)">+100</button>
           <button class="btn" onclick="simulateBag(1000)">+1000</button>
-          <button class="btn btn-danger" onclick="resetExp('bag')" title="Tornar a començar">↺</button>
+          <button class="btn btn-danger" onclick="resetExp('bag')" title="Reiniciar">↺</button>
         </div>
       </div>
 
       <div class="stats-panel">
         <div class="stats-header">
-          <h3>Què ha passat realment?</h3>
-          <span class="counter-badge" id="bag-total">0 boles tretes</span>
+          <h3>Resultats reals</h3>
+          <span class="counter-badge" id="bag-total">0 extraccions</span>
         </div>
 
         <div class="chart-container">
@@ -884,7 +883,7 @@
 
     function updateCoinUI() {
       const { total, Cara, Creu, recent } = stats.coin;
-      document.getElementById('coin-total').textContent = `${total} tirades fetes`;
+      document.getElementById('coin-total').textContent = `${total} tirades`;
 
       const pctCara = total ? ((Cara / total) * 100).toFixed(1) : 0;
       const pctCreu = total ? ((Creu / total) * 100).toFixed(1) : 0;
@@ -924,7 +923,7 @@
 
     function updateDiceUI() {
       const { total, recent } = stats.dice;
-      document.getElementById('dice-total').textContent = `${total} tirades fetes`;
+      document.getElementById('dice-total').textContent = `${total} tirades`;
 
       let maxVal = 0;
       for (let i = 1; i <= 6; i++) {
@@ -978,7 +977,7 @@
 
     function updateBagUI() {
       const { total, Vermella, Blava, recent } = stats.bag;
-      document.getElementById('bag-total').textContent = `${total} boles tretes`;
+      document.getElementById('bag-total').textContent = `${total} extraccions`;
 
       const pctRed = total ? ((Vermella / total) * 100).toFixed(1) : 0;
       const pctBlue = total ? ((Blava / total) * 100).toFixed(1) : 0;
