@@ -546,7 +546,6 @@
                 Tota la teva feina s'ha empaquetat a l'enllaç. Pots copiar-lo amb el botó de sota i <strong>enganxar-lo (Ctrl+V)</strong> al Classroom, Moodle o correu per lliurar la teva tasca al/la docent.
             </p>
 
-            <!-- Camp amb el botó de copiar integrat -->
             <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
                 <input type="text" id="shareUrlInput" readonly class="w-full bg-transparent px-2 text-xs text-slate-700 outline-none select-all font-mono truncate">
                 <button id="copyUrlBtn" onclick="copyShareUrlManually()" class="btn-bento bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-all">
@@ -580,7 +579,6 @@
             }).join(''));
         }
 
-        // Catàleg d'icones variades per categories
         const iconLibrary = [
             { category: "Atzar i Jocs", icons: ["🎲", "🪙", "🛍️", "🎯", "🃏", "🀄", "🎱", "🎳", "🧩", "♟️", "🕹️", "🎟️"] },
             { category: "Matemàtiques i Ciència", icons: ["📐", "📏", "📊", "📈", "📉", "🧮", "🔬", "🔭", "🧪", "🧲", "🧬", "💡", "⚡"] },
@@ -591,9 +589,10 @@
 
         let targetEditIdxForIcon = null;
 
+        // c2 = 60% i c7 = 0%
         const defaultCards = [
             { id: "c1", type: "calcul", text: "Treure un 6 amb un dau normal", icon: "🎲", animClass: "anim-dice", targetValue: 17, minValid: 10, maxValid: 25, hint: "CÀLCUL: Hi ha 1 cara favorable de 6 totals (1/6 ≈ 16.7%).", explanation: "1/6 = 16.7% (Càlcul matemàtic teòric)." },
-            { id: "c2", type: "calcul", text: "Treure vermell de la bossa de l’act.1", icon: "🛍️", animClass: "anim-bag", targetValue: 60, minValid: 50, maxValid: 70, hint: "CÀLCUL: A la bossa de l'activitat 1 hi ha majoria de boles vermelles (60%).", explanation: "60% segons la composició de la bossa." },
+            { id: "c2", type: "calcul", text: "Treure vermell de la bossa de l’act.1", icon: "🛍️", animClass: "anim-bag", targetValue: 60, minValid: 50, maxValid: 70, hint: "CÀLCUL: A la bossa de l'activitat 1 hi ha un 60% de boles vermelles.", explanation: "60% segons la composició de la bossa." },
             { id: "c3", type: "calcul", text: "Treure cara en llançar una moneda", icon: "🪙", animClass: "anim-coin", targetValue: 50, minValid: 40, maxValid: 60, hint: "CÀLCUL: Hi ha 2 opcions equiprobables (cara o creu), 50%.", explanation: "Exactament 50% (Càlcul matemàtic)." },
             { id: "c4", type: "calcul", text: "El sol sortirà demà", icon: "☀️", animClass: "anim-sun", targetValue: 100, minValid: 95, maxValid: 100, hint: "CÀLCUL / DETERMINISTA: Fet astronòmicament segur (100%).", explanation: "100% Segur." },
             { id: "c5", type: "estimacio", text: "Demà plourà", icon: "🌧️", animClass: "anim-rain", targetValue: 25, minValid: 5, maxValid: 75, suggestedFactors: ["Previsió del temps", "Època de l'any (estació)", "Zona / Clima local", "Presència de núvols"], hint: "ESTIMACIÓ: Depèn del mapa del temps, l'estació de l'any i la zona.", explanation: "Estimació variable segons factors meteorològics." },
@@ -640,6 +639,21 @@
                     
                     if (decoded && decoded.cards) {
                         cards = decoded.cards;
+
+                        // Assegura valors teòrics correctes si s'arrosseguen d'enllaços anteriors
+                        const c7 = cards.find(c => c.id === 'c7');
+                        if (c7 && c7.targetValue === 50) {
+                            c7.targetValue = 0;
+                            c7.minValid = 0;
+                            c7.maxValid = 5;
+                        }
+                        const c2 = cards.find(c => c.id === 'c2');
+                        if (c2 && c2.targetValue === 75) {
+                            c2.targetValue = 60;
+                            c2.minValid = 50;
+                            c2.maxValid = 70;
+                        }
+
                         cardPercentages = decoded.percentages || {};
                         cardNotes = decoded.notes || {};
                         cardFactors = decoded.factors || {};
@@ -724,7 +738,6 @@
                 
                 const shareUrl = `${window.location.origin}${window.location.pathname}?treball=${safeEncoded}`;
 
-                // Copiat automàtic per comoditat
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     document.getElementById('shareUrlInput').value = shareUrl;
                     document.getElementById('shareModal').classList.remove('hidden');
@@ -738,7 +751,6 @@
             }
         }
 
-        // Funció per al botó manual de copiar enllaç
         function copyShareUrlManually() {
             const input = document.getElementById('shareUrlInput');
             const btn = document.getElementById('copyUrlBtn');
@@ -1258,7 +1270,7 @@
                     card.icon = iconInput.value || '📌';
                     card.text = textInput.value;
                     card.type = typeInput.value;
-                    const val = parseInt(targetInput.value, 10) || 50;
+                    const val = parseInt(targetInput.value, 10) || 0;
                     card.targetValue = val;
                     card.minValid = Math.max(0, val - 10);
                     card.maxValid = Math.min(100, val + 10);
