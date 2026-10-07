@@ -6,11 +6,12 @@
   <title>Simuladors de probabilitat</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #15803d;
-      --primary-dark: #166534;
+      --primary-dark: #14532d;
+      --primary-light: #dcfce7;
       --primary-gradient: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
       --bg: #f8fafc;
       --surface: #ffffff;
@@ -44,11 +45,11 @@
     }
 
     header {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--surface-border);
-      padding: 14px 20px;
+      padding: 12px 20px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
@@ -57,10 +58,11 @@
       position: sticky;
       top: 0;
       z-index: 50;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
 
     .brand-title {
-      font-size: 1.3rem;
+      font-size: 1.35rem;
       font-weight: 800;
       letter-spacing: -0.5px;
       color: var(--text-main);
@@ -73,10 +75,10 @@
       display: flex;
       background: #e2e8f0;
       padding: 4px;
-      border-radius: 12px;
+      border-radius: 14px;
       gap: 4px;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
     }
 
     @media (min-width: 768px) {
@@ -87,38 +89,38 @@
 
     .tab-btn {
       flex: 1;
-      padding: 8px 14px;
+      padding: 9px 16px;
       border: none;
       background: transparent;
       font-weight: 700;
       color: var(--text-muted);
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
     }
 
     .tab-btn:hover {
       color: var(--text-main);
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.6);
     }
 
     .tab-btn.active {
       background: #ffffff;
       color: var(--primary);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     }
 
     main {
       flex: 1;
       display: flex;
-      padding: 20px;
-      max-width: 1400px;
+      padding: 16px 20px 24px;
+      max-width: 1440px;
       width: 100%;
       margin: 0 auto;
     }
@@ -135,9 +137,9 @@
       display: grid;
     }
 
-    @media (min-width: 992px) {
+    @media (min-width: 1024px) {
       .tool-view {
-        grid-template-columns: 390px 1fr;
+        grid-template-columns: 410px 1fr;
         gap: 24px;
       }
     }
@@ -153,7 +155,7 @@
       justify-content: space-between;
       align-items: center;
       text-align: center;
-      gap: 15px;
+      gap: 14px;
     }
 
     .panel-header {
@@ -161,8 +163,8 @@
     }
 
     .panel-header h2 {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-size: 1.3rem;
+      font-weight: 800;
       color: var(--text-main);
       margin-bottom: 6px;
     }
@@ -172,15 +174,15 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .math-pill {
       background: #f1f5f9;
       border: 1px solid var(--surface-border);
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: #334155;
       display: inline-flex;
@@ -193,12 +195,40 @@
 
     .stage {
       flex: 1;
-      min-height: 200px;
+      min-height: 190px;
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       perspective: 1000px;
+      margin: 4px 0;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      color: #334155;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      min-height: 44px;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.25s ease;
+    }
+
+    .result-badge.highlight {
+      background: #ecfdf5;
+      border-color: #86efac;
+      color: #14532d;
+      transform: scale(1.02);
     }
 
     .stats-panel {
@@ -223,15 +253,15 @@
     }
 
     .stats-header h3 {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 800;
       letter-spacing: -0.3px;
       color: var(--text-main);
     }
 
     .counter-badge {
-      font-size: 0.9rem;
-      font-weight: 700;
+      font-size: 0.92rem;
+      font-weight: 800;
       color: var(--primary);
       background: #ecfdf5;
       padding: 6px 14px;
@@ -243,10 +273,10 @@
       flex: 1;
       display: flex;
       align-items: flex-end;
-      gap: 12px;
-      padding: 24px 14px 14px 14px;
+      gap: 14px;
+      padding: 24px 16px 14px;
       background: var(--surface-card);
-      border-radius: 18px;
+      border-radius: 20px;
       border: 1px solid var(--surface-border);
       min-height: 240px;
       overflow-x: auto;
@@ -265,21 +295,21 @@
 
     .bar-wrapper {
       width: 100%;
-      max-width: 65px;
-      height: 170px;
+      max-width: 68px;
+      height: 165px;
       display: flex;
       align-items: flex-end;
       background: #e2e8f0;
-      border-radius: 10px 10px 4px 4px;
+      border-radius: 12px 12px 4px 4px;
       padding: 3px;
     }
 
     .bar {
       width: 100%;
       background: var(--primary-gradient);
-      border-radius: 8px 8px 3px 3px;
+      border-radius: 9px 9px 3px 3px;
       min-height: 4px;
-      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
     }
 
@@ -301,13 +331,13 @@
     }
 
     .bar-value {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 800;
       color: var(--text-main);
     }
 
     .bar-label {
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--text-muted);
       text-align: center;
@@ -315,11 +345,11 @@
     }
 
     .bar-pct {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: #334155;
-      font-weight: 700;
+      font-weight: 800;
       background: #ffffff;
-      padding: 2px 6px;
+      padding: 2px 8px;
       border-radius: 6px;
       border: 1px solid var(--surface-border);
     }
@@ -339,8 +369,8 @@
       border-radius: 12px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.85rem;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.88rem;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn:hover {
@@ -356,11 +386,11 @@
       background: var(--primary-gradient);
       color: #ffffff;
       border: none;
-      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.2);
+      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
     }
     .btn-main:hover {
       background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-      box-shadow: 0 6px 16px rgba(21, 128, 61, 0.3);
+      box-shadow: 0 6px 16px rgba(21, 128, 61, 0.35);
     }
 
     .btn-danger {
@@ -373,35 +403,32 @@
       color: #ffffff;
     }
 
-    /* BARRA DE PREVISUALITZACIÓ SENSE ERRORS */
     .recent-history-box {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
       background: #f8fafc;
       border: 1px solid var(--surface-border);
-      padding: 10px 14px;
-      border-radius: 14px;
-      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      gap: 8px;
     }
 
     .history-header-tag {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .history-title {
-      font-size: 0.75rem;
+      font-size: 0.76rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
-      white-space: nowrap;
     }
 
     .history-sub {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       color: #94a3b8;
       font-weight: 600;
     }
@@ -411,45 +438,49 @@
       align-items: center;
       gap: 8px;
       overflow-x: auto;
-      padding: 4px;
-      scrollbar-width: none;
+      padding: 6px 2px;
+      scrollbar-width: thin;
+      min-height: 52px;
     }
-    .history-tokens::-webkit-scrollbar { display: none; }
+    .history-tokens::-webkit-scrollbar { height: 4px; }
+    .history-tokens::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
     .token-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
     .token-chip {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 800;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
       transition: all 0.2s ease;
+      position: relative;
     }
 
-    /* RESSALTAT CLAR DE L'ÚLTIMA TIRADA */
     .token-wrapper.is-latest .token-chip {
-      transform: scale(1.15);
-      box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.4), 0 4px 10px rgba(0,0,0,0.15);
+      transform: scale(1.1);
+      box-shadow: 0 0 0 3px #22c55e, 0 4px 10px rgba(0,0,0,0.15);
     }
-    .token-wrapper.is-latest::after {
-      content: 'ÚLTIMA';
-      font-size: 0.55rem;
+
+    .latest-tag {
+      font-size: 0.58rem;
       font-weight: 800;
       color: #15803d;
       background: #dcfce7;
-      padding: 1px 4px;
+      padding: 2px 5px;
       border-radius: 4px;
       line-height: 1;
+      letter-spacing: 0.5px;
     }
 
     .token-chip.coin-cara {
@@ -466,7 +497,7 @@
       background: #ffffff;
       border: 1.5px solid #cbd5e1;
       color: #0f172a;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
     }
     .token-chip.ball-red {
       background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
@@ -477,13 +508,12 @@
       border: 2px solid #1d4ed8;
     }
 
-    /* ------------------- ELEMENTS 3D ------------------- */
     .coin-3d {
-      width: 125px;
-      height: 125px;
+      width: 130px;
+      height: 130px;
       position: relative;
       transform-style: preserve-3d;
-      transition: transform 0.8s cubic-bezier(0.2, 0.85, 0.3, 1);
+      transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
     .coin-face {
       position: absolute;
@@ -505,6 +535,7 @@
     .coin-front {
       background: radial-gradient(circle at 35% 35%, #fffbeb, #fbbf24 60%, #d97706 100%);
       color: #451a03;
+      transform: rotateY(0deg);
     }
     .coin-back {
       background: radial-gradient(circle at 35% 35%, #ffffff, #e2e8f0 60%, #94a3b8 100%);
@@ -519,14 +550,13 @@
     }
 
     .crown-svg {
-      width: 68px;
-      height: 52px;
+      width: 72px;
+      height: 56px;
       filter: drop-shadow(0 2px 4px rgba(180, 83, 9, 0.4));
     }
-
     .cross-svg {
-      width: 58px;
-      height: 58px;
+      width: 60px;
+      height: 60px;
       filter: drop-shadow(0 2px 4px rgba(71, 85, 105, 0.35));
     }
 
@@ -538,17 +568,18 @@
     }
 
     .dice-3d {
-      width: 86px;
-      height: 86px;
+      width: 90px;
+      height: 90px;
       position: relative;
       transform-style: preserve-3d;
       transform: rotateX(0deg) rotateY(0deg);
-      transition: transform 0.8s cubic-bezier(0.2, 0.85, 0.3, 1);
+      transition: transform 0.6s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
+
     .dice-face {
       position: absolute;
-      width: 86px;
-      height: 86px;
+      width: 90px;
+      height: 90px;
       background: #ffffff;
       border-radius: 16px;
       border: 1px solid #cbd5e1;
@@ -558,48 +589,58 @@
       padding: 10px;
       box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.08), 0 8px 18px rgba(0, 0, 0, 0.1);
     }
+
     .dot {
-      width: 15px;
-      height: 15px;
+      width: 16px;
+      height: 16px;
       background-color: #1e293b;
       border-radius: 50%;
       justify-self: center;
       align-self: center;
     }
-    .df-front  { transform: rotateY(0deg) translateZ(43px); }
-    .df-back   { transform: rotateY(180deg) translateZ(43px); }
-    .df-right  { transform: rotateY(90deg) translateZ(43px); }
-    .df-left   { transform: rotateY(-90deg) translateZ(43px); }
-    .df-top    { transform: rotateX(90deg) translateZ(43px); }
-    .df-bottom { transform: rotateX(-90deg) translateZ(43px); }
 
-    .df-front .dot { width: 20px; height: 20px; background: #ef4444; grid-area: 2 / 2; }
-    .df-bottom .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-bottom .dot:nth-child(2) { grid-area: 3 / 3; }
-    .df-right .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-right .dot:nth-child(2) { grid-area: 2 / 2; }
-    .df-right .dot:nth-child(3) { grid-area: 3 / 3; }
-    .df-left .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-left .dot:nth-child(2) { grid-area: 1 / 3; }
-    .df-left .dot:nth-child(3) { grid-area: 3 / 1; }
-    .df-left .dot:nth-child(4) { grid-area: 3 / 3; }
-    .df-top .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-top .dot:nth-child(2) { grid-area: 1 / 3; }
-    .df-top .dot:nth-child(3) { grid-area: 2 / 2; }
-    .df-top .dot:nth-child(4) { grid-area: 3 / 1; }
-    .df-top .dot:nth-child(5) { grid-area: 3 / 3; }
-    .df-back .dot:nth-child(1) { grid-area: 1 / 1; }
-    .df-back .dot:nth-child(2) { grid-area: 2 / 1; }
-    .df-back .dot:nth-child(3) { grid-area: 3 / 1; }
-    .df-back .dot:nth-child(4) { grid-area: 1 / 3; }
-    .df-back .dot:nth-child(5) { grid-area: 2 / 3; }
-    .df-back .dot:nth-child(6) { grid-area: 3 / 3; }
+    /* Absolute face positioning (Cube with radius 45px) */
+    .df-1 { transform: rotateY(0deg) translateZ(45px); }
+    .df-6 { transform: rotateY(180deg) translateZ(45px); }
+    .df-3 { transform: rotateY(90deg) translateZ(45px); }
+    .df-4 { transform: rotateY(-90deg) translateZ(45px); }
+    .df-5 { transform: rotateX(90deg) translateZ(45px); }
+    .df-2 { transform: rotateX(-90deg) translateZ(45px); }
+
+    /* Face standard pip configurations */
+    .df-1 .dot { width: 22px; height: 22px; background: #ef4444; grid-area: 2 / 2; }
+
+    .df-2 .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-2 .dot:nth-child(2) { grid-area: 3 / 3; }
+
+    .df-3 .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-3 .dot:nth-child(2) { grid-area: 2 / 2; }
+    .df-3 .dot:nth-child(3) { grid-area: 3 / 3; }
+
+    .df-4 .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-4 .dot:nth-child(2) { grid-area: 1 / 3; }
+    .df-4 .dot:nth-child(3) { grid-area: 3 / 1; }
+    .df-4 .dot:nth-child(4) { grid-area: 3 / 3; }
+
+    .df-5 .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-5 .dot:nth-child(2) { grid-area: 1 / 3; }
+    .df-5 .dot:nth-child(3) { grid-area: 2 / 2; }
+    .df-5 .dot:nth-child(4) { grid-area: 3 / 1; }
+    .df-5 .dot:nth-child(5) { grid-area: 3 / 3; }
+
+    .df-6 .dot:nth-child(1) { grid-area: 1 / 1; }
+    .df-6 .dot:nth-child(2) { grid-area: 2 / 1; }
+    .df-6 .dot:nth-child(3) { grid-area: 3 / 1; }
+    .df-6 .dot:nth-child(4) { grid-area: 1 / 3; }
+    .df-6 .dot:nth-child(5) { grid-area: 2 / 3; }
+    .df-6 .dot:nth-child(6) { grid-area: 3 / 3; }
 
     .bag-container {
-      width: 135px;
-      height: 140px;
+      width: 140px;
+      height: 145px;
       position: relative;
     }
+
     .bag-body {
       width: 100%;
       height: 100%;
@@ -612,10 +653,11 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      transition: transform 0.2s;
+      transition: transform 0.25s;
     }
+
     .bag-tie {
-      width: 50px;
+      width: 52px;
       height: 12px;
       background: #78350f;
       position: absolute;
@@ -623,6 +665,7 @@
       border-radius: 6px;
       z-index: 4;
     }
+
     .inside-balls {
       position: absolute;
       width: 100%;
@@ -631,6 +674,7 @@
       left: 0;
       pointer-events: none;
     }
+
     .mini-ball {
       width: 26px;
       height: 26px;
@@ -642,29 +686,29 @@
     .mini-ball.blue { background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); }
 
     .b-pos1 { bottom: 22px; left: 24px; }
-    .b-pos2 { bottom: 20px; left: 54px; }
+    .b-pos2 { bottom: 20px; left: 56px; }
     .b-pos3 { bottom: 24px; right: 24px; }
     .b-pos4 { bottom: 48px; left: 38px; }
     .b-pos5 { bottom: 46px; right: 38px; }
 
     .ball-extract {
-      width: 52px;
-      height: 52px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       position: absolute;
       top: 45px;
-      left: 41px;
+      left: 43px;
       opacity: 0;
       z-index: 10;
       transform: scale(0.3) translateY(0);
       transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.6), 0 8px 16px rgba(0, 0, 0, 0.2);
+      box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.3), inset 4px 4px 8px rgba(255, 255, 255, 0.6), 0 10px 20px rgba(0, 0, 0, 0.2);
     }
     .ball-extract.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); }
     .ball-extract.blue { background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb); }
     .ball-extract.pop {
       opacity: 1;
-      transform: scale(1.2) translateY(-75px);
+      transform: scale(1.2) translateY(-78px);
     }
 
     footer {
@@ -692,7 +736,6 @@
   </header>
 
   <main>
-    <!-- VISTA MONEDA -->
     <div class="tool-view active" id="view-coin">
       <div class="sim-panel">
         <div class="panel-header">
@@ -705,6 +748,7 @@
         
         <div class="stage">
           <div class="coin-3d" id="coin-mesh">
+            <!-- CARA: 👑 Corona -->
             <div class="coin-face coin-front">
               <svg class="crown-svg" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 65 C35 70, 65 70, 88 65 L88 56 C65 60, 35 60, 12 56 Z" fill="#78350f"/>
@@ -723,6 +767,7 @@
               <div class="coin-label">CARA</div>
             </div>
 
+            <!-- CREU: ✖️ Creu -->
             <div class="coin-face coin-back">
               <svg class="cross-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <path d="M25 15 L50 40 L75 15 L85 25 L60 50 L85 75 L75 85 L50 60 L25 85 L15 75 L40 50 L15 25 Z" fill="#334155"/>
@@ -732,6 +777,11 @@
               <div class="coin-label">CREU</div>
             </div>
           </div>
+        </div>
+
+        <!-- Badge de resultat visible -->
+        <div class="result-badge" id="coin-badge">
+          Esperant tirada...
         </div>
 
         <div class="controls">
@@ -771,15 +821,14 @@
 
         <div class="recent-history-box">
           <div class="history-header-tag">
-            <span class="history-title">Seqüència:</span>
-            <span class="history-sub">(D'esquerra a dreta)</span>
+            <span class="history-title">Últimes tirades:</span>
+            <span class="history-sub">(Última a l'esquerra)</span>
           </div>
           <div class="history-tokens" id="coin-recent"></div>
         </div>
       </div>
     </div>
 
-    <!-- VISTA DAU -->
     <div class="tool-view" id="view-dice">
       <div class="sim-panel">
         <div class="panel-header">
@@ -791,28 +840,39 @@
 
         <div class="stage">
           <div class="dice-3d" id="dice-mesh">
-            <div class="dice-face df-front"><span class="dot"></span></div>
-            <div class="dice-face df-back">
+            <!-- Cara 1 (Front) -->
+            <div class="dice-face df-1"><span class="dot"></span></div>
+            <!-- Cara 6 (Back) -->
+            <div class="dice-face df-6">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
             </div>
-            <div class="dice-face df-right">
+            <!-- Cara 3 (Right) -->
+            <div class="dice-face df-3">
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
-            <div class="dice-face df-left">
+            <!-- Cara 4 (Left) -->
+            <div class="dice-face df-4">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span><span class="dot"></span>
             </div>
-            <div class="dice-face df-top">
-              <span class="dot"></span><span class="dot"></span>
+            <!-- Cara 5 (Top) -->
+            <div class="dice-face df-5">
               <span class="dot"></span><span class="dot"></span>
               <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
             </div>
-            <div class="dice-face df-bottom">
+            <!-- Cara 2 (Bottom) -->
+            <div class="dice-face df-2">
               <span class="dot"></span><span class="dot"></span>
             </div>
           </div>
+        </div>
+
+        <!-- Badge de resultat visible -->
+        <div class="result-badge" id="dice-badge">
+          Esperant tirada...
         </div>
 
         <div class="controls">
@@ -871,15 +931,14 @@
 
         <div class="recent-history-box">
           <div class="history-header-tag">
-            <span class="history-title">Seqüència:</span>
-            <span class="history-sub">(D'esquerra a dreta)</span>
+            <span class="history-title">Últimes tirades:</span>
+            <span class="history-sub">(Última a l'esquerra)</span>
           </div>
           <div class="history-tokens" id="dice-recent"></div>
         </div>
       </div>
     </div>
 
-    <!-- VISTA BOSSA -->
     <div class="tool-view" id="view-bag">
       <div class="sim-panel">
         <div class="panel-header">
@@ -904,6 +963,11 @@
               <div class="ball-extract" id="ball-mesh"></div>
             </div>
           </div>
+        </div>
+
+        <!-- Badge de resultat visible -->
+        <div class="result-badge" id="bag-badge">
+          Esperant extracció...
         </div>
 
         <div class="controls">
@@ -943,8 +1007,8 @@
 
         <div class="recent-history-box">
           <div class="history-header-tag">
-            <span class="history-title">Seqüència:</span>
-            <span class="history-sub">(D'esquerra a dreta)</span>
+            <span class="history-title">Últimes extraccions:</span>
+            <span class="history-sub">(Última a l'esquerra)</span>
           </div>
           <div class="history-tokens" id="bag-recent"></div>
         </div>
@@ -963,23 +1027,18 @@
       bag: { total: 0, Vermella: 0, Blava: 0, recent: [] }
     };
 
-    let coinFlipsCount = 0;
-    let diceRollsCount = 0;
+    let coinSpinTurns = 0;
+    let diceSpinTurns = 0;
 
-    // Orientació de les 6 cares del dau
-    // df-front: 1 (rotateY 0, rotateX 0)
-    // df-back: 6 (rotateY 180)
-    // df-right: 3 (rotateY -90)
-    // df-left: 4 (rotateY 90)
-    // df-top: 5 (rotateX -90)
-    // df-bottom: 2 (rotateX 90)
-    const diceTargetRotations = {
-      1: { x: 0,   y: 0 },
-      2: { x: -90, y: 0 },
-      3: { x: 0,   y: -90 },
-      4: { x: 0,   y: 90 },
-      5: { x: 90,  y: 0 },
-      6: { x: 0,   y: 180 }
+    // Direct mathematical matrix rotations targeting the visible front camera position
+    // Cube center: (0,0,0). Each face moves precisely to FRONT (Z+):
+    const diceFrontOrientations = {
+      1: { x: 0,   y: 0 },    // df-1 front
+      6: { x: 0,   y: 180 },  // df-6 back -> rotateY(180)
+      3: { x: 0,   y: -90 },  // df-3 right -> rotateY(-90)
+      4: { x: 0,   y: 90 },   // df-4 left -> rotateY(90)
+      5: { x: -90, y: 0 },    // df-5 top -> rotateX(-90)
+      2: { x: 90,  y: 0 }     // df-2 bottom -> rotateX(90)
     };
 
     const diceGlyphs = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
@@ -992,29 +1051,34 @@
       document.getElementById(`view-${tab}`).classList.add('active');
     }
 
-    // ---------------- MONEDA (SINCRONITZADA 100%) ----------------
     function simulateCoin(n) {
       let lastResult = '';
       for (let i = 0; i < n; i++) {
         const res = Math.random() < 0.5 ? 'Cara' : 'Creu';
         stats.coin[res]++;
         stats.coin.total++;
-        // unshift perquè el primer element sigui sempre l'últim que ha caigut
-        stats.coin.recent.unshift(res);
+        stats.coin.recent.unshift(res); // most recent is strictly at index 0
         lastResult = res;
       }
-      if (stats.coin.recent.length > 7) stats.coin.recent.length = 7;
+      if (stats.coin.recent.length > 10) stats.coin.recent.length = 10;
 
-      // Càlcul precís de voltes:
-      coinFlipsCount++;
-      const baseFullSpins = coinFlipsCount * 1440; // 4 voltes completes
-      const targetY = baseFullSpins + (lastResult === 'Cara' ? 0 : 180);
+      // Ensure that rotation strictly stops at Cara (0 deg) or Creu (180 deg) relative to full 360 cycles
+      coinSpinTurns++;
+      const fullRotations = coinSpinTurns * 1440; // 4 full 360 turns
+      const exactY = fullRotations + (lastResult === 'Cara' ? 0 : 180);
 
       const mesh = document.getElementById('coin-mesh');
-      mesh.style.transform = `rotateY(${targetY}deg) translateY(-25px) scale(1.08)`;
+      mesh.style.transform = `rotateY(${exactY}deg) translateY(-24px) scale(1.08)`;
       setTimeout(() => {
-        mesh.style.transform = `rotateY(${targetY}deg) translateY(0px) scale(1)`;
-      }, 400);
+        mesh.style.transform = `rotateY(${exactY}deg) translateY(0px) scale(1)`;
+      }, 350);
+
+      // Explicit outcome badge text
+      const badge = document.getElementById('coin-badge');
+      badge.className = 'result-badge highlight';
+      badge.innerHTML = lastResult === 'Cara' 
+        ? 'ÚLTIM RESULTAT: 👑 <strong>CARA</strong>' 
+        : 'ÚLTIM RESULTAT: ✖️ <strong>CREU</strong>';
 
       updateCoinUI();
     }
@@ -1037,7 +1101,6 @@
       renderRecent('coin', recent);
     }
 
-    // ---------------- DAU (SINCRONITZAT 100%) ----------------
     function simulateDice(n) {
       let lastRoll = 1;
       for (let i = 0; i < n; i++) {
@@ -1047,17 +1110,22 @@
         stats.dice.recent.unshift(roll);
         lastRoll = roll;
       }
-      if (stats.dice.recent.length > 7) stats.dice.recent.length = 7;
+      if (stats.dice.recent.length > 10) stats.dice.recent.length = 10;
 
-      diceRollsCount++;
-      const fullTurn = diceRollsCount * 720;
-      const base = diceTargetRotations[lastRoll];
+      diceSpinTurns++;
+      const fullTurnCycles = diceSpinTurns * 720;
+      const target = diceFrontOrientations[lastRoll];
 
       const mesh = document.getElementById('dice-mesh');
-      mesh.style.transform = `scale(1.15) rotateX(${base.x + fullTurn}deg) rotateY(${base.y + fullTurn}deg)`;
+      // Full turns are multiples of 360, so base angles land with exact alignment to camera
+      mesh.style.transform = `scale(1.15) rotateX(${target.x + fullTurnCycles}deg) rotateY(${target.y + fullTurnCycles}deg)`;
       setTimeout(() => {
-        mesh.style.transform = `scale(1) rotateX(${base.x + fullTurn}deg) rotateY(${base.y + fullTurn}deg)`;
-      }, 400);
+        mesh.style.transform = `scale(1) rotateX(${target.x + fullTurnCycles}deg) rotateY(${target.y + fullTurnCycles}deg)`;
+      }, 350);
+
+      const badge = document.getElementById('dice-badge');
+      badge.className = 'result-badge highlight';
+      badge.innerHTML = `ÚLTIM RESULTAT: <strong style="font-size:1.15rem">${diceGlyphs[lastRoll]}</strong> NÚMERO <strong>${lastRoll}</strong>`;
 
       updateDiceUI();
     }
@@ -1084,7 +1152,6 @@
       renderRecent('dice', recent);
     }
 
-    // ---------------- BOSSA (SINCRONITZADA 100%) ----------------
     function simulateBag(n) {
       const pool = ['Vermella', 'Vermella', 'Vermella', 'Blava', 'Blava'];
       let lastExtract = 'Vermella';
@@ -1096,13 +1163,13 @@
         stats.bag.recent.unshift(item);
         lastExtract = item;
       }
-      if (stats.bag.recent.length > 7) stats.bag.recent.length = 7;
+      if (stats.bag.recent.length > 10) stats.bag.recent.length = 10;
 
       const ball = document.getElementById('ball-mesh');
       const bag = document.getElementById('bag-body');
 
       ball.className = 'ball-extract ' + (lastExtract === 'Vermella' ? 'red' : 'blue');
-      bag.style.transform = 'scale(0.92) rotate(-6deg)';
+      bag.style.transform = 'scale(0.92) rotate(-5deg)';
 
       setTimeout(() => {
         ball.classList.add('pop');
@@ -1111,7 +1178,13 @@
 
       setTimeout(() => {
         ball.classList.remove('pop');
-      }, 650);
+      }, 700);
+
+      const badge = document.getElementById('bag-badge');
+      badge.className = 'result-badge highlight';
+      badge.innerHTML = lastExtract === 'Vermella' 
+        ? 'ÚLTIM RESULTAT: 🔴 <strong>VERMELLA</strong>' 
+        : 'ÚLTIM RESULTAT: 🔵 <strong>BLAVA</strong>';
 
       updateBagUI();
     }
@@ -1134,7 +1207,6 @@
       renderRecent('bag', recent);
     }
 
-    // RENDERITZAT NOU AMB ORDRE CLAR I RESSALTAT DE L'ÚLTIMA
     function renderRecent(type, list) {
       const container = document.getElementById(`${type}-recent`);
       container.innerHTML = '';
@@ -1143,7 +1215,7 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'token-wrapper';
         if (index === 0) {
-          wrapper.classList.add('is-latest'); // Ressaltem la tirada que acaba de sortir
+          wrapper.classList.add('is-latest'); // The most recent element (first from left)
         }
 
         const token = document.createElement('div');
@@ -1169,6 +1241,14 @@
         }
 
         wrapper.appendChild(token);
+
+        if (index === 0) {
+          const tag = document.createElement('span');
+          tag.className = 'latest-tag';
+          tag.textContent = 'ÚLTIMA';
+          wrapper.appendChild(tag);
+        }
+
         container.appendChild(wrapper);
       });
     }
@@ -1176,16 +1256,22 @@
     function resetExp(type) {
       if (type === 'coin') {
         stats.coin = { total: 0, Cara: 0, Creu: 0, recent: [] };
-        coinFlipsCount = 0;
+        coinSpinTurns = 0;
         document.getElementById('coin-mesh').style.transform = 'rotateY(0deg)';
+        document.getElementById('coin-badge').className = 'result-badge';
+        document.getElementById('coin-badge').textContent = 'Esperant tirada...';
         updateCoinUI();
       } else if (type === 'dice') {
         stats.dice = { total: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, recent: [] };
-        diceRollsCount = 0;
+        diceSpinTurns = 0;
         document.getElementById('dice-mesh').style.transform = 'rotateX(0deg) rotateY(0deg)';
+        document.getElementById('dice-badge').className = 'result-badge';
+        document.getElementById('dice-badge').textContent = 'Esperant tirada...';
         updateDiceUI();
       } else if (type === 'bag') {
         stats.bag = { total: 0, Vermella: 0, Blava: 0, recent: [] };
+        document.getElementById('bag-badge').className = 'result-badge';
+        document.getElementById('bag-badge').textContent = 'Esperant extracció...';
         updateBagUI();
       }
     }
