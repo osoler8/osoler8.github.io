@@ -167,7 +167,6 @@
       margin-bottom: 6px;
     }
 
-    /* Etiquetes de Fraccions i Percentatges */
     .math-pill-box {
       display: flex;
       flex-wrap: wrap;
@@ -210,7 +209,7 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     .stats-header {
@@ -374,42 +373,76 @@
       color: #ffffff;
     }
 
-    .recent-history {
+    /* HISTORIAL VISUAL I RESPONSIVE SENSE TEXT LLARG */
+    .recent-history-box {
       display: flex;
       align-items: center;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 4px 0;
-      scrollbar-width: none;
+      justify-content: space-between;
+      background: #f8fafc;
+      border: 1px solid var(--surface-border);
+      padding: 8px 12px;
+      border-radius: 14px;
+      gap: 10px;
     }
-    .recent-history::-webkit-scrollbar { display: none; }
 
     .history-title {
       font-size: 0.75rem;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
       white-space: nowrap;
     }
 
-    .chip {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: #f1f5f9;
-      color: #334155;
-      border: 1px solid var(--surface-border);
-      white-space: nowrap;
-      animation: fadeIn 0.3s ease-out;
+    .history-tokens {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
-    .chip.red { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
-    .chip.blue { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
+    .token-chip {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 800;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+      animation: popToken 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popToken {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .token-chip.coin-cara {
+      background: radial-gradient(circle at 35% 35%, #fffbeb, #fbbf24);
+      border: 2px solid #b45309;
+      color: #78350f;
+    }
+    .token-chip.coin-creu {
+      background: radial-gradient(circle at 35% 35%, #ffffff, #cbd5e1);
+      border: 2px solid #64748b;
+      color: #334155;
+    }
+    .token-chip.dice-token {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      color: #0f172a;
+      font-size: 1.15rem;
+    }
+    .token-chip.ball-red {
+      background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
+      border: 2px solid #b91c1c;
+    }
+    .token-chip.ball-blue {
+      background: radial-gradient(circle at 30% 30%, #60a5fa, #2563eb);
+      border: 2px solid #1d4ed8;
     }
 
     /* ------------------- ELEMENTS 3D ------------------- */
@@ -678,9 +711,10 @@
           </div>
         </div>
 
-        <div class="recent-history">
+        <!-- HISTORIAL AMB ICONES COMPACTES -->
+        <div class="recent-history-box">
           <span class="history-title">Últimes:</span>
-          <div id="coin-recent" style="display:flex; gap:6px;"></div>
+          <div class="history-tokens" id="coin-recent"></div>
         </div>
       </div>
     </div>
@@ -707,17 +741,13 @@
               <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
             <div class="dice-face df-left">
-              <span class="dot"></span><span class="dot"></span>
-              <span class="dot"></span><span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
             <div class="dice-face df-top">
-              <span class="dot"></span><span class="dot"></span>
-              <span class="dot"></span><span class="dot"></span>
-              <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
             </div>
             <div class="dice-face df-bottom">
-              <span class="dot"></span>
-              <span class="dot"></span>
+              <span class="dot"></span><span class="dot"></span>
             </div>
           </div>
         </div>
@@ -776,9 +806,10 @@
           </div>
         </div>
 
-        <div class="recent-history">
+        <!-- HISTORIAL AMB ICONES COMPACTES -->
+        <div class="recent-history-box">
           <span class="history-title">Últimes:</span>
-          <div id="dice-recent" style="display:flex; gap:6px;"></div>
+          <div class="history-tokens" id="dice-recent"></div>
         </div>
       </div>
     </div>
@@ -845,9 +876,10 @@
           </div>
         </div>
 
-        <div class="recent-history">
+        <!-- HISTORIAL AMB ICONES COMPACTES -->
+        <div class="recent-history-box">
           <span class="history-title">Últimes:</span>
-          <div id="bag-recent" style="display:flex; gap:6px;"></div>
+          <div class="history-tokens" id="bag-recent"></div>
         </div>
       </div>
     </div>
@@ -874,6 +906,8 @@
       6: { x: 0,   y: 180 }
     };
 
+    const diceGlyphs = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
+
     function switchTab(btn, tab) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tool-view').forEach(v => v.classList.remove('active'));
@@ -892,7 +926,8 @@
         stats.coin.recent.unshift(res);
         lastResult = res;
       }
-      if (stats.coin.recent.length > 15) stats.coin.recent.length = 15;
+      // Limitem l'historial visual a 8 fitxes per no saturar pantalles petites
+      if (stats.coin.recent.length > 8) stats.coin.recent.length = 8;
 
       coinRot += 1080 + (lastResult === 'Cara' ? 0 : 180);
       const mesh = document.getElementById('coin-mesh');
@@ -932,7 +967,7 @@
         stats.dice.recent.unshift(roll);
         lastRoll = roll;
       }
-      if (stats.dice.recent.length > 15) stats.dice.recent.length = 15;
+      if (stats.dice.recent.length > 8) stats.dice.recent.length = 8;
 
       const rot = diceRotations[lastRoll];
       const mesh = document.getElementById('dice-mesh');
@@ -978,7 +1013,7 @@
         stats.bag.recent.unshift(item);
         lastExtract = item;
       }
-      if (stats.bag.recent.length > 15) stats.bag.recent.length = 15;
+      if (stats.bag.recent.length > 8) stats.bag.recent.length = 8;
 
       const ball = document.getElementById('ball-mesh');
       const bag = document.getElementById('bag-body');
@@ -1016,16 +1051,35 @@
       renderRecent('bag', recent);
     }
 
+    // RENDERITZAT AMB FITXES VISUALS COMPACTES
     function renderRecent(type, list) {
       const container = document.getElementById(`${type}-recent`);
       container.innerHTML = '';
+      
       list.forEach(val => {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        if (val === 'Vermella') chip.classList.add('red');
-        if (val === 'Blava') chip.classList.add('blue');
-        chip.textContent = val;
-        container.appendChild(chip);
+        const token = document.createElement('div');
+        token.className = 'token-chip';
+
+        if (type === 'coin') {
+          if (val === 'Cara') {
+            token.classList.add('coin-cara');
+            token.textContent = '👑';
+          } else {
+            token.classList.add('coin-creu');
+            token.textContent = '✖';
+          }
+        } else if (type === 'dice') {
+          token.classList.add('dice-token');
+          token.textContent = diceGlyphs[val];
+        } else if (type === 'bag') {
+          if (val === 'Vermella') {
+            token.classList.add('ball-red');
+          } else {
+            token.classList.add('ball-blue');
+          }
+        }
+
+        container.appendChild(token);
       });
     }
 
