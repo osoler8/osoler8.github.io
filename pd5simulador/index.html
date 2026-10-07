@@ -373,16 +373,22 @@
       color: #ffffff;
     }
 
-    /* HISTORIAL VISUAL I RESPONSIVE */
+    /* BARRA DE PREVISUALITZACIÓ SENSE ERRORS */
     .recent-history-box {
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #f8fafc;
       border: 1px solid var(--surface-border);
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: 14px;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .history-header-tag {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .history-title {
@@ -394,17 +400,32 @@
       white-space: nowrap;
     }
 
+    .history-sub {
+      font-size: 0.65rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
     .history-tokens {
       display: flex;
       align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px;
+      scrollbar-width: none;
+    }
+    .history-tokens::-webkit-scrollbar { display: none; }
+
+    .token-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
     }
 
     .token-chip {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -412,12 +433,23 @@
       font-size: 0.95rem;
       font-weight: 800;
       box-shadow: 0 2px 5px rgba(0,0,0,0.06);
-      animation: popToken 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.2s ease;
     }
 
-    @keyframes popToken {
-      0% { transform: scale(0.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+    /* RESSALTAT CLAR DE L'ÚLTIMA TIRADA */
+    .token-wrapper.is-latest .token-chip {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.4), 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .token-wrapper.is-latest::after {
+      content: 'ÚLTIMA';
+      font-size: 0.55rem;
+      font-weight: 800;
+      color: #15803d;
+      background: #dcfce7;
+      padding: 1px 4px;
+      border-radius: 4px;
+      line-height: 1;
     }
 
     .token-chip.coin-cara {
@@ -434,7 +466,7 @@
       background: #ffffff;
       border: 1.5px solid #cbd5e1;
       color: #0f172a;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
     }
     .token-chip.ball-red {
       background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
@@ -445,7 +477,7 @@
       border: 2px solid #1d4ed8;
     }
 
-    /* ------------------- MONEDA 3D AMB CORONA 👑 I CREU ✖️ ------------------- */
+    /* ------------------- ELEMENTS 3D ------------------- */
     .coin-3d {
       width: 125px;
       height: 125px;
@@ -486,14 +518,12 @@
       transform: rotateY(180deg);
     }
 
-    /* Corona SVG en relleu */
     .crown-svg {
       width: 68px;
       height: 52px;
       filter: drop-shadow(0 2px 4px rgba(180, 83, 9, 0.4));
     }
 
-    /* Creu SVG en relleu */
     .cross-svg {
       width: 58px;
       height: 58px;
@@ -507,13 +537,12 @@
       margin-top: 4px;
     }
 
-    /* Dau 3D */
     .dice-3d {
       width: 86px;
       height: 86px;
       position: relative;
       transform-style: preserve-3d;
-      transform: rotateX(-25deg) rotateY(-35deg);
+      transform: rotateX(0deg) rotateY(0deg);
       transition: transform 0.8s cubic-bezier(0.2, 0.85, 0.3, 1);
     }
     .dice-face {
@@ -566,7 +595,6 @@
     .df-back .dot:nth-child(5) { grid-area: 2 / 3; }
     .df-back .dot:nth-child(6) { grid-area: 3 / 3; }
 
-    /* Bossa 3D */
     .bag-container {
       width: 135px;
       height: 140px;
@@ -677,22 +705,17 @@
         
         <div class="stage">
           <div class="coin-3d" id="coin-mesh">
-            <!-- CARA: CORONA REIAL EN RELLEU 👑 -->
             <div class="coin-face coin-front">
               <svg class="crown-svg" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
-                <!-- Base de la corona -->
                 <path d="M12 65 C35 70, 65 70, 88 65 L88 56 C65 60, 35 60, 12 56 Z" fill="#78350f"/>
                 <path d="M14 62 C35 66, 65 66, 86 62 L86 58 C65 61, 35 61, 14 58 Z" fill="#fef08a"/>
-                <!-- Cos de la corona amb 5 puntes -->
                 <path d="M14 56 L12 28 L32 44 L50 16 L68 44 L88 28 L86 56 C65 61, 35 61, 14 56 Z" fill="#b45309"/>
                 <path d="M16 54 L14 32 L32 46 L50 21 L68 46 L86 32 L84 54 C65 58, 35 58, 16 54 Z" fill="#fbbf24"/>
-                <!-- Perles de les puntes -->
                 <circle cx="12" cy="28" r="5" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/>
                 <circle cx="32" cy="44" r="4.5" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/>
                 <circle cx="50" cy="16" r="6.5" fill="#fef08a" stroke="#78350f" stroke-width="2"/>
                 <circle cx="68" cy="44" r="4.5" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/>
                 <circle cx="88" cy="28" r="5" fill="#fef08a" stroke="#78350f" stroke-width="1.5"/>
-                <!-- Pedres de la base -->
                 <circle cx="28" cy="60" r="3" fill="#ef4444"/>
                 <polygon points="50,56 53,60 50,64 47,60" fill="#2563eb"/>
                 <circle cx="72" cy="60" r="3" fill="#ef4444"/>
@@ -700,7 +723,6 @@
               <div class="coin-label">CARA</div>
             </div>
 
-            <!-- CREU: CREU ESTILITZADA ✖️ -->
             <div class="coin-face coin-back">
               <svg class="cross-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <path d="M25 15 L50 40 L75 15 L85 25 L60 50 L85 75 L75 85 L50 60 L25 85 L15 75 L40 50 L15 25 Z" fill="#334155"/>
@@ -748,7 +770,10 @@
         </div>
 
         <div class="recent-history-box">
-          <span class="history-title">Últimes:</span>
+          <div class="history-header-tag">
+            <span class="history-title">Seqüència:</span>
+            <span class="history-sub">(D'esquerra a dreta)</span>
+          </div>
           <div class="history-tokens" id="coin-recent"></div>
         </div>
       </div>
@@ -845,7 +870,10 @@
         </div>
 
         <div class="recent-history-box">
-          <span class="history-title">Últimes:</span>
+          <div class="history-header-tag">
+            <span class="history-title">Seqüència:</span>
+            <span class="history-sub">(D'esquerra a dreta)</span>
+          </div>
           <div class="history-tokens" id="dice-recent"></div>
         </div>
       </div>
@@ -914,7 +942,10 @@
         </div>
 
         <div class="recent-history-box">
-          <span class="history-title">Últimes:</span>
+          <div class="history-header-tag">
+            <span class="history-title">Seqüència:</span>
+            <span class="history-sub">(D'esquerra a dreta)</span>
+          </div>
           <div class="history-tokens" id="bag-recent"></div>
         </div>
       </div>
@@ -932,13 +963,22 @@
       bag: { total: 0, Vermella: 0, Blava: 0, recent: [] }
     };
 
-    let coinRot = 0;
-    const diceRotations = {
+    let coinFlipsCount = 0;
+    let diceRollsCount = 0;
+
+    // Orientació de les 6 cares del dau
+    // df-front: 1 (rotateY 0, rotateX 0)
+    // df-back: 6 (rotateY 180)
+    // df-right: 3 (rotateY -90)
+    // df-left: 4 (rotateY 90)
+    // df-top: 5 (rotateX -90)
+    // df-bottom: 2 (rotateX 90)
+    const diceTargetRotations = {
       1: { x: 0,   y: 0 },
-      2: { x: 90,  y: 0 },
+      2: { x: -90, y: 0 },
       3: { x: 0,   y: -90 },
       4: { x: 0,   y: 90 },
-      5: { x: -90, y: 0 },
+      5: { x: 90,  y: 0 },
       6: { x: 0,   y: 180 }
     };
 
@@ -952,24 +992,29 @@
       document.getElementById(`view-${tab}`).classList.add('active');
     }
 
-    // ---------------- MONEDA ----------------
+    // ---------------- MONEDA (SINCRONITZADA 100%) ----------------
     function simulateCoin(n) {
       let lastResult = '';
       for (let i = 0; i < n; i++) {
         const res = Math.random() < 0.5 ? 'Cara' : 'Creu';
         stats.coin[res]++;
         stats.coin.total++;
+        // unshift perquè el primer element sigui sempre l'últim que ha caigut
         stats.coin.recent.unshift(res);
         lastResult = res;
       }
-      if (stats.coin.recent.length > 8) stats.coin.recent.length = 8;
+      if (stats.coin.recent.length > 7) stats.coin.recent.length = 7;
 
-      coinRot += 1080 + (lastResult === 'Cara' ? 0 : 180);
+      // Càlcul precís de voltes:
+      coinFlipsCount++;
+      const baseFullSpins = coinFlipsCount * 1440; // 4 voltes completes
+      const targetY = baseFullSpins + (lastResult === 'Cara' ? 0 : 180);
+
       const mesh = document.getElementById('coin-mesh');
-      mesh.style.transform = `rotateY(${coinRot}deg) translateY(-25px) scale(1.08)`;
+      mesh.style.transform = `rotateY(${targetY}deg) translateY(-25px) scale(1.08)`;
       setTimeout(() => {
-        mesh.style.transform = `rotateY(${coinRot}deg) translateY(0px) scale(1)`;
-      }, 500);
+        mesh.style.transform = `rotateY(${targetY}deg) translateY(0px) scale(1)`;
+      }, 400);
 
       updateCoinUI();
     }
@@ -992,7 +1037,7 @@
       renderRecent('coin', recent);
     }
 
-    // ---------------- DAU ----------------
+    // ---------------- DAU (SINCRONITZAT 100%) ----------------
     function simulateDice(n) {
       let lastRoll = 1;
       for (let i = 0; i < n; i++) {
@@ -1002,14 +1047,17 @@
         stats.dice.recent.unshift(roll);
         lastRoll = roll;
       }
-      if (stats.dice.recent.length > 8) stats.dice.recent.length = 8;
+      if (stats.dice.recent.length > 7) stats.dice.recent.length = 7;
 
-      const rot = diceRotations[lastRoll];
+      diceRollsCount++;
+      const fullTurn = diceRollsCount * 720;
+      const base = diceTargetRotations[lastRoll];
+
       const mesh = document.getElementById('dice-mesh');
-      mesh.style.transform = `scale(1.15) rotateX(${rot.x + 720}deg) rotateY(${rot.y + 720}deg)`;
+      mesh.style.transform = `scale(1.15) rotateX(${base.x + fullTurn}deg) rotateY(${base.y + fullTurn}deg)`;
       setTimeout(() => {
-        mesh.style.transform = `scale(1) rotateX(${rot.x}deg) rotateY(${rot.y}deg)`;
-      }, 500);
+        mesh.style.transform = `scale(1) rotateX(${base.x + fullTurn}deg) rotateY(${base.y + fullTurn}deg)`;
+      }, 400);
 
       updateDiceUI();
     }
@@ -1036,7 +1084,7 @@
       renderRecent('dice', recent);
     }
 
-    // ---------------- BOSSA ----------------
+    // ---------------- BOSSA (SINCRONITZADA 100%) ----------------
     function simulateBag(n) {
       const pool = ['Vermella', 'Vermella', 'Vermella', 'Blava', 'Blava'];
       let lastExtract = 'Vermella';
@@ -1048,7 +1096,7 @@
         stats.bag.recent.unshift(item);
         lastExtract = item;
       }
-      if (stats.bag.recent.length > 8) stats.bag.recent.length = 8;
+      if (stats.bag.recent.length > 7) stats.bag.recent.length = 7;
 
       const ball = document.getElementById('ball-mesh');
       const bag = document.getElementById('bag-body');
@@ -1086,12 +1134,18 @@
       renderRecent('bag', recent);
     }
 
-    // RENDERITZAT D'HISTORIAL
+    // RENDERITZAT NOU AMB ORDRE CLAR I RESSALTAT DE L'ÚLTIMA
     function renderRecent(type, list) {
       const container = document.getElementById(`${type}-recent`);
       container.innerHTML = '';
       
-      list.forEach(val => {
+      list.forEach((val, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'token-wrapper';
+        if (index === 0) {
+          wrapper.classList.add('is-latest'); // Ressaltem la tirada que acaba de sortir
+        }
+
         const token = document.createElement('div');
         token.className = 'token-chip';
 
@@ -1114,19 +1168,21 @@
           }
         }
 
-        container.appendChild(token);
+        wrapper.appendChild(token);
+        container.appendChild(wrapper);
       });
     }
 
     function resetExp(type) {
       if (type === 'coin') {
         stats.coin = { total: 0, Cara: 0, Creu: 0, recent: [] };
-        coinRot = 0;
+        coinFlipsCount = 0;
         document.getElementById('coin-mesh').style.transform = 'rotateY(0deg)';
         updateCoinUI();
       } else if (type === 'dice') {
         stats.dice = { total: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, recent: [] };
-        document.getElementById('dice-mesh').style.transform = 'rotateX(-25deg) rotateY(-35deg)';
+        diceRollsCount = 0;
+        document.getElementById('dice-mesh').style.transform = 'rotateX(0deg) rotateY(0deg)';
         updateDiceUI();
       } else if (type === 'bag') {
         stats.bag = { total: 0, Vermella: 0, Blava: 0, recent: [] };
