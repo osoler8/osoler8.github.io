@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura amb percentatges</title>
+    <!-- Google Fonts: Fredoka & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    keyframes: {
+                        pop: {
+                            '0%': { transform: 'scale(0.95)' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '100%': { transform: 'scale(1)' }
+                        },
+                        broma: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        }
+                    },
+                    animation: {
+                        pop: 'pop 0.3s ease-out',
+                        flotar: 'broma 3s ease-in-out infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .reixa-cel·la {
+            aspect-ratio: 1 / 1;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .reixa-cel·la:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-300 selection:text-amber-900">
+
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- Barra superior / Capçalera principal -->
+    <header class="bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 text-white shadow-xl sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl sm:text-4xl animate-flotar filter drop-shadow">🧭</span>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-fredoka font-bold tracking-wide drop-shadow-sm">
+                        Aventura amb percentatges
+                    </h1>
+                    <p class="text-xs sm:text-sm text-sky-100 font-medium">Descobreix, calcula i converteix-te en un/a expert/a de les matemàtiques!</p>
+                </div>
+            </div>
+
+            <!-- Comptador d'XP i botó de so -->
+            <div class="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20">
+                <div class="flex items-center gap-1.5 text-amber-300 font-fredoka font-bold text-sm sm:text-base">
+                    <span>⭐</span>
+                    <span id="header-xp">0 XP</span>
+                </div>
+                <div class="h-4 w-px bg-white/30"></div>
+                <button id="sound-toggle" aria-label="Activar o desactivar so" class="p-1.5 rounded-xl hover:bg-white/20 transition text-lg" title="So activat/desactivat">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- Pestanyes de navegació amb capitalització correcta en català -->
+        <nav class="max-w-6xl mx-auto px-2 sm:px-4 flex overflow-x-auto no-scrollbar border-t border-white/15">
+            <button onclick="canviarPestanya('explorador')" id="tab-explorador" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-amber-400 text-white transition whitespace-nowrap">
+                <span>🗺️</span> 1. Explorador/a visual
+            </button>
+            <button onclick="canviarPestanya('trucs')" id="tab-trucs" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+                <span>💡</span> 2. Trucs de càlcul mental
+            </button>
+            <button onclick="canviarPestanya('botiga')" id="tab-botiga" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+                <span>🛒</span> 3. La botiga de les rebaixes i la vida quotidiana
+            </button>
+            <button onclick="canviarPestanya('repte')" id="tab-repte" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+                <span>🏆</span> 4. El repte de l'explorador/a
+            </button>
+        </nav>
+    </header>
+
+    <!-- Contingut principal -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 sm:p-6 md:p-8">
+
+        <!-- ==================== SECCIÓ 1: EXPLORADOR/A VISUAL ==================== -->
+        <section id="seccio-explorador" class="space-y-6">
+            <div class="bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-2">
+                    <h2 class="text-2xl font-fredoka font-bold text-sky-900 flex items-center gap-2">
+                        <span>🗺️</span> Què vol dir exactament un percentatge?
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed text-sm sm:text-base">
+                        La paraula <strong>percentatge</strong> prové del llatí <em>per centum</em> i significa <span class="bg-amber-200 px-1.5 py-0.5 rounded font-bold text-amber-900">«de cada 100»</span>. Si diem el <strong>35%</strong>, vol dir que agafem <strong>35 parts d'un total de 100 parts iguals</strong>!
+                    </p>
+                </div>
+                <div class="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl shadow-sm border border-sky-100 shrink-0">
+                    <span class="text-2xl">💡</span>
+                    <span class="text-xs font-semibold text-slate-700">Fes clic als quadrats<br>o mou el lliscador</span>
+                </div>
+            </div>
+
+            <!-- Tauler interactiu 10x10 i equivalències -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Reixa de 100 cel·les -->
+                <div class="lg:col-span-7 bg-white p-5 sm:p-6 rounded-3xl shadow-md border border-slate-200 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-4">
+                        <span class="font-fredoka font-bold text-slate-700 text-lg">Reixa de 100 caselles (10 × 10)</span>
+                        <div class="flex gap-2">
+                            <button onclick="buidarReixa()" class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3 py-1.5 rounded-xl transition">
+                                ↺ Buidar (0%)
+                            </button>
+                            <button onclick="omplirReixa(100)" class="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition">
+                                Omplir (100%)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contenidor de la reixa -->
+                    <div id="grid-container" class="grid grid-cols-10 gap-1.5 w-full max-w-[380px] p-2 bg-slate-100 rounded-2xl border-2 border-slate-200 touch-none shadow-inner">
+                        <!-- Generat per JS -->
+                    </div>
+
+                    <!-- Lliscador -->
+                    <div class="w-full mt-6 space-y-2">
+                        <div class="flex justify-between items-center text-sm font-semibold text-slate-600">
+                            <span>Ajustar ràpidament:</span>
+                            <span id="slider-label" class="text-indigo-600 font-bold font-fredoka text-lg">25%</span>
+                        </div>
+                        <input type="range" id="percent-slider" min="0" max="100" value="25" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                        <div class="flex justify-between text-xs text-slate-400 font-bold px-1">
+                            <span>0%</span>
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equivalències de la quantitat -->
+                <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+                    <div class="bg-white p-5 rounded-3xl shadow-md border border-slate-200 space-y-4">
+                        <h3 class="font-fredoka font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <span>🪞</span> Les tres cares de la mateixa quantitat
+                        </h3>
+
+                        <!-- Percentatge -->
+                        <div class="p-3.5 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-500">Percentatge</span>
+                                <div id="display-percent" class="text-3xl font-fredoka font-bold text-indigo-600">25%</div>
+                            </div>
+                            <span class="text-xs bg-indigo-200 text-indigo-900 font-bold px-2 py-1 rounded-lg">de cada 100</span>
+                        </div>
+
+                        <!-- Fracció simplificada -->
+                        <div class="p-3.5 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Com a fracció</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="display-fraction-raw" class="text-xl font-fredoka font-bold text-emerald-700">25 / 100</span>
+                                    <span class="text-emerald-400 font-bold">=</span>
+                                    <span id="display-fraction-simplified" class="text-2xl font-fredoka font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-xl">1 / 4</span>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-emerald-200 text-emerald-900 font-bold px-2 py-1 rounded-lg">Simplificada</span>
+                        </div>
+
+                        <!-- Decimal -->
+                        <div class="p-3.5 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-amber-700">Nombre decimal</span>
+                                <div id="display-decimal" class="text-3xl font-fredoka font-bold text-amber-800">0,25</div>
+                            </div>
+                            <span class="text-xs bg-amber-200 text-amber-950 font-bold px-2 py-1 rounded-lg">Divisió ÷ 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Gràfic Donut i situació quotidiana -->
+                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 p-5 rounded-3xl shadow-md text-white flex items-center gap-4">
+                        <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-white/20" stroke-width="4" stroke="currentColor" fill="none"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="donut-progress" class="text-amber-300" stroke-width="4" stroke-dasharray="25, 100" stroke-linecap="round" stroke="currentColor" fill="none"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span id="donut-label" class="absolute font-fredoka font-bold text-lg text-white">25%</span>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-300">Situació a la vida real:</span>
+                            <p id="situacio-context" class="text-sm text-sky-100 font-medium">
+                                Si en un grup de 100 persones el 25% porten ulleres, exactament <strong>25 persones</strong> en porten!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓ 2: TRUCS DE CÀLCUL MENTAL ==================== -->
+        <section id="seccio-trucs" class="hidden space-y-8">
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 p-5 rounded-3xl shadow-sm">
+                <h2 class="text-2xl font-fredoka font-bold text-amber-900 flex items-center gap-2 mb-2">
+                    <span>💡</span> Els supertrucs del càlcul mental
+                </h2>
+                <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
+                    No cal fer càlculs llargs en paper cada vegada! Els exploradors i exploradores fan servir <strong>dreceres mentals</strong> ràpides. Escriu un nombre de prova per veure com funciona!
+                </p>
+
+                <div class="mt-4 flex flex-wrap items-center gap-3 bg-white p-3 rounded-2xl border border-amber-200 w-fit">
+                    <label for="input-mental-base" class="text-sm font-bold text-slate-700">Quantitat de prova:</label>
+                    <input type="number" id="input-mental-base" value="80" min="1" max="1000" class="w-24 px-3 py-1.5 font-fredoka font-bold text-lg text-indigo-700 bg-slate-100 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-center">
+                    <span class="text-xs text-slate-500">(Escriu el nombre que vulguis!)</span>
+                </div>
+            </div>
+
+            <!-- Targetes de trucs -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- 50% -->
+                <div class="bg-white p-5 rounded-3xl shadow-md border-2 border-sky-100 hover:border-sky-300 transition hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-fredoka font-bold text-sky-600 bg-sky-100 px-3 py-1 rounded-2xl">50%</span>
+                        <span class="text-sm font-bold text-sky-800 bg-sky-50 px-2.5 py-1 rounded-xl">La meitat</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">
+                        El 50% és simplement <strong>dividir entre 2</strong>.
+                    </p>
+                    <div class="p-3 bg-sky-50 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-semibold block mb-1">Càlcul amb <span class="val-num-base">80</span>:</span>
+                        <div class="text-lg font-fredoka font-bold text-sky-900">
+                            <span class="val-num-base">80</span> ÷ 2 = <span id="res-50" class="text-sky-600 text-xl font-bold">40</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 25% -->
+                <div class="bg-white p-5 rounded-3xl shadow-md border-2 border-emerald-100 hover:border-emerald-300 transition hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-fredoka font-bold text-emerald-600 bg-emerald-100 px-3 py-1 rounded-2xl">25%</span>
+                        <span class="text-sm font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-xl">Quarta part</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">
+                        El 25% és <strong>dividir entre 4</strong> (fer la meitat de la meitat).
+                    </p>
+                    <div class="p-3 bg-emerald-50 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-semibold block mb-1">Càlcul amb <span class="val-num-base">80</span>:</span>
+                        <div class="text-lg font-fredoka font-bold text-emerald-900">
+                            <span class="val-num-base">80</span> ÷ 4 = <span id="res-25" class="text-emerald-600 text-xl font-bold">20</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10% -->
+                <div class="bg-white p-5 rounded-3xl shadow-md border-2 border-purple-100 hover:border-purple-300 transition hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-fredoka font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-2xl">10%</span>
+                        <span class="text-sm font-bold text-purple-800 bg-purple-50 px-2.5 py-1 rounded-xl">La clau màgica</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">
+                        El 10% és només <strong>dividir entre 10</strong> (corre la coma un lloc a l'esquerra).
+                    </p>
+                    <div class="p-3 bg-purple-50 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-semibold block mb-1">Càlcul amb <span class="val-num-base">80</span>:</span>
+                        <div class="text-lg font-fredoka font-bold text-purple-900">
+                            <span class="val-num-base">80</span> ÷ 10 = <span id="res-10" class="text-purple-600 text-xl font-bold">8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 20% -->
+                <div class="bg-white p-5 rounded-3xl shadow-md border-2 border-amber-100 hover:border-amber-300 transition hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-fredoka font-bold text-amber-600 bg-amber-100 px-3 py-1 rounded-2xl">20%</span>
+                        <span class="text-sm font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl">Cinquena part</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Pots <strong>dividir entre 5</strong> o fer directament el doble del 10%!
+                    </p>
+                    <div class="p-3 bg-amber-50 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-semibold block mb-1">Càlcul amb <span class="val-num-base">80</span>:</span>
+                        <div class="text-lg font-fredoka font-bold text-amber-900">
+                            10% (8) × 2 = <span id="res-20" class="text-amber-600 text-xl font-bold">16</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 75% -->
+                <div class="bg-white p-5 rounded-3xl shadow-md border-2 border-rose-100 hover:border-rose-300 transition hover:-translate-y-1 md:col-span-2 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-2xl font-fredoka font-bold text-rose-600 bg-rose-100 px-3 py-1 rounded-2xl">75%</span>
+                        <span class="text-sm font-bold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-xl">Tres quartes parts</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">
+                        El truc combinat: suma el <strong>50% (la meitat)</strong> més el <strong>25% (la quarta part)</strong>!
+                    </p>
+                    <div class="p-3 bg-rose-50 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-semibold block mb-1">Càlcul amb <span class="val-num-base">80</span>:</span>
+                        <div class="text-lg font-fredoka font-bold text-rose-900">
+                            50% (<span id="res-75-a">40</span>) + 25% (<span id="res-75-b">20</span>) = <span id="res-75" class="text-rose-600 text-2xl font-bold">60</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculadora pas a pas -->
+            <div class="bg-white p-6 rounded-3xl shadow-lg border border-slate-200">
+                <h3 class="text-xl font-fredoka font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <span>🔍</span> Com es calcula qualsevol percentatge pas a pas?
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div class="space-y-4 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-700 font-bold text-sm w-36">Percentatge (%):</span>
+                            <input type="number" id="calc-pct" value="15" min="1" max="100" class="w-24 p-2 font-fredoka font-bold text-center bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500">
+                            <span class="font-fredoka font-bold text-slate-600">%</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-slate-700 font-bold text-sm w-36">D'un total de:</span>
+                            <input type="number" id="calc-total" value="200" min="1" max="10000" class="w-24 p-2 font-fredoka font-bold text-center bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500">
+                            <span class="text-sm font-semibold text-slate-500">(euros, persones...)</span>
+                        </div>
+                        <p class="text-xs text-slate-500 italic">
+                            Escriu els teus propis nombres i observa els passos!
+                        </p>
+                    </div>
+
+                    <div id="calc-passos-container" class="space-y-3">
+                        <!-- Generat dinàmicament -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓ 3: LA BOTIGA DE LES REBAIXES ==================== -->
+        <section id="seccio-botiga" class="hidden space-y-8">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 p-5 rounded-3xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-fredoka font-bold text-emerald-900 flex items-center gap-2">
+                        <span>🛒</span> La botiga de les rebaixes i la vida quotidiana
+                    </h2>
+                    <p class="text-slate-700 text-sm sm:text-base leading-relaxed">
+                        A les botigues sovint trobem cartells d'ofertes. 
+                        <strong>El descompte</strong> és la quantitat que <em>t'estalvies</em>, i el preu final és el que has d'abonar a la caixa!
+                    </p>
+                </div>
+                <div class="bg-white px-4 py-2 rounded-2xl shadow-sm border border-emerald-100 text-emerald-800 font-bold text-sm text-center shrink-0">
+                    Preu final = Preu inicial - Estalvi
+                </div>
+            </div>
+
+            <!-- Selecció d'article i descompte -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white p-5 rounded-3xl shadow-md border border-slate-200 space-y-4">
+                    <h3 class="font-fredoka font-bold text-slate-700 text-lg flex items-center gap-2">
+                        <span>🛍️</span> 1. Tria un article del carret:
+                    </h3>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="productes-grid">
+                        <button onclick="seleccionarProducte('Dessuadora esportiva', 40, iconaDessuadoraSvg)" class="prod-btn active p-3 rounded-2xl border-2 border-indigo-500 bg-indigo-50/50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="w-9 h-9 mb-1 flex items-center justify-center text-indigo-600">
+                                <svg class="w-8 h-8 drop-shadow-sm" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 22C22 13 26 8 32 8C38 8 42 13 42 22" stroke="#4338CA" stroke-width="3" stroke-linecap="round" fill="#E0E7FF"/>
+                                    <path d="M27 22V27M37 22V27" stroke="#4338CA" stroke-width="2.5" stroke-linecap="round"/>
+                                    <path d="M20 22L9 33L15 38L21 30V54H43V30L49 38L55 33L44 22C39 24 25 24 20 22Z" fill="#6366F1" stroke="#4338CA" stroke-width="3" stroke-linejoin="round"/>
+                                    <path d="M25 40H39L41 49H23L25 40Z" fill="#4F46E5" stroke="#312E81" stroke-width="2.5" stroke-linejoin="round"/>
+                                    <line x1="21" y1="51" x2="43" y2="51" stroke="#312E81" stroke-width="2.5"/>
+                                </svg>
+                            </span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Dessuadora esportiva</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">40 €</span>
+                        </button>
+                        <button onclick="seleccionarProducte('Videojoc d\'aventures', 60, '🎮')" class="prod-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-slate-50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="text-3xl mb-1">🎮</span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Videojoc</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">60 €</span>
+                        </button>
+                        <button onclick="seleccionarProducte('Patinet elèctric', 120, '🛴')" class="prod-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-slate-50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="text-3xl mb-1">🛴</span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Patinet elèctric</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">120 €</span>
+                        </button>
+                        <button onclick="seleccionarProducte('Llibre d\'aventures', 20, '📚')" class="prod-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-slate-50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="text-3xl mb-1">📚</span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Llibre d'aventures</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">20 €</span>
+                        </button>
+                        <button onclick="seleccionarProducte('Motxilla escolar', 30, '🎒')" class="prod-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-slate-50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="text-3xl mb-1">🎒</span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Motxilla escolar</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">30 €</span>
+                        </button>
+                        <button onclick="seleccionarProducte('Auriculars bluetooth', 50, '🎧')" class="prod-btn p-3 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-slate-50 flex flex-col items-center text-center transition hover:shadow-md">
+                            <span class="text-3xl mb-1">🎧</span>
+                            <span class="font-bold text-slate-800 text-xs sm:text-sm">Auriculars bluetooth</span>
+                            <span class="text-indigo-600 font-fredoka font-bold text-base mt-1">50 €</span>
+                        </button>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <span class="font-fredoka font-bold text-slate-700 text-base block mb-3">
+                            🏷️ 2. Tria el cartell de descompte:
+                        </span>
+                        <div class="flex flex-wrap gap-2" id="descomptes-botons">
+                            <button onclick="aplicarDescompte(10)" class="disc-btn px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-fredoka font-bold text-sm hover:bg-rose-100 transition">-10%</button>
+                            <button onclick="aplicarDescompte(20)" class="disc-btn px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-fredoka font-bold text-sm hover:bg-rose-100 transition">-20%</button>
+                            <button onclick="aplicarDescompte(25)" class="disc-btn px-3 py-1.5 rounded-xl border border-rose-400 bg-rose-500 text-white font-fredoka font-bold text-sm shadow-md transition">-25%</button>
+                            <button onclick="aplicarDescompte(30)" class="disc-btn px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-fredoka font-bold text-sm hover:bg-rose-100 transition">-30%</button>
+                            <button onclick="aplicarDescompte(50)" class="disc-btn px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-700 font-fredoka font-bold text-sm hover:bg-rose-100 transition">-50% Superoferta</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tiquet de caixa -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-3xl shadow-lg border border-slate-200 flex flex-col justify-between">
+                    <div class="border-b-2 border-dashed border-slate-200 pb-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">TIQUET DE CAIXA</span>
+                            <span id="shop-icon" class="text-2xl flex items-center justify-center text-indigo-600">
+                                <svg class="w-7 h-7 drop-shadow-sm" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 22C22 13 26 8 32 8C38 8 42 13 42 22" stroke="#4338CA" stroke-width="3" stroke-linecap="round" fill="#E0E7FF"/>
+                                    <path d="M27 22V27M37 22V27" stroke="#4338CA" stroke-width="2.5" stroke-linecap="round"/>
+                                    <path d="M20 22L9 33L15 38L21 30V54H43V30L49 38L55 33L44 22C39 24 25 24 20 22Z" fill="#6366F1" stroke="#4338CA" stroke-width="3" stroke-linejoin="round"/>
+                                    <path d="M25 40H39L41 49H23L25 40Z" fill="#4F46E5" stroke="#312E81" stroke-width="2.5" stroke-linejoin="round"/>
+                                    <line x1="21" y1="51" x2="43" y2="51" stroke="#312E81" stroke-width="2.5"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <h4 id="shop-item-name" class="font-fredoka font-bold text-slate-800 text-lg">Dessuadora esportiva</h4>
+                    </div>
+
+                    <div class="space-y-3 font-sans">
+                        <div class="flex justify-between text-slate-600 text-sm">
+                            <span>Preu original:</span>
+                            <span id="ticket-original" class="font-bold">40,00 €</span>
+                        </div>
+                        <div class="flex justify-between text-rose-600 text-sm font-semibold bg-rose-50 p-2.5 rounded-xl">
+                            <span class="flex items-center gap-1">
+                                <span>🎉</span> Descompte (<span id="ticket-pct-num">25</span>%):
+                            </span>
+                            <span id="ticket-estalvi">- 10,00 €</span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase block">Total a pagar:</span>
+                                <span id="ticket-final" class="font-fredoka text-3xl font-extrabold text-emerald-600">30,00 €</span>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">
+                                T'estalvies <span id="ticket-badge-estalvi">10 €</span>!
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-1">
+                        <div class="font-bold text-slate-700">Com s'ha calculat?</div>
+                        <div id="shop-explicacio">
+                            1. Estalvi: 25% de 40 € = 10 €.<br>
+                            2. Preu final: 40 € - 10 € = 30 €.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemples de la vida quotidiana -->
+            <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl space-y-5">
+                <h3 class="font-fredoka font-bold text-xl text-amber-300 flex items-center gap-2">
+                    <span>📱</span> On més trobem percentatges cada dia?
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="font-bold flex items-center gap-1.5"><span>🔋</span> Bateria del mòbil:</span>
+                            <span id="bat-val" class="font-fredoka font-bold text-emerald-400 text-lg">75%</span>
+                        </div>
+                        <div class="w-full bg-black/40 h-7 rounded-xl p-1 flex items-center border border-white/20">
+                            <div id="bat-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full rounded-lg transition-all duration-300" style="width: 75%;"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="setBateria(15)" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg">15% (vermell)</button>
+                            <button onclick="setBateria(45)" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg">45% (taronja)</button>
+                            <button onclick="setBateria(85)" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg">85% (verd)</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="font-bold flex items-center gap-1.5"><span>🚀</span> Descàrrega d'un fitxer o joc:</span>
+                            <span id="dl-val" class="font-fredoka font-bold text-sky-400 text-lg">60%</span>
+                        </div>
+                        <div class="w-full bg-black/40 h-7 rounded-xl p-1 flex items-center border border-white/20">
+                            <div id="dl-bar" class="bg-gradient-to-r from-sky-500 to-indigo-400 h-full rounded-lg transition-all duration-300" style="width: 60%;"></div>
+                        </div>
+                        <p class="text-xs text-sky-200">
+                            Si un fitxer fa <strong>50 GB</strong> en total, el 60% completat significa que ja en portes <strong>30 GB</strong> descarregats!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECCIÓ 4: EL REPTE DE L'EXPLORADOR/A ==================== -->
+        <section id="seccio-repte" class="hidden space-y-8">
+            <div class="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">Missions matemàtiques</span>
+                        <h2 class="text-2xl sm:text-3xl font-fredoka font-bold flex items-center gap-2">
+                            <span>🏆</span> El repte de l'explorador/a
+                        </h2>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="bg-white/10 px-4 py-2 rounded-2xl text-center border border-white/10">
+                            <span class="text-xs text-slate-300 block">Ratxa seguida</span>
+                            <div class="font-fredoka text-xl text-amber-400 font-bold flex items-center justify-center gap-1">
+                                <span>🔥</span> <span id="game-streak">0</span>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 px-4 py-2 rounded-2xl text-center border border-white/10">
+                            <span class="text-xs text-slate-300 block">Experiència</span>
+                            <div class="font-fredoka text-xl text-emerald-400 font-bold">
+                                <span id="game-xp">0</span> XP
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-sky-200">
+                        <span id="grau-titol">Rang: Aprenent de percentatges</span>
+                        <span id="grau-prog">Nivell 1 de 3</span>
+                    </div>
+                    <div class="w-full bg-white/20 h-3 rounded-full overflow-hidden">
+                        <div id="game-progress-bar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tria de dificultat -->
+            <div class="flex flex-wrap gap-3 items-center justify-center">
+                <button onclick="canviarDificultat(1)" id="dif-1" class="dif-btn px-4 py-2 rounded-2xl font-fredoka font-bold text-sm bg-indigo-600 text-white shadow-md transition">
+                    🟢 Nivell 1: Reixa i conceptes visuals
+                </button>
+                <button onclick="canviarDificultat(2)" id="dif-2" class="dif-btn px-4 py-2 rounded-2xl font-fredoka font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition">
+                    🟡 Nivell 2: Càlcul mental ràpid
+                </button>
+                <button onclick="canviarDificultat(3)" id="dif-3" class="dif-btn px-4 py-2 rounded-2xl font-fredoka font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition">
+                    🔴 Nivell 3: Problemes i descomptes
+                </button>
+            </div>
+
+            <!-- Targeta del repte actiu -->
+            <div class="max-w-2xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-xl border-2 border-slate-200 space-y-6">
+                <div class="text-center space-y-2">
+                    <span id="quiz-badge" class="text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">Pregunta 1</span>
+                    <h3 id="quiz-pregunta" class="text-xl sm:text-2xl font-fredoka font-bold text-slate-800 min-h-[56px] flex items-center justify-center">
+                        Carregant repte...
+                    </h3>
+                </div>
+
+                <div id="quiz-opcions" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Opcions dinàmiques -->
+                </div>
+
+                <!-- Feedback educatiu -->
+                <div id="quiz-feedback" class="hidden p-4 rounded-2xl border text-sm transition-all duration-300">
+                    <div id="feedback-titol" class="font-fredoka font-bold text-base mb-1"></div>
+                    <p id="feedback-text" class="text-slate-700"></p>
+                    <div class="mt-3 flex justify-end">
+                        <button onclick="seguentPregunta()" id="btn-seguent" class="px-5 py-2 bg-indigo-600 text-white font-fredoka font-bold rounded-xl hover:bg-indigo-700 shadow-md transition flex items-center gap-1.5">
+                            <span>Següent repte</span> <span>➔</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tauler d'insígnies assolides -->
+            <div class="bg-slate-100 p-6 rounded-3xl border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-fredoka font-bold text-lg text-slate-800 flex items-center gap-2">
+                        <span>🎖️</span> Tauler d'insígnies aconseguides
+                    </h4>
+                    <span class="text-xs font-bold text-slate-500">Desbloqueja-les responent correctament!</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="medalles-container">
+                    <div id="badge-meitat" class="badge-card bg-white p-3 rounded-2xl border border-slate-200 text-center opacity-40 grayscale transition">
+                        <div class="text-3xl mb-1">🌗</div>
+                        <div class="font-fredoka font-bold text-xs text-slate-800">Mestre/a de la meitat</div>
+                        <div class="text-[10px] text-slate-500">Encerta un 50%</div>
+                    </div>
+                    <div id="badge-quart" class="badge-card bg-white p-3 rounded-2xl border border-slate-200 text-center opacity-40 grayscale transition">
+                        <div class="text-3xl mb-1">🍕</div>
+                        <div class="font-fredoka font-bold text-xs text-slate-800">Campió/na del quart</div>
+                        <div class="text-[10px] text-slate-500">Encerta un 25%</div>
+                    </div>
+                    <div id="badge-rebaixes" class="badge-card bg-white p-3 rounded-2xl border border-slate-200 text-center opacity-40 grayscale transition">
+                        <div class="text-3xl mb-1">🏷️</div>
+                        <div class="font-fredoka font-bold text-xs text-slate-800">Expert/a en rebaixes</div>
+                        <div class="text-[10px] text-slate-500">Supera el nivell 3</div>
+                    </div>
+                    <div id="badge-foc" class="badge-card bg-white p-3 rounded-2xl border border-slate-200 text-center opacity-40 grayscale transition">
+                        <div class="text-3xl mb-1">⚡</div>
+                        <div class="font-fredoka font-bold text-xs text-slate-800">Superratxa activa</div>
+                        <div class="text-[10px] text-slate-500">5 respostes seguides</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Peu de pàgina -->
+    <footer class="bg-white border-t border-slate-200 py-6 px-4 mt-12 text-center text-slate-600 text-sm">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">📐</span>
+                <span class="font-fredoka font-bold text-slate-800">Aventura amb percentatges</span>
+            </div>
+            <div class="font-fredoka font-medium text-slate-700">
+                Creat per <span class="font-bold text-indigo-600">Oriol Soler</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script de lògica interactiva -->
+    <script>
+        // Sistema d'efectes de so nadius amb Web Audio API
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playSuccessSound() {
+            if (!soundEnabled) return;
+            playTone(523.25, 'triangle', 0.1, 0.1);
+            setTimeout(() => playTone(659.25, 'triangle', 0.12, 0.1), 90);
+            setTimeout(() => playTone(783.99, 'triangle', 0.2, 0.12), 180);
+        }
+
+        function playErrorSound() {
+            if (!soundEnabled) return;
+            playTone(280, 'sawtooth', 0.15, 0.08);
+            setTimeout(() => playTone(220, 'sawtooth', 0.25, 0.08), 120);
+        }
+
+        function playClickSound() {
+            playTone(800, 'sine', 0.04, 0.03);
+        }
+
+        const soundBtn = document.getElementById('sound-toggle');
+        soundBtn.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+            soundBtn.title = soundEnabled ? 'So activat' : 'So desactivat';
+        });
+
+        // Motor de confeti lleuger
+        const confettiCanvas = document.getElementById('confetti-canvas');
+        const cCtx = confettiCanvas.getContext('2d');
+        let confettiParticles = [];
+        let animationFrameId = null;
+
+        function resizeConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeConfetti);
+        resizeConfetti();
+
+        function llançarConfeti() {
+            const colors = ['#F59E0B', '#10B981', '#3B82F6', '#EC4899', '#8B5CF6'];
+            confettiParticles = [];
+            for (let i = 0; i < 75; i++) {
+                confettiParticles.push({
+                    x: window.innerWidth / 2 + (Math.random() * 200 - 100),
+                    y: window.innerHeight / 2 - 100,
+                    w: Math.random() * 8 + 6,
+                    h: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: Math.random() * -10 - 4,
+                    rotation: Math.random() * 360,
+                    vRot: (Math.random() - 0.5) * 10,
+                    alpha: 1
+                });
+            }
+            if (!animationFrameId) animarConfeti();
+        }
+
+        function animarConfeti() {
+            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            let active = false;
+
+            for (let p of confettiParticles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.35;
+                p.rotation += p.vRot;
+                p.alpha -= 0.008;
+
+                if (p.alpha > 0) {
+                    active = true;
+                    cCtx.save();
+                    cCtx.globalAlpha = p.alpha;
+                    cCtx.translate(p.x, p.y);
+                    cCtx.rotate((p.rotation * Math.PI) / 180);
+                    cCtx.fillStyle = p.color;
+                    cCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    cCtx.restore();
+                }
+            }
+
+            if (active) {
+                animationFrameId = requestAnimationFrame(animarConfeti);
+            } else {
+                cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                animationFrameId = null;
+            }
+        }
+
+        function mcd(a, b) {
+            return b === 0 ? a : mcd(b, a % b);
+        }
+
+        let valorPercentatge = 25;
+        const gridContainer = document.getElementById('grid-container');
+        const percentSlider = document.getElementById('percent-slider');
+        const sliderLabel = document.getElementById('slider-label');
+        const displayPercent = document.getElementById('display-percent');
+        const displayFractionRaw = document.getElementById('display-fraction-raw');
+        const displayFractionSimplified = document.getElementById('display-fraction-simplified');
+        const displayDecimal = document.getElementById('display-decimal');
+        const donutProgress = document.getElementById('donut-progress');
+        const donutLabel = document.getElementById('donut-label');
+        const situacioContext = document.getElementById('situacio-context');
+
+        function inicialitzarReixa() {
+            gridContainer.innerHTML = '';
+            for (let i = 1; i <= 100; i++) {
+                const cel = document.createElement('button');
+                cel.type = 'button';
+                cel.dataset.index = i;
+                cel.className = 'reixa-cel·la rounded-md transition duration-150 flex items-center justify-center font-bold text-[9px] cursor-pointer';
+                cel.addEventListener('click', () => {
+                    playClickSound();
+                    actualitzarPercentatge(i);
+                });
+                gridContainer.appendChild(cel);
+            }
+            actualitzarPercentatge(valorPercentatge);
+        }
+
+        function actualitzarPercentatge(num) {
+            valorPercentatge = Math.max(0, Math.min(100, num));
+            percentSlider.value = valorPercentatge;
+            sliderLabel.textContent = `${valorPercentatge}%`;
+
+            const cel·les = gridContainer.children;
+            for (let i = 0; i < cel·les.length; i++) {
+                const idx = i + 1;
+                if (idx <= valorPercentatge) {
+                    cel·les[i].className = 'reixa-cel·la rounded-md bg-indigo-500 text-white shadow-sm border border-indigo-600 scale-[0.98]';
+                } else {
+                    cel·les[i].className = 'reixa-cel·la rounded-md bg-white hover:bg-indigo-100 text-slate-300 border border-slate-200';
+                }
+            }
+
+            displayPercent.textContent = `${valorPercentatge}%`;
+            displayFractionRaw.textContent = `${valorPercentatge} / 100`;
+
+            if (valorPercentatge === 0) {
+                displayFractionSimplified.textContent = '0';
+            } else {
+                const divisor = mcd(valorPercentatge, 100);
+                const numSimp = valorPercentatge / divisor;
+                const denSimp = 100 / divisor;
+                displayFractionSimplified.textContent = `${numSimp} / ${denSimp}`;
+            }
+
+            const dec = (valorPercentatge / 100).toFixed(2).replace('.', ',');
+            displayDecimal.textContent = dec;
+
+            donutProgress.setAttribute('stroke-dasharray', `${valorPercentatge}, 100`);
+            donutLabel.textContent = `${valorPercentatge}%`;
+
+            situacioContext.innerHTML = `Si en un grup de 100 persones el <strong>${valorPercentatge}%</strong> tenen gos o gat, exactament <strong>${valorPercentatge} persones</strong> en tenen!`;
+        }
+
+        percentSlider.addEventListener('input', (e) => {
+            actualitzarPercentatge(parseInt(e.target.value, 10));
+        });
+
+        function buidarReixa() {
+            playClickSound();
+            actualitzarPercentatge(0);
+        }
+
+        function omplirReixa(val) {
+            playClickSound();
+            actualitzarPercentatge(val);
+        }
+
+        const inputMentalBase = document.getElementById('input-mental-base');
+        const calcPct = document.getElementById('calc-pct');
+        const calcTotal = document.getElementById('calc-total');
+        const calcPassosContainer = document.getElementById('calc-passos-container');
+
+        function recalcularTrucsMentals() {
+            const num = parseFloat(inputMentalBase.value) || 0;
+            document.querySelectorAll('.val-num-base').forEach(el => el.textContent = num);
+
+            document.getElementById('res-50').textContent = (num / 2).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            document.getElementById('res-25').textContent = (num / 4).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            document.getElementById('res-10').textContent = (num / 10).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            document.getElementById('res-20').textContent = ((num / 10) * 2).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            
+            const r50 = num / 2;
+            const r25 = num / 4;
+            document.getElementById('res-75-a').textContent = r50.toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            document.getElementById('res-75-b').textContent = r25.toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+            document.getElementById('res-75').textContent = (r50 + r25).toLocaleString('ca-ES', { maximumFractionDigits: 2 });
+        }
+
+        inputMentalBase.addEventListener('input', recalcularTrucsMentals);
+
+        function actualitzarCalculadoraPasAPas() {
+            const p = parseFloat(calcPct.value) || 0;
+            const tot = parseFloat(calcTotal.value) || 0;
+            const valor1Pct = tot / 100;
+            const resultatFinal = (p * tot) / 100;
+
+            calcPassosContainer.innerHTML = `
+                <div class="flex items-start gap-3 p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl">
+                    <span class="bg-indigo-600 text-white font-fredoka font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0 text-xs">1</span>
+                    <div class="text-xs sm:text-sm text-slate-700">
+                        <strong>Trobem quant és l'1%</strong> dividint el total entre 100:<br>
+                        <span class="font-bold text-indigo-700">${tot} ÷ 100 = ${valor1Pct.toLocaleString('ca-ES', { maximumFractionDigits: 2 })}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3 p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+                    <span class="bg-emerald-600 text-white font-fredoka font-bold rounded-lg w-6 h-6 flex items-center justify-center shrink-0 text-xs">2</span>
+                    <div class="text-xs sm:text-sm text-slate-700">
+                        <strong>Multipliquem pel percentatge (${p}%)</strong> buscat:<br>
+                        <span class="font-bold text-emerald-800">${valor1Pct.toLocaleString('ca-ES', { maximumFractionDigits: 2 })} × ${p} = ${resultatFinal.toLocaleString('ca-ES', { maximumFractionDigits: 2 })}</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                    <span class="text-xs font-bold text-amber-800 uppercase block">Conclusió:</span>
+                    <span class="font-fredoka text-lg font-bold text-amber-950">El ${p}% de ${tot} és exactament <span class="text-indigo-600 underline">${resultatFinal.toLocaleString('ca-ES', { maximumFractionDigits: 2 })}</span>!</span>
+                </div>
+            `;
+        }
+
+        calcPct.addEventListener('input', actualitzarCalculadoraPasAPas);
+        calcTotal.addEventListener('input', actualitzarCalculadoraPasAPas);
+
+        const iconaDessuadoraSvg = `<svg class="w-7 h-7 drop-shadow-sm inline-block" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 22C22 13 26 8 32 8C38 8 42 13 42 22" stroke="#4338CA" stroke-width="3" stroke-linecap="round" fill="#E0E7FF"/>
+            <path d="M27 22V27M37 22V27" stroke="#4338CA" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M20 22L9 33L15 38L21 30V54H43V30L49 38L55 33L44 22C39 24 25 24 20 22Z" fill="#6366F1" stroke="#4338CA" stroke-width="3" stroke-linejoin="round"/>
+            <path d="M25 40H39L41 49H23L25 40Z" fill="#4F46E5" stroke="#312E81" stroke-width="2.5" stroke-linejoin="round"/>
+            <line x1="21" y1="51" x2="43" y2="51" stroke="#312E81" stroke-width="2.5"/>
+        </svg>`;
+
+        let preuArticleActual = 40;
+        let nomArticleActual = 'Dessuadora esportiva';
+        let iconaArticleActual = iconaDessuadoraSvg;
+        let descomptePercentatgeActual = 25;
+
+        function seleccionarProducte(nom, preu, icona) {
+            playClickSound();
+            nomArticleActual = nom;
+            preuArticleActual = preu;
+            iconaArticleActual = icona;
+
+            document.querySelectorAll('.prod-btn').forEach(b => {
+                b.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+                b.classList.add('border-slate-200', 'bg-slate-50');
+            });
+            event.currentTarget.classList.remove('border-slate-200', 'bg-slate-50');
+            event.currentTarget.classList.add('border-indigo-500', 'bg-indigo-50/50');
+
+            actualitzarTiquetBotiga();
+        }
+
+        function aplicarDescompte(percentatge) {
+            playClickSound();
+            descomptePercentatgeActual = percentatge;
+
+            document.querySelectorAll('.disc-btn').forEach(b => {
+                b.classList.remove('bg-rose-500', 'text-white', 'shadow-md');
+                b.classList.add('bg-rose-50', 'text-rose-700');
+            });
+            event.currentTarget.classList.remove('bg-rose-50', 'text-rose-700');
+            event.currentTarget.classList.add('bg-rose-500', 'text-white', 'shadow-md');
+
+            actualitzarTiquetBotiga();
+        }
+
+        function actualitzarTiquetBotiga() {
+            const estalvi = (preuArticleActual * descomptePercentatgeActual) / 100;
+            const preuFinal = preuArticleActual - estalvi;
+
+            document.getElementById('shop-icon').innerHTML = iconaArticleActual;
+            document.getElementById('shop-item-name').textContent = nomArticleActual;
+            document.getElementById('ticket-original').textContent = `${preuArticleActual.toFixed(2).replace('.', ',')} €`;
+            document.getElementById('ticket-pct-num').textContent = descomptePercentatgeActual;
+            document.getElementById('ticket-estalvi').textContent = `- ${estalvi.toFixed(2).replace('.', ',')} €`;
+            document.getElementById('ticket-final').textContent = `${preuFinal.toFixed(2).replace('.', ',')} €`;
+            document.getElementById('ticket-badge-estalvi').textContent = `${estalvi.toFixed(2).replace('.', ',')} €`;
+
+            document.getElementById('shop-explicacio').innerHTML = `
+                1. Estalvi: ${descomptePercentatgeActual}% de ${preuArticleActual} € = <strong>${estalvi.toFixed(2).replace('.', ',')} €</strong>.<br>
+                2. Preu a pagar: ${preuArticleActual} € - ${estalvi.toFixed(2).replace('.', ',')} € = <strong>${preuFinal.toFixed(2).replace('.', ',')} €</strong>.
+            `;
+        }
+
+        function setBateria(val) {
+            playClickSound();
+            const bar = document.getElementById('bat-bar');
+            const lbl = document.getElementById('bat-val');
+            lbl.textContent = `${val}%`;
+            bar.style.width = `${val}%`;
+
+            if (val <= 20) {
+                bar.className = 'bg-gradient-to-r from-red-600 to-rose-500 h-full rounded-lg transition-all duration-300';
+                lbl.className = 'font-fredoka font-bold text-rose-400 text-lg';
+            } else if (val <= 50) {
+                bar.className = 'bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-lg transition-all duration-300';
+                lbl.className = 'font-fredoka font-bold text-amber-300 text-lg';
+            } else {
+                bar.className = 'bg-gradient-to-r from-emerald-500 to-green-400 h-full rounded-lg transition-all duration-300';
+                lbl.className = 'font-fredoka font-bold text-emerald-400 text-lg';
+            }
+        }
+
+        let dificultatActual = 1;
+        let puntsXP = 0;
+        let ratxaActual = 0;
+        let indexPreguntaActual = 0;
+        let preguntaResponduda = false;
+
+        const preguntesPerNivell = {
+            1: [
+                {
+                    pregunta: "Quina fracció representa exactament el 50%?",
+                    opcions: ["1 / 2 (la meitat)", "1 / 4 (un quart)", "1 / 10", "3 / 4"],
+                    correcta: 0,
+                    explicacio: "50 de 100 és 50/100, que simplificat dividint numerador i denominador entre 50 dona 1/2 (la meitat)!",
+                    tipus: "50%"
+                },
+                {
+                    pregunta: "Si en una reixa de 100 caselles en pintem 35, quin percentatge tenim?",
+                    opcions: ["3,5%", "35%", "53%", "70%"],
+                    correcta: 1,
+                    explicacio: "Com que la reixa té 100 cel·les, 35 cel·les pintades són exactament el 35% (35 de cada 100)!",
+                    tipus: "basic"
+                },
+                {
+                    pregunta: "Com s'escriu el 25% en forma de nombre decimal?",
+                    opcions: ["2,5", "0,025", "0,25", "25,0"],
+                    correcta: 2,
+                    explicacio: "Per passar de % a decimal dividim entre 100: 25 ÷ 100 = 0,25.",
+                    tipus: "25%"
+                },
+                {
+                    pregunta: "Tot el grup sencer (el 100% de la classe) equival a quina fracció?",
+                    opcions: ["100 / 100 (la unitat sencera)", "1 / 100", "50 / 100", "0 / 100"],
+                    correcta: 0,
+                    explicacio: "El 100% és tot el conjunt sencer: 100/100 = 1!",
+                    tipus: "basic"
+                }
+            ],
+            2: [
+                {
+                    pregunta: "Quin és el 50% de 60 caniques?",
+                    opcions: ["20 caniques", "30 caniques", "15 caniques", "12 caniques"],
+                    correcta: 1,
+                    explicacio: "Super truc del 50%: fem la meitat! 60 ÷ 2 = 30.",
+                    tipus: "50%"
+                },
+                {
+                    pregunta: "Calcula ràpidament el 10% de 90 €:",
+                    opcions: ["9 €", "19 €", "4,5 €", "0,90 €"],
+                    correcta: 0,
+                    explicacio: "El truc del 10% és només dividir entre 10: 90 ÷ 10 = 9 €!",
+                    tipus: "10%"
+                },
+                {
+                    pregunta: "Quant és el 25% de 40 litres d'aigua?",
+                    opcions: ["5 litres", "20 litres", "10 litres", "15 litres"],
+                    correcta: 2,
+                    explicacio: "El 25% és la quarta part: 40 ÷ 4 = 10 litres!",
+                    tipus: "25%"
+                },
+                {
+                    pregunta: "Quin és el 20% de 50 cromos?",
+                    opcions: ["5 cromos", "10 cromos", "25 cromos", "20 cromos"],
+                    correcta: 1,
+                    explicacio: "El 10% de 50 és 5. Per tant, el 20% és el doble: 5 × 2 = 10 cromos!",
+                    tipus: "20%"
+                }
+            ],
+            3: [
+                {
+                    pregunta: "Una motxilla val 40 € i té un descompte del 50%. Quant pagaràs?",
+                    opcions: ["20 €", "30 €", "10 €", "25 €"],
+                    correcta: 0,
+                    explicacio: "El 50% de 40 € és la meitat: t'estalvies 20 €. Preu final: 40 - 20 = 20 €!",
+                    tipus: "rebaixa"
+                },
+                {
+                    pregunta: "Un joc costa 80 € i té una rebaixa del 25%. Quant t'estalvies?",
+                    opcions: ["10 €", "25 €", "20 €", "40 €"],
+                    correcta: 2,
+                    explicacio: "Atenció: la pregunta demana l'estalvi! El 25% de 80 € és 80 ÷ 4 = 20 € d'estalvi!",
+                    tipus: "25%"
+                },
+                {
+                    pregunta: "En una cursa hi ha 300 corredors/es. El 10% van amb patinet. Quants en són?",
+                    opcions: ["3 persones", "30 persones", "10 persones", "50 persones"],
+                    correcta: 1,
+                    explicacio: "El 10% de 300 és dividir entre 10: 300 ÷ 10 = 30 persones!",
+                    tipus: "10%"
+                },
+                {
+                    pregunta: "Un patinet elèctric de 100 € està rebaixat un 15%. Quin és el preu final?",
+                    opcions: ["85 €", "90 €", "75 €", "15 €"],
+                    correcta: 0,
+                    explicacio: "El 15% de 100 € són 15 €. Restem: 100 € - 15 € = 85 €!",
+                    tipus: "rebaixa"
+                }
+            ]
+        };
+
+        function carregarPregunta() {
+            preguntaResponduda = false;
+            const llista = preguntesPerNivell[dificultatActual];
+            const q = llista[indexPreguntaActual % llista.length];
+
+            document.getElementById('quiz-badge').textContent = `Nivell ${dificultatActual} • Missió ${(indexPreguntaActual % llista.length) + 1}`;
+            document.getElementById('quiz-pregunta').textContent = q.pregunta;
+
+            const opcionsCont = document.getElementById('quiz-opcions');
+            opcionsCont.innerHTML = '';
+
+            q.opcions.forEach((opcioText, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 font-fredoka font-semibold text-slate-800 text-base text-left transition transform hover:-translate-y-0.5 active:translate-y-0 shadow-sm';
+                btn.textContent = opcioText;
+                btn.addEventListener('click', () => comprovarResposta(i, q, btn));
+                opcionsCont.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').className = 'hidden';
+        }
+
+        function comprovarResposta(indexTriat, objPregunta, botoClicat) {
+            if (preguntaResponduda) return;
+            preguntaResponduda = true;
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            const feedbackTitol = document.getElementById('feedback-titol');
+            const feedbackText = document.getElementById('feedback-text');
+            const botons = document.querySelectorAll('#quiz-opcions button');
+
+            botons.forEach(b => b.classList.add('pointer-events-none'));
+
+            if (indexTriat === objPregunta.correcta) {
+                playSuccessSound();
+                llançarConfeti();
+                botoClicat.classList.remove('bg-slate-50', 'border-slate-200');
+                botoClicat.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600', 'animate-pop');
+
+                puntsXP += 25 * dificultatActual;
+                ratxaActual++;
+
+                feedbackBox.className = 'p-4 rounded-2xl border border-emerald-300 bg-emerald-50 text-emerald-950 block animate-pop';
+                feedbackTitol.innerHTML = '🎉 Molt bé, campió/na, ho has encertat!';
+                feedbackText.innerHTML = objPregunta.explicacio;
+
+                revisarMedalles(objPregunta.tipus);
+            } else {
+                playErrorSound();
+                botoClicat.classList.remove('bg-slate-50', 'border-slate-200');
+                botoClicat.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+
+                botons[objPregunta.correcta].classList.remove('bg-slate-50');
+                botons[objPregunta.correcta].classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-900', 'font-bold');
+
+                ratxaActual = 0;
+
+                feedbackBox.className = 'p-4 rounded-2xl border border-rose-300 bg-rose-50 text-rose-950 block';
+                feedbackTitol.innerHTML = '💪 Ànims, cap problema! Fixa\'t en l\'explicació:';
+                feedbackText.innerHTML = objPregunta.explicacio;
+            }
+
+            actualitzarMarcadors();
+        }
+
+        function seguentPregunta() {
+            playClickSound();
+            indexPreguntaActual++;
+            carregarPregunta();
+        }
+
+        function canviarDificultat(nivell) {
+            playClickSound();
+            dificultatActual = nivell;
+            indexPreguntaActual = 0;
+
+            for (let i = 1; i <= 3; i++) {
+                const b = document.getElementById(`dif-${i}`);
+                if (i === nivell) {
+                    b.className = 'dif-btn px-4 py-2 rounded-2xl font-fredoka font-bold text-sm bg-indigo-600 text-white shadow-md transition';
+                } else {
+                    b.className = 'dif-btn px-4 py-2 rounded-2xl font-fredoka font-bold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 transition';
+                }
+            }
+
+            document.getElementById('grau-prog').textContent = `Nivell ${dificultatActual} de 3`;
+            carregarPregunta();
+        }
+
+        function actualitzarMarcadors() {
+            document.getElementById('header-xp').textContent = `${puntsXP} XP`;
+            document.getElementById('game-xp').textContent = puntsXP;
+            document.getElementById('game-streak').textContent = ratxaActual;
+
+            const pctProg = Math.min(100, Math.round((puntsXP / 300) * 100));
+            document.getElementById('game-progress-bar').style.width = `${pctProg}%`;
+
+            const titolRang = document.getElementById('grau-titol');
+            if (puntsXP >= 250) {
+                titolRang.textContent = 'Rang: Campió/na dels percentatges 🌟';
+            } else if (puntsXP >= 100) {
+                titolRang.textContent = 'Rang: Expert/a en càlcul mental 🧭';
+            } else {
+                titolRang.textContent = 'Rang: Aprenent de percentatges 🌱';
+            }
+        }
+
+        function revisarMedalles(tipus) {
+            if (tipus === '50%') desbloquejarMedalla('badge-meitat');
+            if (tipus === '25%') desbloquejarMedalla('badge-quart');
+            if (dificultatActual === 3) desbloquejarMedalla('badge-rebaixes');
+            if (ratxaActual >= 5) desbloquejarMedalla('badge-foc');
+        }
+
+        function desbloquejarMedalla(elementId) {
+            const card = document.getElementById(elementId);
+            if (card && card.classList.contains('grayscale')) {
+                card.classList.remove('opacity-40', 'grayscale');
+                card.classList.add('border-amber-400', 'bg-amber-50/50', 'scale-105', 'shadow-md');
+            }
+        }
+
+        function canviarPestanya(pestanya) {
+            playClickSound();
+            const seccions = ['explorador', 'trucs', 'botiga', 'repte'];
+            
+            seccions.forEach(s => {
+                const secEl = document.getElementById(`seccio-${s}`);
+                const tabEl = document.getElementById(`tab-${s}`);
+                if (s === pestanya) {
+                    secEl.classList.remove('hidden');
+                    tabEl.classList.remove('border-transparent', 'text-sky-100');
+                    tabEl.classList.add('border-amber-400', 'text-white');
+                } else {
+                    secEl.classList.add('hidden');
+                    tabEl.classList.remove('border-amber-400', 'text-white');
+                    tabEl.classList.add('border-transparent', 'text-sky-100');
+                }
+            });
+
+            if (pestanya === 'repte' && !document.getElementById('quiz-pregunta').textContent.trim()) {
+                carregarPregunta();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            inicialitzarReixa();
+            recalcularTrucsMentals();
+            actualitzarCalculadoraPasAPas();
+            actualitzarTiquetBotiga();
+            carregarPregunta();
+            actualitzarMarcadors();
+        });
+    </script>
+</body>
+</html>
