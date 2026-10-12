@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aventura amb Decimals: Blocs de Base 10</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: #f0f7ff;
+      user-select: none;
+    }
+    .font-display {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+
+    /* Estils dels blocs gràfics de Base 10 */
+    .grid-placa {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      gap: 1px;
+      background-color: #1d4ed8;
+      border: 2px solid #1e40af;
+      box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.25);
+    }
+    .grid-placa-cell {
+      background-color: #3b82f6;
+    }
+
+    .grid-tira {
+      display: grid;
+      grid-template-rows: repeat(10, 1fr);
+      gap: 1px;
+      background-color: #d97706;
+      border: 2px solid #b45309;
+      box-shadow: 0 3px 5px -1px rgba(180, 83, 9, 0.25);
+    }
+    .grid-tira-cell {
+      background-color: #f59e0b;
+    }
+
+    .grid-cubet {
+      background-color: #10b981;
+      border: 1.5px solid #047857;
+      box-shadow: 0 2px 4px rgba(4, 120, 87, 0.3);
+    }
+
+    /* Transicions suaus */
+    .block-card {
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .block-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Animació de descomposició */
+    @keyframes separateHorizontal {
+      0% { transform: scale(0.95); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .anim-split {
+      animation: separateHorizontal 0.4s ease-out forwards;
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+  <canvas id="confettiCanvas"></canvas>
+
+  <header class="bg-white border-b border-blue-100 shadow-sm sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl shadow-md font-display">
+          10
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold font-display text-blue-950 leading-tight">DeciBlocs</h1>
+          <p class="text-xs text-slate-500 font-semibold">Comprendre els decimals amb blocs de base 10</p>
+        </div>
+      </div>
+
+      <!-- Navegació per pestanyes -->
+      <nav class="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
+        <button id="nav-learn" onclick="switchTab('learn')" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 bg-white text-blue-700 shadow-sm">
+          <span>💡 Com funciona?</span>
+        </button>
+        <button id="nav-lab" onclick="switchTab('lab')" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+          <span>🧪 Laboratori</span>
+        </button>
+        <button id="nav-game" onclick="switchTab('game')" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+          <span>🎯 El Joc dels Reptes</span>
+        </button>
+      </nav>
+
+      <!-- Botó de so -->
+      <button id="soundToggle" onclick="toggleSound()" class="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition" title="Activar/Silenciar so">
+        <span id="soundIcon">🔊</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-1">
+    
+    <!-- PESTANYA 1: EXPLICACIÓ DIDÀCTICA I DESCOMPOSICIÓ INTERACTIVA -->
+    <section id="tab-learn-content" class="space-y-6">
+      
+      <!-- Targeta de benvinguda i canvi de mirada -->
+      <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500 text-white p-6 md:p-8 rounded-3xl shadow-lg relative overflow-hidden">
+        <div class="relative z-10 max-w-3xl">
+          <span class="inline-block bg-white/20 backdrop-blur-md text-xs uppercase tracking-wider font-extrabold px-3 py-1 rounded-full mb-3">La gran idea dels decimals</span>
+          <h2 class="text-2xl md:text-4xl font-extrabold font-display mb-3">Quin valor té cadascuna de les peces?</h2>
+          <p class="text-blue-50 text-base md:text-lg leading-relaxed">
+            Per als <strong>nombres enters</strong>, el cubet petit és el número 1. Però per entendre els <strong>decimals</strong> fem un canvi màgic: 
+            <strong>fem que la placa sencera de 100 quadrets sigui la nostra Unitat (1,0)</strong>. Així la podem tallar en 10 tires (dècims) o en 100 quadrets (centèsims)!
+          </p>
+        </div>
+        <div class="absolute -right-8 -bottom-10 opacity-15 text-9xl font-display font-black">0,1</div>
+      </div>
+
+      <!-- Comparador Enters vs Decimals -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Targeta Enters -->
+        <div class="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm">
+          <div class="flex items-center justify-between border-b pb-3 mb-4">
+            <h3 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+              En Nombres Enters (El cubet és l'1)
+            </h3>
+            <span class="text-xs font-bold uppercase bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg">Tradicional</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50">
+              <div class="w-12 h-12 rounded-lg bg-emerald-500/20 border border-emerald-500 flex items-center justify-center font-bold text-emerald-800">1</div>
+              <div>
+                <p class="font-bold text-sm text-slate-800">Cubet Petit = 1 Unitat (1)</p>
+                <p class="text-xs text-slate-500">És la peça individual més petita.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50">
+              <div class="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-500 flex items-center justify-center font-bold text-amber-800">10</div>
+              <div>
+                <p class="font-bold text-sm text-slate-800">Tira = 1 Desena (10)</p>
+                <p class="text-xs text-slate-500">Agrupament de 10 cubets.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-slate-50">
+              <div class="w-12 h-12 rounded-lg bg-blue-500/20 border border-blue-500 flex items-center justify-center font-bold text-blue-800">100</div>
+              <div>
+                <p class="font-bold text-sm text-slate-800">Placa = 1 Centena (100)</p>
+                <p class="text-xs text-slate-500">Agrupament de 100 cubets.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Targeta Decimals -->
+        <div class="bg-white border-2 border-blue-400 ring-4 ring-blue-50 rounded-3xl p-6 shadow-sm">
+          <div class="flex items-center justify-between border-b border-blue-100 pb-3 mb-4">
+            <h3 class="text-lg font-bold text-blue-900 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-600 animate-pulse"></span>
+              En Decimals (La placa és l'1 sencer!)
+            </h3>
+            <span class="text-xs font-bold uppercase bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg">El nostre model</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-blue-50/70 border border-blue-100">
+              <div class="w-12 h-12 rounded-lg bg-blue-600 text-white font-black text-sm flex items-center justify-center shadow-sm">1 U</div>
+              <div>
+                <p class="font-bold text-sm text-blue-950">1 Placa Gran = 1 Unitat (1,00)</p>
+                <p class="text-xs text-blue-700 font-medium">El "tot" sencer (100 de 100 quadrets = 1).</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-amber-50/70 border border-amber-100">
+              <div class="w-12 h-12 rounded-lg bg-amber-500 text-white font-black text-xs flex items-center justify-center shadow-sm">0,1</div>
+              <div>
+                <p class="font-bold text-sm text-amber-950">1 Tira = 1 Dècim (0,10 o 1/10)</p>
+                <p class="text-xs text-amber-700 font-medium">Una de les 10 columnes d'una unitat.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+              <div class="w-12 h-12 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-sm">0,01</div>
+              <div>
+                <p class="font-bold text-sm text-emerald-950">1 Cubet = 1 Centèsim (0,01 o 1/100)</p>
+                <p class="text-xs text-emerald-700 font-medium">Un sol quadret dels 100 de la unitat.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+        <div class="text-center max-w-xl mx-auto mb-6">
+          <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Animació interactiva</span>
+          <h3 class="text-2xl font-bold font-display text-slate-900 mt-2">Observa com es descomponen les peces</h3>
+          <p class="text-sm text-slate-500 mt-1">Prem els botons per veure com 1 Unitat es divideix en 10 Dècims, i 1 Dècim en 10 Centèsims!</p>
+        </div>
+
+        <!-- Botons d'acció per l'animador -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+          <button onclick="setDecompState('unit')" id="btn-decomp-unit" class="px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-blue-600 text-white shadow-md shadow-blue-200">
+            🟦 1 Unitat (Placa)
+          </button>
+          <button onclick="setDecompState('split-tenths')" id="btn-decomp-tenths" class="px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            ✂️ Dividir en 10 Dècims (0,1 × 10)
+          </button>
+          <button onclick="setDecompState('split-hundredths')" id="btn-decomp-hundredths" class="px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+            🔍 Dividir 1 Dècim en 10 Centèsims (0,01 × 10)
+          </button>
+        </div>
+
+        <!-- Escena de visualització interactiva -->
+        <div class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-6 min-h-[260px] flex flex-col items-center justify-center relative">
+          <div id="decomp-stage" class="flex flex-wrap items-center justify-center gap-3">
+            <!-- Es renderitza dinàmicament via JavaScript -->
+          </div>
+          <div id="decomp-caption" class="mt-6 text-center font-bold text-sm text-slate-600 bg-white px-5 py-2 rounded-xl shadow-sm border border-slate-200">
+            1 Placa = 1 Unitat sencera (1,0) formada per 100 quadrets
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- PESTANYA 2: LABORATORI LLIURE -->
+    <section id="tab-lab-content" class="hidden space-y-6">
+      
+      <!-- Panell del valor en temps real -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Valor Total Actual</span>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span id="lab-decimal-big" class="text-5xl md:text-6xl font-extrabold font-display text-blue-900">0,00</span>
+            <span class="text-slate-400 font-bold text-lg">unitats</span>
+          </div>
+          <p id="lab-decimal-words" class="text-sm font-bold text-slate-600 mt-1">0 unitats, 0 dècims i 0 centèsims</p>
+        </div>
+
+        <!-- Descomposició algebraica -->
+        <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl w-full md:w-auto flex flex-col gap-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Descomposició additiva:</span>
+          <div class="flex flex-wrap items-center gap-2 text-base font-extrabold font-display">
+            <span id="lab-sum-u" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-xl">0 U (0,00)</span>
+            <span class="text-slate-400">+</span>
+            <span id="lab-sum-d" class="px-3 py-1 bg-amber-100 text-amber-800 rounded-xl">0 d (0,00)</span>
+            <span class="text-slate-400">+</span>
+            <span id="lab-sum-c" class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-xl">0 c (0,00)</span>
+          </div>
+        </div>
+
+        <!-- Accions ràpides -->
+        <div class="flex md:flex-col gap-2 w-full md:w-auto">
+          <button onclick="regroupLab()" class="flex-1 px-4 py-2 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+            <span>🔄 Agrupar (de 10 en 10)</span>
+          </button>
+          <button onclick="clearLab()" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+            <span>🗑️ Netejar tot</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Zona de construcció per columnes -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Columna 1: Unitats -->
+        <div class="bg-white border-t-8 border-t-blue-600 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-extrabold text-lg text-blue-950 font-display">Unitats (U)</h3>
+              <p class="text-xs text-blue-700 font-semibold">1 Placa = 1,00</p>
+            </div>
+            <span id="lab-count-u" class="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-extrabold text-sm flex items-center justify-center">0</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('lab', 'u', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('lab', 'u', 1)" class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+
+          <!-- Escena visual dels blocs -->
+          <div id="lab-display-u" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[220px] flex flex-wrap content-start justify-center gap-3 overflow-y-auto max-h-[360px]">
+            <!-- Render dinàmic de plaques -->
+          </div>
+        </div>
+
+        <!-- Columna 2: Dècims -->
+        <div class="bg-white border-t-8 border-t-amber-500 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-extrabold text-lg text-amber-950 font-display">Dècims (d)</h3>
+              <p class="text-xs text-amber-700 font-semibold">1 Tira = 0,10</p>
+            </div>
+            <span id="lab-count-d" class="w-8 h-8 rounded-full bg-amber-50 text-amber-700 font-extrabold text-sm flex items-center justify-center">0</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('lab', 'd', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('lab', 'd', 1)" class="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+
+          <!-- Escena visual de tires -->
+          <div id="lab-display-d" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[220px] flex flex-wrap content-start justify-center gap-2 overflow-y-auto max-h-[360px]">
+            <!-- Render dinàmic de tires -->
+          </div>
+        </div>
+
+        <!-- Columna 3: Centèsims -->
+        <div class="bg-white border-t-8 border-t-emerald-500 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-extrabold text-lg text-emerald-950 font-display">Centèsims (c)</h3>
+              <p class="text-xs text-emerald-700 font-semibold">1 Cubet = 0,01</p>
+            </div>
+            <span id="lab-count-c" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-sm flex items-center justify-center">0</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('lab', 'c', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('lab', 'c', 1)" class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+
+          <!-- Escena visual de cubets -->
+          <div id="lab-display-c" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[220px] flex flex-wrap content-start justify-center gap-1.5 overflow-y-auto max-h-[360px]">
+            <!-- Render dinàmic de cubets -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- PESTANYA 3: EL JOC DELS REPTES -->
+    <section id="tab-game-content" class="hidden space-y-6">
+      
+      <!-- Panell del Repte, Punts i Dificultat -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-3xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center text-3xl font-display font-extrabold">
+            🎯
+          </div>
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Objectiu a construir:</span>
+            <div class="flex items-baseline gap-2">
+              <span id="game-target-number" class="text-5xl font-black font-display text-blue-900">1,35</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de nivell -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 text-xs font-bold">
+          <button id="lvl-1" onclick="setDifficulty(1)" class="px-3 py-1.5 rounded-xl bg-white text-blue-700 shadow-sm transition">Nivell 1 (Dècims)</button>
+          <button id="lvl-2" onclick="setDifficulty(2)" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition">Nivell 2 (Centèsims)</button>
+          <button id="lvl-3" onclick="setDifficulty(3)" class="px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition">Nivell 3 (Complet)</button>
+        </div>
+
+        <!-- Marcador de punts -->
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs font-bold text-slate-400 block uppercase">Puntuació</span>
+            <span id="game-score" class="text-3xl font-black font-display text-emerald-600">0 punts</span>
+          </div>
+          <div class="text-2xl">⭐</div>
+        </div>
+
+      </div>
+
+      <!-- Tauler d'interacció del Joc -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Unitats al joc -->
+        <div class="bg-white border-t-8 border-t-blue-600 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-extrabold text-blue-950 font-display">Unitats (U)</h4>
+            <span id="game-count-u" class="w-8 h-8 rounded-full bg-blue-50 text-blue-700 font-bold text-sm flex items-center justify-center">0</span>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('game', 'u', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('game', 'u', 1)" class="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+          <div id="game-display-u" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[190px] flex flex-wrap content-start justify-center gap-2 max-h-[300px] overflow-y-auto"></div>
+        </div>
+
+        <!-- Dècims al joc -->
+        <div class="bg-white border-t-8 border-t-amber-500 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-extrabold text-amber-950 font-display">Dècims (d)</h4>
+            <span id="game-count-d" class="w-8 h-8 rounded-full bg-amber-50 text-amber-700 font-bold text-sm flex items-center justify-center">0</span>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('game', 'd', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('game', 'd', 1)" class="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+          <div id="game-display-d" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[190px] flex flex-wrap content-start justify-center gap-1.5 max-h-[300px] overflow-y-auto"></div>
+        </div>
+
+        <!-- Centèsims al joc -->
+        <div class="bg-white border-t-8 border-t-emerald-500 border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-extrabold text-emerald-950 font-display">Centèsims (c)</h4>
+            <span id="game-count-c" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 font-bold text-sm flex items-center justify-center">0</span>
+          </div>
+          <div class="flex items-center gap-2 mb-4">
+            <button onclick="modifyBlock('game', 'c', -1)" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-lg transition">-</button>
+            <button onclick="modifyBlock('game', 'c', 1)" class="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg transition shadow-sm">+</button>
+          </div>
+          <div id="game-display-c" class="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-3 flex-1 min-h-[190px] flex flex-wrap content-start justify-center gap-1.5 max-h-[300px] overflow-y-auto"></div>
+        </div>
+
+      </div>
+
+      <!-- Barra de comprovació i feedback -->
+      <div class="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold text-slate-400 block uppercase">El que has format tu:</span>
+          <div class="flex items-baseline gap-2">
+            <span id="game-current-number" class="text-4xl font-black font-display text-slate-800">0,00</span>
+            <span class="text-xs font-bold text-slate-500" id="game-breakdown-hint">(0 U + 0 d + 0 c)</span>
+          </div>
+          <p id="game-feedback-text" class="text-sm font-bold mt-1 text-slate-500">Afegeix peces fins arribar al número objectiu.</p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <button onclick="resetGameBlocks()" class="px-5 py-3 rounded-2xl font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm transition">
+            Reiniciar peces
+          </button>
+          <button onclick="checkGameAnswer()" class="flex-1 md:flex-initial px-8 py-3.5 rounded-2xl font-black font-display bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-base shadow-lg shadow-blue-200 active:scale-95 transition">
+            Comprova la resposta! ✨
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-center text-xs font-semibold text-slate-500">
+    <p>DeciBlocs - Creat per Oriol Soler</p>
+  </footer>
+
+  <script>
+    // --- GESTIÓ D'ÀUDIO VIA WEB AUDIO API (sense fitxers externs) ---
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.15) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {
+        console.warn('Audio error:', e);
+      }
+    }
+
+    function playSuccessJingle() {
+      if (!soundEnabled) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        setTimeout(() => playTone(freq, 'triangle', 0.2), idx * 100);
+      });
+    }
+
+    function playErrorTone() {
+      if (!soundEnabled) return;
+      playTone(220, 'sawtooth', 0.25);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+    }
+
+    // --- GESTIÓ DE PESTANYES ---
+    function switchTab(tabId) {
+      playTone(440, 'sine', 0.08);
+      const tabs = ['learn', 'lab', 'game'];
+      tabs.forEach(t => {
+        const navBtn = document.getElementById(`nav-${t}`);
+        const content = document.getElementById(`tab-${t}-content`);
+        if (t === tabId) {
+          navBtn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 bg-white text-blue-700 shadow-sm";
+          content.classList.remove('hidden');
+        } else {
+          navBtn.className = "tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-2";
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    // --- ESTILS GRÀFICS DELS BLOCS ---
+    function createUnitElement() {
+      const el = document.createElement('div');
+      el.className = 'w-16 h-16 grid-placa rounded-md block-card cursor-pointer transition';
+      el.title = '1 Unitat (Placa sencera de 100 quadrets)';
+      for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-placa-cell';
+        el.appendChild(cell);
+      }
+      return el;
+    }
+
+    function createTenthElement() {
+      const el = document.createElement('div');
+      el.className = 'w-3.5 h-16 grid-tira rounded-sm block-card cursor-pointer transition';
+      el.title = '1 Dècim (Tira de 10 quadrets = 0,10)';
+      for (let i = 0; i < 10; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-tira-cell';
+        el.appendChild(cell);
+      }
+      return el;
+    }
+
+    function createHundredthElement() {
+      const el = document.createElement('div');
+      el.className = 'w-3.5 h-3.5 grid-cubet rounded-sm block-card cursor-pointer transition';
+      el.title = '1 Centèsim (Quadret individual = 0,01)';
+      return el;
+    }
+
+    // --- SECCIÓ 1: ANIMACIÓ DE DESCOMPOSICIÓ INTERACTIVA ---
+    let currentDecompState = 'unit';
+
+    function setDecompState(mode) {
+      currentDecompState = mode;
+      const stage = document.getElementById('decomp-stage');
+      const caption = document.getElementById('decomp-caption');
+      const btnU = document.getElementById('btn-decomp-unit');
+      const btnT = document.getElementById('btn-decomp-tenths');
+      const btnH = document.getElementById('btn-decomp-hundredths');
+
+      // Actualitzar estils dels botons
+      [btnU, btnT, btnH].forEach(b => {
+        b.className = "px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200";
+      });
+
+      stage.innerHTML = '';
+
+      if (mode === 'unit') {
+        btnU.className = "px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-blue-600 text-white shadow-md shadow-blue-200";
+        const unit = createUnitElement();
+        unit.classList.add('w-32', 'h-32', 'anim-split');
+        stage.appendChild(unit);
+        caption.innerHTML = '<span class="text-blue-700 font-extrabold text-base">1 Placa Gran = 1,00 (1 Unitat)</span>. Està formada per una quadrícula de 10×10 = 100 quadrets.';
+        playTone(330, 'sine', 0.12);
+      } 
+      else if (mode === 'split-tenths') {
+        btnT.className = "px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-amber-500 text-white shadow-md shadow-amber-200";
+        caption.innerHTML = '<span class="text-amber-700 font-extrabold text-base">1 Unitat = 10 Dècims (0,1 cadascun)</span>. Si tallem la placa en 10 columnes iguals, cadascuna és 0,1!';
+        playTone(440, 'triangle', 0.15);
+
+        for (let i = 0; i < 10; i++) {
+          const tira = document.createElement('div');
+          tira.className = 'w-5 h-32 grid-tira rounded-sm anim-split';
+          tira.style.animationDelay = `${i * 35}ms`;
+          for (let j = 0; j < 10; j++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-tira-cell';
+            tira.appendChild(cell);
+          }
+          stage.appendChild(tira);
+        }
+      } 
+      else if (mode === 'split-hundredths') {
+        btnH.className = "px-5 py-2.5 rounded-2xl text-sm font-bold transition bg-emerald-600 text-white shadow-md shadow-emerald-200";
+        caption.innerHTML = '<span class="text-emerald-700 font-extrabold text-base">1 Dècim (0,10) = 10 Centèsims (0,01 cadascun)</span>. Si tallem 1 sola tira en 10 trossos, obtenim 10 cubets petits!';
+        playTone(660, 'sine', 0.15);
+
+        const row = document.createElement('div');
+        row.className = 'flex flex-wrap items-center justify-center gap-2 p-4 bg-white rounded-2xl border border-slate-200';
+        for (let i = 0; i < 10; i++) {
+          const cubet = document.createElement('div');
+          cubet.className = 'w-6 h-6 grid-cubet rounded-md anim-split flex items-center justify-center text-[10px] text-white font-black';
+          cubet.textContent = '0,01';
+          cubet.style.animationDelay = `${i * 40}ms`;
+          row.appendChild(cubet);
+        }
+        stage.appendChild(row);
+      }
+    }
+
+    // --- SECCIÓ 2: LABORATORI D'EXPLORACIÓ LLIURE ---
+    const labState = { u: 0, d: 0, c: 0 };
+
+    function modifyBlock(mode, type, delta) {
+      const state = mode === 'lab' ? labState : gameState;
+      const maxLimits = { u: 9, d: 19, c: 29 };
+
+      if (delta > 0 && state[type] < maxLimits[type]) {
+        state[type] += delta;
+        playTone(type === 'u' ? 300 : type === 'd' ? 450 : 600, 'sine', 0.08);
+      } else if (delta < 0 && state[type] > 0) {
+        state[type] += delta;
+        playTone(200, 'sine', 0.05);
+      }
+
+      if (mode === 'lab') updateLabUI();
+      if (mode === 'game') updateGameUI();
+    }
+
+    function calculateVal(state) {
+      const val = (state.u * 1) + (state.d * 0.1) + (state.c * 0.01);
+      return Math.round(val * 100) / 100;
+    }
+
+    function formatDecimalCatalan(num) {
+      return num.toFixed(2).replace('.', ',');
+    }
+
+    function updateLabUI() {
+      // Comptadors
+      document.getElementById('lab-count-u').textContent = labState.u;
+      document.getElementById('lab-count-d').textContent = labState.d;
+      document.getElementById('lab-count-c').textContent = labState.c;
+
+      const total = calculateVal(labState);
+      document.getElementById('lab-decimal-big').textContent = formatDecimalCatalan(total);
+
+      // Descomposició additiva
+      document.getElementById('lab-sum-u').textContent = `${labState.u} U (${formatDecimalCatalan(labState.u * 1)})`;
+      document.getElementById('lab-sum-d').textContent = `${labState.d} d (${formatDecimalCatalan(labState.d * 0.1)})`;
+      document.getElementById('lab-sum-c').textContent = `${labState.c} c (${formatDecimalCatalan(labState.c * 0.01)})`;
+
+      // Text explicatiu
+      document.getElementById('lab-decimal-words').textContent = 
+        `${labState.u} unitat${labState.u !== 1 ? 's' : ''}, ${labState.d} dècim${labState.d !== 1 ? 's' : ''} i ${labState.c} centèsim${labState.c !== 1 ? 's' : ''}`;
+
+      // Render visuals
+      renderBlockContainer('lab-display-u', labState.u, createUnitElement);
+      renderBlockContainer('lab-display-d', labState.d, createTenthElement);
+      renderBlockContainer('lab-display-c', labState.c, createHundredthElement);
+    }
+
+    function renderBlockContainer(id, count, createElementFn) {
+      const container = document.getElementById(id);
+      container.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const item = createElementFn();
+        container.appendChild(item);
+      }
+    }
+
+    function clearLab() {
+      playTone(200, 'sine', 0.1);
+      labState.u = 0;
+      labState.d = 0;
+      labState.c = 0;
+      updateLabUI();
+    }
+
+    function regroupLab() {
+      // Si hi ha 10 centèsims o més -> canvia a dècims
+      let changed = false;
+      if (labState.c >= 10) {
+        const extraD = Math.floor(labState.c / 10);
+        labState.c = labState.c % 10;
+        labState.d += extraD;
+        changed = true;
+      }
+      // Si hi ha 10 dècims o més -> canvia a unitats
+      if (labState.d >= 10) {
+        const extraU = Math.floor(labState.d / 10);
+        labState.d = labState.d % 10;
+        labState.u += extraU;
+        changed = true;
+      }
+
+      if (changed) {
+        playTone(600, 'triangle', 0.2);
+        updateLabUI();
+      }
+    }
+
+    // --- SECCIÓ 3: JOC DELS REPTES ---
+    const gameState = { u: 0, d: 0, c: 0 };
+    let gameTarget = 1.35;
+    let gameScore = 0;
+    let gameDifficulty = 3;
+
+    function setDifficulty(lvl) {
+      gameDifficulty = lvl;
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`lvl-${i}`);
+        if (i === lvl) {
+          btn.className = "px-3 py-1.5 rounded-xl bg-white text-blue-700 shadow-sm transition";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition";
+        }
+      }
+      generateNewTarget();
+    }
+
+    function generateNewTarget() {
+      let u = 0, d = 0, c = 0;
+
+      if (gameDifficulty === 1) {
+        // Només dècims (ex: 1.4, 2.7)
+        u = Math.floor(Math.random() * 4); // 0 a 3
+        d = Math.floor(Math.random() * 9) + 1; // 1 a 9
+        c = 0;
+      } else if (gameDifficulty === 2) {
+        // Centèsims sense unitats (ex: 0.45, 0.72)
+        u = 0;
+        d = Math.floor(Math.random() * 10);
+        c = Math.floor(Math.random() * 9) + 1;
+      } else {
+        // Complet (ex: 2.45, 1.08, 3.70)
+        u = Math.floor(Math.random() * 4);
+        d = Math.floor(Math.random() * 10);
+        c = Math.floor(Math.random() * 10);
+      }
+
+      gameTarget = Math.round(((u * 1) + (d * 0.1) + (c * 0.01)) * 100) / 100;
+      if (gameTarget === 0) gameTarget = 1.25;
+
+      document.getElementById('game-target-number').textContent = formatDecimalCatalan(gameTarget);
+      document.getElementById('game-feedback-text').className = "text-sm font-bold mt-1 text-slate-500";
+      document.getElementById('game-feedback-text').textContent = "Forma aquest nombre afegint o traient peces.";
+
+      resetGameBlocks();
+    }
+
+    function resetGameBlocks() {
+      gameState.u = 0;
+      gameState.d = 0;
+      gameState.c = 0;
+      updateGameUI();
+    }
+
+    function updateGameUI() {
+      document.getElementById('game-count-u').textContent = gameState.u;
+      document.getElementById('game-count-d').textContent = gameState.d;
+      document.getElementById('game-count-c').textContent = gameState.c;
+
+      const current = calculateVal(gameState);
+      document.getElementById('game-current-number').textContent = formatDecimalCatalan(current);
+      document.getElementById('game-breakdown-hint').textContent = `(${gameState.u} U + ${gameState.d} d + ${gameState.c} c)`;
+
+      renderBlockContainer('game-display-u', gameState.u, createUnitElement);
+      renderBlockContainer('game-display-d', gameState.d, createTenthElement);
+      renderBlockContainer('game-display-c', gameState.c, createHundredthElement);
+    }
+
+    function checkGameAnswer() {
+      const current = calculateVal(gameState);
+      const diff = Math.round((current - gameTarget) * 100) / 100;
+      const fb = document.getElementById('game-feedback-text');
+
+      if (diff === 0) {
+        // Resposta correcta!
+        playSuccessJingle();
+        triggerConfetti();
+        gameScore += 10;
+        document.getElementById('game-score').textContent = `${gameScore} punts`;
+        fb.className = "text-sm font-extrabold mt-1 text-emerald-600";
+        fb.textContent = "🎉 Excel·lent! Has construït el decimal correctament. Generant nou repte...";
+
+        setTimeout(() => {
+          generateNewTarget();
+        }, 1800);
+      } else if (diff < 0) {
+        // En falten
+        playErrorTone();
+        fb.className = "text-sm font-bold mt-1 text-amber-600";
+        const missing = Math.abs(diff);
+        fb.textContent = `Encara et falta una mica! Portes ${formatDecimalCatalan(current)} i necessites ${formatDecimalCatalan(gameTarget)} (et falten ${formatDecimalCatalan(missing)}).`;
+      } else {
+        // Se n'ha passat
+        playErrorTone();
+        fb.className = "text-sm font-bold mt-1 text-rose-600";
+        const surplus = diff;
+        fb.textContent = `T'has passat! Portes ${formatDecimalCatalan(current)} i l'objectiu és ${formatDecimalCatalan(gameTarget)} (et sobren ${formatDecimalCatalan(surplus)}).`;
+      }
+    }
+
+    // --- ANIMACIÓ DE CELEBRACIÓ (CONFETTI EN CANVAS) ---
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+    let animationFrame = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+      confettiParticles = [];
+      const colors = ['#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6'];
+      for (let i = 0; i < 90; i++) {
+        confettiParticles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          vx: (Math.random() - 0.5) * 14,
+          vy: (Math.random() - 0.7) * 14,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 10,
+          alpha: 1
+        });
+      }
+
+      if (!animationFrame) {
+        renderConfetti();
+      }
+    }
+
+    function renderConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3; // gravetat
+        p.rotation += p.rotSpeed;
+        p.alpha -= 0.015;
+
+        if (p.alpha > 0) {
+          alive = true;
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        }
+      });
+
+      if (alive) {
+        animationFrame = requestAnimationFrame(renderConfetti);
+      } else {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // Inicialització al carregar
+    window.onload = () => {
+      setDecompState('unit');
+      updateLabUI();
+      generateNewTarget();
+    };
+  </script>
+</body>
+</html>
