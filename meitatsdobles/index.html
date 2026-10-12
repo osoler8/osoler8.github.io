@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aventura amb meitats i dobles</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Fredoka & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            classroom: {
+              bg: '#f8fafc',
+              card: '#ffffff',
+              border: '#cbd5e1',
+              primary: '#2563eb',
+              secondary: '#4f46e5',
+              success: '#059669',
+              warning: '#d97706',
+              danger: '#dc2626',
+              text: '#0f172a',
+              subtext: '#475569'
+            }
+          },
+          boxShadow: {
+            card: '0 8px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04)',
+            glow: '0 10px 30px -5px rgba(37, 99, 235, 0.18)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #f8fafc;
+      background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+      background-size: 20px 20px;
+      color: #0f172a;
+      touch-action: manipulation;
+    }
+    .font-num {
+      font-family: 'Fredoka', cursive;
+    }
+    .btn-touch {
+      transition: all 0.15s ease-out;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .btn-touch:active {
+      transform: scale(0.96);
+    }
+    .tray-half {
+      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+      border: 3px dashed #38bdf8;
+    }
+    .tray-double {
+      background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+      border: 3px dashed #818cf8;
+    }
+    #confettiCanvas {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-900">
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Main title branding -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-2xl shadow-md">
+          <i class="fa-solid fa-shapes"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black font-num text-slate-800 tracking-tight leading-none">
+            Aventura amb meitats i dobles
+          </h1>
+          <p class="text-xs text-slate-500 font-medium mt-1">
+            Exploració manipulativa i estratègies de càlcul mental
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick controls: Fullscreen, Audio, Classroom score -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <button onclick="toggleFullscreen()" id="btnFullscreen" 
+          class="btn-touch px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-2 border border-slate-300">
+          <i class="fa-solid fa-expand text-blue-600"></i>
+          <span class="hidden md:inline">Pantalla completa</span>
+        </button>
+
+        <button onclick="toggleAudio()" id="btnAudioToggle" 
+          class="btn-touch px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-2 border border-slate-300">
+          <i id="audioIcon" class="fa-solid fa-volume-high text-indigo-600"></i>
+          <span id="audioText" class="hidden md:inline">So: actiu</span>
+        </button>
+
+        <div class="flex items-center gap-2 bg-amber-50 border-2 border-amber-300 px-3.5 py-1.5 rounded-xl">
+          <i class="fa-solid fa-star text-amber-500 text-base"></i>
+          <div>
+            <div class="text-[10px] uppercase font-bold text-amber-800 leading-none">Punts xp</div>
+            <div id="topXP" class="text-lg font-black font-num text-amber-700 leading-none">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-slate-100 border-t border-slate-200 px-4 py-2">
+      <div class="max-w-7xl mx-auto flex justify-center">
+        <nav class="grid grid-cols-2 md:grid-cols-4 gap-2 w-full max-w-4xl">
+          <button onclick="changeSection('lab')" id="nav-lab" 
+            class="nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white text-blue-700 shadow-sm border-2 border-blue-500">
+            <i class="fa-solid fa-cubes text-sm"></i>
+            <span>Laboratori visual</span>
+          </button>
+          
+          <button onclick="changeSection('training')" id="nav-training" 
+            class="nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white/70 text-slate-700 hover:bg-white border-2 border-transparent">
+            <i class="fa-solid fa-dumbbell text-sm"></i>
+            <span>Zona d'entrenament</span>
+          </button>
+
+          <button onclick="changeSection('challenge')" id="nav-challenge" 
+            class="nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white/70 text-slate-700 hover:bg-white border-2 border-transparent">
+            <i class="fa-solid fa-stopwatch text-sm"></i>
+            <span>El gran repte</span>
+          </button>
+
+          <button onclick="changeSection('duel')" id="nav-duel" 
+            class="nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white/70 text-slate-700 hover:bg-white border-2 border-transparent">
+            <i class="fa-solid fa-people-arrows text-sm"></i>
+            <span>Duel a la pissarra</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- SECCIÓ 1: LABORATORI VISUAL -->
+    <section id="section-lab" class="space-y-6">
+      
+      <!-- Manipulation panel controls -->
+      <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 shadow-card">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b-2 border-slate-100">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-600 mb-1">
+              <i class="fa-solid fa-layer-group"></i>
+              Comptatge visual de blocs
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black font-num text-slate-800">
+              Laboratori visual
+            </h2>
+            <p class="text-slate-600 text-sm mt-1 max-w-2xl">
+              Compta i reparteix plaques de 100, barres de 10 i cubs d'unitat. Observa com els nombres senars divideixen l'últim cub en dues meitats de 0,5.
+            </p>
+          </div>
+
+          <!-- Quick number buttons -->
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="text-xs font-bold text-slate-500 uppercase">Valors d'exemple:</span>
+            <button onclick="setLabNumber(24)" class="btn-touch px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200">24</button>
+            <button onclick="setLabNumber(47)" class="btn-touch px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300">47 (senar ,5)</button>
+            <button onclick="setLabNumber(86)" class="btn-touch px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200">86</button>
+            <button onclick="setLabNumber(125)" class="btn-touch px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300">125 (senar)</button>
+            <button onclick="setLabNumber(234)" class="btn-touch px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 border border-slate-200">234</button>
+          </div>
+        </div>
+
+        <div class="pt-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          
+          <!-- Mode switcher: Meitat vs Doble -->
+          <div class="md:col-span-5 flex bg-slate-100 p-1 rounded-2xl border-2 border-slate-200">
+            <button onclick="setLabMode('half')" id="labModeBtnHalf" 
+              class="flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200">
+              <i class="fa-solid fa-scissors text-blue-600"></i>
+              <span>Meitat (:2)</span>
+            </button>
+            <button onclick="setLabMode('double')" id="labModeBtnDouble" 
+              class="flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900">
+              <i class="fa-solid fa-clone text-indigo-600"></i>
+              <span>Doble (&times;2)</span>
+            </button>
+          </div>
+
+          <!-- Big Stepper & Numeric Input -->
+          <div class="md:col-span-7 flex items-center gap-3">
+            <button onclick="stepLabNumber(-1)" class="btn-touch w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-2xl font-black flex items-center justify-center border-2 border-slate-300">
+              -
+            </button>
+            
+            <div class="relative flex-1">
+              <input type="number" id="labInput" min="1" max="400" value="46" 
+                class="w-full text-center text-3xl sm:text-4xl font-black font-num bg-slate-50 border-3 border-blue-500 rounded-2xl py-2 px-3 text-blue-900 focus:outline-none focus:ring-4 focus:ring-blue-100 shadow-inner">
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none hidden sm:block">
+                1 - 400
+              </div>
+            </div>
+
+            <button onclick="stepLabNumber(1)" class="btn-touch w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-2xl font-black flex items-center justify-center border-2 border-slate-300">
+              +
+            </button>
+
+            <button onclick="randomLabNumber()" class="btn-touch px-4 h-12 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-sm border-2 border-indigo-200 flex items-center gap-2">
+              <i class="fa-solid fa-dice text-base"></i>
+              <span class="hidden sm:inline">A l'atzar</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Touch Slider -->
+        <div class="pt-4 flex items-center gap-4">
+          <span class="text-xs font-bold text-slate-400">1</span>
+          <input type="range" id="labSlider" min="1" max="300" value="46" 
+            class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+          <span class="text-xs font-bold text-slate-400">300</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Original block set & legend -->
+        <div class="lg:col-span-5 bg-white rounded-3xl border-2 border-slate-200 p-5 sm:p-6 shadow-card space-y-4">
+          <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+            <div>
+              <span class="text-xs font-bold uppercase text-slate-400">Grup de partida</span>
+              <div class="text-2xl font-black font-num text-slate-800 flex items-center gap-2">
+                <span>Nombre:</span>
+                <span id="labOriginalNumberDisplay" class="text-3xl text-blue-600 bg-blue-50 px-3 py-0.5 rounded-xl border border-blue-200">46</span>
+              </div>
+            </div>
+            <div id="oddWarningBadge" class="hidden px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold">
+              <i class="fa-solid fa-circle-exclamation mr-1 text-amber-600"></i> Senar
+            </div>
+          </div>
+
+          <!-- Base 10 legend -->
+          <div class="flex items-center justify-around bg-slate-50 p-2.5 rounded-2xl border border-slate-200 text-xs font-semibold text-slate-600">
+            <div class="flex items-center gap-1.5">
+              <div class="w-4 h-4 bg-emerald-500 rounded-sm border border-emerald-700"></div>
+              <span>Centena (100)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-5 bg-amber-500 rounded-sm border border-amber-700"></div>
+              <span>Desena (10)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3.5 h-3.5 bg-blue-500 rounded-sm border border-blue-700"></div>
+              <span>Unitat (1)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-3.5 h-2 bg-pink-500 rounded-sm border border-pink-700"></div>
+              <span>Meitat (0,5)</span>
+            </div>
+          </div>
+
+          <!-- Graphic blocks container for original number -->
+          <div class="bg-slate-50/70 border-2 border-dashed border-slate-300 rounded-2xl p-4 min-h-[220px]">
+            <div class="text-[11px] font-bold uppercase text-slate-400 mb-2">Comptatge gràfic dels blocs:</div>
+            <div id="labOriginalBlocks" class="flex flex-wrap items-end gap-3 justify-center sm:justify-start">
+              <!-- Dynamically populated Base 10 blocks -->
+            </div>
+          </div>
+
+          <!-- Decomposition summary -->
+          <div id="labDecompositionSummary" class="text-xs font-bold text-slate-700 bg-slate-100 p-3 rounded-xl text-center">
+            40 + 6 = 46
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-white rounded-3xl border-2 border-slate-200 p-5 sm:p-6 shadow-card space-y-4">
+          <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+            <div>
+              <span id="labTransformSubtitle" class="text-xs font-bold uppercase text-blue-600">
+                Repartiment en 2 parts iguals
+              </span>
+              <h3 id="labTransformTitle" class="text-xl sm:text-2xl font-black font-num text-slate-800">
+                La meitat: safata A i safata B
+              </h3>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold uppercase text-slate-400">Resultat</span>
+              <div id="labFinalResultBadge" class="text-3xl font-black font-num text-indigo-700 bg-indigo-50 px-4 py-1 rounded-2xl border-2 border-indigo-200">
+                23
+              </div>
+            </div>
+          </div>
+
+          <!-- Trays container: Dynamic display for half or double -->
+          <div id="labTraysWrapper" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Tray 1 -->
+            <div id="tray1" class="tray-half rounded-2xl p-4 transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <span id="tray1Label" class="text-xs font-extrabold uppercase text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-lg">
+                  Safata A (1a meitat)
+                </span>
+                <span id="tray1Count" class="text-lg font-black font-num text-sky-700">23</span>
+              </div>
+              <div id="tray1Blocks" class="flex flex-wrap items-end gap-2 min-h-[140px] p-2 bg-white/80 rounded-xl border border-sky-200">
+                <!-- Dynamically rendered blocks -->
+              </div>
+            </div>
+
+            <!-- Tray 2 -->
+            <div id="tray2" class="tray-half rounded-2xl p-4 transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <span id="tray2Label" class="text-xs font-extrabold uppercase text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-lg">
+                  Safata B (2a meitat)
+                </span>
+                <span id="tray2Count" class="text-lg font-black font-num text-sky-700">23</span>
+              </div>
+              <div id="tray2Blocks" class="flex flex-wrap items-end gap-2 min-h-[140px] p-2 bg-white/80 rounded-xl border border-sky-200">
+                <!-- Dynamically rendered blocks -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Step by step pedagogical explanation -->
+          <div id="labStepExplanation" class="bg-blue-50/70 border-2 border-blue-200 rounded-2xl p-4 text-xs sm:text-sm text-slate-700 space-y-1.5">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 shadow-card">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+            <i class="fa-solid fa-sitemap"></i>
+          </div>
+          <h3 class="text-lg sm:text-xl font-black font-num text-slate-800">
+            Esquema de ramificació
+          </h3>
+        </div>
+
+        <div id="labBranchingTree" class="flex flex-col items-center">
+          <!-- Dynamically generated branch boxes and connectors -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓ 2: ZONA D'ENTRENAMENT -->
+    <section id="section-training" class="hidden space-y-6">
+      
+      <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="text-xs font-black uppercase text-emerald-600 tracking-wider mb-1">
+            <i class="fa-solid fa-graduation-cap mr-1"></i>
+            Pràctica guiada amb suport visual
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black font-num text-slate-800">
+            Zona d'entrenament
+          </h2>
+          <p class="text-slate-600 text-sm mt-1">
+            Resol càlculs de meitats i dobles. Pots desplegar els blocs per comptar visualment abans de respondre.
+          </p>
+        </div>
+
+        <!-- Filter buttons -->
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setTrainingMode('all')" id="btnFilterAll" class="btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm">Tots els tipus</button>
+          <button onclick="setTrainingMode('halves')" id="btnFilterHalves" class="btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Només meitats</button>
+          <button onclick="setTrainingMode('doubles')" id="btnFilterDoubles" class="btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Només dobles</button>
+          <button onclick="setTrainingMode('odds')" id="btnFilterOdds" class="btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">Decimals (,5)</button>
+        </div>
+      </div>
+
+      <!-- Training Question Card -->
+      <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-8 shadow-card space-y-6">
+          
+          <div class="flex items-center justify-between">
+            <span id="trainingCardBadge" class="px-3 py-1 rounded-full text-xs font-black uppercase bg-blue-100 text-blue-800 border border-blue-200">
+              Meitat (:2)
+            </span>
+            <div class="text-xs font-bold text-slate-500">
+              Encerts acumulats: <span id="trainingSuccessCount" class="text-emerald-600 font-black text-sm">0</span>
+            </div>
+          </div>
+
+          <div class="text-center py-4">
+            <div class="text-xs uppercase font-extrabold text-slate-400 tracking-wider">Pregunta de càlcul:</div>
+            <div id="trainingQuestionText" class="text-4xl sm:text-5xl font-black font-num text-slate-800 mt-2">
+              La meitat de 58
+            </div>
+          </div>
+
+          <!-- Visual support drawers -->
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <button onclick="toggleTrainingBlocksHelp()" id="btnTrainingBlocks" 
+                class="flex-1 py-2.5 px-4 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-bold border-2 border-indigo-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-shapes text-indigo-500"></i>
+                <span id="btnTrainingBlocksText">Obrir blocs de suport per comptar</span>
+              </button>
+              
+              <button onclick="toggleTrainingHint()" id="btnTrainingSteps" 
+                class="py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs sm:text-sm font-bold border-2 border-amber-200 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-600"></i>
+                <span class="hidden sm:inline">Pista pas a pas</span>
+              </button>
+            </div>
+
+            <!-- Visual blocks drawer container -->
+            <div id="trainingBlocksContainer" class="hidden bg-slate-50 border-2 border-dashed border-indigo-300 rounded-2xl p-4 animate-pop">
+              <div class="text-xs font-bold text-indigo-900 mb-2 flex items-center justify-between">
+                <span>Blocs del nombre <span id="trainingHelpNum">58</span>:</span>
+                <span class="text-[11px] text-slate-500">Compta les barres i els cubs</span>
+              </div>
+              <div id="trainingBlocksDisplay" class="flex flex-wrap items-end gap-2 justify-center py-2">
+                <!-- Dynamically rendered helper blocks -->
+              </div>
+            </div>
+
+            <!-- Step by step text hint drawer -->
+            <div id="trainingStepsContainer" class="hidden bg-amber-50/70 border-2 border-amber-200 rounded-2xl p-4 text-xs sm:text-sm text-amber-900 space-y-1">
+              <!-- Dynamically populated steps -->
+            </div>
+          </div>
+
+          <form onsubmit="verifyTrainingAnswer(event)" class="space-y-4">
+            <div class="flex gap-2">
+              <input type="text" id="trainingInput" inputmode="decimal" placeholder="Escriu el resultat..." autocomplete="off"
+                class="flex-1 text-center text-3xl sm:text-4xl font-black font-num bg-slate-50 border-3 border-slate-300 focus:border-blue-500 rounded-2xl py-3 px-4 text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-100">
+              <button type="submit" class="btn-touch px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg sm:text-xl font-num shadow-md flex items-center justify-center">
+                Comprova
+              </button>
+            </div>
+
+            <!-- Virtual fast touch keypad -->
+            <div class="grid grid-cols-6 gap-1.5 pt-2">
+              <button type="button" onclick="keypadType('1')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">1</button>
+              <button type="button" onclick="keypadType('2')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">2</button>
+              <button type="button" onclick="keypadType('3')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">3</button>
+              <button type="button" onclick="keypadType('4')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">4</button>
+              <button type="button" onclick="keypadType('5')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">5</button>
+              <button type="button" onclick="keypadType('6')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">6</button>
+              <button type="button" onclick="keypadType('7')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">7</button>
+              <button type="button" onclick="keypadType('8')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">8</button>
+              <button type="button" onclick="keypadType('9')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">9</button>
+              <button type="button" onclick="keypadType('0')" class="btn-touch py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-base font-black font-num text-slate-800 border border-slate-300">0</button>
+              <button type="button" onclick="keypadType(',')" class="btn-touch py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-base font-black font-num text-amber-900 border border-amber-300">,5</button>
+              <button type="button" onclick="keypadBackspace()" class="btn-touch py-2.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-base font-bold text-rose-800 border border-rose-300">
+                <i class="fa-solid fa-delete-left"></i>
+              </button>
+            </div>
+          </form>
+
+          <!-- Training feedback alert -->
+          <div id="trainingFeedback" class="hidden p-4 rounded-2xl text-center font-bold text-base border-2 animate-pop"></div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="nextTrainingCard()" class="btn-touch px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm border border-slate-300 flex items-center gap-2">
+              <span>Següent pregunta</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓ 3: EL GRAN REPTE -->
+    <section id="section-challenge" class="hidden space-y-6">
+
+      <!-- Challenge Intro Screen -->
+      <div id="challengeIntro" class="bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-10 text-center max-w-2xl mx-auto space-y-6 shadow-card">
+        <div class="w-20 h-20 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center text-4xl mx-auto shadow-sm">
+          <i class="fa-solid fa-stopwatch"></i>
+        </div>
+
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 mb-2">
+            Ronda de 60 segons
+          </span>
+          <h2 class="text-3xl sm:text-4xl font-black font-num text-slate-800">
+            El gran repte
+          </h2>
+          <p class="text-slate-600 text-sm max-w-md mx-auto mt-2">
+            Posa a prova la teva agilitat mental. Enllaça respostes correctes per augmentar el multiplicador de ratxa i aconseguir la màxima puntuació.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="text-xs uppercase font-extrabold text-slate-400">Tria el nivell de dificultat:</div>
+          <div class="grid grid-cols-3 gap-3">
+            <button onclick="setChallengeDifficulty('facil')" id="diffBtn-facil" 
+              class="btn-touch p-3 rounded-2xl border-2 border-slate-200 text-center hover:border-emerald-500">
+              <div class="font-black font-num text-emerald-700 text-base">Fàcil</div>
+              <div class="text-[11px] text-slate-500">Nombres parells fins a 60</div>
+            </button>
+
+            <button onclick="setChallengeDifficulty('mitja')" id="diffBtn-mitja" 
+              class="btn-touch p-3 rounded-2xl border-2 border-blue-500 bg-blue-50/50 text-center">
+              <div class="font-black font-num text-blue-700 text-base">Mitjà</div>
+              <div class="text-[11px] text-slate-500">Fins a 150 i senars amb ,5</div>
+            </button>
+
+            <button onclick="setChallengeDifficulty('expert')" id="diffBtn-expert" 
+              class="btn-touch p-3 rounded-2xl border-2 border-slate-200 text-center hover:border-rose-500">
+              <div class="font-black font-num text-rose-700 text-base">Avançat</div>
+              <div class="text-[11px] text-slate-500">Centenes i màxima velocitat</div>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <button onclick="startChallengeGame()" class="btn-touch px-10 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xl font-num shadow-lg shadow-blue-200 flex items-center gap-3 mx-auto">
+            <i class="fa-solid fa-play"></i>
+            <span>Comença el repte (60s)</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="challengeGame" class="hidden max-w-2xl mx-auto space-y-4">
+        
+        <!-- Live HUD stats -->
+        <div class="bg-white rounded-2xl border-2 border-slate-200 p-4 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Temps restant</div>
+              <div id="challengeTimeDisplay" class="text-2xl font-black font-num text-rose-600 leading-none">60s</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-bold">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Multiplicador</div>
+              <div id="challengeComboDisplay" class="text-2xl font-black font-num text-amber-600 leading-none">x1.0</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-slate-400">Puntuació</div>
+              <div id="challengeScoreDisplay" class="text-2xl font-black font-num text-blue-700 leading-none">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer progress bar -->
+        <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden border border-slate-300">
+          <div id="challengeProgressBar" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-rose-500 w-full transition-all duration-1000 ease-linear"></div>
+        </div>
+
+        <!-- Question display -->
+        <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-8 text-center space-y-6 shadow-card">
+          <div class="flex items-center justify-between">
+            <span id="challengeOpTag" class="px-3 py-1 rounded-full text-xs font-black uppercase bg-blue-100 text-blue-800">
+              Meitat (:2)
+            </span>
+            <div class="text-xs font-bold text-slate-500">
+              Ratxa actual: <span id="challengeCurrentStreak" class="text-rose-600 font-black text-sm">0</span> 🔥
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs uppercase font-extrabold text-slate-400">Calcula ràpidament:</div>
+            <div id="challengeQuestionText" class="text-4xl sm:text-6xl font-black font-num text-slate-800 mt-2">
+              La meitat de 84
+            </div>
+          </div>
+
+          <!-- 4 option buttons -->
+          <div id="challengeOptionsGrid" class="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Challenge Finished Results Screen -->
+      <div id="challengeResults" class="hidden bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-10 max-w-lg mx-auto text-center space-y-6 shadow-card animate-pop">
+        <div class="w-20 h-20 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center text-4xl mx-auto shadow-sm">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+
+        <div>
+          <h3 class="text-3xl font-black font-num text-slate-800">Temps finalitzat!</h3>
+          <p id="challengeResultText" class="text-slate-600 text-sm mt-1">Magnífic càlcul mental!</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
+          <div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Punts totals</div>
+            <div id="resFinalPoints" class="text-3xl font-black font-num text-blue-700">0</div>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Encerts</div>
+            <div id="resFinalAccuracy" class="text-3xl font-black font-num text-emerald-600">0/0</div>
+          </div>
+          <div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Millor ratxa</div>
+            <div id="resFinalStreak" class="text-3xl font-black font-num text-rose-600">0</div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="startChallengeGame()" class="btn-touch flex-1 py-3.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black font-num text-base shadow-md">
+            Juga una altra vegada
+          </button>
+          <button onclick="changeSection('lab')" class="btn-touch flex-1 py-3.5 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm border border-slate-300">
+            Torna al laboratori
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓ 4: DUEL A LA PISSARRA -->
+    <section id="section-duel" class="hidden space-y-6">
+
+      <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="text-xs font-black uppercase text-indigo-600 tracking-wider mb-1">
+            <i class="fa-solid fa-gamepad mr-1"></i>
+            Dos jugadors cara a cara
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black font-num text-slate-800">
+            Duel a la pissarra
+          </h2>
+          <p class="text-slate-600 text-sm mt-1">
+            Pantalla partida: equip blau a l'esquerra i equip vermell a la dreta. El primer que prem la resposta correcta suma el punt.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="resetDuelMatch()" class="btn-touch px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm border border-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Reinicia el duel</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Shared Question Display in Center -->
+      <div class="bg-white rounded-3xl border-3 border-indigo-400 p-6 text-center shadow-glow space-y-2">
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Pregunta per als dos jugadors:</div>
+        <div id="duelQuestionText" class="text-4xl sm:text-6xl font-black font-num text-slate-900 tracking-tight">
+          La meitat de 64
+        </div>
+        <div class="text-xs font-semibold text-slate-500">
+          Primer a <strong>5 punts</strong> guanya la ronda!
+        </div>
+      </div>
+
+      <!-- Split Screen: Left Blue Team vs Right Red Team -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Blue Player (Left) -->
+        <div class="bg-blue-50/70 border-3 border-blue-400 rounded-3xl p-6 shadow-card space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-blue-200">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl font-bold shadow-md">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold uppercase text-blue-600">Costat esquerre</span>
+                <h3 class="text-xl font-black font-num text-blue-950">Equip blau</h3>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] font-bold uppercase text-slate-500">Punts</span>
+              <div id="duelScoreBlue" class="text-4xl font-black font-num text-blue-700">0</div>
+            </div>
+          </div>
+
+          <div class="text-xs font-bold text-blue-900 text-center">
+            Prem la resposta correcta:
+          </div>
+
+          <div id="duelButtonsBlue" class="grid grid-cols-3 gap-2 sm:gap-3">
+            <!-- Dynamically populated buttons -->
+          </div>
+        </div>
+
+        <!-- Red Player (Right) -->
+        <div class="bg-rose-50/70 border-3 border-rose-400 rounded-3xl p-6 shadow-card space-y-5">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-rose-200">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-2xl font-bold shadow-md">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold uppercase text-rose-600">Costat dret</span>
+                <h3 class="text-xl font-black font-num text-rose-950">Equip vermell</h3>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] font-bold uppercase text-slate-500">Punts</span>
+              <div id="duelScoreRed" class="text-4xl font-black font-num text-rose-700">0</div>
+            </div>
+          </div>
+
+          <div class="text-xs font-bold text-rose-900 text-center">
+            Prem la resposta correcta:
+          </div>
+
+          <div id="duelButtonsRed" class="grid grid-cols-3 gap-2 sm:gap-3">
+            <!-- Dynamically populated buttons -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Duel Victory Overlay Modal -->
+      <div id="duelVictoryModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl border-3 border-slate-200 p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-pop">
+          <div id="duelWinnerIcon" class="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-md">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+
+          <div>
+            <h3 id="duelWinnerText" class="text-3xl font-black font-num text-slate-800">Equip guanyador!</h3>
+            <p class="text-slate-600 text-sm mt-1">Gran velocitat de càlcul mental!</p>
+          </div>
+
+          <button onclick="resetDuelMatch()" class="btn-touch w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black font-num text-lg shadow-md">
+            Nova partida de duel
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="mt-auto border-t-2 border-slate-200 bg-white py-6 px-4 text-center">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-slate-500">
+      <div class="flex items-center gap-2 font-semibold">
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+        <span>Aventura amb meitats i dobles</span>
+      </div>
+      <div class="font-bold text-slate-700">
+        Creat per <span class="text-blue-600 font-black">Oriol Soler</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let audioCtx = null;
+    let audioEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const icon = document.getElementById('audioIcon');
+      const text = document.getElementById('audioText');
+      if (audioEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-indigo-600';
+        text.textContent = 'So: actiu';
+        playNote('click');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+        text.textContent = 'So: silenciat';
+      }
+    }
+
+    function playNote(type) {
+      if (!audioEnabled) return;
+      try {
+        const ctx = initAudio();
+        const now = ctx.currentTime;
+
+        if (type === 'click') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'correct') {
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.06);
+            gain.gain.setValueAtTime(0.12, now + i * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.2);
+          });
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'fanfare') {
+          [440, 554, 659, 880, 1108].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+            gain.gain.setValueAtTime(0.09, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.25);
+          });
+        }
+      } catch (err) {
+        console.warn('Audio note error:', err);
+      }
+    }
+
+    function toggleFullscreen() {
+      playNote('click');
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiList = [];
+    let confettiAnim = null;
+
+    function resizeConfetti() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfetti);
+    resizeConfetti();
+
+    function shootConfetti(count = 70) {
+      const colors = ['#2563eb', '#059669', '#d97706', '#db2777', '#4f46e5'];
+      for (let i = 0; i < count; i++) {
+        confettiList.push({
+          x: confettiCanvas.width / 2 + (Math.random() * 200 - 100),
+          y: confettiCanvas.height / 3,
+          vx: (Math.random() - 0.5) * 14,
+          vy: Math.random() * -12 - 4,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rot: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          alpha: 1,
+        });
+      }
+      if (!confettiAnim) runConfettiLoop();
+    }
+
+    function runConfettiLoop() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = confettiList.length - 1; i >= 0; i--) {
+        const p = confettiList[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.35;
+        p.rot += p.vRot;
+        p.alpha -= 0.012;
+
+        if (p.alpha <= 0 || p.y > confettiCanvas.height) {
+          confettiList.splice(i, 1);
+          continue;
+        }
+
+        confettiCtx.save();
+        confettiCtx.globalAlpha = Math.max(0, p.alpha);
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rot * Math.PI) / 180);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.2);
+        confettiCtx.restore();
+      }
+
+      if (confettiList.length > 0) {
+        confettiAnim = requestAnimationFrame(runConfettiLoop);
+      } else {
+        confettiAnim = null;
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      }
+    }
+
+    const appState = {
+      xp: 0,
+      trainingAnswered: 0
+    };
+
+    function loadSavedState() {
+      try {
+        const saved = localStorage.getItem('aventura_meitats_dobles_app');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          appState.xp = parsed.xp || 0;
+          appState.trainingAnswered = parsed.trainingAnswered || 0;
+        }
+      } catch (e) {}
+      document.getElementById('topXP').textContent = appState.xp;
+    }
+
+    function addClassXP(points) {
+      appState.xp += points;
+      document.getElementById('topXP').textContent = appState.xp;
+      try {
+        localStorage.setItem('aventura_meitats_dobles_app', JSON.stringify(appState));
+      } catch (e) {}
+    }
+
+    function changeSection(secId) {
+      playNote('click');
+      const sections = ['lab', 'training', 'challenge', 'duel'];
+      sections.forEach(s => {
+        const el = document.getElementById(`section-${s}`);
+        const nav = document.getElementById(`nav-${s}`);
+        if (s === secId) {
+          el.classList.remove('hidden');
+          nav.className = 'nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white text-blue-700 shadow-sm border-2 border-blue-500';
+        } else {
+          el.classList.add('hidden');
+          nav.className = 'nav-tab py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition bg-white/70 text-slate-700 hover:bg-white border-2 border-transparent';
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function createHundredSvg() {
+      return `
+        <div class="relative group flex flex-col items-center">
+          <svg width="68" height="68" viewBox="0 0 100 100" class="drop-shadow-sm">
+            <rect x="2" y="2" width="96" height="96" rx="4" fill="#10b981" stroke="#047857" stroke-width="3" />
+            <path d="
+              M 10 2 V 98 M 20 2 V 98 M 30 2 V 98 M 40 2 V 98 M 50 2 V 98 M 60 2 V 98 M 70 2 V 98 M 80 2 V 98 M 90 2 V 98
+              M 2 10 H 98 M 2 20 H 98 M 2 30 H 98 M 2 40 H 98 M 2 50 H 98 M 2 60 H 98 M 2 70 H 98 M 2 80 H 98 M 2 90 H 98
+            " stroke="#065f46" stroke-width="1" opacity="0.65" />
+          </svg>
+          <span class="text-[10px] font-black text-emerald-800 mt-0.5">100</span>
+        </div>
+      `;
+    }
+
+    function createTenSvg() {
+      return `
+        <div class="relative flex flex-col items-center">
+          <svg width="18" height="68" viewBox="0 0 20 100" class="drop-shadow-sm">
+            <rect x="2" y="2" width="16" height="96" rx="2" fill="#f59e0b" stroke="#b45309" stroke-width="2" />
+            <path d="
+              M 2 10 H 18 M 2 20 H 18 M 2 30 H 18 M 2 40 H 18 M 2 50 H 18 M 2 60 H 18 M 2 70 H 18 M 2 80 H 18 M 2 90 H 18
+            " stroke="#78350f" stroke-width="1.2" opacity="0.7" />
+          </svg>
+          <span class="text-[10px] font-black text-amber-800 mt-0.5">10</span>
+        </div>
+      `;
+    }
+
+    function createUnitSvg() {
+      return `
+        <div class="relative flex flex-col items-center">
+          <svg width="18" height="18" viewBox="0 0 20 20" class="drop-shadow-sm">
+            <rect x="2" y="2" width="16" height="16" rx="3" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2" />
+          </svg>
+          <span class="text-[10px] font-black text-blue-800 mt-0.5">1</span>
+        </div>
+      `;
+    }
+
+    function createHalfSvg() {
+      return `
+        <div class="relative flex flex-col items-center animate-pulse">
+          <svg width="18" height="12" viewBox="0 0 20 12" class="drop-shadow-sm">
+            <rect x="2" y="2" width="16" height="8" rx="2" fill="#ec4899" stroke="#be185d" stroke-width="2" />
+          </svg>
+          <span class="text-[9px] font-black text-pink-700 bg-pink-100 px-1 rounded">0,5</span>
+        </div>
+      `;
+    }
+
+    function renderBlocksHTML(hundreds, tens, units, halves = 0) {
+      let html = '';
+      if (hundreds > 0) {
+        html += '<div class="flex flex-wrap gap-1.5 items-end">';
+        for (let i = 0; i < hundreds; i++) html += createHundredSvg();
+        html += '</div>';
+      }
+      if (tens > 0) {
+        html += '<div class="flex flex-wrap gap-1 items-end">';
+        for (let i = 0; i < tens; i++) html += createTenSvg();
+        html += '</div>';
+      }
+      if (units > 0) {
+        html += '<div class="flex flex-wrap gap-1 items-end">';
+        for (let i = 0; i < units; i++) html += createUnitSvg();
+        html += '</div>';
+      }
+      if (halves > 0) {
+        html += '<div class="flex flex-wrap gap-1 items-end">';
+        for (let i = 0; i < halves; i++) html += createHalfSvg();
+        html += '</div>';
+      }
+      return html || '<span class="text-xs text-slate-400 font-bold">Cap bloc</span>';
+    }
+
+    let labCurrentNum = 46;
+    let labMode = 'half';
+
+    const labInput = document.getElementById('labInput');
+    const labSlider = document.getElementById('labSlider');
+
+    labInput.addEventListener('input', (e) => {
+      let val = parseInt(e.target.value) || 1;
+      if (val < 1) val = 1;
+      if (val > 400) val = 400;
+      labCurrentNum = val;
+      if (val <= 300) labSlider.value = val;
+      updateLabView();
+    });
+
+    labSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value) || 1;
+      labCurrentNum = val;
+      labInput.value = val;
+      updateLabView();
+    });
+
+    function setLabNumber(n) {
+      playNote('click');
+      labCurrentNum = n;
+      labInput.value = n;
+      if (n <= 300) labSlider.value = n;
+      updateLabView();
+    }
+
+    function stepLabNumber(delta) {
+      playNote('click');
+      let val = labCurrentNum + delta;
+      if (val < 1) val = 1;
+      if (val > 400) val = 400;
+      setLabNumber(val);
+    }
+
+    function randomLabNumber() {
+      playNote('click');
+      const samples = [18, 27, 36, 45, 54, 73, 98, 126, 155, 230];
+      const pick = samples[Math.floor(Math.random() * samples.length)];
+      setLabNumber(pick);
+    }
+
+    function setLabMode(mode) {
+      playNote('click');
+      labMode = mode;
+      const btnHalf = document.getElementById('labModeBtnHalf');
+      const btnDouble = document.getElementById('labModeBtnDouble');
+      const tray1 = document.getElementById('tray1');
+      const tray2 = document.getElementById('tray2');
+
+      if (mode === 'half') {
+        btnHalf.className = 'flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200';
+        btnDouble.className = 'flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900';
+        tray1.className = 'tray-half rounded-2xl p-4 transition-all';
+        tray2.className = 'tray-half rounded-2xl p-4 transition-all';
+        document.getElementById('labTransformSubtitle').textContent = 'Repartiment en 2 parts iguals';
+        document.getElementById('labTransformTitle').textContent = 'La meitat: safata A i safata B';
+        document.getElementById('tray1Label').textContent = 'Safata A (1a meitat)';
+        document.getElementById('tray2Label').textContent = 'Safata B (2a meitat)';
+      } else {
+        btnDouble.className = 'flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 bg-white text-indigo-700 shadow-sm border border-slate-200';
+        btnHalf.className = 'flex-1 py-3 px-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900';
+        tray1.className = 'tray-double rounded-2xl p-4 transition-all';
+        tray2.className = 'tray-double rounded-2xl p-4 transition-all';
+        document.getElementById('labTransformSubtitle').textContent = 'Duplicació del conjunt de blocs';
+        document.getElementById('labTransformTitle').textContent = 'El doble: grup original i grup clonat';
+        document.getElementById('tray1Label').textContent = 'Grup 1 (original)';
+        document.getElementById('tray2Label').textContent = 'Grup 2 (clonat)';
+      }
+      updateLabView();
+    }
+
+    function updateLabView() {
+      const n = labCurrentNum;
+      document.getElementById('labOriginalNumberDisplay').textContent = n;
+
+      const hundreds = Math.floor(n / 100);
+      const tens = Math.floor((n % 100) / 10);
+      const units = n % 10;
+      const isOdd = n % 2 !== 0;
+
+      const oddBadge = document.getElementById('oddWarningBadge');
+      if (isOdd && labMode === 'half') {
+        oddBadge.classList.remove('hidden');
+      } else {
+        oddBadge.classList.add('hidden');
+      }
+
+      document.getElementById('labOriginalBlocks').innerHTML = renderBlocksHTML(hundreds, tens, units);
+
+      const parts = [];
+      if (hundreds > 0) parts.push(`${hundreds * 100}`);
+      if (tens > 0) parts.push(`${tens * 10}`);
+      if (units > 0 || parts.length === 0) parts.push(`${units}`);
+      document.getElementById('labDecompositionSummary').innerHTML = `Descomposició: <strong>${parts.join(' + ')} = ${n}</strong>`;
+
+      const tray1Blocks = document.getElementById('tray1Blocks');
+      const tray2Blocks = document.getElementById('tray2Blocks');
+      const stepBox = document.getElementById('labStepExplanation');
+
+      if (labMode === 'half') {
+        const halfVal = n / 2;
+        const formattedHalf = halfVal.toString().replace('.', ',');
+        document.getElementById('labFinalResultBadge').textContent = formattedHalf;
+        document.getElementById('tray1Count').textContent = formattedHalf;
+        document.getElementById('tray2Count').textContent = formattedHalf;
+
+        const halfTotalUnits = Math.floor(n / 2);
+        const trayH = Math.floor(halfTotalUnits / 100);
+        const trayT = Math.floor((halfTotalUnits % 100) / 10);
+        const trayU = halfTotalUnits % 10;
+        const trayHalves = isOdd ? 1 : 0;
+
+        tray1Blocks.innerHTML = renderBlocksHTML(trayH, trayT, trayU, trayHalves);
+        tray2Blocks.innerHTML = renderBlocksHTML(trayH, trayT, trayU, trayHalves);
+
+        let stepHtml = `<div><strong>Pas 1:</strong> Repartim ${hundreds > 0 ? hundreds * 100 + ' en centenes, ' : ''}${tens * 10} en desenes i ${units} en unitats.</div>`;
+        if (isOdd) {
+          stepHtml += `<div class="text-pink-700 font-bold"><i class="fa-solid fa-scissors mr-1"></i><strong>Atenció al senar:</strong> L'últim cub s'ha tallat en dues meitats de <strong>0,5</strong>. Per això el resultat acaba en <strong>,5</strong>.</div>`;
+        }
+        stepHtml += `<div><strong>Comprovació:</strong> ${formattedHalf} + ${formattedHalf} = <strong>${n}</strong>.</div>`;
+        stepBox.innerHTML = stepHtml;
+
+        renderBranchingTree(n, 'half');
+      } else {
+        const doubleVal = n * 2;
+        document.getElementById('labFinalResultBadge').textContent = doubleVal;
+        document.getElementById('tray1Count').textContent = n;
+        document.getElementById('tray2Count').textContent = n;
+
+        tray1Blocks.innerHTML = renderBlocksHTML(hundreds, tens, units);
+        tray2Blocks.innerHTML = renderBlocksHTML(hundreds, tens, units);
+
+        let stepHtml = `<div><strong>Pas 1:</strong> Agafem els ${n} blocs originals.</div>`;
+        stepHtml += `<div><strong>Pas 2:</strong> Clonem un segon grup exactament igual de ${n} blocs.</div>`;
+        stepHtml += `<div><strong>Total obtingut:</strong> ${n} &times; 2 = <strong>${doubleVal}</strong>.</div>`;
+        stepBox.innerHTML = stepHtml;
+
+        renderBranchingTree(n, 'double');
+      }
+    }
+
+    function renderBranchingTree(n, mode) {
+      const container = document.getElementById('labBranchingTree');
+      const hundreds = Math.floor(n / 100) * 100;
+      const tens = Math.floor((n % 100) / 10) * 10;
+      const units = n % 10;
+
+      const branches = [];
+      if (hundreds > 0) branches.push({ label: 'Centenes', val: hundreds });
+      if (tens > 0) branches.push({ label: 'Desenes', val: tens });
+      if (units > 0 || branches.length === 0) branches.push({ label: 'Unitats', val: units });
+
+      let branchesHtml = branches.map(b => {
+        let opVal = mode === 'half' ? b.val / 2 : b.val * 2;
+        let opFormatted = opVal.toString().replace('.', ',');
+        let opSymbol = mode === 'half' ? '&divide; 2 =' : '&times; 2 =';
+
+        return `
+          <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 text-center min-w-[130px] shadow-sm">
+            <div class="text-[10px] font-bold uppercase text-slate-400">${b.label}</div>
+            <div class="text-lg font-black font-num text-slate-800">${b.val}</div>
+            <div class="text-xs text-blue-600 font-bold mt-1 border-t border-slate-200 pt-1">
+              ${opSymbol} <span class="text-base text-indigo-700">${opFormatted}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      let resultVal = mode === 'half' ? (n / 2).toString().replace('.', ',') : (n * 2);
+
+      container.innerHTML = `
+        <div class="bg-blue-600 text-white px-6 py-2 rounded-2xl text-2xl font-black font-num shadow-md">
+          ${n}
+        </div>
+        <div class="w-0.5 h-6 bg-slate-300 my-1"></div>
+        <div class="flex flex-wrap justify-center gap-3">
+          ${branchesHtml}
+        </div>
+        <div class="w-0.5 h-6 bg-slate-300 my-1"></div>
+        <div class="bg-indigo-50 border-2 border-indigo-200 text-indigo-900 px-6 py-2 rounded-2xl text-xl sm:text-2xl font-black font-num">
+          Total = ${resultVal}
+        </div>
+      `;
+    }
+
+    let trainingFilter = 'all';
+    let currentTrainingQuestion = null;
+    let trainingSuccessCount = 0;
+
+    function setTrainingMode(mode) {
+      playNote('click');
+      trainingFilter = mode;
+      ['all', 'halves', 'doubles', 'odds'].forEach(m => {
+        const btn = document.getElementById(`btnFilter${m.charAt(0).toUpperCase() + m.slice(1)}`);
+        if (m === mode) {
+          btn.className = 'btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm';
+        } else {
+          btn.className = 'btn-touch px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200';
+        }
+      });
+      nextTrainingCard();
+    }
+
+    function generateTrainingQ() {
+      let type = 'double';
+      if (trainingFilter === 'halves') type = 'half';
+      else if (trainingFilter === 'doubles') type = 'double';
+      else if (trainingFilter === 'odds') type = 'half_odd';
+      else {
+        const rand = Math.random();
+        if (rand < 0.35) type = 'double';
+        else if (rand < 0.7) type = 'half';
+        else type = 'half_odd';
+      }
+
+      let num = 36;
+      let ans = 72;
+      let steps = [];
+
+      if (type === 'double') {
+        num = Math.floor(Math.random() * 65) + 12;
+        ans = num * 2;
+        const tens = Math.floor(num / 10) * 10;
+        const units = num % 10;
+        steps = [
+          `Doble de les desenes: ${tens} &times; 2 = ${tens * 2}`,
+          `Doble de les unitats: ${units} &times; 2 = ${units * 2}`,
+          `Suma de les dues parts: ${tens * 2} + ${units * 2} = ${ans}`
+        ];
+      } else if (type === 'half') {
+        num = (Math.floor(Math.random() * 45) + 6) * 2;
+        ans = num / 2;
+        const tens = Math.floor(num / 10) * 10;
+        const units = num % 10;
+        steps = [
+          `Meitat de les desenes: ${tens} &divide; 2 = ${tens / 2}`,
+          `Meitat de les unitats: ${units} &divide; 2 = ${units / 2}`,
+          `Suma final: ${tens / 2} + ${units / 2} = ${ans}`
+        ];
+      } else {
+        const oddList = [15, 25, 35, 45, 55, 65, 75, 85, 95, 115, 125, 145];
+        num = oddList[Math.floor(Math.random() * oddList.length)];
+        ans = num / 2;
+        const prevEven = num - 1;
+        steps = [
+          `Nombre senar: acaba en 5.`,
+          `Meitat del parell anterior: ${prevEven} &divide; 2 = ${prevEven / 2}`,
+          `Afegeix la meitat de l'últim cub: ${prevEven / 2} + 0,5 = ${ans.toString().replace('.', ',')}`
+        ];
+      }
+
+      return { type, num, ans: ans.toString(), steps };
+    }
+
+    function nextTrainingCard() {
+      currentTrainingQuestion = generateTrainingQ();
+      
+      document.getElementById('trainingInput').value = '';
+      document.getElementById('trainingFeedback').classList.add('hidden');
+      document.getElementById('trainingBlocksContainer').classList.add('hidden');
+      document.getElementById('trainingStepsContainer').classList.add('hidden');
+      document.getElementById('btnTrainingBlocksText').textContent = 'Obrir blocs de suport per comptar';
+
+      const badge = document.getElementById('trainingCardBadge');
+      const text = document.getElementById('trainingQuestionText');
+      const q = currentTrainingQuestion;
+
+      document.getElementById('trainingHelpNum').textContent = q.num;
+
+      if (q.type === 'double') {
+        badge.textContent = 'Doble (x2)';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase bg-indigo-100 text-indigo-800 border border-indigo-200';
+        text.textContent = `El doble de ${q.num}`;
+      } else {
+        badge.textContent = 'Meitat (:2)';
+        badge.className = 'px-3 py-1 rounded-full text-xs font-black uppercase bg-blue-100 text-blue-800 border border-blue-200';
+        text.textContent = `La meitat de ${q.num}`;
+      }
+
+      const hundreds = Math.floor(q.num / 100);
+      const tens = Math.floor((q.num % 100) / 10);
+      const units = q.num % 10;
+      document.getElementById('trainingBlocksDisplay').innerHTML = renderBlocksHTML(hundreds, tens, units);
+
+      document.getElementById('trainingStepsContainer').innerHTML = q.steps.map(s => `<div>• ${s}</div>`).join('');
+      document.getElementById('trainingInput').focus();
+    }
+
+    function toggleTrainingBlocksHelp() {
+      playNote('click');
+      const box = document.getElementById('trainingBlocksContainer');
+      const text = document.getElementById('btnTrainingBlocksText');
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        text.textContent = 'Amaga els blocs de suport';
+      } else {
+        box.classList.add('hidden');
+        text.textContent = 'Obrir blocs de suport per comptar';
+      }
+    }
+
+    function toggleTrainingHint() {
+      playNote('click');
+      const box = document.getElementById('trainingStepsContainer');
+      box.classList.toggle('hidden');
+    }
+
+    function keypadType(char) {
+      playNote('click');
+      const input = document.getElementById('trainingInput');
+      if (char === ',') {
+        if (!input.value.includes(',')) input.value += ',5';
+      } else {
+        input.value += char;
+      }
+      input.focus();
+    }
+
+    function keypadBackspace() {
+      playNote('click');
+      const input = document.getElementById('trainingInput');
+      input.value = input.value.slice(0, -1);
+      input.focus();
+    }
+
+    function verifyTrainingAnswer(e) {
+      e.preventDefault();
+      if (!currentTrainingQuestion) return;
+
+      const userVal = document.getElementById('trainingInput').value.trim().replace(',', '.');
+      const expected = currentTrainingQuestion.ans;
+      const feedback = document.getElementById('trainingFeedback');
+
+      if (!userVal) return;
+
+      if (parseFloat(userVal) === parseFloat(expected)) {
+        playNote('correct');
+        trainingSuccessCount++;
+        document.getElementById('trainingSuccessCount').textContent = trainingSuccessCount;
+        addClassXP(15);
+
+        feedback.className = 'p-4 rounded-2xl text-center font-bold text-base border-2 bg-emerald-50 border-emerald-300 text-emerald-800 animate-pop';
+        feedback.innerHTML = `
+          <i class="fa-solid fa-circle-check mr-2 text-emerald-600"></i>
+          Molt bé! Resposta correcta: <strong>${expected.replace('.', ',')}</strong> (+15 XP)
+        `;
+        feedback.classList.remove('hidden');
+
+        setTimeout(() => {
+          nextTrainingCard();
+        }, 1200);
+      } else {
+        playNote('wrong');
+        feedback.className = 'p-4 rounded-2xl text-center font-bold text-base border-2 bg-rose-50 border-rose-300 text-rose-800 animate-pop';
+        feedback.innerHTML = `
+          <i class="fa-solid fa-circle-xmark mr-2 text-rose-600"></i>
+          No és correcte. Revisa els blocs o la pista pas a pas!
+        `;
+        feedback.classList.remove('hidden');
+      }
+    }
+
+    let challengeTimer = null;
+    let challengeSeconds = 60;
+    let challengeScore = 0;
+    let challengeStreak = 0;
+    let challengeBestStreak = 0;
+    let challengeMultiplier = 1.0;
+    let challengeTotal = 0;
+    let challengeCorrect = 0;
+    let challengeDiff = 'mitja';
+    let currentChallengeQ = null;
+
+    function setChallengeDifficulty(diff) {
+      playNote('click');
+      challengeDiff = diff;
+      ['facil', 'mitja', 'expert'].forEach(d => {
+        const btn = document.getElementById(`diffBtn-${d}`);
+        if (d === diff) {
+          btn.className = 'btn-touch p-3 rounded-2xl border-2 border-blue-500 bg-blue-50/50 text-center';
+        } else {
+          btn.className = 'btn-touch p-3 rounded-2xl border-2 border-slate-200 text-center hover:border-slate-300';
+        }
+      });
+    }
+
+    function startChallengeGame() {
+      playNote('click');
+      challengeSeconds = 60;
+      challengeScore = 0;
+      challengeStreak = 0;
+      challengeBestStreak = 0;
+      challengeMultiplier = 1.0;
+      challengeTotal = 0;
+      challengeCorrect = 0;
+
+      document.getElementById('challengeIntro').classList.add('hidden');
+      document.getElementById('challengeResults').classList.add('hidden');
+      document.getElementById('challengeGame').classList.remove('hidden');
+
+      updateChallengeHUD();
+      nextChallengeQuestion();
+
+      clearInterval(challengeTimer);
+      challengeTimer = setInterval(() => {
+        challengeSeconds--;
+        updateChallengeHUD();
+        if (challengeSeconds <= 0) finishChallenge();
+      }, 1000);
+    }
+
+    function updateChallengeHUD() {
+      document.getElementById('challengeTimeDisplay').textContent = `${challengeSeconds}s`;
+      document.getElementById('challengeScoreDisplay').textContent = challengeScore;
+      document.getElementById('challengeCurrentStreak').textContent = challengeStreak;
+      document.getElementById('challengeComboDisplay').textContent = `x${challengeMultiplier.toFixed(1)}`;
+
+      const pct = (challengeSeconds / 60) * 100;
+      document.getElementById('challengeProgressBar').style.width = `${pct}%`;
+    }
+
+    function nextChallengeQuestion() {
+      const isDouble = Math.random() > 0.5;
+      let num = 24;
+      let ans = 48;
+
+      if (challengeDiff === 'facil') {
+        if (isDouble) {
+          num = Math.floor(Math.random() * 30) + 6;
+          ans = num * 2;
+        } else {
+          num = (Math.floor(Math.random() * 30) + 4) * 2;
+          ans = num / 2;
+        }
+      } else if (challengeDiff === 'mitja') {
+        if (isDouble) {
+          num = Math.floor(Math.random() * 65) + 12;
+          ans = num * 2;
+        } else {
+          if (Math.random() > 0.4) {
+            const odds = [15, 25, 35, 45, 55, 65, 75, 85, 95];
+            num = odds[Math.floor(Math.random() * odds.length)];
+          } else {
+            num = (Math.floor(Math.random() * 50) + 8) * 2;
+          }
+          ans = num / 2;
+        }
+      } else {
+        if (isDouble) {
+          num = Math.floor(Math.random() * 150) + 30;
+          ans = num * 2;
+        } else {
+          if (Math.random() > 0.4) {
+            const odds = [65, 75, 85, 95, 115, 135, 155, 175, 225];
+            num = odds[Math.floor(Math.random() * odds.length)];
+          } else {
+            num = (Math.floor(Math.random() * 120) + 25) * 2;
+          }
+          ans = num / 2;
+        }
+      }
+
+      currentChallengeQ = { isDouble, num, ans };
+
+      const tag = document.getElementById('challengeOpTag');
+      const text = document.getElementById('challengeQuestionText');
+      if (isDouble) {
+        tag.textContent = 'Doble (x2)';
+        tag.className = 'px-3 py-1 rounded-full text-xs font-black uppercase bg-indigo-100 text-indigo-800';
+        text.textContent = `El doble de ${num}`;
+      } else {
+        tag.textContent = 'Meitat (:2)';
+        tag.className = 'px-3 py-1 rounded-full text-xs font-black uppercase bg-blue-100 text-blue-800';
+        text.textContent = `La meitat de ${num}`;
+      }
+
+      const choices = new Set([ans]);
+      while (choices.size < 4) {
+        const offset = [-10, 10, -2, 2, -1, 1, -0.5, 0.5][Math.floor(Math.random() * 8)];
+        const fake = ans + offset;
+        if (fake > 0) choices.add(fake);
+      }
+
+      const grid = document.getElementById('challengeOptionsGrid');
+      grid.innerHTML = '';
+      Array.from(choices).sort(() => Math.random() - 0.5).forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-touch py-4 sm:py-5 px-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border-3 border-slate-300 hover:border-blue-500 text-2xl sm:text-3xl font-black font-num text-slate-800 shadow-sm transition active:scale-95';
+        btn.textContent = choice.toString().replace('.', ',');
+        btn.onclick = () => submitChallengeChoice(choice, btn);
+        grid.appendChild(btn);
+      });
+    }
+
+    function submitChallengeChoice(val, btn) {
+      challengeTotal++;
+      if (val === currentChallengeQ.ans) {
+        playNote('correct');
+        challengeCorrect++;
+        challengeStreak++;
+        if (challengeStreak > challengeBestStreak) challengeBestStreak = challengeStreak;
+
+        if (challengeStreak >= 10) challengeMultiplier = 3.0;
+        else if (challengeStreak >= 6) challengeMultiplier = 2.0;
+        else if (challengeStreak >= 3) challengeMultiplier = 1.5;
+        else challengeMultiplier = 1.0;
+
+        const gain = Math.round(10 * challengeMultiplier);
+        challengeScore += gain;
+        addClassXP(gain);
+
+        btn.className = 'btn-touch py-4 sm:py-5 px-3 rounded-2xl bg-emerald-500 border-3 border-emerald-600 text-2xl sm:text-3xl font-black font-num text-white shadow-sm';
+
+        if (challengeStreak % 5 === 0) {
+          playNote('fanfare');
+          shootConfetti(40);
+        }
+      } else {
+        playNote('wrong');
+        challengeStreak = 0;
+        challengeMultiplier = 1.0;
+        btn.className = 'btn-touch py-4 sm:py-5 px-3 rounded-2xl bg-rose-500 border-3 border-rose-600 text-2xl sm:text-3xl font-black font-num text-white shadow-sm';
+      }
+
+      updateChallengeHUD();
+      setTimeout(nextChallengeQuestion, 300);
+    }
+
+    function finishChallenge() {
+      clearInterval(challengeTimer);
+      playNote('fanfare');
+      shootConfetti(90);
+
+      document.getElementById('challengeGame').classList.add('hidden');
+      document.getElementById('challengeResults').classList.remove('hidden');
+
+      document.getElementById('resFinalPoints').textContent = challengeScore;
+      document.getElementById('resFinalAccuracy').textContent = `${challengeCorrect}/${challengeTotal}`;
+      document.getElementById('resFinalStreak').textContent = challengeBestStreak;
+    }
+
+    let duelScoreBlue = 0;
+    let duelScoreRed = 0;
+    let currentDuelQ = null;
+    let duelActive = true;
+
+    function resetDuelMatch() {
+      playNote('click');
+      duelScoreBlue = 0;
+      duelScoreRed = 0;
+      duelActive = true;
+      document.getElementById('duelScoreBlue').textContent = '0';
+      document.getElementById('duelScoreRed').textContent = '0';
+      document.getElementById('duelVictoryModal').classList.add('hidden');
+      nextDuelRound();
+    }
+
+    function nextDuelRound() {
+      duelActive = true;
+      const isDouble = Math.random() > 0.5;
+      let num = 20;
+      let ans = 40;
+
+      if (isDouble) {
+        num = Math.floor(Math.random() * 45) + 12;
+        ans = num * 2;
+        document.getElementById('duelQuestionText').textContent = `El doble de ${num}`;
+      } else {
+        const isOdd = Math.random() > 0.5;
+        if (isOdd) {
+          const odds = [15, 25, 35, 45, 55, 65, 75];
+          num = odds[Math.floor(Math.random() * odds.length)];
+        } else {
+          num = (Math.floor(Math.random() * 35) + 8) * 2;
+        }
+        ans = num / 2;
+        document.getElementById('duelQuestionText').textContent = `La meitat de ${num}`;
+      }
+
+      currentDuelQ = { isDouble, num, ans };
+
+      const choices = new Set([ans]);
+      while (choices.size < 3) {
+        const offset = [-10, 10, -2, 2, -1, 1, 0.5, -0.5][Math.floor(Math.random() * 8)];
+        const fake = ans + offset;
+        if (fake > 0) choices.add(fake);
+      }
+      const choiceArr = Array.from(choices).sort(() => Math.random() - 0.5);
+
+      populateDuelSide('Blue', choiceArr);
+      populateDuelSide('Red', choiceArr);
+    }
+
+    function populateDuelSide(color, choices) {
+      const container = document.getElementById(`duelButtons${color}`);
+      container.innerHTML = '';
+      choices.forEach(val => {
+        const btn = document.createElement('button');
+        const isBlue = color === 'Blue';
+        btn.className = `btn-touch py-6 sm:py-8 px-2 rounded-2xl text-2xl sm:text-3xl font-black font-num text-slate-800 bg-white border-3 ${
+          isBlue ? 'border-blue-400 hover:bg-blue-100' : 'border-rose-400 hover:bg-rose-100'
+        } shadow-md transition active:scale-95`;
+        btn.textContent = val.toString().replace('.', ',');
+        btn.onclick = () => handleDuelTap(color, val, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function handleDuelTap(player, val, btn) {
+      if (!duelActive) return;
+
+      if (val === currentDuelQ.ans) {
+        duelActive = false;
+        playNote('correct');
+
+        if (player === 'Blue') {
+          duelScoreBlue++;
+          document.getElementById('duelScoreBlue').textContent = duelScoreBlue;
+          btn.className = 'btn-touch py-6 sm:py-8 px-2 rounded-2xl text-2xl sm:text-3xl font-black font-num text-white bg-blue-600 border-3 border-blue-700 shadow-md';
+        } else {
+          duelScoreRed++;
+          document.getElementById('duelScoreRed').textContent = duelScoreRed;
+          btn.className = 'btn-touch py-6 sm:py-8 px-2 rounded-2xl text-2xl sm:text-3xl font-black font-num text-white bg-rose-600 border-3 border-rose-700 shadow-md';
+        }
+
+        if (duelScoreBlue >= 5 || duelScoreRed >= 5) {
+          triggerDuelVictory(duelScoreBlue >= 5 ? 'Equip blau' : 'Equip vermell');
+        } else {
+          setTimeout(nextDuelRound, 700);
+        }
+      } else {
+        playNote('wrong');
+        btn.className = 'btn-touch py-6 sm:py-8 px-2 rounded-2xl text-2xl sm:text-3xl font-black font-num text-white bg-slate-400 border-3 border-slate-500 shadow-none pointer-events-none';
+      }
+    }
+
+    function triggerDuelVictory(winnerName) {
+      playNote('fanfare');
+      shootConfetti(100);
+
+      const modal = document.getElementById('duelVictoryModal');
+      const text = document.getElementById('duelWinnerText');
+      const icon = document.getElementById('duelWinnerIcon');
+
+      text.textContent = `Ha guanyat l'${winnerName}!`;
+      if (winnerName.includes('blau')) {
+        icon.className = 'w-20 h-20 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-4xl mx-auto shadow-md';
+      } else {
+        icon.className = 'w-20 h-20 rounded-3xl bg-rose-600 text-white flex items-center justify-center text-4xl mx-auto shadow-md';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSavedState();
+      updateLabView();
+      nextTrainingCard();
+      nextDuelRound();
+    });
+  </script>
+</body>
+</html>
