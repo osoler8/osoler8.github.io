@@ -38,6 +38,20 @@
         }
     </script>
     <style>
+        /* Ocultar barres de desplaçament no desitjades */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
         .reixa-cel·la {
             aspect-ratio: 1 / 1;
             transition: all 0.15s ease;
@@ -49,7 +63,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-300 selection:text-amber-900">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-300 selection:text-amber-900 overflow-x-hidden">
 
     <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
@@ -79,18 +93,18 @@
             </div>
         </div>
 
-        <!-- Pestanyes de navegació amb capitalització correcta en català -->
-        <nav class="max-w-6xl mx-auto px-2 sm:px-4 flex overflow-x-auto no-scrollbar border-t border-white/15">
-            <button onclick="canviarPestanya('explorador')" id="tab-explorador" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-amber-400 text-white transition whitespace-nowrap">
-                <span>🗺️</span> 1. Explorador/a visual
+        <!-- Pestanyes de navegació adaptatives sense barra de desplaçament horitzontal -->
+        <nav class="max-w-6xl mx-auto px-2 sm:px-4 flex flex-wrap sm:flex-nowrap justify-center sm:justify-start overflow-x-auto no-scrollbar border-t border-white/15">
+            <button onclick="canviarPestanya('explorador')" id="tab-explorador" class="tab-btn flex items-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 font-fredoka text-xs sm:text-sm md:text-base font-semibold border-b-4 border-amber-400 text-white transition whitespace-nowrap">
+                <span>🗺️</span> 1. Exploració visual
             </button>
-            <button onclick="canviarPestanya('trucs')" id="tab-trucs" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
-                <span>💡</span> 2. Trucs de càlcul mental
+            <button onclick="canviarPestanya('trucs')" id="tab-trucs" class="tab-btn flex items-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 font-fredoka text-xs sm:text-sm md:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+                <span>💡</span> 2. Trucs de càlcul
             </button>
-            <button onclick="canviarPestanya('botiga')" id="tab-botiga" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
-                <span>🛒</span> 3. La botiga de les rebaixes i la vida quotidiana
+            <button onclick="canviarPestanya('botiga')" id="tab-botiga" class="tab-btn flex items-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 font-fredoka text-xs sm:text-sm md:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+                <span>🛒</span> 3. La botiga de les rebaixes
             </button>
-            <button onclick="canviarPestanya('repte')" id="tab-repte" class="tab-btn flex items-center gap-2 px-4 py-3 font-fredoka text-sm sm:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
+            <button onclick="canviarPestanya('repte')" id="tab-repte" class="tab-btn flex items-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 font-fredoka text-xs sm:text-sm md:text-base font-semibold border-b-4 border-transparent text-sky-100 hover:text-white transition whitespace-nowrap">
                 <span>🏆</span> 4. El repte de l'explorador/a
             </button>
         </nav>
