@@ -8,10 +8,10 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Font Awesome CDN per a icones segures -->
+  <!-- Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-  <!-- Tipografia Inter de Google Fonts -->
+  <!-- Tipografia Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -21,7 +21,6 @@
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     
-    /* Evitar barra de desplaçament lletja als botons horitzontals */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -30,7 +29,6 @@
       scrollbar-width: none;
     }
 
-    /* Animacions visuals suaus */
     @keyframes hop {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-12px) scale(1.08); }
@@ -41,13 +39,12 @@
 
     @keyframes pulseGold {
       0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0)); }
-      50% { transform: scale(1.04); filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.4)); }
+      50% { transform: scale(1.03); filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4)); }
     }
     .animate-gold {
       animation: pulseGold 2.2s infinite ease-in-out;
     }
 
-    /* Estils de les pestanyes actives */
     .tab-btn.active {
       background-color: #0284c7;
       color: #ffffff;
@@ -62,10 +59,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen antialiased selection:bg-sky-200">
 
-  <!-- ================= CANVAS NADIU PER AL CONFETI (SENSE DEPENDÈNCIES EXTERNES) ================= -->
+  <!-- ================= CANVAS NADIU PER AL CONFETI ================= -->
   <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
-  <!-- ================= CAPÇALERA FIXA REAL (NETA I BEN MESURADA) ================= -->
+  <!-- ================= CAPÇALERA FIXA REAL ================= -->
   <header class="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm">
     <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5">
       
@@ -103,7 +100,6 @@
               </div>
             </div>
             
-            <!-- Botó per veure medalles -->
             <button onclick="openBadgesModal()" class="text-amber-500 hover:text-amber-600 text-base sm:text-lg ml-0.5" title="Medalles aconseguides">
               <i class="fa-solid fa-award"></i>
             </button>
@@ -143,23 +139,21 @@
           <span>4. Contrarellotge</span>
         </button>
 
-        <!-- Pestanya 5: Boss final destacada -->
+        <!-- Pestanya 5: Boss final neteja sense duplicar corones -->
         <button id="nav-game5" onclick="switchSection('game5')" class="tab-btn-boss px-3.5 py-1.5 rounded-xl whitespace-nowrap bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition flex items-center gap-1.5 ml-auto font-black shadow-sm">
-          <i class="fa-solid fa-crown text-amber-500"></i>
-          <span>5. El gran repte final 👑</span>
+          <i class="fa-solid fa-crown text-amber-600"></i>
+          <span>5. El gran repte final</span>
         </button>
       </nav>
 
     </div>
   </header>
 
-  <!-- ================= CONTENIDOR PRINCIPAL (AMB PADDING TOP SUFICIENT) ================= -->
+  <!-- ================= CONTENIDOR PRINCIPAL ================= -->
   <main class="max-w-6xl mx-auto px-4 pt-36 sm:pt-40 md:pt-44 pb-16">
 
     <!-- ================= PESTANYA 0: EL LABORATORI DE LES MESURES ================= -->
     <section id="section-lab" class="view-panel space-y-6">
-      
-      <!-- Targeta de benvinguda al laboratori -->
       <div class="bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
         <div class="relative z-10 max-w-2xl">
           <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold tracking-wider mb-2">Comença aquí la teva aventura</span>
@@ -173,7 +167,6 @@
         </div>
       </div>
 
-      <!-- Selector de magnitud al laboratori -->
       <div class="flex justify-center gap-2 sm:gap-4">
         <button id="btn-mag-longitud" onclick="setLabTab('longitud')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-sky-500 text-white shadow-md transition flex items-center gap-2">
           <i class="fa-solid fa-ruler"></i> Longitud
@@ -186,7 +179,6 @@
         </button>
       </div>
 
-      <!-- Targetes explicatives amb objectes reals de l'escola -->
       <div id="labCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
       <!-- Eina interactiva: L'escala màgica de la granota -->
@@ -206,7 +198,6 @@
 
         <div class="bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200">
           <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-center">
-            
             <div>
               <label class="text-[11px] font-bold text-slate-500 block mb-1">Quantitat:</label>
               <input type="number" id="frogValueInput" value="1" min="0" step="any" class="w-24 text-center font-black text-lg px-2 py-1.5 rounded-xl border-2 border-emerald-400 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -231,14 +222,12 @@
             </div>
           </div>
 
-          <!-- Resultat del salt -->
           <div id="frogResultBox" class="mt-4 bg-white p-4 rounded-xl border border-emerald-200 text-center hidden">
             <p id="frogResultTitle" class="text-emerald-950 font-black text-lg mb-0.5"></p>
             <p id="frogResultExplanation" class="text-slate-600 text-xs sm:text-sm"></p>
           </div>
         </div>
       </div>
-
     </section>
 
     <!-- ================= PESTANYA 1: TRIA LA UNITAT ================= -->
@@ -259,7 +248,6 @@
         </div>
 
         <div id="g1OptionsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"></div>
-
         <div id="g1Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
 
         <button id="g1NextBtn" onclick="nextGame1Question()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
@@ -322,7 +310,6 @@
         <p class="text-slate-600 text-xs sm:text-sm mb-6">Tria el valor exacte perquè els dos costats tinguin el mateix pes o mesura.</p>
 
         <div class="bg-gradient-to-b from-purple-50 to-indigo-50 p-6 rounded-3xl border border-purple-200 mb-6">
-          <!-- Dibuix visual de la balança -->
           <div class="w-44 h-2.5 bg-purple-400 mx-auto rounded-full mb-6 relative">
             <div class="w-3.5 h-7 bg-purple-600 mx-auto -mt-5 rounded-md"></div>
           </div>
@@ -343,7 +330,6 @@
         </div>
 
         <div id="g3OptionsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
-
         <div id="g3Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
 
         <button id="g3NextBtn" onclick="nextGame3Question()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
@@ -355,8 +341,6 @@
     <!-- ================= PESTANYA 4: CONTRARELLOTGE ================= -->
     <section id="section-game4" class="view-panel hidden space-y-6">
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-rose-300 shadow-sm max-w-3xl mx-auto">
-        
-        <!-- Pantalla prèvia -->
         <div id="g4StartScreen" class="text-center py-6">
           <div class="w-16 h-16 bg-rose-100 text-rose-500 text-3xl rounded-3xl flex items-center justify-center mx-auto mb-4">
             <i class="fa-solid fa-stopwatch-20"></i>
@@ -371,7 +355,6 @@
           </button>
         </div>
 
-        <!-- Pantalla de joc actiu -->
         <div id="g4ActiveScreen" class="hidden">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2">
@@ -395,7 +378,6 @@
           <div id="g4AnswersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
-        <!-- Pantalla final -->
         <div id="g4EndScreen" class="hidden text-center py-6">
           <div class="text-5xl mb-2">🏅</div>
           <h2 class="text-2xl font-black text-slate-800 mb-1">Temps acabat!</h2>
@@ -409,60 +391,155 @@
             </button>
           </div>
         </div>
-
       </div>
     </section>
 
-    <!-- ================= PESTANYA 5: EL GRAN REPTE FINAL (EXPERT) ================= -->
+    <!-- ================= PESTANYA 5: EL GRAN REPTE FINAL (EXPANDIT I MULTI-ACTIVITAT) ================= -->
     <section id="section-game5" class="view-panel hidden space-y-6">
       
-      <!-- Banner Boss Final -->
+      <!-- Banner Boss Final (amb només una icona neta) -->
       <div class="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-black tracking-widest mb-2 border border-white/30">
-              Nivell expert · Boss final
+              L'aventura definitiva de mestratge
             </span>
             <h2 class="text-2xl sm:text-4xl font-black mb-2">El gran repte final</h2>
             <p class="text-amber-100 text-xs sm:text-sm max-w-xl leading-relaxed">
-              Aquí es barregen <strong>totes les unitats alhora</strong> (km, m, cm, mm, kg, g, l, cl, ml). Trobaràs problemes de situacions reals, operacions de càlcul combinat, comparacions amb signes matemàtics i ordenacions de sèries. Supera els reptes per assolir el rang màxim!
+              Supera una gran travessia de <strong>10 fases variades</strong> que combina longituds, masses i capacitats: problemes de doble pas, ordenació dinàmica, comparació de signes, repartiment de líquids i la caça de l'error!
             </p>
           </div>
           <div class="text-center bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/20 shrink-0">
-            <div class="text-4xl sm:text-5xl animate-gold mb-1">👑</div>
-            <span class="text-xs font-black uppercase text-amber-200 block">Puntuació màxima:</span>
-            <span class="text-sm sm:text-base font-extrabold text-white">+50 XP per repte</span>
+            <div class="text-3xl text-amber-200 mb-1">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <span class="text-xs font-black uppercase text-amber-200 block">Recompensa màxima:</span>
+            <span class="text-sm sm:text-base font-extrabold text-white">+50 XP per fase</span>
           </div>
         </div>
       </div>
 
-      <!-- Caixa del repte actiu -->
-      <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-400 shadow-sm max-w-3xl mx-auto">
-        <div class="flex justify-between items-center mb-6 border-b pb-4 border-slate-100">
-          <div class="flex items-center gap-2">
-            <span id="g5TypeBadge" class="px-3 py-1 bg-amber-100 text-amber-900 font-extrabold rounded-full text-xs">Problema combinat</span>
-            <span id="g5ProgressBadge" class="text-xs font-black text-slate-500">Repte 1 / 6</span>
+      <!-- Pantalla d'Inici de l'Aventura 5 -->
+      <div id="g5IntroScreen" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-300 shadow-sm max-w-3xl mx-auto text-center">
+        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-4">
+          <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-2">Prepara't per al viatge complet</h3>
+        <p class="text-slate-600 text-xs sm:text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+          T'esperen 10 proves consecutives amb activitats diferents. Disposes de <strong>3 vides</strong> (cors) per completar la travessia. Si falles, perdràs un cor, però podràs aprendre de l'error i continuar!
+        </p>
+
+        <!-- Indicador de tipus d'activitats -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-left text-xs mb-6 max-w-2xl mx-auto">
+          <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <span class="font-black text-amber-800 block mb-0.5">1. Doble pas</span>
+            <p class="text-[11px] text-slate-600">Problemes reals amb canvis d'unitat.</p>
           </div>
-          <div class="flex items-center gap-1 text-amber-600 font-black text-xs sm:text-sm">
-            <i class="fa-solid fa-gem"></i> Nivell expert
+          <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <span class="font-black text-amber-800 block mb-0.5">2. Ordenació</span>
+            <p class="text-[11px] text-slate-600">Ordena valors de menor a major.</p>
+          </div>
+          <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <span class="font-black text-amber-800 block mb-0.5">3. Comparació</span>
+            <p class="text-[11px] text-slate-600">Tria el símbol (&lt;, =, &gt;).</p>
+          </div>
+          <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+            <span class="font-black text-amber-800 block mb-0.5">4. Repartiments</span>
+            <p class="text-[11px] text-slate-600">Gots, talls de cinta i ampolles.</p>
+          </div>
+          <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 col-span-2 sm:col-span-1">
+            <span class="font-black text-amber-800 block mb-0.5">5. Caça l'error</span>
+            <p class="text-[11px] text-slate-600">Troba la conversió falsa.</p>
           </div>
         </div>
 
-        <div class="text-center mb-6">
+        <button onclick="startBossAdventure()" class="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95 flex items-center gap-2 mx-auto">
+          Inicia la gran travessia! <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Pantalla de Joc Actiu del Repte Final -->
+      <div id="g5ActiveScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-400 shadow-sm max-w-3xl mx-auto">
+        
+        <!-- Barra de seguiment: Progrés + Vides -->
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+          <div class="flex items-center gap-2">
+            <span id="g5StageBadge" class="px-3 py-1 bg-amber-100 text-amber-900 font-extrabold rounded-full text-xs">Fase 1 / 10</span>
+            <span id="g5TypeLabel" class="text-xs font-bold text-slate-500">Problema de doble pas</span>
+          </div>
+
+          <!-- Vides restants -->
+          <div class="flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full text-rose-500 font-bold text-sm">
+            <span class="text-xs text-slate-600 mr-1 font-bold">Vides:</span>
+            <span id="g5HeartsDisplay">❤️❤️❤️</span>
+          </div>
+        </div>
+
+        <!-- Barra visual de progrés de 10 passos -->
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
+          <div id="g5ProgressBar" class="bg-gradient-to-r from-amber-400 to-yellow-500 h-full w-[10%] transition-all duration-300"></div>
+        </div>
+
+        <!-- Enunciat i pregunta -->
+        <div class="text-center mb-5">
           <div id="g5PromptIcon" class="text-5xl mb-2">🍰</div>
           <h3 id="g5Title" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug"></h3>
-          <p class="text-slate-500 text-xs mt-1">Converteix mentalment totes les dades a la mateixa unitat abans de triar la resposta!</p>
+          <p id="g5Instruction" class="text-slate-500 text-xs mt-1">Converteix mentalment a la mateixa unitat abans de respondre:</p>
         </div>
 
-        <div id="g5InteractiveBox" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 mb-6 text-center"></div>
+        <!-- Panell d'interacció dinàmic (s'omple segons el tipus d'activitat) -->
+        <div id="g5InteractivePanel" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 mb-6"></div>
 
-        <div id="g5OptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
+        <!-- Panell d'opcions de resposta -->
+        <div id="g5OptionsContainer" class="mb-6"></div>
 
+        <!-- Feedback d'encert o correcció -->
         <div id="g5Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm"></div>
 
-        <button id="g5NextBtn" onclick="nextGame5Question()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
-          Següent repte expert <i class="fa-solid fa-arrow-right"></i>
+        <!-- Botó de continuar -->
+        <button id="g5NextBtn" onclick="nextBossStage()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
+          Continua el viatge <i class="fa-solid fa-arrow-right"></i>
         </button>
+      </div>
+
+      <!-- Pantalla de Victòria / Èxit Total -->
+      <div id="g5VictoryScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-400 shadow-sm max-w-3xl mx-auto text-center py-8">
+        <div class="text-6xl mb-3 animate-gold">👑</div>
+        <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 font-extrabold rounded-full text-xs uppercase tracking-wider inline-block mb-2">Mestratge absolut assolit</span>
+        <h3 class="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Enhorabona! Has dominat el gran repte final!</h3>
+        <p id="g5VictoryText" class="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+          Has superat amb èxit les 10 fases combinades de longitud, massa i capacitat. El teu domini de les conversions i de les mesures de l'entorn és impecable.
+        </p>
+
+        <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-950 px-6 py-3 rounded-2xl font-black text-lg mb-6 shadow-sm border border-amber-300">
+          <i class="fa-solid fa-star text-amber-500"></i> +300 XP de bonificació de mestre!
+        </div>
+
+        <div class="flex justify-center gap-3">
+          <button onclick="startBossAdventure()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold text-sm shadow transition">
+            Repetir la gran travessia <i class="fa-solid fa-rotate-right ml-1"></i>
+          </button>
+          <button onclick="switchSection('lab')" class="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold text-sm shadow transition">
+            Tornar al laboratori <i class="fa-solid fa-flask-vial ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pantalla de Derrota (Sense vides) -->
+      <div id="g5DefeatScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-rose-300 shadow-sm max-w-2xl mx-auto text-center py-8">
+        <div class="text-5xl mb-3 text-rose-500">💔</div>
+        <h3 class="text-2xl font-black text-slate-900 mb-2">T'has quedat sense cors!</h3>
+        <p class="text-slate-600 text-sm max-w-md mx-auto mb-6 leading-relaxed">
+          No et preocupis, a la ciència de les mesures cada intent és un aprenentatge. Pots tornar al laboratori per repassar l'escala o tornar-ho a provar ara mateix!
+        </p>
+        <div class="flex justify-center gap-3">
+          <button onclick="startBossAdventure()" class="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-sm shadow transition">
+            Torna-ho a intentar <i class="fa-solid fa-rotate-right ml-1"></i>
+          </button>
+          <button onclick="switchSection('lab')" class="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-2xl font-bold text-sm transition">
+            Repassar al laboratori
+          </button>
+        </div>
       </div>
 
     </section>
@@ -515,7 +592,7 @@
     </div>
   </div>
 
-  <!-- ================= MODAL DE NOTIFICACIÓ PERSONALITZADA (SENSE ALERT) ================= -->
+  <!-- ================= MODAL DE NOTIFICACIÓ PERSONALITZADA ================= -->
   <div id="noticeModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center border-2 border-amber-300 shadow-xl">
       <div id="noticeIcon" class="text-4xl mb-2">⭐</div>
@@ -554,10 +631,10 @@
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, now);       // Do
-          osc.frequency.setValueAtTime(659.25, now + 0.08); // Mi
-          osc.frequency.setValueAtTime(783.99, now + 0.16); // Sol
-          osc.frequency.setValueAtTime(1046.50, now + 0.24); // Do agut
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          osc.frequency.setValueAtTime(1046.50, now + 0.24);
           gain.gain.setValueAtTime(0.18, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
           osc.connect(gain);
@@ -633,7 +710,7 @@
     };
 
     /* -------------------------------------------------------------
-       2. MOTOR NADIU DE CONFETI EN CANVAS (SENSE SCRIPTS EXTERNS)
+       2. MOTOR NADIU DE CONFETI EN CANVAS
     ------------------------------------------------------------- */
     const NativeConfetti = {
       canvas: null,
@@ -656,7 +733,7 @@
       launch() {
         if (!this.canvas || !this.ctx) this.init();
         const colors = ['#f59e0b', '#10b981', '#0ea5e9', '#ec4899', '#8b5cf6', '#eab308'];
-        const count = 75;
+        const count = 80;
         for (let i = 0; i < count; i++) {
           this.particles.push({
             x: this.canvas.width * (0.3 + Math.random() * 0.4),
@@ -710,10 +787,10 @@
        3. SISTEMA DE GAMIFICACIÓ, RANGS I MEDALLES
     ------------------------------------------------------------- */
     const RANKS = [
-      { name: "Explorador/a novell", minXp: 0, maxXp: 180 },
-      { name: "Cadet del regle", minXp: 180, maxXp: 420 },
-      { name: "Especialista en pesos", minXp: 420, maxXp: 800 },
-      { name: "Mestre/a suprem/a de les mesures 👑", minXp: 800, maxXp: 1800 }
+      { name: "Explorador/a novell", minXp: 0, maxXp: 200 },
+      { name: "Cadet del regle", minXp: 200, maxXp: 500 },
+      { name: "Especialista en pesos", minXp: 500, maxXp: 950 },
+      { name: "Mestre/a suprem/a de les mesures", minXp: 950, maxXp: 2000 }
     ];
 
     const BADGES = [
@@ -723,7 +800,7 @@
       { id: 'water_drop', name: 'Gota màgica', desc: 'Supera dues rondes d\'aparellar mesures', icon: '💧' },
       { id: 'speed_lightning', name: 'Llamp del saber', desc: 'Fes més de 4 encerts al contrarellotge', icon: '⚡' },
       { id: 'frog_master', name: 'Salt de la granota', desc: 'Fes un salt d\'unitats amb la granota', icon: '🐸' },
-      { id: 'supreme_crown', name: 'Corona del mestre suprem', desc: 'Supera 3 reptes experts del repte final', icon: '👑' }
+      { id: 'boss_conqueror', name: 'Corona del mestre suprem', desc: 'Supera amb èxit el gran repte final de 10 fases', icon: '👑' }
     ];
 
     let player = {
@@ -736,14 +813,14 @@
         game2Rounds: 0,
         game3Correct: 0,
         game4Best: 0,
-        game5Correct: 0,
+        bossWins: 0,
         frogJumps: 0
       }
     };
 
     function loadGameData() {
       try {
-        const stored = localStorage.getItem('aventura_mesures_v3');
+        const stored = localStorage.getItem('aventura_mesures_v4');
         if (stored) {
           player = Object.assign(player, JSON.parse(stored));
         }
@@ -755,7 +832,7 @@
 
     function saveGameData() {
       try {
-        localStorage.setItem('aventura_mesures_v3', JSON.stringify(player));
+        localStorage.setItem('aventura_mesures_v4', JSON.stringify(player));
       } catch (err) {
         console.warn("No s'ha pogut desar al localStorage", err);
       }
@@ -814,7 +891,7 @@
       if (player.stats.game2Rounds >= 2) grant('water_drop');
       if (player.stats.game4Best >= 4) grant('speed_lightning');
       if (player.stats.frogJumps >= 1) grant('frog_master');
-      if (player.stats.game5Correct >= 3) grant('supreme_crown');
+      if (player.stats.bossWins >= 1) grant('boss_conqueror');
     }
 
     function resetGameProgress() {
@@ -824,7 +901,7 @@
           avatar: "🧭",
           xp: 0,
           badges: [],
-          stats: { game1Correct: 0, game2Rounds: 0, game3Correct: 0, game4Best: 0, game5Correct: 0, frogJumps: 0 }
+          stats: { game1Correct: 0, game2Rounds: 0, game3Correct: 0, game4Best: 0, bossWins: 0, frogJumps: 0 }
         };
         saveGameData();
         refreshPlayerUI();
@@ -1338,170 +1415,397 @@
     }
 
     /* -------------------------------------------------------------
-       9. ACTIVITAT 5: EL GRAN REPTE FINAL (EXPERT / BOSS)
+       9. ACTIVITAT 5: EL GRAN REPTE FINAL (10 FASES I 5 TIPUS D'ACTIVITAT)
     ------------------------------------------------------------- */
-    const G5_CHALLENGES = [
+    const BOSS_STAGES = [
+      // 1. Doble pas: massa
       {
-        type: "Problema real · massa",
+        kind: "problem",
+        typeLabel: "Problema real de doble pas",
         icon: "🍰",
-        title: "Per fer un pastís necessitem 1,5 kg de farina. A l'armari només en tenim 350 g. Quants grams de farina ens falten comprar exactament?",
-        interactive: `
-          <div class="flex items-center justify-center gap-2 text-base sm:text-lg font-black text-amber-950">
-            <span>1,5 kg (necessaris)</span>
-            <span>−</span>
-            <span>350 g (tenim)</span>
-            <span>=</span>
-            <span class="text-amber-600 underline">? g</span>
-          </div>
-        `,
-        options: ["1.150 g", "1.250 g", "800 g", "1.350 g"],
+        title: "Per preparar el pastís de la festa escolar necessitem 1,5 kg de farina. A l'armari només en tenim un paquet de 350 g. Quants grams de farina ens falten comprar exactament?",
+        instruction: "Expressa les dues quantitats en grams abans de calcular la diferència:",
+        equation: "1,5 kg (1.500 g) − 350 g = ? g",
+        options: ["1.150 g", "1.250 g", "850 g", "1.350 g"],
         answer: "1.150 g",
-        reason: "1,5 kg equivalen a 1.500 g. Si en restem 350 g: 1.500 − 350 = 1.150 g."
+        reason: "1,5 kg són 1.500 g. Fent la resta amb els que ja tenim: 1.500 − 350 = 1.150 g."
       },
+      // 2. Ordenació interactiva: capacitats
       {
-        type: "Comparació de capacitats",
-        icon: "🥤",
-        title: "Quina relació matemàtica és la correcta entre una ampolla de 3,2 litres i un recipient de 350 centilitres (cl)?",
-        interactive: `
-          <div class="flex items-center justify-center gap-3 text-lg sm:text-xl font-black text-amber-950">
-            <span class="bg-white px-3 py-1 rounded-xl shadow-sm">3,2 l</span>
-            <span class="text-amber-600 text-2xl font-black">¿ ?</span>
-            <span class="bg-white px-3 py-1 rounded-xl shadow-sm">350 cl</span>
-          </div>
-        `,
-        options: ["3,2 l < 350 cl", "3,2 l > 350 cl", "3,2 l = 350 cl"],
-        answer: "3,2 l < 350 cl",
-        reason: "3,2 litres són 320 cl (multipliquem per 100). Per tant, 320 cl és menor (<) que 350 cl."
-      },
-      {
-        type: "Repartiment real de líquids",
-        icon: "🥛",
-        title: "Tenim una ampolla gran de suc d'1,5 litres (1,5 l). Quants gots plens de 25 cl podem omplir completament?",
-        interactive: `
-          <div class="flex items-center justify-center gap-3 text-base sm:text-lg font-black text-amber-950">
-            <span>1,5 l (150 cl)</span>
-            <span>÷</span>
-            <span>25 cl (per got)</span>
-            <span>=</span>
-            <span class="text-amber-600">? gots</span>
-          </div>
-        `,
-        options: ["4 gots", "6 gots", "8 gots", "10 gots"],
-        answer: "6 gots",
-        reason: "1,5 l equivalen a 150 cl. Fent la divisió: 150 ÷ 25 = 6 gots exactes!"
-      },
-      {
-        type: "Problema real · longitud combinada",
-        icon: "🧵",
-        title: "Per decorar l'aula preparem una tira de tela de 2 m i 40 cm. Si en tallem un tros de 85 cm, quants centímetres de tela ens queden?",
-        interactive: `
-          <div class="flex items-center justify-center gap-2 text-base sm:text-lg font-black text-amber-950">
-            <span>2 m 40 cm (240 cm)</span>
-            <span>−</span>
-            <span>85 cm</span>
-            <span>=</span>
-            <span class="text-amber-600">? cm</span>
-          </div>
-        `,
-        options: ["155 cm", "165 cm", "145 cm", "175 cm"],
-        answer: "155 cm",
-        reason: "2 m i 40 cm són 240 cm. Fent la resta: 240 − 85 = 155 cm."
-      },
-      {
-        type: "Equivalència de longitud",
-        icon: "📏",
-        title: "Compara aquestes dues mesures: 4.500 mil·límetres (mm) i 4,5 metres (m). Quin signe matemàtic hi correspon?",
-        interactive: `
-          <div class="flex items-center justify-center gap-3 text-lg sm:text-xl font-black text-amber-950">
-            <span class="bg-white px-3 py-1 rounded-xl shadow-sm">4.500 mm</span>
-            <span class="text-amber-600 text-2xl font-black">¿ ?</span>
-            <span class="bg-white px-3 py-1 rounded-xl shadow-sm">4,5 m</span>
-          </div>
-        `,
-        options: ["4.500 mm = 4,5 m", "4.500 mm > 4,5 m", "4.500 mm < 4,5 m"],
-        answer: "4.500 mm = 4,5 m",
-        reason: "1 metre té 1.000 mm. Multiplicant 4,5 m × 1.000 obtenim 4.500 mm: són exactament iguals (=)!"
-      },
-      {
-        type: "Sèrie ordenada de masses",
-        icon: "⚖️",
-        title: "Quina d'aquestes llistes de pesos està ben ordenada de menor a major?",
-        interactive: `
-          <div class="text-xs sm:text-sm font-bold text-slate-700 bg-white p-2.5 rounded-xl border border-amber-200">
-            Mesures: <strong>0,75 kg</strong> | <strong>800 g</strong> | <strong>1,2 kg</strong> | <strong>500 g</strong>
-          </div>
-        `,
-        options: [
-          "500 g < 0,75 kg < 800 g < 1,2 kg",
-          "0,75 kg < 500 g < 800 g < 1,2 kg",
-          "500 g < 800 g < 0,75 kg < 1,2 kg",
-          "1,2 kg < 800 g < 0,75 kg < 500 g"
+        kind: "ordering",
+        typeLabel: "Ordenació interactiva de menor a major",
+        icon: "🧪",
+        title: "Ordena aquests 4 recipients de líquid des del més petit fins al més gran. Fes clic sobre cadascun per anar construint la teva seqüència:",
+        instruction: "Pensa en mil·lilitres: 5 cl = 50 ml, 25 cl = 250 ml, 1,2 l = 1.200 ml.",
+        items: [
+          { label: "1,2 l", ml: 1200 },
+          { label: "25 cl", ml: 250 },
+          { label: "300 ml", ml: 300 },
+          { label: "5 cl", ml: 50 }
         ],
-        answer: "500 g < 0,75 kg < 800 g < 1,2 kg",
-        reason: "Passat tot a grams: 500 g < 750 g (0,75 kg) < 800 g < 1.200 g (1,2 kg)."
+        correctOrder: ["5 cl", "25 cl", "300 ml", "1,2 l"],
+        reason: "Convertint tot a ml: 5 cl (50 ml) < 25 cl (250 ml) < 300 ml < 1,2 l (1.200 ml)."
+      },
+      // 3. Comparació interactiva amb símbols: longituds
+      {
+        kind: "compare",
+        typeLabel: "Comparació d'expressions compostes",
+        icon: "📏",
+        title: "Quin signe matemàtic expressa la relació correcta entre aquestes dues mesures de longitud?",
+        instruction: "Tria el símbol correcte per col·locar entre les dues quantitats:",
+        left: "2 m 50 cm",
+        right: "260 cm",
+        leftValCm: 250,
+        rightValCm: 260,
+        answer: "<",
+        reason: "2 metres i 50 cm equivalen a 250 cm. Com que 250 cm és més petit que 260 cm, la relació és <."
+      },
+      // 4. Repartiment: líquids
+      {
+        kind: "sharing",
+        typeLabel: "Repartiment i fraccionament de mesures",
+        icon: "🧃",
+        title: "Tenim una garrafa de 2 litres de suc de taronja per a l'esmorzar de la classe. Si omplim gots de 25 cl, quants gots sencers podrem repartir en total?",
+        instruction: "Recorda quants centilitres conté 1 litre complet:",
+        equation: "2 l = 200 cl → 200 cl ÷ 25 cl = ? gots",
+        options: ["8 gots", "6 gots", "10 gots", "5 gots"],
+        answer: "8 gots",
+        reason: "2 litres són 200 cl. Dividint: 200 ÷ 25 = 8 gots complets."
+      },
+      // 5. Caça de l'error matemàtic: conversions
+      {
+        kind: "hunter",
+        typeLabel: "Caça de l'error matemàtic",
+        icon: "🔍",
+        title: "Un explorador despistat ha anotat quatre afirmacions a la seva llibreta de camp. Quina d'aquestes afirmacions és FALSA?",
+        instruction: "Analitza cadascuna de les 4 equivalències per trobar la incorrecta:",
+        options: [
+          "3,5 km = 3.500 m",
+          "750 g = 0,75 kg",
+          "4.500 mm = 45 m",
+          "600 cl = 6 l"
+        ],
+        answer: "4.500 mm = 45 m",
+        reason: "4.500 mm dividit per 1.000 són 4,5 metres, NO 45 metres! Aquesta era l'afirmació falsa."
+      },
+      // 6. Doble pas: longitud
+      {
+        kind: "problem",
+        typeLabel: "Problema real de doble pas",
+        icon: "🧵",
+        title: "A la classe de plàstica tenim una bobina de cinta de 3 metres. En tallem 3 trossos de 40 cm per fer una garlanda. Quants centímetres de cinta queden a la bobina?",
+        instruction: "Calcula primer el total tallat (3 × 40 cm) i resta-ho dels metres inicials:",
+        equation: "3 m (300 cm) − (3 × 40 cm = 120 cm) = ? cm",
+        options: ["180 cm", "160 cm", "200 cm", "140 cm"],
+        answer: "180 cm",
+        reason: "3 metres són 300 cm. Els tres talls sumen 120 cm. La resta és: 300 − 120 = 180 cm."
+      },
+      // 7. Ordenació interactiva: masses mixtes
+      {
+        kind: "ordering",
+        typeLabel: "Ordenació interactiva de menor a major",
+        icon: "⚖️",
+        title: "Ordena aquestes 4 masses de menor a major. Fes clic sobre cadascuna per afegir-la a la seqüència:",
+        instruction: "Passa-ho tot mentalment a grams per comparar amb seguretat:",
+        items: [
+          { label: "1,5 kg", g: 1500 },
+          { label: "800 g", g: 800 },
+          { label: "2,1 kg", g: 2100 },
+          { label: "450 g", g: 450 }
+        ],
+        correctOrder: ["450 g", "800 g", "1,5 kg", "2,1 kg"],
+        reason: "En grams: 450 g < 800 g < 1,5 kg (1.500 g) < 2,1 kg (2.100 g)."
+      },
+      // 8. Comparació interactiva amb símbols: capacitats
+      {
+        kind: "compare",
+        typeLabel: "Comparació d'expressions compostes",
+        icon: "🥛",
+        title: "Quin signe matemàtic cal col·locar entre 3 litres i mig (3 l 50 cl) i 3.500 mil·lilitres (ml)?",
+        instruction: "Calcula els mil·lilitres dels dos costats:",
+        left: "3 l 50 cl",
+        right: "3.500 ml",
+        leftValCm: 3500,
+        rightValCm: 3500,
+        answer: "=",
+        reason: "3 litres són 3.000 ml i 50 cl són 500 ml: sumen 3.500 ml. Ambdós costats són exactament iguals (=)!"
+      },
+      // 9. Repartiment: longituds
+      {
+        kind: "sharing",
+        typeLabel: "Repartiment i fraccionament de mesures",
+        icon: "🪵",
+        title: "Un fuster té un llistó de fusta de 4 metres. En vol fer peces curtes de 20 centímetres per a unes maquetes. Quantes peces completes en podrà treure?",
+        instruction: "Passa els 4 metres a centímetres i divideix:",
+        equation: "4 m = 400 cm → 400 cm ÷ 20 cm = ? peces",
+        options: ["20 peces", "15 peces", "25 peces", "18 peces"],
+        answer: "20 peces",
+        reason: "4 metres són 400 cm. Dividint entre 20 cm: 400 ÷ 20 = 20 peces exactes."
+      },
+      // 10. Caça de l'error: barreja final
+      {
+        kind: "hunter",
+        typeLabel: "Caça de l'error final",
+        icon: "🎯",
+        title: "Última prova de la travessia: quina d'aquestes quatre igualtats és una afirmació INCORRECTA?",
+        instruction: "Revisa detingudament cadascuna de les 4 equivalències:",
+        options: [
+          "2 kg 250 g = 2.250 g",
+          "1 l 25 cl = 125 cl",
+          "3 m 8 cm = 380 cm",
+          "5 km 40 m = 5.040 m"
+        ],
+        answer: "3 m 8 cm = 380 cm",
+        reason: "3 m són 300 cm, per tant 3 m 8 cm són 308 cm, NO 380 cm (que serien 3 m 80 cm)!"
       }
     ];
 
-    let g5Index = 0;
+    let bossIndex = 0;
+    let bossLives = 3;
+    let currentSelectedOrder = [];
 
-    function initGame5() {
-      g5Index = 0;
-      loadGame5Item();
+    function startBossAdventure() {
+      bossIndex = 0;
+      bossLives = 3;
+      document.getElementById('g5IntroScreen').classList.add('hidden');
+      document.getElementById('g5VictoryScreen').classList.add('hidden');
+      document.getElementById('g5DefeatScreen').classList.add('hidden');
+      document.getElementById('g5ActiveScreen').classList.remove('hidden');
+      updateBossHeartsUI();
+      loadBossStage();
     }
 
-    function loadGame5Item() {
-      const item = G5_CHALLENGES[g5Index % G5_CHALLENGES.length];
-      document.getElementById('g5TypeBadge').textContent = item.type;
-      document.getElementById('g5ProgressBadge').textContent = `Repte ${(g5Index % G5_CHALLENGES.length) + 1} / ${G5_CHALLENGES.length}`;
-      document.getElementById('g5PromptIcon').textContent = item.icon;
-      document.getElementById('g5Title').textContent = item.title;
-      document.getElementById('g5InteractiveBox').innerHTML = item.interactive;
+    function updateBossHeartsUI() {
+      let hStr = "";
+      for (let i = 0; i < bossLives; i++) hStr += "❤️";
+      for (let i = bossLives; i < 3; i++) hStr += "🖤";
+      document.getElementById('g5HeartsDisplay').textContent = hStr;
+    }
 
+    function loadBossStage() {
+      const stage = BOSS_STAGES[bossIndex];
+      const total = BOSS_STAGES.length;
+
+      document.getElementById('g5StageBadge').textContent = `Fase ${bossIndex + 1} / ${total}`;
+      document.getElementById('g5TypeLabel').textContent = stage.typeLabel;
+      document.getElementById('g5PromptIcon').textContent = stage.icon;
+      document.getElementById('g5Title').textContent = stage.title;
+      document.getElementById('g5Instruction').textContent = stage.instruction;
+
+      const progressPct = ((bossIndex + 1) / total) * 100;
+      document.getElementById('g5ProgressBar').style.width = `${progressPct}%`;
+
+      const interactive = document.getElementById('g5InteractivePanel');
+      const optionsBox = document.getElementById('g5OptionsContainer');
       const feedback = document.getElementById('g5Feedback');
-      feedback.className = "hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm";
-      feedback.textContent = "";
 
+      interactive.innerHTML = '';
+      optionsBox.innerHTML = '';
+      feedback.className = "hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm";
+      feedback.textContent = '';
       document.getElementById('g5NextBtn').classList.add('hidden');
 
-      const grid = document.getElementById('g5OptionsGrid');
-      grid.innerHTML = '';
+      // Generació segons tipus de dinàmica
+      if (stage.kind === 'problem' || stage.kind === 'sharing') {
+        interactive.innerHTML = `
+          <div class="text-center">
+            <span class="text-xs uppercase font-extrabold text-amber-700 tracking-wider block mb-1">Equació guia</span>
+            <div class="text-base sm:text-lg font-black text-amber-950 bg-white py-2 px-4 rounded-xl border border-amber-200 inline-block shadow-sm">
+              ${stage.equation}
+            </div>
+          </div>
+        `;
+        renderBossStandardButtons(stage.options, stage.answer, stage.reason);
+      } else if (stage.kind === 'hunter') {
+        interactive.innerHTML = `
+          <div class="text-center text-xs sm:text-sm text-slate-700 font-medium">
+            Observa amb atenció aquestes afirmacions i clica sobre la que conté un <strong>error de mesura</strong>:
+          </div>
+        `;
+        renderBossStandardButtons(stage.options, stage.answer, stage.reason);
+      } else if (stage.kind === 'compare') {
+        interactive.innerHTML = `
+          <div class="flex items-center justify-center gap-3 text-lg sm:text-2xl font-black text-amber-950">
+            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${stage.left}</span>
+            <span id="g5CompareSlot" class="w-12 h-12 flex items-center justify-center bg-amber-200 text-amber-900 rounded-2xl border-2 border-dashed border-amber-400 text-2xl font-black">?</span>
+            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${stage.right}</span>
+          </div>
+        `;
+        renderBossCompareButtons(stage.answer, stage.reason);
+      } else if (stage.kind === 'ordering') {
+        currentSelectedOrder = [];
+        renderBossOrderingInterface(stage);
+      }
+    }
 
-      item.options.forEach(opt => {
+    function renderBossStandardButtons(options, correctAnswer, reason) {
+      const box = document.getElementById('g5OptionsContainer');
+      box.className = "grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6";
+
+      options.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.className = "py-3 sm:py-4 px-3 rounded-2xl bg-white hover:bg-amber-50 border-2 border-amber-300 font-extrabold text-sm sm:text-base text-slate-800 shadow-sm transition active:scale-95";
-        btn.onclick = () => checkGame5Choice(opt, btn, item);
-        grid.appendChild(btn);
+        btn.className = "boss-opt-btn py-3 sm:py-4 px-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-extrabold text-sm sm:text-base text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
+        btn.onclick = () => evaluateBossAnswer(opt === correctAnswer, btn, correctAnswer, reason);
+        box.appendChild(btn);
       });
     }
 
-    function checkGame5Choice(selected, btnElem, item) {
-      document.querySelectorAll('#g5OptionsGrid button').forEach(b => b.disabled = true);
+    function renderBossCompareButtons(correctSign, reason) {
+      const box = document.getElementById('g5OptionsContainer');
+      box.className = "flex justify-center gap-4 mb-6";
+
+      ['<', '=', '>'].forEach(sign => {
+        const btn = document.createElement('button');
+        btn.textContent = sign;
+        btn.className = "boss-opt-btn w-20 py-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-black text-2xl text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
+        btn.onclick = () => {
+          document.getElementById('g5CompareSlot').textContent = sign;
+          evaluateBossAnswer(sign === correctSign, btn, correctSign, reason);
+        };
+        box.appendChild(btn);
+      });
+    }
+
+    function renderBossOrderingInterface(stage) {
+      const interactive = document.getElementById('g5InteractivePanel');
+      const box = document.getElementById('g5OptionsContainer');
+      box.className = "space-y-4 mb-6";
+
+      interactive.innerHTML = `
+        <div class="text-xs uppercase font-extrabold text-amber-800 mb-2 text-center">La teva seqüència (de menor a major):</div>
+        <div id="g5OrderSlots" class="min-h-[50px] p-2 bg-white rounded-2xl border-2 border-dashed border-amber-300 flex flex-wrap items-center justify-center gap-2">
+          <span class="text-xs text-slate-400 font-medium">Clica sobre les peces de sota per col·locar-les en ordre...</span>
+        </div>
+      `;
+
+      // Peces per clicar
+      const poolDiv = document.createElement('div');
+      poolDiv.className = "flex flex-wrap items-center justify-center gap-2.5";
+
+      const shuffled = [...stage.items].sort(() => Math.random() - 0.5);
+
+      shuffled.forEach(item => {
+        const btn = document.createElement('button');
+        btn.textContent = item.label;
+        btn.dataset.label = item.label;
+        btn.className = "order-chip px-4 py-2.5 bg-white hover:bg-amber-100 border-2 border-amber-300 text-slate-800 font-black text-sm rounded-2xl shadow-sm transition active:scale-95";
+        btn.onclick = () => {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          btn.classList.add('opacity-30', 'grayscale');
+
+          currentSelectedOrder.push(item.label);
+          updateOrderSlotsUI(stage);
+        };
+        poolDiv.appendChild(btn);
+      });
+
+      const controlDiv = document.createElement('div');
+      controlDiv.className = "flex justify-center gap-3";
+
+      const resetBtn = document.createElement('button');
+      resetBtn.className = "px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition";
+      resetBtn.innerHTML = `<i class="fa-solid fa-rotate-left mr-1"></i> Netejar ordre`;
+      resetBtn.onclick = () => {
+        currentSelectedOrder = [];
+        document.querySelectorAll('.order-chip').forEach(b => {
+          b.disabled = false;
+          b.classList.remove('opacity-30', 'grayscale');
+        });
+        updateOrderSlotsUI(stage);
+      };
+
+      const submitBtn = document.createElement('button');
+      submitBtn.id = "g5SubmitOrderBtn";
+      submitBtn.disabled = true;
+      submitBtn.className = "px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black text-xs rounded-xl shadow transition";
+      submitBtn.innerHTML = `Comprova la seqüència <i class="fa-solid fa-check ml-1"></i>`;
+      submitBtn.onclick = () => {
+        const isMatch = JSON.stringify(currentSelectedOrder) === JSON.stringify(stage.correctOrder);
+        evaluateBossAnswer(isMatch, submitBtn, stage.correctOrder.join(" < "), stage.reason);
+      };
+
+      controlDiv.appendChild(resetBtn);
+      controlDiv.appendChild(submitBtn);
+
+      box.appendChild(poolDiv);
+      box.appendChild(controlDiv);
+    }
+
+    function updateOrderSlotsUI(stage) {
+      const slotBox = document.getElementById('g5OrderSlots');
+      const submitBtn = document.getElementById('g5SubmitOrderBtn');
+
+      if (currentSelectedOrder.length === 0) {
+        slotBox.innerHTML = `<span class="text-xs text-slate-400 font-medium">Clica sobre les peces de sota per col·locar-les en ordre...</span>`;
+        if (submitBtn) submitBtn.disabled = true;
+        return;
+      }
+
+      slotBox.innerHTML = '';
+      currentSelectedOrder.forEach((val, idx) => {
+        const tag = document.createElement('span');
+        tag.className = "px-3 py-1.5 bg-amber-100 text-amber-950 font-black text-xs sm:text-sm rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm";
+        tag.innerHTML = `<span>${val}</span> <span class="text-[10px] text-amber-600 font-bold">#${idx + 1}</span>`;
+        slotBox.appendChild(tag);
+      });
+
+      if (submitBtn) {
+        submitBtn.disabled = currentSelectedOrder.length !== stage.items.length;
+      }
+    }
+
+    function evaluateBossAnswer(isCorrect, btnElem, expected, reason) {
+      document.querySelectorAll('.boss-opt-btn, .order-chip, #g5SubmitOrderBtn').forEach(b => b.disabled = true);
       const feedback = document.getElementById('g5Feedback');
       feedback.classList.remove('hidden');
 
-      if (selected === item.answer) {
+      if (isCorrect) {
         NativeAudio.playSuccess();
         NativeConfetti.launch();
-        btnElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        if (btnElem) btnElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
         feedback.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-emerald-100 text-emerald-950 border border-emerald-300";
-        feedback.innerHTML = `👑 <strong>Fantàstic!</strong> Resposta impecable.<br><span class="text-xs font-medium">${item.reason}</span>`;
+        feedback.innerHTML = `🌟 <strong>Molt bé! Fase superada!</strong><br><span class="text-xs font-medium">${reason}</span>`;
         addPlayerXp(50);
-        player.stats.game5Correct++;
-        evaluateBadges();
       } else {
         NativeAudio.playError();
-        btnElem.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        bossLives--;
+        updateBossHeartsUI();
+        if (btnElem) btnElem.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
         feedback.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-rose-100 text-rose-950 border border-rose-300";
-        feedback.innerHTML = `❌ <strong>Gairebé ho tens!</strong> La solució correcta era: <strong>${item.answer}</strong>.<br><span class="text-xs font-medium">${item.reason}</span>`;
+        feedback.innerHTML = `❌ <strong>No és correcte!</strong> Has perdut 1 cor.<br>La solució correcta era: <strong>${expected}</strong>.<br><span class="text-xs font-medium">${reason}</span>`;
+
+        if (bossLives <= 0) {
+          setTimeout(() => {
+            document.getElementById('g5ActiveScreen').classList.add('hidden');
+            document.getElementById('g5DefeatScreen').classList.remove('hidden');
+          }, 1400);
+          return;
+        }
       }
 
       document.getElementById('g5NextBtn').classList.remove('hidden');
     }
 
-    function nextGame5Question() {
-      g5Index++;
-      loadGame5Item();
+    function nextBossStage() {
+      bossIndex++;
+      if (bossIndex >= BOSS_STAGES.length) {
+        finishBossAdventure();
+      } else {
+        loadBossStage();
+      }
+    }
+
+    function finishBossAdventure() {
+      document.getElementById('g5ActiveScreen').classList.add('hidden');
+      document.getElementById('g5VictoryScreen').classList.remove('hidden');
+      NativeAudio.playLevelUp();
+      NativeConfetti.launch();
+      addPlayerXp(300);
+      player.stats.bossWins++;
+      evaluateBadges();
+      saveGameData();
     }
 
     /* -------------------------------------------------------------
@@ -1525,7 +1829,12 @@
         document.getElementById('g4ActiveScreen').classList.add('hidden');
         document.getElementById('g4EndScreen').classList.add('hidden');
       }
-      if (secKey === 'game5') initGame5();
+      if (secKey === 'game5') {
+        document.getElementById('g5IntroScreen').classList.remove('hidden');
+        document.getElementById('g5ActiveScreen').classList.add('hidden');
+        document.getElementById('g5VictoryScreen').classList.add('hidden');
+        document.getElementById('g5DefeatScreen').classList.add('hidden');
+      }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
