@@ -4,73 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>L'aventura de les mesures: longitud, massa i capacitat</title>
-  
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-  <!-- Tipografia Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-
   <style>
     body {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    
-    .no-scrollbar::-webkit-scrollbar {
+    .sense-barra::-webkit-scrollbar {
       display: none;
     }
-    .no-scrollbar {
+    .sense-barra {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-
-    @keyframes hop {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px) scale(1.08); }
+    .pestanya-activa {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3) !important;
     }
-    .animate-hop {
-      animation: hop 0.4s ease-in-out;
-    }
-
-    @keyframes pulseGold {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0)); }
-      50% { transform: scale(1.03); filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.4)); }
-    }
-    .animate-gold {
-      animation: pulseGold 2.2s infinite ease-in-out;
-    }
-
-    .tab-btn.active {
-      background-color: #0284c7;
-      color: #ffffff;
-      box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.25);
-    }
-    .tab-btn-boss.active {
-      background-color: #b45309;
-      color: #ffffff;
-      box-shadow: 0 4px 8px -1px rgba(180, 83, 9, 0.35);
+    .pestanya-cap-activa {
+      background-color: #b45309 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 8px -1px rgba(180, 83, 9, 0.35) !important;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen antialiased selection:bg-sky-200">
+<body class="bg-slate-50 text-slate-800 min-h-screen antialiased select-none">
 
-  <!-- ================= CANVAS NADIU PER AL CONFETI ================= -->
-  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+  <canvas id="telaConfeti" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
-  <!-- ================= CAPÇALERA FIXA REAL ================= -->
   <header class="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm">
     <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5">
-      
-      <!-- Fila superior: logotip i estat del jugador -->
       <div class="flex items-center justify-between gap-2 mb-2">
-        
-        <!-- Logotip -->
-        <div class="flex items-center gap-2.5 cursor-pointer shrink-0" onclick="switchSection('lab')">
+        <div class="flex items-center gap-2.5 cursor-pointer shrink-0" onclick="canviarSeccio('lab')">
           <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xl shadow-md">
             <i class="fa-solid fa-ruler-combined"></i>
           </div>
@@ -80,80 +49,71 @@
           </div>
         </div>
 
-        <!-- Indicador de nivell, avatar i punts XP -->
         <div class="flex items-center gap-1.5 sm:gap-2.5">
-          <!-- Botó avatar -->
-          <button onclick="openAvatarModal()" class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-full px-2.5 py-1 transition" title="Canviar perfil">
-            <span id="playerAvatar" class="text-lg sm:text-xl">🧭</span>
-            <span id="playerName" class="hidden md:inline font-bold text-amber-950 text-xs max-w-[100px] truncate">Explorador/a</span>
+          <button onclick="obrirModalPerfil()" class="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-full px-2.5 py-1 transition" title="Canviar perfil">
+            <span id="iconaPerfil" class="text-lg sm:text-xl">🧭</span>
+            <span id="nomPerfil" class="hidden md:inline font-bold text-amber-950 text-xs max-w-[100px] truncate">Explorador/a</span>
           </button>
 
-          <!-- Marcador XP i rang -->
           <div class="bg-sky-50 border border-sky-200 rounded-2xl px-2.5 sm:px-3 py-1 flex items-center gap-2">
             <div class="flex flex-col">
               <div class="flex justify-between items-center gap-2 text-[10px] sm:text-xs font-black text-sky-900">
-                <span id="playerRankName" class="truncate max-w-[110px] sm:max-w-[150px]">Explorador/a novell</span>
-                <span class="text-sky-600 font-bold"><span id="playerXpVal">0</span> XP</span>
+                <span id="textRang" class="truncate max-w-[110px] sm:max-w-[150px]">Explorador/a novell</span>
+                <span class="text-sky-600 font-bold"><span id="valorPunts">0</span> punts</span>
               </div>
               <div class="w-16 sm:w-24 bg-sky-200 rounded-full h-1.5 mt-0.5 overflow-hidden">
-                <div id="playerXpBar" class="bg-gradient-to-r from-amber-400 to-emerald-500 h-full rounded-full transition-all duration-300" style="width: 5%;"></div>
+                <div id="barraPunts" class="bg-gradient-to-r from-amber-400 to-emerald-500 h-full rounded-full transition-all duration-300" style="width: 5%;"></div>
               </div>
             </div>
             
-            <button onclick="openBadgesModal()" class="text-amber-500 hover:text-amber-600 text-base sm:text-lg ml-0.5" title="Medalles aconseguides">
+            <button onclick="obrirModalMedalles()" class="text-amber-500 hover:text-amber-600 text-base sm:text-lg ml-0.5" title="Medalles aconseguides">
               <i class="fa-solid fa-award"></i>
             </button>
           </div>
 
-          <!-- Reiniciar progrés -->
-          <button onclick="resetGameProgress()" class="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl transition" title="Reiniciar punts">
+          <button onclick="reiniciarPartida()" class="p-1.5 text-slate-400 hover:text-rose-500 rounded-xl transition" title="Reiniciar punts">
             <i class="fa-solid fa-rotate-right text-xs"></i>
           </button>
         </div>
       </div>
 
-      <!-- Fila inferior: 6 pestanyes de navegació fixa -->
-      <nav class="flex overflow-x-auto no-scrollbar gap-1.5 pt-1 text-xs sm:text-sm font-bold">
-        <button id="nav-lab" onclick="switchSection('lab')" class="tab-btn active px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
+      <nav class="flex overflow-x-auto sense-barra gap-1.5 pt-1 text-xs sm:text-sm font-bold">
+        <button id="boto-seccio-lab" onclick="canviarSeccio('lab')" class="boto-pestanya pestanya-activa px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
           <i class="fa-solid fa-flask-vial text-sky-500"></i>
           <span>El laboratori de les mesures</span>
         </button>
 
-        <button id="nav-game1" onclick="switchSection('game1')" class="tab-btn px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
+        <button id="boto-seccio-joc1" onclick="canviarSeccio('joc1')" class="boto-pestanya px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
           <i class="fa-solid fa-circle-question text-emerald-500"></i>
           <span>1. Tria la unitat</span>
         </button>
 
-        <button id="nav-game2" onclick="switchSection('game2')" class="tab-btn px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
+        <button id="boto-seccio-joc2" onclick="canviarSeccio('joc2')" class="boto-pestanya px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
           <i class="fa-solid fa-shuffle text-indigo-500"></i>
           <span>2. Aparellar</span>
         </button>
 
-        <button id="nav-game3" onclick="switchSection('game3')" class="tab-btn px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
+        <button id="boto-seccio-joc3" onclick="canviarSeccio('joc3')" class="boto-pestanya px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
           <i class="fa-solid fa-scale-balanced text-purple-500"></i>
           <span>3. Balança i conversió</span>
         </button>
 
-        <button id="nav-game4" onclick="switchSection('game4')" class="tab-btn px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
+        <button id="boto-seccio-joc4" onclick="canviarSeccio('joc4')" class="boto-pestanya px-3 py-1.5 rounded-xl whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5">
           <i class="fa-solid fa-stopwatch-20 text-rose-500"></i>
           <span>4. Contrarellotge</span>
         </button>
 
-        <!-- Pestanya 5: Boss final neteja sense duplicar corones -->
-        <button id="nav-game5" onclick="switchSection('game5')" class="tab-btn-boss px-3.5 py-1.5 rounded-xl whitespace-nowrap bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition flex items-center gap-1.5 ml-auto font-black shadow-sm">
+        <button id="boto-seccio-joc5" onclick="canviarSeccio('joc5')" class="boto-pestanya-cap px-3.5 py-1.5 rounded-xl whitespace-nowrap bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition flex items-center gap-1.5 ml-auto font-black shadow-sm">
           <i class="fa-solid fa-crown text-amber-600"></i>
           <span>5. El gran repte final</span>
         </button>
       </nav>
-
     </div>
   </header>
 
-  <!-- ================= CONTENIDOR PRINCIPAL ================= -->
   <main class="max-w-6xl mx-auto px-4 pt-36 sm:pt-40 md:pt-44 pb-16">
 
-    <!-- ================= PESTANYA 0: EL LABORATORI DE LES MESURES ================= -->
-    <section id="section-lab" class="view-panel space-y-6">
+    <section id="panell-lab" class="panell-vista space-y-6">
       <div class="bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-500 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
         <div class="relative z-10 max-w-2xl">
           <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold tracking-wider mb-2">Comença aquí la teva aventura</span>
@@ -168,27 +128,26 @@
       </div>
 
       <div class="flex justify-center gap-2 sm:gap-4">
-        <button id="btn-mag-longitud" onclick="setLabTab('longitud')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-sky-500 text-white shadow-md transition flex items-center gap-2">
+        <button id="boto-cat-longitud" onclick="seleccionarCategoriaLab('longitud')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-sky-500 text-white shadow-md transition flex items-center gap-2">
           <i class="fa-solid fa-ruler"></i> Longitud
         </button>
-        <button id="btn-mag-massa" onclick="setLabTab('massa')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-2">
+        <button id="boto-cat-massa" onclick="seleccionarCategoriaLab('massa')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-2">
           <i class="fa-solid fa-weight-hanging"></i> Massa
         </button>
-        <button id="btn-mag-capacitat" onclick="setLabTab('capacitat')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-2">
+        <button id="boto-cat-capacitat" onclick="seleccionarCategoriaLab('capacitat')" class="px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-2">
           <i class="fa-solid fa-glass-water"></i> Capacitat
         </button>
       </div>
 
-      <div id="labCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div id="contenidorTargetesLab" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
-      <!-- Eina interactiva: L'escala màgica de la granota -->
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-300 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
           <div>
             <h3 class="text-xl sm:text-2xl font-black text-emerald-950 flex items-center gap-2">
-              <span>🐸</span> L'escala màgica de la granota: salts de 10
+              <span>🐸</span> L'escala de la granota: salts de 10
             </h3>
-            <p class="text-slate-600 text-xs sm:text-sm mt-0.5">Comprova com canvia una quantitat en saltar d'una unitat a una altra:</p>
+            <p class="text-slate-600 text-xs sm:text-sm mt-0.5">Comprova com canvia una quantitat en passar d'una unitat a una altra:</p>
           </div>
           <div class="flex flex-wrap gap-2 text-xs font-bold">
             <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-xl">Baixar escala: multiplica (×10)</span>
@@ -200,64 +159,62 @@
           <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-center">
             <div>
               <label class="text-[11px] font-bold text-slate-500 block mb-1">Quantitat:</label>
-              <input type="number" id="frogValueInput" value="1" min="0" step="any" class="w-24 text-center font-black text-lg px-2 py-1.5 rounded-xl border-2 border-emerald-400 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <input type="number" id="campValorGranota" value="1" min="0" step="any" class="w-24 text-center font-black text-lg px-2 py-1.5 rounded-xl border-2 border-emerald-400 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
 
             <div>
               <label class="text-[11px] font-bold text-slate-500 block mb-1">Unitat d'origen:</label>
-              <select id="frogFromSelect" class="font-bold text-sm px-3 py-2 rounded-xl border-2 border-emerald-400 bg-white text-emerald-950 shadow-sm"></select>
+              <select id="desplegableOrigenGranota" class="font-bold text-sm px-3 py-2 rounded-xl border-2 border-emerald-400 bg-white text-emerald-950 shadow-sm"></select>
             </div>
 
             <div class="text-xl text-emerald-600 font-black self-end pb-2">➔</div>
 
             <div>
               <label class="text-[11px] font-bold text-slate-500 block mb-1">Unitat de destí:</label>
-              <select id="frogToSelect" class="font-bold text-sm px-3 py-2 rounded-xl border-2 border-emerald-400 bg-white text-emerald-950 shadow-sm"></select>
+              <select id="desplegableDestiGranota" class="font-bold text-sm px-3 py-2 rounded-xl border-2 border-emerald-400 bg-white text-emerald-950 shadow-sm"></select>
             </div>
 
             <div class="self-end pb-1">
-              <button onclick="calculateFrogJump()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl shadow-md transition active:scale-95 flex items-center gap-2">
-                <span id="frogAnimEmoji" class="text-lg inline-block">🐸</span> Fes el salt!
+              <button onclick="executarSaltGranota()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl shadow-md transition active:scale-95 flex items-center gap-2">
+                <span>🐸</span> Fes el salt!
               </button>
             </div>
           </div>
 
-          <div id="frogResultBox" class="mt-4 bg-white p-4 rounded-xl border border-emerald-200 text-center hidden">
-            <p id="frogResultTitle" class="text-emerald-950 font-black text-lg mb-0.5"></p>
-            <p id="frogResultExplanation" class="text-slate-600 text-xs sm:text-sm"></p>
+          <div id="caixaResultatGranota" class="mt-4 bg-white p-4 rounded-xl border border-emerald-200 text-center hidden">
+            <p id="titolResultatGranota" class="text-emerald-950 font-black text-lg mb-0.5"></p>
+            <p id="explicacioResultatGranota" class="text-slate-600 text-xs sm:text-sm"></p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================= PESTANYA 1: TRIA LA UNITAT ================= -->
-    <section id="section-game1" class="view-panel hidden space-y-6">
+    <section id="panell-joc1" class="panell-vista hidden space-y-6">
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sky-300 shadow-sm text-center max-w-3xl mx-auto">
         <div class="flex justify-between items-center mb-4">
           <span class="px-3 py-1 bg-sky-100 text-sky-800 font-extrabold rounded-full text-xs">Activitat 1 · Estimació quotidiana</span>
-          <span class="text-amber-500 font-bold text-sm"><i class="fa-solid fa-star"></i> +20 XP</span>
+          <span class="text-amber-500 font-bold text-sm"><i class="fa-solid fa-star"></i> +20 punts</span>
         </div>
 
         <h2 class="text-xl sm:text-2xl font-black text-sky-950 mb-1">Quina és la unitat més adequada?</h2>
         <p class="text-slate-600 text-xs sm:text-sm mb-6">Pensa en la mesura real d'aquest element i tria la millor unitat per indicar-la.</p>
 
         <div class="bg-gradient-to-b from-sky-50 to-indigo-50/40 p-6 rounded-3xl border border-sky-200 mb-6">
-          <div id="g1Icon" class="text-6xl sm:text-7xl mb-2 transition transform hover:scale-110">✏️</div>
-          <h3 id="g1Title" class="text-xl sm:text-2xl font-bold text-slate-800 mb-1">Un llapis per pintar</h3>
-          <p id="g1Sub" class="text-sky-700 text-xs font-bold">Magnitud: longitud</p>
+          <div id="iconaJoc1" class="text-6xl sm:text-7xl mb-2 transition transform hover:scale-110">✏️</div>
+          <h3 id="titolJoc1" class="text-xl sm:text-2xl font-bold text-slate-800 mb-1">Un llapis per pintar</h3>
+          <p id="subtitolJoc1" class="text-sky-700 text-xs font-bold">Magnitud: longitud</p>
         </div>
 
-        <div id="g1OptionsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"></div>
-        <div id="g1Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
+        <div id="graellaOpcionsJoc1" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"></div>
+        <div id="missatgeRetornJoc1" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
 
-        <button id="g1NextBtn" onclick="nextGame1Question()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
+        <button id="botoSeguentJoc1" onclick="avancarPreguntaJoc1()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
           Següent element <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </section>
 
-    <!-- ================= PESTANYA 2: APARELLAR ================= -->
-    <section id="section-game2" class="view-panel hidden space-y-6">
+    <section id="panell-joc2" class="panell-vista hidden space-y-6">
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-indigo-300 shadow-sm max-w-4xl mx-auto">
         <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
           <div>
@@ -265,7 +222,7 @@
             <h2 class="text-xl sm:text-2xl font-black text-indigo-950 mt-1">Aparella cada objecte amb la seva mesura real</h2>
           </div>
           <div>
-            <span id="g2CounterBadge" class="px-3.5 py-1.5 bg-indigo-500 text-white font-black rounded-2xl text-xs sm:text-sm">Parella 0 / 4</span>
+            <span id="marcadorParellesJoc2" class="px-3.5 py-1.5 bg-indigo-500 text-white font-black rounded-2xl text-xs sm:text-sm">Parella 0 / 4</span>
           </div>
         </div>
 
@@ -276,21 +233,21 @@
             <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
               <i class="fa-solid fa-cube text-indigo-500"></i> Objectes quotidians:
             </h4>
-            <div id="g2ObjectsCol" class="space-y-2.5"></div>
+            <div id="columnaObjectesJoc2" class="space-y-2.5"></div>
           </div>
 
           <div class="space-y-2.5">
             <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
               <i class="fa-solid fa-ruler-combined text-indigo-500"></i> Mesures raonables:
             </h4>
-            <div id="g2ValuesCol" class="space-y-2.5"></div>
+            <div id="columnaValorsJoc2" class="space-y-2.5"></div>
           </div>
         </div>
 
-        <div id="g2SuccessMsg" class="hidden mt-6 p-4 bg-emerald-100 text-emerald-900 rounded-2xl text-center font-bold">
-          🎉 Excel·lent! Has relacionat correctament totes les mesures d'aquesta ronda! (+60 XP)
+        <div id="missatgeExitJoc2" class="hidden mt-6 p-4 bg-emerald-100 text-emerald-900 rounded-2xl text-center font-bold">
+          Molt bé! Has relacionat correctament totes les mesures d'aquesta ronda! (+60 punts)
           <div class="mt-3">
-            <button onclick="initGame2()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow">
+            <button onclick="iniciarJoc2()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow">
               Nova ronda d'objectes <i class="fa-solid fa-rotate-right ml-1"></i>
             </button>
           </div>
@@ -298,12 +255,11 @@
       </div>
     </section>
 
-    <!-- ================= PESTANYA 3: BALANÇA I CONVERSIÓ ================= -->
-    <section id="section-game3" class="view-panel hidden space-y-6">
+    <section id="panell-joc3" class="panell-vista hidden space-y-6">
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-purple-300 shadow-sm text-center max-w-3xl mx-auto">
         <div class="flex justify-between items-center mb-4">
           <span class="px-3 py-1 bg-purple-100 text-purple-900 font-extrabold rounded-full text-xs">Activitat 3 · Canvis i equivalències</span>
-          <span class="text-amber-500 font-bold text-sm"><i class="fa-solid fa-trophy"></i> +30 XP</span>
+          <span class="text-amber-500 font-bold text-sm"><i class="fa-solid fa-trophy"></i> +30 punts</span>
         </div>
 
         <h2 class="text-xl sm:text-2xl font-black text-purple-950 mb-1">Equilibra la balança!</h2>
@@ -317,76 +273,75 @@
           <div class="grid grid-cols-2 gap-4 items-center">
             <div class="bg-white p-4 rounded-2xl border-2 border-purple-300 shadow-sm">
               <span class="text-[10px] uppercase font-black text-purple-500 block">Plat esquerre</span>
-              <div id="g3LeftVal" class="text-2xl sm:text-3xl font-black text-slate-800 my-1">2 m</div>
+              <div id="valorEsquerreJoc3" class="text-2xl sm:text-3xl font-black text-slate-800 my-1">2 m</div>
               <span class="text-xs text-slate-400">Quantitat de referència</span>
             </div>
 
             <div class="bg-white p-4 rounded-2xl border-2 border-dashed border-purple-400 shadow-sm">
               <span class="text-[10px] uppercase font-black text-purple-500 block">Plat dret</span>
-              <div id="g3RightTarget" class="text-2xl sm:text-3xl font-black text-purple-600 my-1">? cm</div>
+              <div id="valorDretJoc3" class="text-2xl sm:text-3xl font-black text-purple-600 my-1">? cm</div>
               <span class="text-xs text-slate-400">Quin és el seu equivalent?</span>
             </div>
           </div>
         </div>
 
-        <div id="g3OptionsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
-        <div id="g3Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
+        <div id="graellaOpcionsJoc3" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4"></div>
+        <div id="missatgeRetornJoc3" class="hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base"></div>
 
-        <button id="g3NextBtn" onclick="nextGame3Question()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
+        <button id="botoSeguentJoc3" onclick="avancarPreguntaJoc3()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
           Següent balança <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </section>
 
-    <!-- ================= PESTANYA 4: CONTRARELLOTGE ================= -->
-    <section id="section-game4" class="view-panel hidden space-y-6">
+    <section id="panell-joc4" class="panell-vista hidden space-y-6">
       <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-rose-300 shadow-sm max-w-3xl mx-auto">
-        <div id="g4StartScreen" class="text-center py-6">
+        <div id="pantallaIniciJoc4" class="text-center py-6">
           <div class="w-16 h-16 bg-rose-100 text-rose-500 text-3xl rounded-3xl flex items-center justify-center mx-auto mb-4">
             <i class="fa-solid fa-stopwatch-20"></i>
           </div>
           <span class="px-3 py-1 bg-rose-100 text-rose-800 font-extrabold rounded-full text-xs inline-block mb-2">Activitat 4 · Agilitat mental</span>
           <h2 class="text-2xl sm:text-3xl font-black text-rose-950 mb-2">Contrarellotge de 45 segons</h2>
           <p class="text-slate-600 max-w-md mx-auto mb-6 text-xs sm:text-sm">
-            Posa a prova la teva rapidesa. Tens 45 segons per contestar tantes preguntes com puguis. Cada encert et donarà <strong>+25 XP</strong>!
+            Posa a prova la teva rapidesa. Tens 45 segons per contestar tantes preguntes com puguis. Cada encert et donarà <strong>+25 punts</strong>!
           </p>
-          <button onclick="startSpeedGame()" class="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95">
+          <button onclick="comencarJocContrarellotge()" class="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95">
             Comença el repte! ⏱️
           </button>
         </div>
 
-        <div id="g4ActiveScreen" class="hidden">
+        <div id="pantallaActivaJoc4" class="hidden">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2">
               <span class="text-xl">⏱️</span>
-              <span id="g4TimerText" class="text-2xl font-black text-rose-600">45s</span>
+              <span id="textTempsJoc4" class="text-2xl font-black text-rose-600">45s</span>
             </div>
             <div class="text-sm font-bold text-slate-500">
-              Encerts: <span id="g4ScoreText" class="text-emerald-600 font-black text-lg">0</span>
+              Encerts: <span id="textEncertsJoc4" class="text-emerald-600 font-black text-lg">0</span>
             </div>
           </div>
 
           <div class="w-full bg-slate-100 rounded-full h-2.5 mb-6 overflow-hidden">
-            <div id="g4TimerBar" class="bg-rose-500 h-full w-full transition-all duration-1000 linear"></div>
+            <div id="barraTempsJoc4" class="bg-rose-500 h-full w-full transition-all duration-1000"></div>
           </div>
 
           <div class="bg-rose-50/60 p-6 rounded-2xl border border-rose-200 mb-6 text-center">
-            <span id="g4CategoryBadge" class="px-3 py-1 bg-white text-rose-700 text-xs font-bold rounded-full shadow-sm mb-2 inline-block">Longitud</span>
-            <h3 id="g4QuestionPrompt" class="text-lg sm:text-xl font-bold text-slate-800 my-2">Quants metres té 1 quilòmetre?</h3>
+            <span id="etiquetaCategoriaJoc4" class="px-3 py-1 bg-white text-rose-700 text-xs font-bold rounded-full shadow-sm mb-2 inline-block">Longitud</span>
+            <h3 id="textPreguntaJoc4" class="text-lg sm:text-xl font-bold text-slate-800 my-2">Quants metres té 1 quilòmetre?</h3>
           </div>
 
-          <div id="g4AnswersGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          <div id="graellaRespostesJoc4" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         </div>
 
-        <div id="g4EndScreen" class="hidden text-center py-6">
+        <div id="pantallaFinalJoc4" class="hidden text-center py-6">
           <div class="text-5xl mb-2">🏅</div>
           <h2 class="text-2xl font-black text-slate-800 mb-1">Temps acabat!</h2>
-          <p id="g4SummaryText" class="text-sm text-slate-600 mb-4"></p>
-          <div id="g4XpEarnedBadge" class="inline-block bg-amber-100 text-amber-900 px-6 py-2 rounded-2xl font-black text-lg mb-6">
-            +0 XP guanyats
+          <p id="resumFinalJoc4" class="text-sm text-slate-600 mb-4"></p>
+          <div id="insigniaPuntsJoc4" class="inline-block bg-amber-100 text-amber-900 px-6 py-2 rounded-2xl font-black text-lg mb-6">
+            +0 punts guanyats
           </div>
           <div>
-            <button onclick="startSpeedGame()" class="px-8 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95">
+            <button onclick="comencarJocContrarellotge()" class="px-8 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95">
               Tornar a jugar <i class="fa-solid fa-rotate-right ml-1"></i>
             </button>
           </div>
@@ -394,10 +349,7 @@
       </div>
     </section>
 
-    <!-- ================= PESTANYA 5: EL GRAN REPTE FINAL (EXPANDIT I MULTI-ACTIVITAT) ================= -->
-    <section id="section-game5" class="view-panel hidden space-y-6">
-      
-      <!-- Banner Boss Final (amb només una icona neta) -->
+    <section id="panell-joc5" class="panell-vista hidden space-y-6">
       <div class="bg-gradient-to-r from-amber-600 via-yellow-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">
         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
@@ -413,14 +365,13 @@
             <div class="text-3xl text-amber-200 mb-1">
               <i class="fa-solid fa-crown"></i>
             </div>
-            <span class="text-xs font-black uppercase text-amber-200 block">Recompensa màxima:</span>
-            <span class="text-sm sm:text-base font-extrabold text-white">+50 XP per fase</span>
+            <span class="text-xs font-black uppercase text-amber-200 block">Recompensa:</span>
+            <span class="text-sm sm:text-base font-extrabold text-white">+50 punts per fase</span>
           </div>
         </div>
       </div>
 
-      <!-- Pantalla d'Inici de l'Aventura 5 -->
-      <div id="g5IntroScreen" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-300 shadow-sm max-w-3xl mx-auto text-center">
+      <div id="pantallaIniciJoc5" class="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-300 shadow-sm max-w-3xl mx-auto text-center">
         <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center text-3xl mx-auto mb-4">
           <i class="fa-solid fa-map-location-dot"></i>
         </div>
@@ -429,7 +380,6 @@
           T'esperen 10 proves consecutives amb activitats diferents. Disposes de <strong>3 vides</strong> (cors) per completar la travessia. Si falles, perdràs un cor, però podràs aprendre de l'error i continuar!
         </p>
 
-        <!-- Indicador de tipus d'activitats -->
         <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-left text-xs mb-6 max-w-2xl mx-auto">
           <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200">
             <span class="font-black text-amber-800 block mb-0.5">1. Doble pas</span>
@@ -453,103 +403,87 @@
           </div>
         </div>
 
-        <button onclick="startBossAdventure()" class="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95 flex items-center gap-2 mx-auto">
+        <button onclick="iniciarAventuraJoc5()" class="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-base rounded-2xl shadow-md transition active:scale-95 flex items-center gap-2 mx-auto">
           Inicia la gran travessia! <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
 
-      <!-- Pantalla de Joc Actiu del Repte Final -->
-      <div id="g5ActiveScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-400 shadow-sm max-w-3xl mx-auto">
-        
-        <!-- Barra de seguiment: Progrés + Vides -->
+      <div id="pantallaActivaJoc5" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-400 shadow-sm max-w-3xl mx-auto">
         <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
           <div class="flex items-center gap-2">
-            <span id="g5StageBadge" class="px-3 py-1 bg-amber-100 text-amber-900 font-extrabold rounded-full text-xs">Fase 1 / 10</span>
-            <span id="g5TypeLabel" class="text-xs font-bold text-slate-500">Problema de doble pas</span>
+            <span id="etiquetaFaseJoc5" class="px-3 py-1 bg-amber-100 text-amber-900 font-extrabold rounded-full text-xs">Fase 1 / 10</span>
+            <span id="etiquetaTipusJoc5" class="text-xs font-bold text-slate-500">Problema de doble pas</span>
           </div>
 
-          <!-- Vides restants -->
           <div class="flex items-center gap-1.5 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full text-rose-500 font-bold text-sm">
             <span class="text-xs text-slate-600 mr-1 font-bold">Vides:</span>
-            <span id="g5HeartsDisplay">❤️❤️❤️</span>
+            <span id="marcadorVidesJoc5">❤️❤️❤️</span>
           </div>
         </div>
 
-        <!-- Barra visual de progrés de 10 passos -->
         <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-6">
-          <div id="g5ProgressBar" class="bg-gradient-to-r from-amber-400 to-yellow-500 h-full w-[10%] transition-all duration-300"></div>
+          <div id="barraProgresJoc5" class="bg-gradient-to-r from-amber-400 to-yellow-500 h-full w-[10%] transition-all duration-300"></div>
         </div>
 
-        <!-- Enunciat i pregunta -->
         <div class="text-center mb-5">
-          <div id="g5PromptIcon" class="text-5xl mb-2">🍰</div>
-          <h3 id="g5Title" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug"></h3>
-          <p id="g5Instruction" class="text-slate-500 text-xs mt-1">Converteix mentalment a la mateixa unitat abans de respondre:</p>
+          <div id="iconaPreguntaJoc5" class="text-5xl mb-2">🍰</div>
+          <h3 id="titolPreguntaJoc5" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug"></h3>
+          <p id="instruccioPreguntaJoc5" class="text-slate-500 text-xs mt-1">Converteix mentalment a la mateixa unitat abans de respondre:</p>
         </div>
 
-        <!-- Panell d'interacció dinàmic (s'omple segons el tipus d'activitat) -->
-        <div id="g5InteractivePanel" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 mb-6"></div>
+        <div id="panellInteractiuJoc5" class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 mb-6"></div>
+        <div id="contenidorOpcionsJoc5" class="mb-6"></div>
+        <div id="missatgeRetornJoc5" class="hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm"></div>
 
-        <!-- Panell d'opcions de resposta -->
-        <div id="g5OptionsContainer" class="mb-6"></div>
-
-        <!-- Feedback d'encert o correcció -->
-        <div id="g5Feedback" class="hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm"></div>
-
-        <!-- Botó de continuar -->
-        <button id="g5NextBtn" onclick="nextBossStage()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
+        <button id="botoSeguentJoc5" onclick="avancarFaseJoc5()" class="hidden mt-4 mx-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-md transition active:scale-95 flex items-center gap-2">
           Continua el viatge <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
 
-      <!-- Pantalla de Victòria / Èxit Total -->
-      <div id="g5VictoryScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-400 shadow-sm max-w-3xl mx-auto text-center py-8">
-        <div class="text-6xl mb-3 animate-gold">👑</div>
+      <div id="pantallaVictoriaJoc5" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-400 shadow-sm max-w-3xl mx-auto text-center py-8">
+        <div class="text-6xl mb-3">👑</div>
         <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 font-extrabold rounded-full text-xs uppercase tracking-wider inline-block mb-2">Mestratge absolut assolit</span>
         <h3 class="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Enhorabona! Has dominat el gran repte final!</h3>
-        <p id="g5VictoryText" class="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
+        <p class="text-slate-600 text-sm max-w-lg mx-auto mb-6 leading-relaxed">
           Has superat amb èxit les 10 fases combinades de longitud, massa i capacitat. El teu domini de les conversions i de les mesures de l'entorn és impecable.
         </p>
 
         <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-950 px-6 py-3 rounded-2xl font-black text-lg mb-6 shadow-sm border border-amber-300">
-          <i class="fa-solid fa-star text-amber-500"></i> +300 XP de bonificació de mestre!
+          <i class="fa-solid fa-star text-amber-500"></i> +300 punts de bonificació de mestre!
         </div>
 
         <div class="flex justify-center gap-3">
-          <button onclick="startBossAdventure()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold text-sm shadow transition">
+          <button onclick="iniciarAventuraJoc5()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold text-sm shadow transition">
             Repetir la gran travessia <i class="fa-solid fa-rotate-right ml-1"></i>
           </button>
-          <button onclick="switchSection('lab')" class="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold text-sm shadow transition">
+          <button onclick="canviarSeccio('lab')" class="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-bold text-sm shadow transition">
             Tornar al laboratori <i class="fa-solid fa-flask-vial ml-1"></i>
           </button>
         </div>
       </div>
 
-      <!-- Pantalla de Derrota (Sense vides) -->
-      <div id="g5DefeatScreen" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-rose-300 shadow-sm max-w-2xl mx-auto text-center py-8">
+      <div id="pantallaDerrotaJoc5" class="hidden bg-white rounded-3xl p-6 sm:p-8 border-2 border-rose-300 shadow-sm max-w-2xl mx-auto text-center py-8">
         <div class="text-5xl mb-3 text-rose-500">💔</div>
         <h3 class="text-2xl font-black text-slate-900 mb-2">T'has quedat sense cors!</h3>
         <p class="text-slate-600 text-sm max-w-md mx-auto mb-6 leading-relaxed">
           No et preocupis, a la ciència de les mesures cada intent és un aprenentatge. Pots tornar al laboratori per repassar l'escala o tornar-ho a provar ara mateix!
         </p>
         <div class="flex justify-center gap-3">
-          <button onclick="startBossAdventure()" class="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-sm shadow transition">
+          <button onclick="iniciarAventuraJoc5()" class="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-sm shadow transition">
             Torna-ho a intentar <i class="fa-solid fa-rotate-right ml-1"></i>
           </button>
-          <button onclick="switchSection('lab')" class="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-2xl font-bold text-sm transition">
+          <button onclick="canviarSeccio('lab')" class="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-2xl font-bold text-sm transition">
             Repassar al laboratori
           </button>
         </div>
       </div>
-
     </section>
 
   </main>
 
-  <!-- ================= MODAL: MEDALLES I ASSOLIMENTS ================= -->
-  <div id="badgesModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div id="modalMedalles" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border-2 border-amber-300 shadow-xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="closeBadgesModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">
+      <button onclick="tancarModalMedalles()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">
         &times;
       </button>
       <div class="text-center mb-6">
@@ -557,14 +491,13 @@
         <h3 class="text-xl sm:text-2xl font-black text-slate-800">El teu quadern de medalles</h3>
         <p class="text-xs text-slate-500">Supera activitats i reptes per desbloquejar-les totes!</p>
       </div>
-      <div id="badgesGrid" class="grid grid-cols-2 gap-3"></div>
+      <div id="graellaMedalles" class="grid grid-cols-2 gap-3"></div>
     </div>
   </div>
 
-  <!-- ================= MODAL: SELECCIÓ D'AVATAR ================= -->
-  <div id="avatarModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div id="modalPerfil" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 border-2 border-sky-300 shadow-xl relative">
-      <button onclick="closeAvatarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">
+      <button onclick="tancarModalPerfil()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-bold">
         &times;
       </button>
       <h3 class="text-xl font-black text-center text-sky-950 mb-1">Tria el teu perfil d'explorador/a</h3>
@@ -572,1346 +505,1328 @@
 
       <div class="mb-4">
         <label class="block text-xs font-bold text-slate-600 mb-1">El teu nom:</label>
-        <input type="text" id="avatarInputName" maxlength="15" placeholder="Nom de l'explorador/a" class="w-full px-4 py-2 border-2 border-sky-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400">
+        <input type="text" id="campNomPerfil" maxlength="15" placeholder="Nom de l'explorador/a" class="w-full px-4 py-2 border-2 border-sky-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400">
       </div>
 
       <div class="grid grid-cols-4 gap-2.5 text-2xl mb-6">
-        <button onclick="setAvatarEmoji('🧭')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🧭</button>
-        <button onclick="setAvatarEmoji('🦊')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦊</button>
-        <button onclick="setAvatarEmoji('🦉')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦉</button>
-        <button onclick="setAvatarEmoji('🚀')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🚀</button>
-        <button onclick="setAvatarEmoji('🦁')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦁</button>
-        <button onclick="setAvatarEmoji('🐬')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🐬</button>
-        <button onclick="setAvatarEmoji('🐸')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🐸</button>
-        <button onclick="setAvatarEmoji('👑')" class="avatar-pick p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">👑</button>
+        <button onclick="seleccionarIconaPerfil('🧭')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🧭</button>
+        <button onclick="seleccionarIconaPerfil('🦊')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦊</button>
+        <button onclick="seleccionarIconaPerfil('🦉')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦉</button>
+        <button onclick="seleccionarIconaPerfil('🚀')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🚀</button>
+        <button onclick="seleccionarIconaPerfil('🦁')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🦁</button>
+        <button onclick="seleccionarIconaPerfil('🐬')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🐬</button>
+        <button onclick="seleccionarIconaPerfil('🐸')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">🐸</button>
+        <button onclick="seleccionarIconaPerfil('👑')" class="boto-avatar p-3 bg-slate-50 hover:bg-sky-100 rounded-2xl border border-slate-200 transition">👑</button>
       </div>
 
-      <button onclick="savePlayerProfile()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow transition">
+      <button onclick="desarPerfilJugador()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow transition">
         Guardar dades
       </button>
     </div>
   </div>
 
-  <!-- ================= MODAL DE NOTIFICACIÓ PERSONALITZADA ================= -->
-  <div id="noticeModal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div id="modalAvis" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center border-2 border-amber-300 shadow-xl">
-      <div id="noticeIcon" class="text-4xl mb-2">⭐</div>
-      <h4 id="noticeTitle" class="text-lg font-black text-slate-800 mb-1">Felicitats!</h4>
-      <p id="noticeDesc" class="text-xs text-slate-600 mb-4"></p>
-      <button onclick="closeNoticeModal()" class="px-6 py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow transition">
+      <div id="iconaAvis" class="text-4xl mb-2">⭐</div>
+      <h4 id="titolAvis" class="text-lg font-black text-slate-800 mb-1">Felicitats!</h4>
+      <p id="descripcioAvis" class="text-xs text-slate-600 mb-4"></p>
+      <button onclick="tancarModalAvis()" class="px-6 py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs shadow transition">
         D'acord!
       </button>
     </div>
   </div>
 
-  <!-- ================= CODI JAVASCRIPT ROBUST I ENCAPSULAT ================= -->
   <script>
-    /* -------------------------------------------------------------
-       1. GENERADOR DE SONS NADIUS AMB WEB AUDIO API
-    ------------------------------------------------------------- */
-    const NativeAudio = {
-      ctx: null,
-      getAudioContext() {
-        if (!this.ctx) {
+    const So = {
+      context: null,
+      obtenirContext() {
+        if (!this.context) {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
           if (AudioContext) {
-            this.ctx = new AudioContext();
+            this.context = new AudioContext();
           }
         }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+        if (this.context && this.context.state === 'suspended') {
+          this.context.resume();
         }
-        return this.ctx;
+        return this.context;
       },
-      playSuccess() {
+      encert() {
         try {
-          const ctx = this.getAudioContext();
+          const ctx = this.obtenirContext();
           if (!ctx) return;
-          const now = ctx.currentTime;
+          const ara = ctx.currentTime;
           const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          const guany = ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.setValueAtTime(659.25, now + 0.08);
-          osc.frequency.setValueAtTime(783.99, now + 0.16);
-          osc.frequency.setValueAtTime(1046.50, now + 0.24);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.42);
-        } catch (e) {
-          console.warn("Àudio no disponible", e);
-        }
+          osc.frequency.setValueAtTime(523.25, ara);
+          osc.frequency.setValueAtTime(659.25, ara + 0.08);
+          osc.frequency.setValueAtTime(783.99, ara + 0.16);
+          osc.frequency.setValueAtTime(1046.50, ara + 0.24);
+          guany.gain.setValueAtTime(0.15, ara);
+          guany.gain.exponentialRampToValueAtTime(0.001, ara + 0.35);
+          osc.connect(guany);
+          guany.connect(ctx.destination);
+          osc.start(ara);
+          osc.stop(ara + 0.35);
+        } catch (e) {}
       },
-      playError() {
+      error() {
         try {
-          const ctx = this.getAudioContext();
+          const ctx = this.obtenirContext();
           if (!ctx) return;
-          const now = ctx.currentTime;
+          const ara = ctx.currentTime;
           const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          const guany = ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.linearRampToValueAtTime(130, now + 0.22);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.25);
-        } catch (e) {
-          console.warn("Àudio no disponible", e);
-        }
+          osc.frequency.setValueAtTime(220, ara);
+          osc.frequency.linearRampToValueAtTime(130, ara + 0.2);
+          guany.gain.setValueAtTime(0.15, ara);
+          guany.gain.exponentialRampToValueAtTime(0.001, ara + 0.22);
+          osc.connect(guany);
+          guany.connect(ctx.destination);
+          osc.start(ara);
+          osc.stop(ara + 0.22);
+        } catch (e) {}
       },
-      playLevelUp() {
+      victoria() {
         try {
-          const ctx = this.getAudioContext();
+          const ctx = this.obtenirContext();
           if (!ctx) return;
-          const now = ctx.currentTime;
+          const ara = ctx.currentTime;
           const notes = [440, 554, 659, 880, 1108];
           notes.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+            const guany = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
-            gain.gain.setValueAtTime(0.16, now + (idx * 0.08));
-            gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.24);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + (idx * 0.08));
-            osc.stop(now + (idx * 0.08) + 0.24);
+            osc.frequency.setValueAtTime(freq, ara + (idx * 0.07));
+            guany.gain.setValueAtTime(0.14, ara + (idx * 0.07));
+            guany.gain.exponentialRampToValueAtTime(0.001, ara + (idx * 0.07) + 0.22);
+            osc.connect(guany);
+            guany.connect(ctx.destination);
+            osc.start(ara + (idx * 0.07));
+            osc.stop(ara + (idx * 0.07) + 0.22);
           });
-        } catch (e) {
-          console.warn("Àudio no disponible", e);
-        }
+        } catch (e) {}
       },
-      playHop() {
+      salt() {
         try {
-          const ctx = this.getAudioContext();
+          const ctx = this.obtenirContext();
           if (!ctx) return;
-          const now = ctx.currentTime;
+          const ara = ctx.currentTime;
           const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          const guany = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(320, now);
-          osc.frequency.exponentialRampToValueAtTime(680, now + 0.12);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.12);
-        } catch (e) {
-          console.warn("Àudio no disponible", e);
-        }
+          osc.frequency.setValueAtTime(320, ara);
+          osc.frequency.exponentialRampToValueAtTime(680, ara + 0.12);
+          guany.gain.setValueAtTime(0.16, ara);
+          guany.gain.exponentialRampToValueAtTime(0.01, ara + 0.12);
+          osc.connect(guany);
+          guany.connect(ctx.destination);
+          osc.start(ara);
+          osc.stop(ara + 0.12);
+        } catch (e) {}
       }
     };
 
-    /* -------------------------------------------------------------
-       2. MOTOR NADIU DE CONFETI EN CANVAS
-    ------------------------------------------------------------- */
-    const NativeConfetti = {
+    const Confeti = {
       canvas: null,
       ctx: null,
-      particles: [],
-      animationId: null,
-      init() {
-        this.canvas = document.getElementById('confettiCanvas');
+      particules: [],
+      idAnimacio: null,
+      temporitzadorAturada: null,
+      inicialitzar() {
+        this.canvas = document.getElementById('telaConfeti');
         if (this.canvas) {
           this.ctx = this.canvas.getContext('2d');
-          this.resize();
-          window.addEventListener('resize', () => this.resize());
+          this.redimensionar();
+          window.addEventListener('resize', () => this.redimensionar());
         }
       },
-      resize() {
+      redimensionar() {
         if (!this.canvas) return;
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
       },
-      launch() {
-        if (!this.canvas || !this.ctx) this.init();
+      netejar() {
+        if (this.idAnimacio) {
+          cancelAnimationFrame(this.idAnimacio);
+          this.idAnimacio = null;
+        }
+        if (this.temporitzadorAturada) {
+          clearTimeout(this.temporitzadorAturada);
+          this.temporitzadorAturada = null;
+        }
+        this.particules = [];
+        if (this.ctx && this.canvas) {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      },
+      llancar() {
+        this.netejar();
+        if (!this.canvas || !this.ctx) this.inicialitzar();
+        if (!this.canvas || !this.ctx) return;
+
         const colors = ['#f59e0b', '#10b981', '#0ea5e9', '#ec4899', '#8b5cf6', '#eab308'];
-        const count = 80;
-        for (let i = 0; i < count; i++) {
-          this.particles.push({
-            x: this.canvas.width * (0.3 + Math.random() * 0.4),
-            y: this.canvas.height * 0.6,
-            w: 8 + Math.random() * 6,
-            h: 6 + Math.random() * 4,
+        const quantitat = 60;
+        const origenX = this.canvas.width * 0.5;
+        const origenY = this.canvas.height * 0.45;
+
+        for (let i = 0; i < quantitat; i++) {
+          this.particules.push({
+            x: origenX + (Math.random() - 0.5) * 120,
+            y: origenY + (Math.random() - 0.5) * 60,
+            w: 7 + Math.random() * 5,
+            h: 5 + Math.random() * 4,
             color: colors[Math.floor(Math.random() * colors.length)],
-            vx: (Math.random() - 0.5) * 16,
-            vy: -10 - Math.random() * 12,
-            gravity: 0.35,
-            rotation: Math.random() * 360,
-            rotSpeed: (Math.random() - 0.5) * 8,
-            life: 90
+            vx: (Math.random() - 0.5) * 14,
+            vy: -7 - Math.random() * 9,
+            gravetat: 0.38,
+            rotacio: Math.random() * 360,
+            velocitatRotacio: (Math.random() - 0.5) * 10,
+            vida: 70 + Math.random() * 20
           });
         }
-        if (!this.animationId) {
-          this.update();
-        }
-      },
-      update() {
-        if (!this.ctx || !this.canvas) return;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-          const p = this.particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += p.gravity;
-          p.rotation += p.rotSpeed;
-          p.life--;
 
-          this.ctx.save();
-          this.ctx.translate(p.x, p.y);
-          this.ctx.rotate((p.rotation * Math.PI) / 180);
-          this.ctx.fillStyle = p.color;
-          this.ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-          this.ctx.restore();
+        const actualitzar = () => {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          for (let i = this.particules.length - 1; i >= 0; i--) {
+            const p = this.particules[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravetat;
+            p.rotacio += p.velocitatRotacio;
+            p.vida--;
 
-          if (p.life <= 0 || p.y > this.canvas.height) {
-            this.particles.splice(i, 1);
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate((p.rotacio * Math.PI) / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            this.ctx.restore();
+
+            if (p.vida <= 0 || p.y > this.canvas.height) {
+              this.particules.splice(i, 1);
+            }
           }
-        }
-        if (this.particles.length > 0) {
-          this.animationId = requestAnimationFrame(() => this.update());
-        } else {
-          this.animationId = null;
-        }
-      }
-    };
 
-    /* -------------------------------------------------------------
-       3. SISTEMA DE GAMIFICACIÓ, RANGS I MEDALLES
-    ------------------------------------------------------------- */
-    const RANKS = [
-      { name: "Explorador/a novell", minXp: 0, maxXp: 200 },
-      { name: "Cadet del regle", minXp: 200, maxXp: 500 },
-      { name: "Especialista en pesos", minXp: 500, maxXp: 950 },
-      { name: "Mestre/a suprem/a de les mesures", minXp: 950, maxXp: 2000 }
-    ];
-
-    const BADGES = [
-      { id: 'first_step', name: 'Primer pas', desc: 'Aconsegueix els teus primers 20 XP', icon: '🌱' },
-      { id: 'length_hawk', name: 'Ull de falcó', desc: 'Supera 5 preguntes d\'estimació de longitud', icon: '📏' },
-      { id: 'balance_gold', name: 'Balança d\'or', desc: 'Resol 4 equilibris a la balança', icon: '⚖️' },
-      { id: 'water_drop', name: 'Gota màgica', desc: 'Supera dues rondes d\'aparellar mesures', icon: '💧' },
-      { id: 'speed_lightning', name: 'Llamp del saber', desc: 'Fes més de 4 encerts al contrarellotge', icon: '⚡' },
-      { id: 'frog_master', name: 'Salt de la granota', desc: 'Fes un salt d\'unitats amb la granota', icon: '🐸' },
-      { id: 'boss_conqueror', name: 'Corona del mestre suprem', desc: 'Supera amb èxit el gran repte final de 10 fases', icon: '👑' }
-    ];
-
-    let player = {
-      name: "Explorador/a",
-      avatar: "🧭",
-      xp: 0,
-      badges: [],
-      stats: {
-        game1Correct: 0,
-        game2Rounds: 0,
-        game3Correct: 0,
-        game4Best: 0,
-        bossWins: 0,
-        frogJumps: 0
-      }
-    };
-
-    function loadGameData() {
-      try {
-        const stored = localStorage.getItem('aventura_mesures_v4');
-        if (stored) {
-          player = Object.assign(player, JSON.parse(stored));
-        }
-      } catch (err) {
-        console.warn("No s'ha pogut accedir al localStorage", err);
-      }
-      refreshPlayerUI();
-    }
-
-    function saveGameData() {
-      try {
-        localStorage.setItem('aventura_mesures_v4', JSON.stringify(player));
-      } catch (err) {
-        console.warn("No s'ha pogut desar al localStorage", err);
-      }
-    }
-
-    function getCurrentRank(xp) {
-      for (let i = RANKS.length - 1; i >= 0; i--) {
-        if (xp >= RANKS[i].minXp) return RANKS[i];
-      }
-      return RANKS[0];
-    }
-
-    function addPlayerXp(amount) {
-      const oldRank = getCurrentRank(player.xp);
-      player.xp += amount;
-      refreshPlayerUI();
-      evaluateBadges();
-      saveGameData();
-
-      const newRank = getCurrentRank(player.xp);
-      if (newRank.name !== oldRank.name) {
-        NativeAudio.playLevelUp();
-        NativeConfetti.launch();
-        showModalNotice("🌟 Has pujat de rang!", `Felicitats! Ara ets: ${newRank.name}!`);
-      }
-    }
-
-    function refreshPlayerUI() {
-      document.getElementById('playerName').textContent = player.name;
-      document.getElementById('playerAvatar').textContent = player.avatar;
-      document.getElementById('playerXpVal').textContent = player.xp;
-
-      const r = getCurrentRank(player.xp);
-      document.getElementById('playerRankName').textContent = r.name;
-
-      const span = r.maxXp - r.minXp;
-      const progress = Math.min(Math.max(player.xp - r.minXp, 0), span);
-      const pct = Math.min((progress / span) * 100, 100);
-      document.getElementById('playerXpBar').style.width = `${pct}%`;
-    }
-
-    function evaluateBadges() {
-      function grant(id) {
-        if (!player.badges.includes(id)) {
-          player.badges.push(id);
-          const b = BADGES.find(item => item.id === id);
-          NativeAudio.playLevelUp();
-          NativeConfetti.launch();
-          showModalNotice(`🏆 Nova medalla: ${b.name}!`, `${b.icon} ${b.desc}`);
-        }
-      }
-
-      if (player.xp >= 20) grant('first_step');
-      if (player.stats.game1Correct >= 5) grant('length_hawk');
-      if (player.stats.game3Correct >= 4) grant('balance_gold');
-      if (player.stats.game2Rounds >= 2) grant('water_drop');
-      if (player.stats.game4Best >= 4) grant('speed_lightning');
-      if (player.stats.frogJumps >= 1) grant('frog_master');
-      if (player.stats.bossWins >= 1) grant('boss_conqueror');
-    }
-
-    function resetGameProgress() {
-      if (confirm("Vols reiniciar els punts d'experiència i medalles a zero?")) {
-        player = {
-          name: "Explorador/a",
-          avatar: "🧭",
-          xp: 0,
-          badges: [],
-          stats: { game1Correct: 0, game2Rounds: 0, game3Correct: 0, game4Best: 0, bossWins: 0, frogJumps: 0 }
+          if (this.particules.length > 0) {
+            this.idAnimacio = requestAnimationFrame(actualitzar);
+          } else {
+            this.netejar();
+          }
         };
-        saveGameData();
-        refreshPlayerUI();
-        showModalNotice("Reiniciat", "S'han restablert els punts i el teu progrés.");
+
+        this.idAnimacio = requestAnimationFrame(actualitzar);
+
+        this.temporitzadorAturada = setTimeout(() => {
+          this.netejar();
+        }, 2500);
+      }
+    };
+
+    const RANGS = [
+      { nom: "Explorador/a novell", min: 0, max: 200 },
+      { nom: "Cadet del regle", min: 200, max: 500 },
+      { nom: "Especialista en pesos", min: 500, max: 950 },
+      { nom: "Mestre/a suprem/a de les mesures", min: 950, max: 2000 }
+    ];
+
+    const MEDALLES = [
+      { id: 'primer_pas', nom: 'Primer pas', desc: 'Aconsegueix els teus primers 20 punts', icona: '🌱' },
+      { id: 'ull_falco', nom: 'Ull de falcó', desc: 'Supera 5 preguntes d\'estimació de longitud', icona: '📏' },
+      { id: 'balanca_or', nom: 'Balança d\'or', desc: 'Resol 4 equilibris a la balança', icona: '⚖️' },
+      { id: 'gota_magica', nom: 'Gota màgica', desc: 'Supera dues rondes d\'aparellar mesures', icona: '💧' },
+      { id: 'llamp_saber', nom: 'Llamp del saber', desc: 'Fes més de 4 encerts al contrarellotge', icona: '⚡' },
+      { id: 'salt_granota', nom: 'Salt de la granota', desc: 'Fes un salt d\'unitats amb la granota', icona: '🐸' },
+      { id: 'corona_mestre', nom: 'Corona del mestre suprem', desc: 'Supera amb èxit el gran repte final de 10 fases', icona: '👑' }
+    ];
+
+    let dadesJugador = {
+      nom: "Explorador/a",
+      avatar: "🧭",
+      punts: 0,
+      medalles: [],
+      estadistiques: {
+        joc1Encerts: 0,
+        joc2Rondes: 0,
+        joc3Encerts: 0,
+        joc4Millor: 0,
+        joc5Victories: 0,
+        granotaSalts: 0
+      }
+    };
+
+    function carregarDades() {
+      try {
+        const desades = localStorage.getItem('aventura_mesures_dades_v5');
+        if (desades) {
+          dadesJugador = Object.assign(dadesJugador, JSON.parse(desades));
+        }
+      } catch (e) {}
+      actualitzarInterficieJugador();
+    }
+
+    function desarDades() {
+      try {
+        localStorage.setItem('aventura_mesures_dades_v5', JSON.stringify(dadesJugador));
+      } catch (e) {}
+    }
+
+    function obtenirRang(punts) {
+      for (let i = RANGS.length - 1; i >= 0; i--) {
+        if (punts >= RANGS[i].min) return RANGS[i];
+      }
+      return RANGS[0];
+    }
+
+    function afegirPunts(quantitat) {
+      const rangAbans = obtenirRang(dadesJugador.punts);
+      dadesJugador.punts += quantitat;
+      actualitzarInterficieJugador();
+      comprovarMedalles();
+      desarDades();
+
+      const rangDespres = obtenirRang(dadesJugador.punts);
+      if (rangDespres.nom !== rangAbans.nom) {
+        So.victoria();
+        Confeti.llancar();
+        mostrarAvisModal("Has pujat de rang!", `Felicitats! Ara el teu rang és: ${rangDespres.nom}!`);
       }
     }
 
-    /* -------------------------------------------------------------
-       4. LABORATORI DIDÀCTIC: EXPLICACIONS I ESCALA DE LA GRANOTA
-    ------------------------------------------------------------- */
-    const LAB_DATA = {
+    function actualitzarInterficieJugador() {
+      document.getElementById('nomPerfil').textContent = dadesJugador.nom;
+      document.getElementById('iconaPerfil').textContent = dadesJugador.avatar;
+      document.getElementById('valorPunts').textContent = dadesJugador.punts;
+
+      const r = obtenirRang(dadesJugador.punts);
+      document.getElementById('textRang').textContent = r.nom;
+
+      const recorregut = r.max - r.min;
+      const assolit = Math.min(Math.max(dadesJugador.punts - r.min, 0), recorregut);
+      const percentatge = Math.min((assolit / recorregut) * 100, 100);
+      document.getElementById('barraPunts').style.width = `${percentatge}%`;
+    }
+
+    function comprovarMedalles() {
+      function atorgar(id) {
+        if (!dadesJugador.medalles.includes(id)) {
+          dadesJugador.medalles.push(id);
+          const m = MEDALLES.find(item => item.id === id);
+          So.victoria();
+          Confeti.llancar();
+          mostrarAvisModal(`Nova medalla: ${m.nom}!`, `${m.icona} ${m.desc}`);
+        }
+      }
+
+      if (dadesJugador.punts >= 20) atorgar('primer_pas');
+      if (dadesJugador.estadistiques.joc1Encerts >= 5) atorgar('ull_falco');
+      if (dadesJugador.estadistiques.joc3Encerts >= 4) atorgar('balanca_or');
+      if (dadesJugador.estadistiques.joc2Rondes >= 2) atorgar('gota_magica');
+      if (dadesJugador.estadistiques.joc4Millor >= 4) atorgar('llamp_saber');
+      if (dadesJugador.estadistiques.granotaSalts >= 1) atorgar('salt_granota');
+      if (dadesJugador.estadistiques.joc5Victories >= 1) atorgar('corona_mestre');
+    }
+
+    function reiniciarPartida() {
+      if (confirm("Vols reiniciar els punts i el progrés a zero?")) {
+        Confeti.netejar();
+        aturarTemporitzadorJoc4();
+        dadesJugador = {
+          nom: "Explorador/a",
+          avatar: "🧭",
+          punts: 0,
+          medalles: [],
+          estadistiques: {
+            joc1Encerts: 0,
+            joc2Rondes: 0,
+            joc3Encerts: 0,
+            joc4Millor: 0,
+            joc5Victories: 0,
+            granotaSalts: 0
+          }
+        };
+        desarDades();
+        actualitzarInterficieJugador();
+        mostrarAvisModal("Reiniciat", "S'han restablert els punts i el teu progrés.");
+      }
+    }
+
+    const DADES_LAB = {
       longitud: {
-        title: "Unitats de longitud (distància i mida)",
-        units: [
-          { sym: "mm", name: "mil·límetre", equiv: "1 mm = 0,001 m", obj: "El gruix d'una moneda d'1 euro 🪙 o una petita formiga.", detail: "S'utilitza per a objectes molt fins i detalls diminuts." },
-          { sym: "cm", name: "centímetre", equiv: "1 cm = 10 mm", obj: "L'amplada d'un dit de la mà o el clip d'un full 📎.", detail: "Un regle escolar clàssic de la motxilla fa 20 o 30 cm." },
-          { sym: "m", name: "metre (unitat principal)", equiv: "1 m = 100 cm = 1.000 mm", obj: "L'alçada d'una porta escolar o la pissarra de classe.", detail: "Si obres els dos braços de bat a bat, és aproximadament 1 metre!" },
-          { sym: "km", name: "quilòmetre", equiv: "1 km = 1.000 m", obj: "Una caminada llarga pel barri o la distància al poble veí 🚌.", detail: "Caminant a bon pas es triga uns 12 a 15 minuts en fer 1 km." }
+        titol: "Unitats de longitud (distància i mida)",
+        unitats: [
+          { simbol: "mm", nom: "mil·límetre", equivalencia: "1 mm = 0,001 m", exemple: "El gruix d'una moneda d'1 euro 🪙 o una petita formiga.", detall: "S'utilitza per a objectes molt fins i detalls diminuts." },
+          { simbol: "cm", nom: "centímetre", equivalencia: "1 cm = 10 mm", exemple: "L'amplada d'un dit de la mà o el clip d'un full 📎.", detall: "Un regle escolar clàssic de la motxilla fa 20 o 30 cm." },
+          { simbol: "m", nom: "metre (unitat principal)", equivalencia: "1 m = 100 cm = 1.000 mm", exemple: "L'alçada d'una porta escolar o la pissarra de classe.", detall: "Si obres els dos braços de bat a bat, és aproximadament 1 metre!" },
+          { simbol: "km", nom: "quilòmetre", equivalencia: "1 km = 1.000 m", exemple: "Una caminada llarga pel barri o la distància al poble veí 🚌.", detall: "Caminant a bon pas es triga uns 12 a 15 minuts en fer 1 km." }
         ],
-        frogUnits: ['mm', 'cm', 'm', 'km'],
-        rates: { mm: 0.001, cm: 0.01, m: 1, km: 1000 }
+        unitatsGranota: ['mm', 'cm', 'm', 'km'],
+        factors: { mm: 0.001, cm: 0.01, m: 1, km: 1000 }
       },
       massa: {
-        title: "Unitats de massa (el pes dels cossos)",
-        units: [
-          { sym: "g", name: "gram", equiv: "1 g = 0,001 kg", obj: "Un clip de paper 📎, un caramel 🍬 o una llavor.", detail: "Ideal per a objectes molt lleugers que no fan cap esforç a la mà." },
-          { sym: "kg", name: "quilogram (quilo)", equiv: "1 kg = 1.000 g", obj: "Un paquet sencer de farina o d'arròs 🌾.", detail: "La motxilla amb llibres acostuma a pesar entre 3 i 4 kg." }
+        titol: "Unitats de massa (el pes dels cossos)",
+        unitats: [
+          { simbol: "g", nom: "gram", equivalencia: "1 g = 0,001 kg", exemple: "Un clip de paper 📎, un caramel 🍬 o una llavor.", detall: "Ideal per a objectes molt lleugers que no fan cap esforç a la mà." },
+          { simbol: "kg", nom: "quilogram (quilo)", equivalencia: "1 kg = 1.000 g", exemple: "Un paquet sencer de farina o d'arròs 🌾.", detall: "La motxilla amb llibres acostuma a pesar entre 3 i 4 kg." }
         ],
-        frogUnits: ['g', 'kg'],
-        rates: { g: 0.001, kg: 1 }
+        unitatsGranota: ['g', 'kg'],
+        factors: { g: 0.001, kg: 1 }
       },
       capacitat: {
-        title: "Unitats de capacitat (líquids i volums)",
-        units: [
-          { sym: "ml", name: "mil·lilitre", equiv: "1 ml = 0,001 l", obj: "El tap petit d'un medicament o una cullereta de xarop 🥄.", detail: "Usat per a dosis molt petites de líquid en medicina i ciència." },
-          { sym: "cl", name: "centilitre", equiv: "1 cl = 10 ml | 100 cl = 1 l", obj: "Una llauna clàssica de refresc (33 cl) o un got ple d'aigua 🥤.", detail: "Molt utilitzat a envasos individuals de sucs i begudes." },
-          { sym: "l", name: "litre (unitat principal)", equiv: "1 l = 100 cl = 1.000 ml", obj: "Un tetrabric gran de llet o una ampolla d'aigua 🥛.", detail: "Una ampolla gran d'aigua mineral habitualment conté 1,5 litres." }
+        titol: "Unitats de capacitat (líquids i volums)",
+        unitats: [
+          { simbol: "ml", nom: "mil·lilitre", equivalencia: "1 ml = 0,001 l", exemple: "El tap petit d'un medicament o una cullereta de xarop 🥄.", detall: "Usat per a dosis molt petites de líquid en medicina i ciència." },
+          { simbol: "cl", nom: "centilitre", equivalencia: "1 cl = 10 ml | 100 cl = 1 l", exemple: "Una llauna clàssica de refresc (33 cl) o un got ple d'aigua 🥤.", detall: "Molt utilitzat a envasos individuals de sucs i begudes." },
+          { simbol: "l", nom: "litre (unitat principal)", equivalencia: "1 l = 100 cl = 1.000 ml", exemple: "Un tetrabric gran de llet o una ampolla d'aigua 🥛.", detall: "Una ampolla gran d'aigua mineral habitualment conté 1,5 litres." }
         ],
-        frogUnits: ['ml', 'cl', 'l'],
-        rates: { ml: 0.001, cl: 0.01, l: 1 }
+        unitatsGranota: ['ml', 'cl', 'l'],
+        factors: { ml: 0.001, cl: 0.01, l: 1 }
       }
     };
 
-    let activeLabKey = 'longitud';
+    let categoriaLabActiva = 'longitud';
 
-    function setLabTab(key) {
-      activeLabKey = key;
+    function seleccionarCategoriaLab(clau) {
+      categoriaLabActiva = clau;
       ['longitud', 'massa', 'capacitat'].forEach(k => {
-        const btn = document.getElementById(`btn-mag-${k}`);
-        if (k === key) {
+        const btn = document.getElementById(`boto-cat-${k}`);
+        if (k === clau) {
           btn.className = "px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-sky-500 text-white shadow-md transition flex items-center gap-2";
         } else {
           btn.className = "px-4 sm:px-6 py-2.5 rounded-2xl font-black text-sm sm:text-base bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-2";
         }
       });
-      renderLabCards();
-      setupFrogSelectors();
+      dibuixarTargetesLab();
+      configurarDesplegablesGranota();
     }
 
-    function renderLabCards() {
-      const data = LAB_DATA[activeLabKey];
-      const container = document.getElementById('labCardsContainer');
-      let html = '';
+    function dibuixarTargetesLab() {
+      const dades = DADES_LAB[categoriaLabActiva];
+      const contenidor = document.getElementById('contenidorTargetesLab');
+      let codi = '';
 
-      data.units.forEach(u => {
-        html += `
+      dades.unitats.forEach(u => {
+        codi += `
           <div class="p-5 rounded-2xl bg-white border-2 border-slate-200 shadow-sm hover:border-sky-400 transition">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-3xl font-black text-sky-900">${u.sym}</span>
-              <span class="px-3 py-1 rounded-xl font-bold text-xs bg-sky-100 text-sky-800">${u.name}</span>
+              <span class="text-3xl font-black text-sky-900">${u.simbol}</span>
+              <span class="px-3 py-1 rounded-xl font-bold text-xs bg-sky-100 text-sky-800">${u.nom}</span>
             </div>
-            <p class="text-xs font-bold text-slate-500 mb-2">Equivalència: <span class="text-slate-800">${u.equiv}</span></p>
+            <p class="text-xs font-bold text-slate-500 mb-2">Equivalència: <span class="text-slate-800">${u.equivalencia}</span></p>
             <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-950 mb-2 font-medium">
-              <strong>Exemple escolar/real:</strong> ${u.obj}
+              <strong>Exemple escolar/real:</strong> ${u.exemple}
             </div>
-            <p class="text-xs text-slate-600 leading-relaxed">${u.detail}</p>
+            <p class="text-xs text-slate-600 leading-relaxed">${u.detall}</p>
           </div>
         `;
       });
 
-      container.innerHTML = html;
+      contenidor.innerHTML = codi;
     }
 
-    function setupFrogSelectors() {
-      const data = LAB_DATA[activeLabKey];
-      const fromSel = document.getElementById('frogFromSelect');
-      const toSel = document.getElementById('frogToSelect');
-      fromSel.innerHTML = '';
-      toSel.innerHTML = '';
+    function configurarDesplegablesGranota() {
+      const dades = DADES_LAB[categoriaLabActiva];
+      const desplegableOrigen = document.getElementById('desplegableOrigenGranota');
+      const desplegableDesti = document.getElementById('desplegableDestiGranota');
+      desplegableOrigen.innerHTML = '';
+      desplegableDesti.innerHTML = '';
 
-      data.frogUnits.forEach((unit, idx) => {
+      dades.unitatsGranota.forEach((unitat, index) => {
         const o1 = document.createElement('option');
-        o1.value = unit;
-        o1.textContent = unit;
-        fromSel.appendChild(o1);
+        o1.value = unitat;
+        o1.textContent = unitat;
+        desplegableOrigen.appendChild(o1);
 
         const o2 = document.createElement('option');
-        o2.value = unit;
-        o2.textContent = unit;
-        if (idx === 1) o2.selected = true;
-        toSel.appendChild(o2);
+        o2.value = unitat;
+        o2.textContent = unitat;
+        if (index === 1) o2.selected = true;
+        desplegableDesti.appendChild(o2);
       });
 
-      document.getElementById('frogResultBox').classList.add('hidden');
+      document.getElementById('caixaResultatGranota').classList.add('hidden');
     }
 
-    function calculateFrogJump() {
-      NativeAudio.playHop();
-      const val = parseFloat(document.getElementById('frogValueInput').value);
-      if (isNaN(val)) return;
+    function executarSaltGranota() {
+      So.salt();
+      const valor = parseFloat(document.getElementById('campValorGranota').value);
+      if (isNaN(valor)) return;
 
-      const fromU = document.getElementById('frogFromSelect').value;
-      const toU = document.getElementById('frogToSelect').value;
-      const data = LAB_DATA[activeLabKey];
+      const unitatOrigen = document.getElementById('desplegableOrigenGranota').value;
+      const unitatDesti = document.getElementById('desplegableDestiGranota').value;
+      const dades = DADES_LAB[categoriaLabActiva];
 
-      const baseVal = val * data.rates[fromU];
-      const finalVal = baseVal / data.rates[toU];
-      const cleanVal = parseFloat(finalVal.toFixed(6));
+      const valorBase = valor * dades.factors[unitatOrigen];
+      const valorFinal = valorBase / dades.factors[unitatDesti];
+      const valorNet = parseFloat(valorFinal.toFixed(6));
 
-      const frogEmoji = document.getElementById('frogAnimEmoji');
-      frogEmoji.classList.remove('animate-hop');
-      void frogEmoji.offsetWidth;
-      frogEmoji.classList.add('animate-hop');
+      const caixa = document.getElementById('caixaResultatGranota');
+      caixa.classList.remove('hidden');
 
-      const box = document.getElementById('frogResultBox');
-      box.classList.remove('hidden');
-
-      let explanation = "";
-      if (data.rates[fromU] > data.rates[toU]) {
-        explanation = "La granota baixa l'escala cap a una unitat més petita: cal multiplicar!";
-      } else if (data.rates[fromU] < data.rates[toU]) {
-        explanation = "La granota puja l'escala cap a una unitat més gran: cal dividir!";
+      let explicacio = "";
+      if (dades.factors[unitatOrigen] > dades.factors[unitatDesti]) {
+        explicacio = "La granota baixa l'escala cap a una unitat més petita: cal multiplicar!";
+      } else if (dades.factors[unitatOrigen] < dades.factors[unitatDesti]) {
+        explicacio = "La granota puja l'escala cap a una unitat més gran: cal dividir!";
       } else {
-        explanation = "És exactament la mateixa unitat: la quantitat no canvia!";
+        explicacio = "És exactament la mateixa unitat: la quantitat no canvia!";
       }
 
-      document.getElementById('frogResultTitle').textContent = `${val} ${fromU} = ${cleanVal} ${toU}`;
-      document.getElementById('frogResultExplanation').textContent = `${explanation} (1 ${fromU} conté ${parseFloat((data.rates[fromU]/data.rates[toU]).toFixed(6))} ${toU})`;
+      document.getElementById('titolResultatGranota').textContent = `${valor} ${unitatOrigen} = ${valorNet} ${unitatDesti}`;
+      document.getElementById('explicacioResultatGranota').textContent = `${explicacio} (1 ${unitatOrigen} conté ${parseFloat((dades.factors[unitatOrigen]/dades.factors[unitatDesti]).toFixed(6))} ${unitatDesti})`;
 
-      player.stats.frogJumps++;
-      evaluateBadges();
-      saveGameData();
+      dadesJugador.estadistiques.granotaSalts++;
+      comprovarMedalles();
+      desarDades();
     }
 
-    /* -------------------------------------------------------------
-       5. ACTIVITAT 1: TRIA LA UNITAT
-    ------------------------------------------------------------- */
-    const G1_QUESTIONS = [
-      { title: "La llargada d'un llapis escolar", icon: "✏️", cat: "longitud", options: ["mm", "cm", "m", "km"], answer: "cm", reason: "Un llapis mesura aproximadament entre 15 i 18 centímetres (cm)." },
-      { title: "La distància entre Barcelona i Girona", icon: "🚗", cat: "longitud", options: ["cm", "m", "km", "mm"], answer: "km", reason: "Per a trajectes llargs per carretera fem servir els quilòmetres (km)." },
-      { title: "El pes d'un paquet de farina o arròs", icon: "🌾", cat: "massa", options: ["g", "kg", "ml", "km"], answer: "kg", reason: "Els paquets estàndard de cuina pesen 1 quilogram (kg)." },
-      { title: "Una cullereta de xarop per a la gola", icon: "🥄", cat: "capacitat", options: ["l", "cl", "ml", "kg"], answer: "ml", reason: "És una quantitat molt petita de líquid: uns 5 mil·lilitres (ml)." },
-      { title: "L'alçada de la porta de l'aula", icon: "🚪", cat: "longitud", options: ["mm", "cm", "m", "km"], answer: "m", reason: "L'alçada d'una porta fa aproximadament 2 metres (m)." },
-      { title: "El pes d'un clip de paper", icon: "📎", cat: "massa", options: ["kg", "g", "km", "cl"], answer: "g", reason: "Un clip és molt lleuger i fa només 1 gram (g)." },
-      { title: "Una llauna clàssica de refresc", icon: "🥤", cat: "capacitat", options: ["ml", "cl", "kg", "km"], answer: "cl", reason: "Una llauna habitual conté 33 centilitres (cl)." },
-      { title: "El gruix d'una moneda d'1 euro", icon: "🪙", cat: "longitud", options: ["mm", "m", "km", "l"], answer: "mm", reason: "Fa només una mica més de 2 mil·límetres (mm) de gruix." }
+    const PREGUNTES_JOC1 = [
+      { titol: "La llargada d'un llapis escolar", icona: "✏️", categoria: "longitud", opcions: ["mm", "cm", "m", "km"], resposta: "cm", motiu: "Un llapis mesura aproximadament entre 15 i 18 centímetres (cm)." },
+      { titol: "La distància entre Barcelona i Girona", icona: "🚗", categoria: "longitud", opcions: ["cm", "m", "km", "mm"], resposta: "km", motiu: "Per a trajectes llargs per carretera fem servir els quilòmetres (km)." },
+      { titol: "El pes d'un paquet de farina o arròs", icona: "🌾", categoria: "massa", opcions: ["g", "kg", "ml", "km"], resposta: "kg", motiu: "Els paquets estàndard de cuina pesen 1 quilogram (kg)." },
+      { titol: "Una cullereta de xarop per a la gola", icona: "🥄", categoria: "capacitat", opcions: ["l", "cl", "ml", "kg"], resposta: "ml", motiu: "És una quantitat molt petita de líquid: uns 5 mil·lilitres (ml)." },
+      { titol: "L'alçada de la porta de l'aula", icona: "🚪", categoria: "longitud", opcions: ["mm", "cm", "m", "km"], resposta: "m", motiu: "L'alçada d'una porta fa aproximadament 2 metres (m)." },
+      { titol: "El pes d'un clip de paper", icona: "📎", categoria: "massa", opcions: ["kg", "g", "km", "cl"], resposta: "g", motiu: "Un clip és molt lleuger i fa només 1 gram (g)." },
+      { titol: "Una llauna clàssica de refresc", icona: "🥤", categoria: "capacitat", opcions: ["ml", "cl", "kg", "km"], resposta: "cl", motiu: "Una llauna habitual conté 33 centilitres (cl)." },
+      { titol: "El gruix d'una moneda d'1 euro", icona: "🪙", categoria: "longitud", opcions: ["mm", "m", "km", "l"], resposta: "mm", motiu: "Fa només una mica més de 2 mil·límetres (mm) de gruix." }
     ];
 
-    let g1Index = 0;
+    let indexJoc1 = 0;
 
-    function initGame1() {
-      g1Index = 0;
-      loadGame1Item();
+    function iniciarJoc1() {
+      indexJoc1 = 0;
+      carregarElementJoc1();
     }
 
-    function loadGame1Item() {
-      const q = G1_QUESTIONS[g1Index % G1_QUESTIONS.length];
-      document.getElementById('g1Icon').textContent = q.icon;
-      document.getElementById('g1Title').textContent = q.title;
-      document.getElementById('g1Sub').textContent = `Magnitud: ${q.cat}`;
+    function carregarElementJoc1() {
+      const p = PREGUNTES_JOC1[indexJoc1 % PREGUNTES_JOC1.length];
+      document.getElementById('iconaJoc1').textContent = p.icona;
+      document.getElementById('titolJoc1').textContent = p.titol;
+      document.getElementById('subtitolJoc1').textContent = `Magnitud: ${p.categoria}`;
 
-      const feedback = document.getElementById('g1Feedback');
-      feedback.className = "hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base";
-      feedback.textContent = "";
+      const retorn = document.getElementById('missatgeRetornJoc1');
+      retorn.className = "hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base";
+      retorn.textContent = "";
 
-      document.getElementById('g1NextBtn').classList.add('hidden');
+      document.getElementById('botoSeguentJoc1').classList.add('hidden');
 
-      const grid = document.getElementById('g1OptionsGrid');
-      grid.innerHTML = '';
+      const graella = document.getElementById('graellaOpcionsJoc1');
+      graella.innerHTML = '';
 
-      q.options.forEach(opt => {
+      p.opcions.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
         btn.className = "py-3 sm:py-4 px-2 rounded-2xl bg-white hover:bg-sky-50 border-2 border-sky-300 font-black text-xl sm:text-2xl text-sky-950 shadow-sm transition active:scale-95";
-        btn.onclick = () => checkGame1Choice(opt, btn, q);
-        grid.appendChild(btn);
+        btn.onclick = () => verificarOpcioJoc1(opt, btn, p);
+        graella.appendChild(btn);
       });
     }
 
-    function checkGame1Choice(selected, btnElem, q) {
-      document.querySelectorAll('#g1OptionsGrid button').forEach(b => b.disabled = true);
-      const feedback = document.getElementById('g1Feedback');
-      feedback.classList.remove('hidden');
+    function verificarOpcioJoc1(seleccionat, elementBoto, p) {
+      document.querySelectorAll('#graellaOpcionsJoc1 button').forEach(b => b.disabled = true);
+      const retorn = document.getElementById('missatgeRetornJoc1');
+      retorn.classList.remove('hidden');
 
-      if (selected === q.answer) {
-        NativeAudio.playSuccess();
-        NativeConfetti.launch();
-        btnElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
-        feedback.innerHTML = `🎉 <strong>Molt bé!</strong> ${q.reason}`;
-        addPlayerXp(20);
-        player.stats.game1Correct++;
-        evaluateBadges();
+      if (seleccionat === p.resposta) {
+        So.encert();
+        Confeti.llancar();
+        elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
+        retorn.innerHTML = `Molt bé! ${p.motiu}`;
+        afegirPunts(20);
+        dadesJugador.estadistiques.joc1Encerts++;
+        comprovarMedalles();
       } else {
-        NativeAudio.playError();
-        btnElem.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
-        feedback.innerHTML = `❌ <strong>Gairebé!</strong> La unitat més adequada és <strong>${q.answer}</strong>.<br><span class="text-xs">${q.reason}</span>`;
+        So.error();
+        elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
+        retorn.innerHTML = `Gairebé! La unitat més adequada és <strong>${p.resposta}</strong>.<br><span class="text-xs">${p.motiu}</span>`;
       }
 
-      document.getElementById('g1NextBtn').classList.remove('hidden');
+      document.getElementById('botoSeguentJoc1').classList.remove('hidden');
     }
 
-    function nextGame1Question() {
-      g1Index++;
-      loadGame1Item();
+    function avancarPreguntaJoc1() {
+      indexJoc1++;
+      carregarElementJoc1();
     }
 
-    /* -------------------------------------------------------------
-       6. ACTIVITAT 2: APARELLAR
-    ------------------------------------------------------------- */
-    const G2_ROUNDS = [
+    const RONDES_JOC2 = [
       [
-        { id: 1, name: "Autobús escolar", icon: "🚌", val: "12 m" },
-        { id: 2, name: "Tassa de xocolata", icon: "☕", val: "250 ml" },
-        { id: 3, name: "Gat adult", icon: "🐱", val: "4 kg" },
-        { id: 4, name: "Un gra d'arròs", icon: "🌾", val: "6 mm" }
+        { id: 1, nom: "Autobús escolar", icona: "🚌", valor: "12 m" },
+        { id: 2, nom: "Tassa de xocolata", icona: "☕", valor: "250 ml" },
+        { id: 3, nom: "Gat adult", icona: "🐱", valor: "4 kg" },
+        { id: 4, nom: "Un gra d'arròs", icona: "🌾", valor: "6 mm" }
       ],
       [
-        { id: 5, name: "Banyera de casa", icon: "🛁", val: "150 l" },
-        { id: 6, name: "Goma d'esborrar", icon: "🧽", val: "4 cm" },
-        { id: 7, name: "Una poma", icon: "🍎", val: "180 g" },
-        { id: 8, name: "Caminada entre pobles", icon: "🥾", val: "5 km" }
+        { id: 5, nom: "Banyera de casa", icona: "🛁", valor: "150 l" },
+        { id: 6, nom: "Goma d'esborrar", icona: "🧽", valor: "4 cm" },
+        { id: 7, nom: "Una poma", icona: "🍎", valor: "180 g" },
+        { id: 8, nom: "Caminada entre pobles", icona: "🥾", valor: "5 km" }
       ]
     ];
 
-    let g2RoundIdx = 0;
-    let selectedObj = null;
-    let selectedVal = null;
-    let g2PairsCount = 0;
+    let indexRondaJoc2 = 0;
+    let objecteSeleccionatJoc2 = null;
+    let valorSeleccionatJoc2 = null;
+    let comptadorParellesJoc2 = 0;
 
-    function initGame2() {
-      g2PairsCount = 0;
-      selectedObj = null;
-      selectedVal = null;
-      document.getElementById('g2CounterBadge').textContent = "Parella 0 / 4";
-      document.getElementById('g2SuccessMsg').classList.add('hidden');
+    function iniciarJoc2() {
+      comptadorParellesJoc2 = 0;
+      objecteSeleccionatJoc2 = null;
+      valorSeleccionatJoc2 = null;
+      document.getElementById('marcadorParellesJoc2').textContent = "Parella 0 / 4";
+      document.getElementById('missatgeExitJoc2').classList.add('hidden');
 
-      const currentPool = G2_ROUNDS[g2RoundIdx % G2_ROUNDS.length];
-      g2RoundIdx++;
+      const conjuntActual = RONDES_JOC2[indexRondaJoc2 % RONDES_JOC2.length];
+      indexRondaJoc2++;
 
-      const objs = [...currentPool].sort(() => Math.random() - 0.5);
-      const vals = [...currentPool].sort(() => Math.random() - 0.5);
+      const objectes = [...conjuntActual].sort(() => Math.random() - 0.5);
+      const valors = [...conjuntActual].sort(() => Math.random() - 0.5);
 
-      const objCol = document.getElementById('g2ObjectsCol');
-      const valCol = document.getElementById('g2ValuesCol');
-      objCol.innerHTML = '';
-      valCol.innerHTML = '';
+      const colObjectes = document.getElementById('columnaObjectesJoc2');
+      const colValors = document.getElementById('columnaValorsJoc2');
+      colObjectes.innerHTML = '';
+      colValors.innerHTML = '';
 
-      objs.forEach(item => {
+      objectes.forEach(item => {
         const btn = document.createElement('button');
         btn.dataset.id = item.id;
-        btn.className = "g2-btn-obj w-full text-left p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl font-bold text-slate-800 flex items-center justify-between transition text-xs sm:text-sm";
-        btn.innerHTML = `<span class="flex items-center gap-2"><span class="text-xl">${item.icon}</span> ${item.name}</span><i class="fa-regular fa-circle text-amber-400"></i>`;
-        btn.onclick = () => selectGame2Item('obj', item.id, btn);
-        objCol.appendChild(btn);
+        btn.className = "boto-obj-joc2 w-full text-left p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-2xl font-bold text-slate-800 flex items-center justify-between transition text-xs sm:text-sm";
+        btn.innerHTML = `<span class="flex items-center gap-2"><span class="text-xl">${item.icona}</span> ${item.nom}</span><i class="fa-regular fa-circle text-amber-400"></i>`;
+        btn.onclick = () => seleccionarElementJoc2('obj', item.id, btn);
+        colObjectes.appendChild(btn);
       });
 
-      vals.forEach(item => {
+      valors.forEach(item => {
         const btn = document.createElement('button');
         btn.dataset.id = item.id;
-        btn.className = "g2-btn-val w-full text-left p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-2xl font-black text-indigo-950 text-sm sm:text-base flex items-center justify-between transition";
-        btn.innerHTML = `<span>${item.val}</span><i class="fa-regular fa-circle text-slate-300"></i>`;
-        btn.onclick = () => selectGame2Item('val', item.id, btn);
-        valCol.appendChild(btn);
+        btn.className = "boto-val-joc2 w-full text-left p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-200 rounded-2xl font-black text-indigo-950 text-sm sm:text-base flex items-center justify-between transition";
+        btn.innerHTML = `<span>${item.valor}</span><i class="fa-regular fa-circle text-slate-300"></i>`;
+        btn.onclick = () => seleccionarElementJoc2('val', item.id, btn);
+        colValors.appendChild(btn);
       });
     }
 
-    function selectGame2Item(type, id, elem) {
-      if (type === 'obj') {
-        if (elem.classList.contains('is-matched')) return;
-        document.querySelectorAll('.g2-btn-obj').forEach(b => {
-          if (!b.classList.contains('is-matched')) b.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-200');
+    function seleccionarElementJoc2(tipus, id, element) {
+      if (tipus === 'obj') {
+        if (element.classList.contains('aparellat')) return;
+        document.querySelectorAll('.boto-obj-joc2').forEach(b => {
+          if (!b.classList.contains('aparellat')) b.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-200');
         });
-        elem.classList.add('ring-2', 'ring-amber-500', 'bg-amber-200');
-        selectedObj = { id, elem };
+        element.classList.add('ring-2', 'ring-amber-500', 'bg-amber-200');
+        objecteSeleccionatJoc2 = { id, element };
       } else {
-        if (elem.classList.contains('is-matched')) return;
-        document.querySelectorAll('.g2-btn-val').forEach(b => {
-          if (!b.classList.contains('is-matched')) b.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+        if (element.classList.contains('aparellat')) return;
+        document.querySelectorAll('.boto-val-joc2').forEach(b => {
+          if (!b.classList.contains('aparellat')) b.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100');
         });
-        elem.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-100');
-        selectedVal = { id, elem };
+        element.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+        valorSeleccionatJoc2 = { id, element };
       }
 
-      if (selectedObj && selectedVal) {
-        verifyGame2Pair();
+      if (objecteSeleccionatJoc2 && valorSeleccionatJoc2) {
+        verificarParellaJoc2();
       }
     }
 
-    function verifyGame2Pair() {
-      if (selectedObj.id === selectedVal.id) {
-        NativeAudio.playSuccess();
-        selectedObj.elem.className = "is-matched w-full text-left p-3 bg-emerald-100 border border-emerald-400 rounded-2xl font-bold text-emerald-950 flex items-center justify-between text-xs sm:text-sm opacity-80 cursor-default";
-        selectedObj.elem.innerHTML = selectedObj.elem.innerHTML.replace('fa-regular fa-circle', 'fa-solid fa-circle-check text-emerald-600');
+    function verificarParellaJoc2() {
+      if (objecteSeleccionatJoc2.id === valorSeleccionatJoc2.id) {
+        So.encert();
+        objecteSeleccionatJoc2.element.className = "aparellat w-full text-left p-3 bg-emerald-100 border border-emerald-400 rounded-2xl font-bold text-emerald-950 flex items-center justify-between text-xs sm:text-sm opacity-80 cursor-default";
+        objecteSeleccionatJoc2.element.innerHTML = objecteSeleccionatJoc2.element.innerHTML.replace('fa-regular fa-circle', 'fa-solid fa-circle-check text-emerald-600');
 
-        selectedVal.elem.className = "is-matched w-full text-left p-3 bg-emerald-100 border border-emerald-400 rounded-2xl font-black text-emerald-950 text-sm sm:text-base flex items-center justify-between opacity-80 cursor-default";
-        selectedVal.elem.innerHTML = selectedVal.elem.innerHTML.replace('fa-regular fa-circle', 'fa-solid fa-circle-check text-emerald-600');
+        valorSeleccionatJoc2.element.className = "aparellat w-full text-left p-3 bg-emerald-100 border border-emerald-400 rounded-2xl font-black text-emerald-950 text-sm sm:text-base flex items-center justify-between opacity-80 cursor-default";
+        valorSeleccionatJoc2.element.innerHTML = valorSeleccionatJoc2.element.innerHTML.replace('fa-regular fa-circle', 'fa-solid fa-circle-check text-emerald-600');
 
-        g2PairsCount++;
-        document.getElementById('g2CounterBadge').textContent = `Parella ${g2PairsCount} / 4`;
+        comptadorParellesJoc2++;
+        document.getElementById('marcadorParellesJoc2').textContent = `Parella ${comptadorParellesJoc2} / 4`;
 
-        selectedObj = null;
-        selectedVal = null;
+        objecteSeleccionatJoc2 = null;
+        valorSeleccionatJoc2 = null;
 
-        if (g2PairsCount === 4) {
-          NativeAudio.playLevelUp();
-          NativeConfetti.launch();
-          addPlayerXp(60);
-          player.stats.game2Rounds++;
-          evaluateBadges();
-          document.getElementById('g2SuccessMsg').classList.remove('hidden');
+        if (comptadorParellesJoc2 === 4) {
+          So.victoria();
+          Confeti.llancar();
+          afegirPunts(60);
+          dadesJugador.estadistiques.joc2Rondes++;
+          comprovarMedalles();
+          document.getElementById('missatgeExitJoc2').classList.remove('hidden');
         }
       } else {
-        NativeAudio.playError();
-        const oElem = selectedObj.elem;
-        const vElem = selectedVal.elem;
-        oElem.classList.add('bg-rose-200');
-        vElem.classList.add('bg-rose-200');
+        So.error();
+        const objElem = objecteSeleccionatJoc2.element;
+        const valElem = valorSeleccionatJoc2.element;
+        objElem.classList.add('bg-rose-200');
+        valElem.classList.add('bg-rose-200');
 
         setTimeout(() => {
-          oElem.classList.remove('bg-rose-200', 'ring-2', 'ring-amber-500', 'bg-amber-200');
-          vElem.classList.remove('bg-rose-200', 'ring-2', 'ring-indigo-500', 'bg-indigo-100');
-        }, 450);
+          objElem.classList.remove('bg-rose-200', 'ring-2', 'ring-amber-500', 'bg-amber-200');
+          valElem.classList.remove('bg-rose-200', 'ring-2', 'ring-indigo-500', 'bg-indigo-100');
+        }, 400);
 
-        selectedObj = null;
-        selectedVal = null;
+        objecteSeleccionatJoc2 = null;
+        valorSeleccionatJoc2 = null;
       }
     }
 
-    /* -------------------------------------------------------------
-       7. ACTIVITAT 3: BALANÇA I CONVERSIÓ
-    ------------------------------------------------------------- */
-    const G3_CHALLENGES = [
-      { left: "1 kg", targetUnit: "g", correct: 1000, options: [10, 100, 1000, 10000] },
-      { left: "2 m", targetUnit: "cm", correct: 200, options: [20, 200, 2000, 2] },
-      { left: "1,5 l", targetUnit: "ml", correct: 1500, options: [15, 150, 1500, 15000] },
-      { left: "300 cm", targetUnit: "m", correct: 3, options: [3, 30, 0.3, 3000] },
-      { left: "5.000 g", targetUnit: "kg", correct: 5, options: [5, 50, 500, 0.5] },
-      { left: "2 l", targetUnit: "cl", correct: 200, options: [20, 200, 2000, 20000] },
-      { left: "40 mm", targetUnit: "cm", correct: 4, options: [0.4, 4, 400, 40] }
+    const REPTES_JOC3 = [
+      { esquerre: "1 kg", unitatDesti: "g", correcte: 1000, opcions: [10, 100, 1000, 10000] },
+      { esquerre: "2 m", unitatDesti: "cm", correcte: 200, opcions: [20, 200, 2000, 2] },
+      { esquerre: "1,5 l", unitatDesti: "ml", correcte: 1500, opcions: [15, 150, 1500, 15000] },
+      { esquerre: "300 cm", unitatDesti: "m", correcte: 3, opcions: [3, 30, 0.3, 3000] },
+      { esquerre: "5.000 g", unitatDesti: "kg", correcte: 5, opcions: [5, 50, 500, 0.5] },
+      { esquerre: "2 l", unitatDesti: "cl", correcte: 200, opcions: [20, 200, 2000, 20000] },
+      { esquerre: "40 mm", unitatDesti: "cm", correcte: 4, opcions: [0.4, 4, 400, 40] }
     ];
 
-    let g3Index = 0;
+    let indexJoc3 = 0;
 
-    function initGame3() {
-      g3Index = 0;
-      loadGame3Item();
+    function iniciarJoc3() {
+      indexJoc3 = 0;
+      carregarElementJoc3();
     }
 
-    function loadGame3Item() {
-      const item = G3_CHALLENGES[g3Index % G3_CHALLENGES.length];
-      document.getElementById('g3LeftVal').textContent = item.left;
-      document.getElementById('g3RightTarget').textContent = `? ${item.targetUnit}`;
+    function carregarElementJoc3() {
+      const repte = REPTES_JOC3[indexJoc3 % REPTES_JOC3.length];
+      document.getElementById('valorEsquerreJoc3').textContent = repte.esquerre;
+      document.getElementById('valorDretJoc3').textContent = `? ${repte.unitatDesti}`;
 
-      const feedback = document.getElementById('g3Feedback');
-      feedback.className = "hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base";
-      feedback.textContent = "";
+      const retorn = document.getElementById('missatgeRetornJoc3');
+      retorn.className = "hidden p-4 rounded-2xl text-center font-bold text-sm sm:text-base";
+      retorn.textContent = "";
 
-      document.getElementById('g3NextBtn').classList.add('hidden');
+      document.getElementById('botoSeguentJoc3').classList.add('hidden');
 
-      const grid = document.getElementById('g3OptionsGrid');
-      grid.innerHTML = '';
+      const graella = document.getElementById('graellaOpcionsJoc3');
+      graella.innerHTML = '';
 
-      item.options.forEach(opt => {
+      repte.opcions.forEach(opt => {
         const btn = document.createElement('button');
-        btn.textContent = `${opt} ${item.targetUnit}`;
+        btn.textContent = `${opt} ${repte.unitatDesti}`;
         btn.className = "py-3 sm:py-4 px-2 rounded-2xl bg-white hover:bg-purple-50 border-2 border-purple-300 font-black text-lg sm:text-xl text-purple-950 shadow-sm transition active:scale-95";
-        btn.onclick = () => checkGame3Choice(opt, btn, item);
-        grid.appendChild(btn);
+        btn.onclick = () => verificarOpcioJoc3(opt, btn, repte);
+        graella.appendChild(btn);
       });
     }
 
-    function checkGame3Choice(selected, btnElem, item) {
-      document.querySelectorAll('#g3OptionsGrid button').forEach(b => b.disabled = true);
-      const feedback = document.getElementById('g3Feedback');
-      feedback.classList.remove('hidden');
+    function verificarOpcioJoc3(seleccionat, elementBoto, repte) {
+      document.querySelectorAll('#graellaOpcionsJoc3 button').forEach(b => b.disabled = true);
+      const retorn = document.getElementById('missatgeRetornJoc3');
+      retorn.classList.remove('hidden');
 
-      if (selected === item.correct) {
-        NativeAudio.playSuccess();
-        NativeConfetti.launch();
-        btnElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
-        feedback.innerHTML = `⚖️ <strong>Equilibri aconseguit!</strong> ${item.left} és exactament igual a ${item.correct} ${item.targetUnit}.`;
-        addPlayerXp(30);
-        player.stats.game3Correct++;
-        evaluateBadges();
+      if (seleccionat === repte.correcte) {
+        So.encert();
+        Confeti.llancar();
+        elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
+        retorn.innerHTML = `Equilibri aconseguit! ${repte.esquerre} és exactament igual a ${repte.correcte} ${repte.unitatDesti}.`;
+        afegirPunts(30);
+        dadesJugador.estadistiques.joc3Encerts++;
+        comprovarMedalles();
       } else {
-        NativeAudio.playError();
-        btnElem.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
-        feedback.innerHTML = `❌ <strong>Balança descompensada!</strong> El valor equivalent és <strong>${item.correct} ${item.targetUnit}</strong>.`;
+        So.error();
+        elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
+        retorn.innerHTML = `Balança descompensada! El valor equivalent és <strong>${repte.correcte} ${repte.unitatDesti}</strong>.`;
       }
 
-      document.getElementById('g3NextBtn').classList.remove('hidden');
+      document.getElementById('botoSeguentJoc3').classList.remove('hidden');
     }
 
-    function nextGame3Question() {
-      g3Index++;
-      loadGame3Item();
+    function avancarPreguntaJoc3() {
+      indexJoc3++;
+      carregarElementJoc3();
     }
 
-    /* -------------------------------------------------------------
-       8. ACTIVITAT 4: CONTRARELLOTGE DE 45 SEGONS
-    ------------------------------------------------------------- */
-    const G4_QUESTIONS = [
-      { q: "Quants metres té 1 quilòmetre (km)?", cat: "longitud", options: ["100 m", "1.000 m", "10.000 m"], ans: "1.000 m" },
-      { q: "Quants grams té 1 quilogram (kg)?", cat: "massa", options: ["100 g", "1.000 g", "500 g"], ans: "1.000 g" },
-      { q: "Quants centilitres (cl) té 1 litre complet?", cat: "capacitat", options: ["10 cl", "100 cl", "1.000 cl"], ans: "100 cl" },
-      { q: "Quants mil·límetres (mm) té 1 centímetre (cm)?", cat: "longitud", options: ["10 mm", "100 mm", "5 mm"], ans: "10 mm" },
-      { q: "Dues ampolles de 500 ml d'aigua, quant sumen?", cat: "capacitat", options: ["1 litre", "2 litres", "500 ml"], ans: "1 litre" },
-      { q: "Mig quilo (1/2 kg) de farina, quants grams són?", cat: "massa", options: ["250 g", "500 g", "750 g"], ans: "500 g" },
-      { q: "Quants mil·lilitres (ml) hi ha en 1 litre?", cat: "capacitat", options: ["100 ml", "1.000 ml", "10.000 ml"], ans: "1.000 ml" },
-      { q: "Una cinta de 300 cm, quants metres fa?", cat: "longitud", options: ["3 m", "30 m", "0,3 m"], ans: "3 m" }
+    const PREGUNTES_JOC4 = [
+      { p: "Quants metres té 1 quilòmetre (km)?", cat: "Longitud", opcions: ["100 m", "1.000 m", "10.000 m"], correcta: "1.000 m" },
+      { p: "Quants grams té 1 quilogram (kg)?", cat: "Massa", opcions: ["100 g", "1.000 g", "500 g"], correcta: "1.000 g" },
+      { p: "Quants centilitres (cl) té 1 litre complet?", cat: "Capacitat", opcions: ["10 cl", "100 cl", "1.000 cl"], correcta: "100 cl" },
+      { p: "Quants mil·límetres (mm) té 1 centímetre (cm)?", cat: "Longitud", opcions: ["10 mm", "100 mm", "5 mm"], correcta: "10 mm" },
+      { p: "Dues ampolles de 500 ml d'aigua, quant sumen?", cat: "Capacitat", opcions: ["1 litre", "2 litres", "500 ml"], correcta: "1 litre" },
+      { p: "Mig quilo (1/2 kg) de farina, quants grams són?", cat: "Massa", opcions: ["250 g", "500 g", "750 g"], correcta: "500 g" },
+      { p: "Quants mil·lilitres (ml) hi ha en 1 litre?", cat: "Capacitat", opcions: ["100 ml", "1.000 ml", "10.000 ml"], correcta: "1.000 ml" },
+      { p: "Una cinta de 300 cm, quants metres fa?", cat: "Longitud", opcions: ["3 m", "30 m", "0,3 m"], correcta: "3 m" }
     ];
 
-    let g4Timer = null;
-    let g4TimeLeft = 45;
-    let g4Score = 0;
-    let g4Pool = [];
-    let g4Idx = 0;
+    let intervalJoc4 = null;
+    let tempsRestantJoc4 = 45;
+    let encertsJoc4 = 0;
+    let conjuntJoc4 = [];
+    let indexPreguntaJoc4 = 0;
 
-    function startSpeedGame() {
-      document.getElementById('g4StartScreen').classList.add('hidden');
-      document.getElementById('g4EndScreen').classList.add('hidden');
-      document.getElementById('g4ActiveScreen').classList.remove('hidden');
+    function aturarTemporitzadorJoc4() {
+      if (intervalJoc4) {
+        clearInterval(intervalJoc4);
+        intervalJoc4 = null;
+      }
+    }
 
-      g4Score = 0;
-      g4TimeLeft = 45;
-      document.getElementById('g4ScoreText').textContent = g4Score;
-      document.getElementById('g4TimerText').textContent = `${g4TimeLeft}s`;
-      document.getElementById('g4TimerBar').style.width = '100%';
+    function comencarJocContrarellotge() {
+      aturarTemporitzadorJoc4();
+      document.getElementById('pantallaIniciJoc4').classList.add('hidden');
+      document.getElementById('pantallaFinalJoc4').classList.add('hidden');
+      document.getElementById('pantallaActivaJoc4').classList.remove('hidden');
 
-      g4Pool = [...G4_QUESTIONS].sort(() => Math.random() - 0.5);
-      g4Idx = 0;
+      encertsJoc4 = 0;
+      tempsRestantJoc4 = 45;
+      document.getElementById('textEncertsJoc4').textContent = encertsJoc4;
+      document.getElementById('textTempsJoc4').textContent = `${tempsRestantJoc4}s`;
+      document.getElementById('barraTempsJoc4').style.width = '100%';
 
-      loadNextSpeedItem();
+      conjuntJoc4 = [...PREGUNTES_JOC4].sort(() => Math.random() - 0.5);
+      indexPreguntaJoc4 = 0;
 
-      if (g4Timer) clearInterval(g4Timer);
-      g4Timer = setInterval(() => {
-        g4TimeLeft--;
-        document.getElementById('g4TimerText').textContent = `${g4TimeLeft}s`;
-        const pct = (g4TimeLeft / 45) * 100;
-        document.getElementById('g4TimerBar').style.width = `${pct}%`;
+      carregarSeguentPreguntaJoc4();
 
-        if (g4TimeLeft <= 0) {
-          finishSpeedGame();
+      intervalJoc4 = setInterval(() => {
+        tempsRestantJoc4--;
+        document.getElementById('textTempsJoc4').textContent = `${tempsRestantJoc4}s`;
+        const pct = (tempsRestantJoc4 / 45) * 100;
+        document.getElementById('barraTempsJoc4').style.width = `${pct}%`;
+
+        if (tempsRestantJoc4 <= 0) {
+          finalitzarJocContrarellotge();
         }
       }, 1000);
     }
 
-    function loadNextSpeedItem() {
-      const item = g4Pool[g4Idx % g4Pool.length];
-      document.getElementById('g4CategoryBadge').textContent = item.cat;
-      document.getElementById('g4QuestionPrompt').textContent = item.q;
+    function carregarSeguentPreguntaJoc4() {
+      const q = conjuntJoc4[indexPreguntaJoc4 % conjuntJoc4.length];
+      document.getElementById('etiquetaCategoriaJoc4').textContent = q.cat;
+      document.getElementById('textPreguntaJoc4').textContent = q.p;
 
-      const grid = document.getElementById('g4AnswersGrid');
-      grid.innerHTML = '';
+      const graella = document.getElementById('graellaRespostesJoc4');
+      graella.innerHTML = '';
 
-      item.options.forEach(opt => {
+      q.opcions.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
         btn.className = "py-3 px-4 bg-white hover:bg-rose-50 border border-rose-300 rounded-2xl font-bold text-slate-800 text-sm sm:text-base shadow-sm transition active:scale-95";
-        btn.onclick = () => answerSpeedItem(opt, item.ans, btn);
-        grid.appendChild(btn);
+        btn.onclick = () => respondrePreguntaJoc4(opt, q.correcta, btn);
+        graella.appendChild(btn);
       });
     }
 
-    function answerSpeedItem(selected, correct, btnElem) {
-      if (selected === correct) {
-        NativeAudio.playSuccess();
-        g4Score++;
-        document.getElementById('g4ScoreText').textContent = g4Score;
-        btnElem.classList.add('bg-emerald-400', 'text-white');
+    function respondrePreguntaJoc4(seleccionada, correcta, elementBoto) {
+      if (seleccionada === correcta) {
+        So.encert();
+        encertsJoc4++;
+        document.getElementById('textEncertsJoc4').textContent = encertsJoc4;
+        elementBoto.classList.add('bg-emerald-400', 'text-white');
       } else {
-        NativeAudio.playError();
-        btnElem.classList.add('bg-rose-400', 'text-white');
+        So.error();
+        elementBoto.classList.add('bg-rose-400', 'text-white');
       }
 
-      g4Idx++;
-      setTimeout(loadNextSpeedItem, 220);
+      indexPreguntaJoc4++;
+      setTimeout(carregarSeguentPreguntaJoc4, 200);
     }
 
-    function finishSpeedGame() {
-      clearInterval(g4Timer);
-      document.getElementById('g4ActiveScreen').classList.add('hidden');
-      document.getElementById('g4EndScreen').classList.remove('hidden');
+    function finalitzarJocContrarellotge() {
+      aturarTemporitzadorJoc4();
+      document.getElementById('pantallaActivaJoc4').classList.add('hidden');
+      document.getElementById('pantallaFinalJoc4').classList.remove('hidden');
 
-      const xpEarned = g4Score * 25;
-      addPlayerXp(xpEarned);
+      const puntsGuanyats = encertsJoc4 * 25;
+      afegirPunts(puntsGuanyats);
 
-      if (g4Score > player.stats.game4Best) {
-        player.stats.game4Best = g4Score;
+      if (encertsJoc4 > dadesJugador.estadistiques.joc4Millor) {
+        dadesJugador.estadistiques.joc4Millor = encertsJoc4;
       }
-      evaluateBadges();
-      saveGameData();
+      comprovarMedalles();
+      desarDades();
 
-      document.getElementById('g4SummaryText').textContent = `Molt bona feina! Has obtingut ${g4Score} encerts en 45 segons.`;
-      document.getElementById('g4XpEarnedBadge').textContent = `+${xpEarned} XP guanyats`;
-      NativeConfetti.launch();
+      document.getElementById('resumFinalJoc4').textContent = `Molt bona feina! Has obtingut ${encertsJoc4} encerts en 45 segons.`;
+      document.getElementById('insigniaPuntsJoc4').textContent = `+${puntsGuanyats} punts guanyats`;
+      Confeti.llancar();
     }
 
-    /* -------------------------------------------------------------
-       9. ACTIVITAT 5: EL GRAN REPTE FINAL (10 FASES I 5 TIPUS D'ACTIVITAT)
-    ------------------------------------------------------------- */
-    const BOSS_STAGES = [
-      // 1. Doble pas: massa
+    const FASES_BOSS = [
       {
-        kind: "problem",
-        typeLabel: "Problema real de doble pas",
-        icon: "🍰",
-        title: "Per preparar el pastís de la festa escolar necessitem 1,5 kg de farina. A l'armari només en tenim un paquet de 350 g. Quants grams de farina ens falten comprar exactament?",
-        instruction: "Expressa les dues quantitats en grams abans de calcular la diferència:",
-        equation: "1,5 kg (1.500 g) − 350 g = ? g",
-        options: ["1.150 g", "1.250 g", "850 g", "1.350 g"],
-        answer: "1.150 g",
-        reason: "1,5 kg són 1.500 g. Fent la resta amb els que ja tenim: 1.500 − 350 = 1.150 g."
+        tipus: "problema",
+        etiquetaTipus: "Problema real de doble pas",
+        icona: "🍰",
+        titol: "Per preparar el pastís de la festa escolar necessitem 1,5 kg de farina. A l'armari només en tenim un paquet de 350 g. Quants grams de farina ens falten comprar exactament?",
+        instruccio: "Expressa les dues quantitats en grams abans de calcular la diferència:",
+        equacio: "1,5 kg (1.500 g) − 350 g = ? g",
+        opcions: ["1.150 g", "1.250 g", "850 g", "1.350 g"],
+        resposta: "1.150 g",
+        motiu: "1,5 kg són 1.500 g. Fent la resta amb els que ja tenim: 1.500 − 350 = 1.150 g."
       },
-      // 2. Ordenació interactiva: capacitats
       {
-        kind: "ordering",
-        typeLabel: "Ordenació interactiva de menor a major",
-        icon: "🧪",
-        title: "Ordena aquests 4 recipients de líquid des del més petit fins al més gran. Fes clic sobre cadascun per anar construint la teva seqüència:",
-        instruction: "Pensa en mil·lilitres: 5 cl = 50 ml, 25 cl = 250 ml, 1,2 l = 1.200 ml.",
-        items: [
-          { label: "1,2 l", ml: 1200 },
-          { label: "25 cl", ml: 250 },
-          { label: "300 ml", ml: 300 },
-          { label: "5 cl", ml: 50 }
+        tipus: "ordenacio",
+        etiquetaTipus: "Ordenació interactiva de menor a major",
+        icona: "🧪",
+        titol: "Ordena aquests 4 recipients de líquid des del més petit fins al més gran. Fes clic sobre cadascun per anar construint la teva seqüència:",
+        instruccio: "Pensa en mil·lilitres: 5 cl = 50 ml, 25 cl = 250 ml, 1,2 l = 1.200 ml.",
+        elements: [
+          { etiqueta: "1,2 l" },
+          { etiqueta: "25 cl" },
+          { etiqueta: "300 ml" },
+          { etiqueta: "5 cl" }
         ],
-        correctOrder: ["5 cl", "25 cl", "300 ml", "1,2 l"],
-        reason: "Convertint tot a ml: 5 cl (50 ml) < 25 cl (250 ml) < 300 ml < 1,2 l (1.200 ml)."
+        ordreCorrecte: ["5 cl", "25 cl", "300 ml", "1,2 l"],
+        motiu: "Convertint tot a ml: 5 cl (50 ml) < 25 cl (250 ml) < 300 ml < 1,2 l (1.200 ml)."
       },
-      // 3. Comparació interactiva amb símbols: longituds
       {
-        kind: "compare",
-        typeLabel: "Comparació d'expressions compostes",
-        icon: "📏",
-        title: "Quin signe matemàtic expressa la relació correcta entre aquestes dues mesures de longitud?",
-        instruction: "Tria el símbol correcte per col·locar entre les dues quantitats:",
-        left: "2 m 50 cm",
-        right: "260 cm",
-        leftValCm: 250,
-        rightValCm: 260,
-        answer: "<",
-        reason: "2 metres i 50 cm equivalen a 250 cm. Com que 250 cm és més petit que 260 cm, la relació és <."
+        tipus: "comparacio",
+        etiquetaTipus: "Comparació d'expressions compostes",
+        icona: "📏",
+        titol: "Quin signe matemàtic expressa la relació correcta entre aquestes dues mesures de longitud?",
+        instruccio: "Tria el símbol correcte per col·locar entre les dues quantitats:",
+        esquerre: "2 m 50 cm",
+        dret: "260 cm",
+        resposta: "<",
+        motiu: "2 metres i 50 cm equivalen a 250 cm. Com que 250 cm és més petit que 260 cm, la relació és <."
       },
-      // 4. Repartiment: líquids
       {
-        kind: "sharing",
-        typeLabel: "Repartiment i fraccionament de mesures",
-        icon: "🧃",
-        title: "Tenim una garrafa de 2 litres de suc de taronja per a l'esmorzar de la classe. Si omplim gots de 25 cl, quants gots sencers podrem repartir en total?",
-        instruction: "Recorda quants centilitres conté 1 litre complet:",
-        equation: "2 l = 200 cl → 200 cl ÷ 25 cl = ? gots",
-        options: ["8 gots", "6 gots", "10 gots", "5 gots"],
-        answer: "8 gots",
-        reason: "2 litres són 200 cl. Dividint: 200 ÷ 25 = 8 gots complets."
+        tipus: "repartiment",
+        etiquetaTipus: "Repartiment i fraccionament de mesures",
+        icona: "🧃",
+        titol: "Tenim una garrafa de 2 litres de suc de taronja per a l'esmorzar de la classe. Si omplim gots de 25 cl, quants gots sencers podrem repartir en total?",
+        instruccio: "Recorda quants centilitres conté 1 litre complet:",
+        equacio: "2 l = 200 cl → 200 cl ÷ 25 cl = ? gots",
+        opcions: ["8 gots", "6 gots", "10 gots", "5 gots"],
+        resposta: "8 gots",
+        motiu: "2 litres són 200 cl. Dividint: 200 ÷ 25 = 8 gots complets."
       },
-      // 5. Caça de l'error matemàtic: conversions
       {
-        kind: "hunter",
-        typeLabel: "Caça de l'error matemàtic",
-        icon: "🔍",
-        title: "Un explorador despistat ha anotat quatre afirmacions a la seva llibreta de camp. Quina d'aquestes afirmacions és FALSA?",
-        instruction: "Analitza cadascuna de les 4 equivalències per trobar la incorrecta:",
-        options: [
+        tipus: "caca",
+        etiquetaTipus: "Caça de l'error matemàtic",
+        icona: "🔍",
+        titol: "Un explorador despistat ha anotat quatre afirmacions a la seva llibreta de camp. Quina d'aquestes afirmacions és falsa?",
+        instruccio: "Analitza cadascuna de les 4 equivalències per trobar la incorrecta:",
+        opcions: [
           "3,5 km = 3.500 m",
           "750 g = 0,75 kg",
           "4.500 mm = 45 m",
           "600 cl = 6 l"
         ],
-        answer: "4.500 mm = 45 m",
-        reason: "4.500 mm dividit per 1.000 són 4,5 metres, NO 45 metres! Aquesta era l'afirmació falsa."
+        resposta: "4.500 mm = 45 m",
+        motiu: "4.500 mm dividit per 1.000 són 4,5 metres, no 45 metres! Aquesta era l'afirmació falsa."
       },
-      // 6. Doble pas: longitud
       {
-        kind: "problem",
-        typeLabel: "Problema real de doble pas",
-        icon: "🧵",
-        title: "A la classe de plàstica tenim una bobina de cinta de 3 metres. En tallem 3 trossos de 40 cm per fer una garlanda. Quants centímetres de cinta queden a la bobina?",
-        instruction: "Calcula primer el total tallat (3 × 40 cm) i resta-ho dels metres inicials:",
-        equation: "3 m (300 cm) − (3 × 40 cm = 120 cm) = ? cm",
-        options: ["180 cm", "160 cm", "200 cm", "140 cm"],
-        answer: "180 cm",
-        reason: "3 metres són 300 cm. Els tres talls sumen 120 cm. La resta és: 300 − 120 = 180 cm."
+        tipus: "problema",
+        etiquetaTipus: "Problema real de doble pas",
+        icona: "🧵",
+        titol: "A la classe de plàstica tenim una bobina de cinta de 3 metres. En tallem 3 trossos de 40 cm per fer una garlanda. Quants centímetres de cinta queden a la bobina?",
+        instruccio: "Calcula primer el total tallat (3 × 40 cm) i resta-ho dels metres inicials:",
+        equacio: "3 m (300 cm) − (3 × 40 cm = 120 cm) = ? cm",
+        opcions: ["180 cm", "160 cm", "200 cm", "140 cm"],
+        resposta: "180 cm",
+        motiu: "3 metres són 300 cm. Els tres talls sumen 120 cm. La resta és: 300 − 120 = 180 cm."
       },
-      // 7. Ordenació interactiva: masses mixtes
       {
-        kind: "ordering",
-        typeLabel: "Ordenació interactiva de menor a major",
-        icon: "⚖️",
-        title: "Ordena aquestes 4 masses de menor a major. Fes clic sobre cadascuna per afegir-la a la seqüència:",
-        instruction: "Passa-ho tot mentalment a grams per comparar amb seguretat:",
-        items: [
-          { label: "1,5 kg", g: 1500 },
-          { label: "800 g", g: 800 },
-          { label: "2,1 kg", g: 2100 },
-          { label: "450 g", g: 450 }
+        tipus: "ordenacio",
+        etiquetaTipus: "Ordenació interactiva de menor a major",
+        icona: "⚖️",
+        titol: "Ordena aquestes 4 masses de menor a major. Fes clic sobre cadascuna per afegir-la a la seqüència:",
+        instruccio: "Passa-ho tot mentalment a grams per comparar amb seguretat:",
+        elements: [
+          { etiqueta: "1,5 kg" },
+          { etiqueta: "800 g" },
+          { etiqueta: "2,1 kg" },
+          { etiqueta: "450 g" }
         ],
-        correctOrder: ["450 g", "800 g", "1,5 kg", "2,1 kg"],
-        reason: "En grams: 450 g < 800 g < 1,5 kg (1.500 g) < 2,1 kg (2.100 g)."
+        ordreCorrecte: ["450 g", "800 g", "1,5 kg", "2,1 kg"],
+        motiu: "En grams: 450 g < 800 g < 1,5 kg (1.500 g) < 2,1 kg (2.100 g)."
       },
-      // 8. Comparació interactiva amb símbols: capacitats
       {
-        kind: "compare",
-        typeLabel: "Comparació d'expressions compostes",
-        icon: "🥛",
-        title: "Quin signe matemàtic cal col·locar entre 3 litres i mig (3 l 50 cl) i 3.500 mil·lilitres (ml)?",
-        instruction: "Calcula els mil·lilitres dels dos costats:",
-        left: "3 l 50 cl",
-        right: "3.500 ml",
-        leftValCm: 3500,
-        rightValCm: 3500,
-        answer: "=",
-        reason: "3 litres són 3.000 ml i 50 cl són 500 ml: sumen 3.500 ml. Ambdós costats són exactament iguals (=)!"
+        tipus: "comparacio",
+        etiquetaTipus: "Comparació d'expressions compostes",
+        icona: "🥛",
+        titol: "Quin signe matemàtic cal col·locar entre 3 litres i mig (3 l 50 cl) i 3.500 mil·lilitres (ml)?",
+        instruccio: "Calcula els mil·lilitres dels dos costats:",
+        esquerre: "3 l 50 cl",
+        dret: "3.500 ml",
+        resposta: "=",
+        motiu: "3 litres són 3.000 ml i 50 cl són 500 ml: sumen 3.500 ml. Ambdós costats són exactament iguals (=)!"
       },
-      // 9. Repartiment: longituds
       {
-        kind: "sharing",
-        typeLabel: "Repartiment i fraccionament de mesures",
-        icon: "🪵",
-        title: "Un fuster té un llistó de fusta de 4 metres. En vol fer peces curtes de 20 centímetres per a unes maquetes. Quantes peces completes en podrà treure?",
-        instruction: "Passa els 4 metres a centímetres i divideix:",
-        equation: "4 m = 400 cm → 400 cm ÷ 20 cm = ? peces",
-        options: ["20 peces", "15 peces", "25 peces", "18 peces"],
-        answer: "20 peces",
-        reason: "4 metres són 400 cm. Dividint entre 20 cm: 400 ÷ 20 = 20 peces exactes."
+        tipus: "repartiment",
+        etiquetaTipus: "Repartiment i fraccionament de mesures",
+        icona: "🪵",
+        titol: "Un fuster té un llistó de fusta de 4 metres. En vol fer peces curtes de 20 centímetres per a unes maquetes. Quantes peces completes en podrà treure?",
+        instruccio: "Passa els 4 metres a centímetres i divideix:",
+        equacio: "4 m = 400 cm → 400 cm ÷ 20 cm = ? peces",
+        opcions: ["20 peces", "15 peces", "25 peces", "18 peces"],
+        resposta: "20 peces",
+        motiu: "4 metres són 400 cm. Dividint entre 20 cm: 400 ÷ 20 = 20 peces exactes."
       },
-      // 10. Caça de l'error: barreja final
       {
-        kind: "hunter",
-        typeLabel: "Caça de l'error final",
-        icon: "🎯",
-        title: "Última prova de la travessia: quina d'aquestes quatre igualtats és una afirmació INCORRECTA?",
-        instruction: "Revisa detingudament cadascuna de les 4 equivalències:",
-        options: [
+        tipus: "caca",
+        etiquetaTipus: "Caça de l'error final",
+        icona: "🎯",
+        titol: "Última prova de la travessia: quina d'aquestes quatre igualtats és una afirmació incorrecta?",
+        instruccio: "Revisa detingudament cadascuna de les 4 equivalències:",
+        opcions: [
           "2 kg 250 g = 2.250 g",
           "1 l 25 cl = 125 cl",
           "3 m 8 cm = 380 cm",
           "5 km 40 m = 5.040 m"
         ],
-        answer: "3 m 8 cm = 380 cm",
-        reason: "3 m són 300 cm, per tant 3 m 8 cm són 308 cm, NO 380 cm (que serien 3 m 80 cm)!"
+        resposta: "3 m 8 cm = 380 cm",
+        motiu: "3 m són 300 cm, per tant 3 m 8 cm són 308 cm, no 380 cm (que serien 3 m 80 cm)!"
       }
     ];
 
-    let bossIndex = 0;
-    let bossLives = 3;
-    let currentSelectedOrder = [];
+    let indexFaseBoss = 0;
+    let videsBoss = 3;
+    let ordreSeleccionatBoss = [];
 
-    function startBossAdventure() {
-      bossIndex = 0;
-      bossLives = 3;
-      document.getElementById('g5IntroScreen').classList.add('hidden');
-      document.getElementById('g5VictoryScreen').classList.add('hidden');
-      document.getElementById('g5DefeatScreen').classList.add('hidden');
-      document.getElementById('g5ActiveScreen').classList.remove('hidden');
-      updateBossHeartsUI();
-      loadBossStage();
+    function iniciarAventuraJoc5() {
+      indexFaseBoss = 0;
+      videsBoss = 3;
+      document.getElementById('pantallaIniciJoc5').classList.add('hidden');
+      document.getElementById('pantallaVictoriaJoc5').classList.add('hidden');
+      document.getElementById('pantallaDerrotaJoc5').classList.add('hidden');
+      document.getElementById('pantallaActivaJoc5').classList.remove('hidden');
+      actualitzarVidesBossUI();
+      carregarFaseBoss();
     }
 
-    function updateBossHeartsUI() {
-      let hStr = "";
-      for (let i = 0; i < bossLives; i++) hStr += "❤️";
-      for (let i = bossLives; i < 3; i++) hStr += "🖤";
-      document.getElementById('g5HeartsDisplay').textContent = hStr;
+    function actualitzarVidesBossUI() {
+      let str = "";
+      for (let i = 0; i < videsBoss; i++) str += "❤️";
+      for (let i = videsBoss; i < 3; i++) str += "🖤";
+      document.getElementById('marcadorVidesJoc5').textContent = str;
     }
 
-    function loadBossStage() {
-      const stage = BOSS_STAGES[bossIndex];
-      const total = BOSS_STAGES.length;
+    function carregarFaseBoss() {
+      const fase = FASES_BOSS[indexFaseBoss];
+      const total = FASES_BOSS.length;
 
-      document.getElementById('g5StageBadge').textContent = `Fase ${bossIndex + 1} / ${total}`;
-      document.getElementById('g5TypeLabel').textContent = stage.typeLabel;
-      document.getElementById('g5PromptIcon').textContent = stage.icon;
-      document.getElementById('g5Title').textContent = stage.title;
-      document.getElementById('g5Instruction').textContent = stage.instruction;
+      document.getElementById('etiquetaFaseJoc5').textContent = `Fase ${indexFaseBoss + 1} / ${total}`;
+      document.getElementById('etiquetaTipusJoc5').textContent = fase.etiquetaTipus;
+      document.getElementById('iconaPreguntaJoc5').textContent = fase.icona;
+      document.getElementById('titolPreguntaJoc5').textContent = fase.titol;
+      document.getElementById('instruccioPreguntaJoc5').textContent = fase.instruccio;
 
-      const progressPct = ((bossIndex + 1) / total) * 100;
-      document.getElementById('g5ProgressBar').style.width = `${progressPct}%`;
+      const pct = ((indexFaseBoss + 1) / total) * 100;
+      document.getElementById('barraProgresJoc5').style.width = `${pct}%`;
 
-      const interactive = document.getElementById('g5InteractivePanel');
-      const optionsBox = document.getElementById('g5OptionsContainer');
-      const feedback = document.getElementById('g5Feedback');
+      const interactiu = document.getElementById('panellInteractiuJoc5');
+      const contenidorOpcions = document.getElementById('contenidorOpcionsJoc5');
+      const retorn = document.getElementById('missatgeRetornJoc5');
 
-      interactive.innerHTML = '';
-      optionsBox.innerHTML = '';
-      feedback.className = "hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm";
-      feedback.textContent = '';
-      document.getElementById('g5NextBtn').classList.add('hidden');
+      interactiu.innerHTML = '';
+      contenidorOpcions.innerHTML = '';
+      retorn.className = "hidden p-4 rounded-2xl text-center font-bold text-xs sm:text-sm";
+      retorn.textContent = '';
+      document.getElementById('botoSeguentJoc5').classList.add('hidden');
 
-      // Generació segons tipus de dinàmica
-      if (stage.kind === 'problem' || stage.kind === 'sharing') {
-        interactive.innerHTML = `
+      if (fase.tipus === 'problema' || fase.tipus === 'repartiment') {
+        interactiu.innerHTML = `
           <div class="text-center">
             <span class="text-xs uppercase font-extrabold text-amber-700 tracking-wider block mb-1">Equació guia</span>
             <div class="text-base sm:text-lg font-black text-amber-950 bg-white py-2 px-4 rounded-xl border border-amber-200 inline-block shadow-sm">
-              ${stage.equation}
+              ${fase.equacio}
             </div>
           </div>
         `;
-        renderBossStandardButtons(stage.options, stage.answer, stage.reason);
-      } else if (stage.kind === 'hunter') {
-        interactive.innerHTML = `
+        generarBotonsEstandardBoss(fase.opcions, fase.resposta, fase.motiu);
+      } else if (fase.tipus === 'caca') {
+        interactiu.innerHTML = `
           <div class="text-center text-xs sm:text-sm text-slate-700 font-medium">
             Observa amb atenció aquestes afirmacions i clica sobre la que conté un <strong>error de mesura</strong>:
           </div>
         `;
-        renderBossStandardButtons(stage.options, stage.answer, stage.reason);
-      } else if (stage.kind === 'compare') {
-        interactive.innerHTML = `
+        generarBotonsEstandardBoss(fase.opcions, fase.resposta, fase.motiu);
+      } else if (fase.tipus === 'comparacio') {
+        interactiu.innerHTML = `
           <div class="flex items-center justify-center gap-3 text-lg sm:text-2xl font-black text-amber-950">
-            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${stage.left}</span>
-            <span id="g5CompareSlot" class="w-12 h-12 flex items-center justify-center bg-amber-200 text-amber-900 rounded-2xl border-2 border-dashed border-amber-400 text-2xl font-black">?</span>
-            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${stage.right}</span>
+            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${fase.esquerre}</span>
+            <span id="ranuraComparacioBoss" class="w-12 h-12 flex items-center justify-center bg-amber-200 text-amber-900 rounded-2xl border-2 border-dashed border-amber-400 text-2xl font-black">?</span>
+            <span class="bg-white px-4 py-2 rounded-2xl border border-amber-200 shadow-sm">${fase.dret}</span>
           </div>
         `;
-        renderBossCompareButtons(stage.answer, stage.reason);
-      } else if (stage.kind === 'ordering') {
-        currentSelectedOrder = [];
-        renderBossOrderingInterface(stage);
+        generarBotonsComparacioBoss(fase.resposta, fase.motiu);
+      } else if (fase.tipus === 'ordenacio') {
+        ordreSeleccionatBoss = [];
+        generarInterficieOrdenacioBoss(fase);
       }
     }
 
-    function renderBossStandardButtons(options, correctAnswer, reason) {
-      const box = document.getElementById('g5OptionsContainer');
-      box.className = "grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6";
+    function generarBotonsEstandardBoss(opcions, respostaCorrecta, motiu) {
+      const caixa = document.getElementById('contenidorOpcionsJoc5');
+      caixa.className = "grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6";
 
-      options.forEach(opt => {
+      opcions.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt;
-        btn.className = "boss-opt-btn py-3 sm:py-4 px-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-extrabold text-sm sm:text-base text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
-        btn.onclick = () => evaluateBossAnswer(opt === correctAnswer, btn, correctAnswer, reason);
-        box.appendChild(btn);
+        btn.className = "boto-opt-boss py-3 sm:py-4 px-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-extrabold text-sm sm:text-base text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
+        btn.onclick = () => avaluarRespostaBoss(opt === respostaCorrecta, btn, respostaCorrecta, motiu);
+        caixa.appendChild(btn);
       });
     }
 
-    function renderBossCompareButtons(correctSign, reason) {
-      const box = document.getElementById('g5OptionsContainer');
-      box.className = "flex justify-center gap-4 mb-6";
+    function generarBotonsComparacioBoss(signeCorrecte, motiu) {
+      const caixa = document.getElementById('contenidorOpcionsJoc5');
+      caixa.className = "flex justify-center gap-4 mb-6";
 
-      ['<', '=', '>'].forEach(sign => {
+      ['<', '=', '>'].forEach(signe => {
         const btn = document.createElement('button');
-        btn.textContent = sign;
-        btn.className = "boss-opt-btn w-20 py-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-black text-2xl text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
+        btn.textContent = signe;
+        btn.className = "boto-opt-boss w-20 py-3 bg-white hover:bg-amber-50 border-2 border-amber-300 font-black text-2xl text-slate-800 rounded-2xl shadow-sm transition active:scale-95";
         btn.onclick = () => {
-          document.getElementById('g5CompareSlot').textContent = sign;
-          evaluateBossAnswer(sign === correctSign, btn, correctSign, reason);
+          document.getElementById('ranuraComparacioBoss').textContent = signe;
+          avaluarRespostaBoss(signe === signeCorrecte, btn, signeCorrecte, motiu);
         };
-        box.appendChild(btn);
+        caixa.appendChild(btn);
       });
     }
 
-    function renderBossOrderingInterface(stage) {
-      const interactive = document.getElementById('g5InteractivePanel');
-      const box = document.getElementById('g5OptionsContainer');
-      box.className = "space-y-4 mb-6";
+    function generarInterficieOrdenacioBoss(fase) {
+      const interactiu = document.getElementById('panellInteractiuJoc5');
+      const caixa = document.getElementById('contenidorOpcionsJoc5');
+      caixa.className = "space-y-4 mb-6";
 
-      interactive.innerHTML = `
+      interactiu.innerHTML = `
         <div class="text-xs uppercase font-extrabold text-amber-800 mb-2 text-center">La teva seqüència (de menor a major):</div>
-        <div id="g5OrderSlots" class="min-h-[50px] p-2 bg-white rounded-2xl border-2 border-dashed border-amber-300 flex flex-wrap items-center justify-center gap-2">
+        <div id="ranuresOrdreBoss" class="min-h-[50px] p-2 bg-white rounded-2xl border-2 border-dashed border-amber-300 flex flex-wrap items-center justify-center gap-2">
           <span class="text-xs text-slate-400 font-medium">Clica sobre les peces de sota per col·locar-les en ordre...</span>
         </div>
       `;
 
-      // Peces per clicar
-      const poolDiv = document.createElement('div');
-      poolDiv.className = "flex flex-wrap items-center justify-center gap-2.5";
+      const contenidorPeces = document.createElement('div');
+      contenidorPeces.className = "flex flex-wrap items-center justify-center gap-2.5";
 
-      const shuffled = [...stage.items].sort(() => Math.random() - 0.5);
+      const barrejats = [...fase.elements].sort(() => Math.random() - 0.5);
 
-      shuffled.forEach(item => {
+      barrejats.forEach(elem => {
         const btn = document.createElement('button');
-        btn.textContent = item.label;
-        btn.dataset.label = item.label;
-        btn.className = "order-chip px-4 py-2.5 bg-white hover:bg-amber-100 border-2 border-amber-300 text-slate-800 font-black text-sm rounded-2xl shadow-sm transition active:scale-95";
+        btn.textContent = elem.etiqueta;
+        btn.className = "peça-ordre px-4 py-2.5 bg-white hover:bg-amber-100 border-2 border-amber-300 text-slate-800 font-black text-sm rounded-2xl shadow-sm transition active:scale-95";
         btn.onclick = () => {
           if (btn.disabled) return;
           btn.disabled = true;
           btn.classList.add('opacity-30', 'grayscale');
 
-          currentSelectedOrder.push(item.label);
-          updateOrderSlotsUI(stage);
+          ordreSeleccionatBoss.push(elem.etiqueta);
+          actualitzarRanuresOrdreUI(fase);
         };
-        poolDiv.appendChild(btn);
+        contenidorPeces.appendChild(btn);
       });
 
-      const controlDiv = document.createElement('div');
-      controlDiv.className = "flex justify-center gap-3";
+      const contenidorControls = document.createElement('div');
+      contenidorControls.className = "flex justify-center gap-3";
 
-      const resetBtn = document.createElement('button');
-      resetBtn.className = "px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition";
-      resetBtn.innerHTML = `<i class="fa-solid fa-rotate-left mr-1"></i> Netejar ordre`;
-      resetBtn.onclick = () => {
-        currentSelectedOrder = [];
-        document.querySelectorAll('.order-chip').forEach(b => {
+      const btnReiniciar = document.createElement('button');
+      btnReiniciar.className = "px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition";
+      btnReiniciar.innerHTML = `<i class="fa-solid fa-rotate-left mr-1"></i> Netejar ordre`;
+      btnReiniciar.onclick = () => {
+        ordreSeleccionatBoss = [];
+        document.querySelectorAll('.peça-ordre').forEach(b => {
           b.disabled = false;
           b.classList.remove('opacity-30', 'grayscale');
         });
-        updateOrderSlotsUI(stage);
+        actualitzarRanuresOrdreUI(fase);
       };
 
-      const submitBtn = document.createElement('button');
-      submitBtn.id = "g5SubmitOrderBtn";
-      submitBtn.disabled = true;
-      submitBtn.className = "px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black text-xs rounded-xl shadow transition";
-      submitBtn.innerHTML = `Comprova la seqüència <i class="fa-solid fa-check ml-1"></i>`;
-      submitBtn.onclick = () => {
-        const isMatch = JSON.stringify(currentSelectedOrder) === JSON.stringify(stage.correctOrder);
-        evaluateBossAnswer(isMatch, submitBtn, stage.correctOrder.join(" < "), stage.reason);
+      const btnComprovar = document.createElement('button');
+      btnComprovar.id = "botoComprovarOrdreBoss";
+      btnComprovar.disabled = true;
+      btnComprovar.className = "px-6 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black text-xs rounded-xl shadow transition";
+      btnComprovar.innerHTML = `Comprova la seqüència <i class="fa-solid fa-check ml-1"></i>`;
+      btnComprovar.onclick = () => {
+        const coincideix = JSON.stringify(ordreSeleccionatBoss) === JSON.stringify(fase.ordreCorrecte);
+        avaluarRespostaBoss(coincideix, btnComprovar, fase.ordreCorrecte.join(" < "), fase.motiu);
       };
 
-      controlDiv.appendChild(resetBtn);
-      controlDiv.appendChild(submitBtn);
+      contenidorControls.appendChild(btnReiniciar);
+      contenidorControls.appendChild(btnComprovar);
 
-      box.appendChild(poolDiv);
-      box.appendChild(controlDiv);
+      caixa.appendChild(contenidorPeces);
+      caixa.appendChild(contenidorControls);
     }
 
-    function updateOrderSlotsUI(stage) {
-      const slotBox = document.getElementById('g5OrderSlots');
-      const submitBtn = document.getElementById('g5SubmitOrderBtn');
+    function actualitzarRanuresOrdreUI(fase) {
+      const ranures = document.getElementById('ranuresOrdreBoss');
+      const btnComprovar = document.getElementById('botoComprovarOrdreBoss');
 
-      if (currentSelectedOrder.length === 0) {
-        slotBox.innerHTML = `<span class="text-xs text-slate-400 font-medium">Clica sobre les peces de sota per col·locar-les en ordre...</span>`;
-        if (submitBtn) submitBtn.disabled = true;
+      if (ordreSeleccionatBoss.length === 0) {
+        ranures.innerHTML = `<span class="text-xs text-slate-400 font-medium">Clica sobre les peces de sota per col·locar-les en ordre...</span>`;
+        if (btnComprovar) btnComprovar.disabled = true;
         return;
       }
 
-      slotBox.innerHTML = '';
-      currentSelectedOrder.forEach((val, idx) => {
-        const tag = document.createElement('span');
-        tag.className = "px-3 py-1.5 bg-amber-100 text-amber-950 font-black text-xs sm:text-sm rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm";
-        tag.innerHTML = `<span>${val}</span> <span class="text-[10px] text-amber-600 font-bold">#${idx + 1}</span>`;
-        slotBox.appendChild(tag);
+      ranures.innerHTML = '';
+      ordreSeleccionatBoss.forEach((val, idx) => {
+        const etiqueta = document.createElement('span');
+        etiqueta.className = "px-3 py-1.5 bg-amber-100 text-amber-950 font-black text-xs sm:text-sm rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm";
+        etiqueta.innerHTML = `<span>${val}</span> <span class="text-[10px] text-amber-600 font-bold">#${idx + 1}</span>`;
+        ranures.appendChild(etiqueta);
       });
 
-      if (submitBtn) {
-        submitBtn.disabled = currentSelectedOrder.length !== stage.items.length;
+      if (btnComprovar) {
+        btnComprovar.disabled = ordreSeleccionatBoss.length !== fase.elements.length;
       }
     }
 
-    function evaluateBossAnswer(isCorrect, btnElem, expected, reason) {
-      document.querySelectorAll('.boss-opt-btn, .order-chip, #g5SubmitOrderBtn').forEach(b => b.disabled = true);
-      const feedback = document.getElementById('g5Feedback');
-      feedback.classList.remove('hidden');
+    function avaluarRespostaBoss(esCorrecte, elementBoto, esperat, motiu) {
+      document.querySelectorAll('.boto-opt-boss, .peça-ordre, #botoComprovarOrdreBoss').forEach(b => b.disabled = true);
+      const retorn = document.getElementById('missatgeRetornJoc5');
+      retorn.classList.remove('hidden');
 
-      if (isCorrect) {
-        NativeAudio.playSuccess();
-        NativeConfetti.launch();
-        if (btnElem) btnElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-emerald-100 text-emerald-950 border border-emerald-300";
-        feedback.innerHTML = `🌟 <strong>Molt bé! Fase superada!</strong><br><span class="text-xs font-medium">${reason}</span>`;
-        addPlayerXp(50);
+      if (esCorrecte) {
+        So.encert();
+        Confeti.llancar();
+        if (elementBoto) elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-emerald-100 text-emerald-950 border border-emerald-300";
+        retorn.innerHTML = `Molt bé! Fase superada!<br><span class="text-xs font-medium">${motiu}</span>`;
+        afegirPunts(50);
       } else {
-        NativeAudio.playError();
-        bossLives--;
-        updateBossHeartsUI();
-        if (btnElem) btnElem.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
-        feedback.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-rose-100 text-rose-950 border border-rose-300";
-        feedback.innerHTML = `❌ <strong>No és correcte!</strong> Has perdut 1 cor.<br>La solució correcta era: <strong>${expected}</strong>.<br><span class="text-xs font-medium">${reason}</span>`;
+        So.error();
+        videsBoss--;
+        actualitzarVidesBossUI();
+        if (elementBoto) elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        retorn.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-rose-100 text-rose-950 border border-rose-300";
+        retorn.innerHTML = `No és correcte! Has perdut 1 cor.<br>La solució correcta era: <strong>${esperat}</strong>.<br><span class="text-xs font-medium">${motiu}</span>`;
 
-        if (bossLives <= 0) {
+        if (videsBoss <= 0) {
           setTimeout(() => {
-            document.getElementById('g5ActiveScreen').classList.add('hidden');
-            document.getElementById('g5DefeatScreen').classList.remove('hidden');
-          }, 1400);
+            document.getElementById('pantallaActivaJoc5').classList.add('hidden');
+            document.getElementById('pantallaDerrotaJoc5').classList.remove('hidden');
+          }, 1200);
           return;
         }
       }
 
-      document.getElementById('g5NextBtn').classList.remove('hidden');
+      document.getElementById('botoSeguentJoc5').classList.remove('hidden');
     }
 
-    function nextBossStage() {
-      bossIndex++;
-      if (bossIndex >= BOSS_STAGES.length) {
-        finishBossAdventure();
+    function avancarFaseJoc5() {
+      indexFaseBoss++;
+      if (indexFaseBoss >= FASES_BOSS.length) {
+        finalitzarAventuraBoss();
       } else {
-        loadBossStage();
+        carregarFaseBoss();
       }
     }
 
-    function finishBossAdventure() {
-      document.getElementById('g5ActiveScreen').classList.add('hidden');
-      document.getElementById('g5VictoryScreen').classList.remove('hidden');
-      NativeAudio.playLevelUp();
-      NativeConfetti.launch();
-      addPlayerXp(300);
-      player.stats.bossWins++;
-      evaluateBadges();
-      saveGameData();
+    function finalitzarAventuraBoss() {
+      document.getElementById('pantallaActivaJoc5').classList.add('hidden');
+      document.getElementById('pantallaVictoriaJoc5').classList.remove('hidden');
+      So.victoria();
+      Confeti.llancar();
+      afegirPunts(300);
+      dadesJugador.estadistiques.joc5Victories++;
+      comprovarMedalles();
+      desarDades();
     }
 
-    /* -------------------------------------------------------------
-       10. CANVI DE PESTANYES I FINESTRES MODALS
-    ------------------------------------------------------------- */
-    function switchSection(secKey) {
-      document.querySelectorAll('.view-panel').forEach(p => p.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn, .tab-btn-boss').forEach(b => b.classList.remove('active'));
+    function canviarSeccio(clauSeccio) {
+      Confeti.netejar();
+      aturarTemporitzadorJoc4();
 
-      const panel = document.getElementById(`section-${secKey}`);
-      if (panel) panel.classList.remove('hidden');
+      document.querySelectorAll('.panell-vista').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.boto-pestanya').forEach(b => b.classList.remove('pestanya-activa'));
+      document.querySelectorAll('.boto-pestanya-cap').forEach(b => b.classList.remove('pestanya-cap-activa'));
 
-      const navBtn = document.getElementById(`nav-${secKey}`);
-      if (navBtn) navBtn.classList.add('active');
+      const panell = document.getElementById(`panell-${clauSeccio}`);
+      if (panell) panell.classList.remove('hidden');
 
-      if (secKey === 'game1') initGame1();
-      if (secKey === 'game2') initGame2();
-      if (secKey === 'game3') initGame3();
-      if (secKey === 'game4') {
-        document.getElementById('g4StartScreen').classList.remove('hidden');
-        document.getElementById('g4ActiveScreen').classList.add('hidden');
-        document.getElementById('g4EndScreen').classList.add('hidden');
+      const botoNav = document.getElementById(`boto-seccio-${clauSeccio}`);
+      if (botoNav) {
+        if (clauSeccio === 'joc5') {
+          botoNav.classList.add('pestanya-cap-activa');
+        } else {
+          botoNav.classList.add('pestanya-activa');
+        }
       }
-      if (secKey === 'game5') {
-        document.getElementById('g5IntroScreen').classList.remove('hidden');
-        document.getElementById('g5ActiveScreen').classList.add('hidden');
-        document.getElementById('g5VictoryScreen').classList.add('hidden');
-        document.getElementById('g5DefeatScreen').classList.add('hidden');
+
+      if (clauSeccio === 'joc1') iniciarJoc1();
+      if (clauSeccio === 'joc2') iniciarJoc2();
+      if (clauSeccio === 'joc3') iniciarJoc3();
+      if (clauSeccio === 'joc4') {
+        document.getElementById('pantallaIniciJoc4').classList.remove('hidden');
+        document.getElementById('pantallaActivaJoc4').classList.add('hidden');
+        document.getElementById('pantallaFinalJoc4').classList.add('hidden');
+      }
+      if (clauSeccio === 'joc5') {
+        document.getElementById('pantallaIniciJoc5').classList.remove('hidden');
+        document.getElementById('pantallaActivaJoc5').classList.add('hidden');
+        document.getElementById('pantallaVictoriaJoc5').classList.add('hidden');
+        document.getElementById('pantallaDerrotaJoc5').classList.add('hidden');
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function openBadgesModal() {
-      const grid = document.getElementById('badgesGrid');
-      grid.innerHTML = '';
+    function obrirModalMedalles() {
+      const graella = document.getElementById('graellaMedalles');
+      graella.innerHTML = '';
 
-      BADGES.forEach(b => {
-        const unlocked = player.badges.includes(b.id);
-        const card = document.createElement('div');
-        card.className = `p-3 rounded-2xl border text-center transition ${unlocked ? 'bg-amber-50 border-amber-300' : 'bg-slate-100 border-slate-200 opacity-40 grayscale'}`;
-        card.innerHTML = `
-          <div class="text-2xl mb-1">${b.icon}</div>
-          <h4 class="font-bold text-slate-800 text-xs mb-0.5">${b.name}</h4>
-          <p class="text-[10px] text-slate-500">${b.desc}</p>
-          <span class="mt-2 inline-block text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${unlocked ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-500'}">
-            ${unlocked ? 'Aconseguida' : 'Per desbloquejar'}
+      MEDALLES.forEach(m => {
+        const desbloquejada = dadesJugador.medalles.includes(m.id);
+        const targeta = document.createElement('div');
+        targeta.className = `p-3 rounded-2xl border text-center transition ${desbloquejada ? 'bg-amber-50 border-amber-300' : 'bg-slate-100 border-slate-200 opacity-40 grayscale'}`;
+        targeta.innerHTML = `
+          <div class="text-2xl mb-1">${m.icona}</div>
+          <h4 class="font-bold text-slate-800 text-xs mb-0.5">${m.nom}</h4>
+          <p class="text-[10px] text-slate-500">${m.desc}</p>
+          <span class="mt-2 inline-block text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${desbloquejada ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-200 text-slate-500'}">
+            ${desbloquejada ? 'Aconseguida' : 'Per desbloquejar'}
           </span>
         `;
-        grid.appendChild(card);
+        graella.appendChild(targeta);
       });
 
-      document.getElementById('badgesModal').classList.remove('hidden');
+      document.getElementById('modalMedalles').classList.remove('hidden');
     }
 
-    function closeBadgesModal() {
-      document.getElementById('badgesModal').classList.add('hidden');
+    function tancarModalMedalles() {
+      document.getElementById('modalMedalles').classList.add('hidden');
     }
 
-    function openAvatarModal() {
-      document.getElementById('avatarInputName').value = player.name;
-      document.getElementById('avatarModal').classList.remove('hidden');
+    function obrirModalPerfil() {
+      document.getElementById('campNomPerfil').value = dadesJugador.nom;
+      document.getElementById('modalPerfil').classList.remove('hidden');
     }
 
-    function closeAvatarModal() {
-      document.getElementById('avatarModal').classList.add('hidden');
+    function tancarModalPerfil() {
+      document.getElementById('modalPerfil').classList.add('hidden');
     }
 
-    let chosenAvatar = "🧭";
-    function setAvatarEmoji(emoji) {
-      chosenAvatar = emoji;
-      document.querySelectorAll('.avatar-pick').forEach(btn => {
-        const active = btn.textContent.trim() === emoji;
-        btn.classList.toggle('border-sky-500', active);
-        btn.classList.toggle('bg-sky-100', active);
+    let avatarTriat = "🧭";
+    function seleccionarIconaPerfil(icona) {
+      avatarTriat = icona;
+      document.querySelectorAll('.boto-avatar').forEach(btn => {
+        const actiu = btn.textContent.trim() === icona;
+        btn.classList.toggle('border-sky-500', actiu);
+        btn.classList.toggle('bg-sky-100', actiu);
       });
     }
 
-    function savePlayerProfile() {
-      const name = document.getElementById('avatarInputName').value.trim();
-      if (name) player.name = name;
-      player.avatar = chosenAvatar;
-      saveGameData();
-      refreshPlayerUI();
-      closeAvatarModal();
-      showModalNotice("Perfil guardat", `Tot a punt, ${player.name}!`);
+    function desarPerfilJugador() {
+      const nom = document.getElementById('campNomPerfil').value.trim();
+      if (nom) dadesJugador.nom = nom;
+      dadesJugador.avatar = avatarTriat;
+      desarDades();
+      actualitzarInterficieJugador();
+      tancarModalPerfil();
+      mostrarAvisModal("Perfil guardat", `Tot a punt, ${dadesJugador.nom}!`);
     }
 
-    function showModalNotice(title, desc) {
-      document.getElementById('noticeTitle').textContent = title;
-      document.getElementById('noticeDesc').textContent = desc;
-      document.getElementById('noticeModal').classList.remove('hidden');
+    function mostrarAvisModal(titol, desc) {
+      document.getElementById('titolAvis').textContent = titol;
+      document.getElementById('descripcioAvis').textContent = desc;
+      document.getElementById('modalAvis').classList.remove('hidden');
     }
 
-    function closeNoticeModal() {
-      document.getElementById('noticeModal').classList.add('hidden');
+    function tancarModalAvis() {
+      document.getElementById('modalAvis').classList.add('hidden');
     }
 
-    /* -------------------------------------------------------------
-       11. ARRENCADA SEGURA (DOM CONTENT LOADED)
-    ------------------------------------------------------------- */
     document.addEventListener('DOMContentLoaded', () => {
-      NativeConfetti.init();
-      loadGameData();
-      setLabTab('longitud');
-      initGame1();
+      Confeti.inicialitzar();
+      carregarDades();
+      seleccionarCategoriaLab('longitud');
+      iniciarJoc1();
     });
   </script>
 </body>
