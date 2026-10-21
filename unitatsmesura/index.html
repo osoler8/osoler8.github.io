@@ -668,7 +668,7 @@
         if (!this.canvas || !this.ctx) return;
 
         const colors = ['#f59e0b', '#10b981', '#0ea5e9', '#ec4899', '#8b5cf6', '#eab308'];
-        const quantitat = 60;
+        const quantitat = 50;
         const origenX = this.canvas.width * 0.5;
         const origenY = this.canvas.height * 0.45;
 
@@ -679,12 +679,12 @@
             w: 7 + Math.random() * 5,
             h: 5 + Math.random() * 4,
             color: colors[Math.floor(Math.random() * colors.length)],
-            vx: (Math.random() - 0.5) * 14,
-            vy: -7 - Math.random() * 9,
+            vx: (Math.random() - 0.5) * 12,
+            vy: -6 - Math.random() * 8,
             gravetat: 0.38,
             rotacio: Math.random() * 360,
             velocitatRotacio: (Math.random() - 0.5) * 10,
-            vida: 70 + Math.random() * 20
+            vida: 60 + Math.random() * 15
           });
         }
 
@@ -721,7 +721,7 @@
 
         this.temporitzadorAturada = setTimeout(() => {
           this.netejar();
-        }, 2500);
+        }, 2000);
       }
     };
 
@@ -739,7 +739,7 @@
       { id: 'gota_magica', nom: 'Gota màgica', desc: 'Supera dues rondes d\'aparellar mesures', icona: '💧' },
       { id: 'llamp_saber', nom: 'Llamp del saber', desc: 'Fes més de 4 encerts al contrarellotge', icona: '⚡' },
       { id: 'salt_granota', nom: 'Salt de la granota', desc: 'Fes un salt d\'unitats amb la granota', icona: '🐸' },
-      { id: 'corona_mestre', nom: 'Corona del mestre suprem', desc: 'Supera amb èxit el gran repte final de 10 fases', icona: '👑' }
+      { id: 'corona_mestre', nom: 'Corona del mestre/a suprem', desc: 'Supera amb èxit el gran repte final de 10 fases', icona: '👑' }
     ];
 
     let dadesJugador = {
@@ -759,7 +759,7 @@
 
     function carregarDades() {
       try {
-        const desades = localStorage.getItem('aventura_mesures_dades_v5');
+        const desades = localStorage.getItem('aventura_mesures_dades_v6');
         if (desades) {
           dadesJugador = Object.assign(dadesJugador, JSON.parse(desades));
         }
@@ -769,7 +769,7 @@
 
     function desarDades() {
       try {
-        localStorage.setItem('aventura_mesures_dades_v5', JSON.stringify(dadesJugador));
+        localStorage.setItem('aventura_mesures_dades_v6', JSON.stringify(dadesJugador));
       } catch (e) {}
     }
 
@@ -1032,7 +1032,7 @@
       if (seleccionat === p.resposta) {
         So.encert();
         Confeti.llancar();
-        elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        elementBoto.className = "py-3 sm:py-4 px-2 rounded-2xl bg-emerald-100 border-2 border-emerald-600 font-black text-xl sm:text-2xl text-emerald-950 shadow-sm";
         retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
         retorn.innerHTML = `Molt bé! ${p.motiu}`;
         afegirPunts(20);
@@ -1040,7 +1040,7 @@
         comprovarMedalles();
       } else {
         So.error();
-        elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        elementBoto.className = "py-3 sm:py-4 px-2 rounded-2xl bg-rose-100 border-2 border-rose-600 font-black text-xl sm:text-2xl text-rose-950 shadow-sm";
         retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
         retorn.innerHTML = `Gairebé! La unitat més adequada és <strong>${p.resposta}</strong>.<br><span class="text-xs">${p.motiu}</span>`;
       }
@@ -1220,7 +1220,7 @@
       if (seleccionat === repte.correcte) {
         So.encert();
         Confeti.llancar();
-        elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        elementBoto.className = "py-3 sm:py-4 px-2 rounded-2xl bg-emerald-100 border-2 border-emerald-600 font-black text-lg sm:text-xl text-emerald-950 shadow-sm";
         retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-emerald-100 text-emerald-900 border border-emerald-300";
         retorn.innerHTML = `Equilibri aconseguit! ${repte.esquerre} és exactament igual a ${repte.correcte} ${repte.unitatDesti}.`;
         afegirPunts(30);
@@ -1228,7 +1228,7 @@
         comprovarMedalles();
       } else {
         So.error();
-        elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        elementBoto.className = "py-3 sm:py-4 px-2 rounded-2xl bg-rose-100 border-2 border-rose-600 font-black text-lg sm:text-xl text-rose-950 shadow-sm";
         retorn.className = "p-4 rounded-2xl text-center font-bold text-sm sm:text-base bg-rose-100 text-rose-900 border border-rose-300";
         retorn.innerHTML = `Balança descompensada! El valor equivalent és <strong>${repte.correcte} ${repte.unitatDesti}</strong>.`;
       }
@@ -1316,10 +1316,10 @@
         So.encert();
         encertsJoc4++;
         document.getElementById('textEncertsJoc4').textContent = encertsJoc4;
-        elementBoto.classList.add('bg-emerald-400', 'text-white');
+        elementBoto.className = "py-3 px-4 bg-emerald-100 border border-emerald-500 rounded-2xl font-black text-emerald-950 text-sm sm:text-base shadow-sm";
       } else {
         So.error();
-        elementBoto.classList.add('bg-rose-400', 'text-white');
+        elementBoto.className = "py-3 px-4 bg-rose-100 border border-rose-500 rounded-2xl font-black text-rose-950 text-sm sm:text-base shadow-sm";
       }
 
       indexPreguntaJoc4++;
@@ -1675,7 +1675,9 @@
       if (esCorrecte) {
         So.encert();
         Confeti.llancar();
-        if (elementBoto) elementBoto.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+        if (elementBoto && elementBoto.classList.contains('boto-opt-boss')) {
+          elementBoto.className = "boto-opt-boss py-3 sm:py-4 px-3 bg-emerald-100 border-2 border-emerald-600 font-extrabold text-sm sm:text-base text-emerald-950 rounded-2xl shadow-sm";
+        }
         retorn.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-emerald-100 text-emerald-950 border border-emerald-300";
         retorn.innerHTML = `Molt bé! Fase superada!<br><span class="text-xs font-medium">${motiu}</span>`;
         afegirPunts(50);
@@ -1683,7 +1685,9 @@
         So.error();
         videsBoss--;
         actualitzarVidesBossUI();
-        if (elementBoto) elementBoto.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+        if (elementBoto && elementBoto.classList.contains('boto-opt-boss')) {
+          elementBoto.className = "boto-opt-boss py-3 sm:py-4 px-3 bg-rose-100 border-2 border-rose-600 font-extrabold text-sm sm:text-base text-rose-950 rounded-2xl shadow-sm";
+        }
         retorn.className = "p-4 rounded-2xl text-center font-bold text-xs sm:text-sm bg-rose-100 text-rose-950 border border-rose-300";
         retorn.innerHTML = `No és correcte! Has perdut 1 cor.<br>La solució correcta era: <strong>${esperat}</strong>.<br><span class="text-xs font-medium">${motiu}</span>`;
 
