@@ -261,7 +261,6 @@
         // DOM Elements
         const canvas = document.getElementById('fibCanvas');
         const ctx = canvas.getContext('2d');
-        const PADDING = 2; // Marge intern lògic per no tallar la línia
         let currentScale = 80;  // Multiplicador dinàmic per evitar errors a mides grans
         let reqAnimFrame;
 
@@ -275,9 +274,12 @@
         function updateLayout() {
             state.layout = generateFibLayout(state.iters);
             
+            // Càlcul dinàmic del marge per evitar que es tallin les vores al fer zoom out (5% de l'ample)
+            state.layout.pad = Math.max(1, state.layout.width * 0.05);
+            
             // Ajustar el canvas
-            const logW = state.layout.width + PADDING * 2;
-            const logH = state.layout.height + PADDING * 2;
+            const logW = state.layout.width + state.layout.pad * 2;
+            const logH = state.layout.height + state.layout.pad * 2;
             
             // Limitar la resolució interna a aprox ~3000px per evitar que l'espiral desaparegui del llenç
             const maxDim = Math.max(logW, logH);
@@ -296,17 +298,23 @@
             document.getElementById('infoPhi').innerHTML = `&asymp; ${phi.toFixed(4)}`;
         }
 
-        function setLineStyle(c) {
+        function setLineStyle(c, thick) {
             c.lineJoin = 'round';
             c.lineCap = 'round';
-            if (state.lineStyle === 'dashed') c.setLineDash([state.thickness * 4, state.thickness * 4]);
-            else if (state.lineStyle === 'dotted') c.setLineDash([state.thickness, state.thickness * 3]);
+            if (state.lineStyle === 'dashed') c.setLineDash([thick * 4, thick * 4]);
+            else if (state.lineStyle === 'dotted') c.setLineDash([thick, thick * 3]);
             else c.setLineDash([]);
         }
 
         // Renderitzador
         function render(overrideProgress = null) {
             const prog = overrideProgress !== null ? overrideProgress : state.animProgress;
+            const pad = state.layout.pad;
+            
+            // Escalar el gruix perquè no desaparegui en mides d'iteració molt grans
+            // Prenem la iteració 8 (ample 21) com a mida base de proporció
+            const adaptThickness = state.thickness * (state.layout.width / 21);
+            const finalThick = Math.max(state.thickness * 0.5, adaptThickness);
             
             // Fons
             ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset abans de clear
@@ -319,13 +327,13 @@
             ctx.scale(currentScale, currentScale);
             
             // Graella
-            ctx.lineWidth = state.thickness;
+            ctx.lineWidth = finalThick;
             ctx.strokeStyle = state.gridColor;
-            setLineStyle(ctx);
+            setLineStyle(ctx, finalThick);
             
             state.layout.squares.forEach(sq => {
                 ctx.beginPath();
-                ctx.rect(sq.x + PADDING, sq.y + PADDING, sq.s, sq.s);
+                ctx.rect(sq.x + pad, sq.y + pad, sq.s, sq.s);
                 ctx.stroke();
 
                 // Nombres
@@ -333,14 +341,12 @@
                     ctx.save();
                     // Escala de la font dinàmica basada en la mida de la capsa
                     let fSize = sq.s * 0.4;
-                    // Protecció per números en caixes petites
-                    if(fSize < 0.2) fSize = 0.2; 
                     
                     ctx.font = `600 ${fSize}px Inter, sans-serif`;
                     ctx.fillStyle = state.gridColor;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(sq.s, sq.x + PADDING + sq.s/2, sq.y + PADDING + sq.s/2);
+                    ctx.fillText(sq.s, sq.x + pad + sq.s/2, sq.y + pad + sq.s/2);
                     ctx.restore();
                 }
             });
@@ -350,14 +356,14 @@
             const partialArc = prog - fullArcs;
 
             ctx.setLineDash([]); // Espiral sempre contínua i més gruixuda
-            ctx.lineWidth = state.thickness * 1.5;
+            ctx.lineWidth = finalThick * 1.5;
             ctx.strokeStyle = state.spiralColor;
 
             for (let i = 0; i < fullArcs; i++) {
                 if(i >= state.layout.squares.length) continue;
                 const sq = state.layout.squares[i];
                 ctx.beginPath();
-                ctx.arc(sq.cx + PADDING, sq.cy + PADDING, sq.s, sq.startA, sq.endA, true);
+                ctx.arc(sq.cx + pad, sq.cy + pad, sq.s, sq.startA, sq.endA, true);
                 ctx.stroke();
             }
 
@@ -366,27 +372,27 @@
                 const currentEndA = sq.startA + (-Math.PI/2) * partialArc;
 
                 ctx.beginPath();
-                ctx.arc(sq.cx + PADDING, sq.cy + PADDING, sq.s, sq.startA, currentEndA, true);
+                ctx.arc(sq.cx + pad, sq.cy + pad, sq.s, sq.startA, currentEndA, true);
                 ctx.stroke();
 
                 // Efecte Compàs
                 if (state.isPlaying) {
-                    const tipX = sq.cx + PADDING + sq.s * Math.cos(currentEndA);
-                    const tipY = sq.cy + PADDING + sq.s * Math.sin(currentEndA);
+                    const tipX = sq.cx + pad + sq.s * Math.cos(currentEndA);
+                    const tipY = sq.cy + pad + sq.s * Math.sin(currentEndA);
                     
-                    ctx.lineWidth = state.thickness * 0.5;
+                    ctx.lineWidth = finalThick * 0.5;
                     ctx.strokeStyle = '#ef4444'; // Vermell compàs
                     ctx.setLineDash([0.1, 0.1]); 
                     ctx.beginPath();
-                    ctx.moveTo(sq.cx + PADDING, sq.cy + PADDING);
+                    ctx.moveTo(sq.cx + pad, sq.cy + pad);
                     ctx.lineTo(tipX, tipY);
                     ctx.stroke();
                     ctx.setLineDash([]);
                     
                     ctx.fillStyle = '#0f172a';
-                    ctx.beginPath(); ctx.arc(sq.cx + PADDING, sq.cy + PADDING, state.thickness*2, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(sq.cx + pad, sq.cy + pad, finalThick*2, 0, Math.PI * 2); ctx.fill();
                     ctx.fillStyle = '#ef4444';
-                    ctx.beginPath(); ctx.arc(tipX, tipY, state.thickness*1.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(tipX, tipY, finalThick*1.5, 0, Math.PI * 2); ctx.fill();
                 }
             }
         }
@@ -407,8 +413,11 @@
 
         // SVG Export
         function generateSVG() {
-            const w = state.layout.width + PADDING*2;
-            const h = state.layout.height + PADDING*2;
+            const pad = state.layout.pad;
+            const finalThick = Math.max(state.thickness * 0.5, state.thickness * (state.layout.width / 21));
+            
+            const w = state.layout.width + pad*2;
+            const h = state.layout.height + pad*2;
             
             let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="100%" height="100%">`;
             
@@ -419,34 +428,34 @@
 
             // Estil línies per a la graella
             let strokeDash = '';
-            if (state.lineStyle === 'dashed') strokeDash = `stroke-dasharray="${state.thickness*4} ${state.thickness*4}"`;
-            else if (state.lineStyle === 'dotted') strokeDash = `stroke-dasharray="${state.thickness} ${state.thickness*3}"`;
+            if (state.lineStyle === 'dashed') strokeDash = `stroke-dasharray="${finalThick*4} ${finalThick*4}"`;
+            else if (state.lineStyle === 'dotted') strokeDash = `stroke-dasharray="${finalThick} ${finalThick*3}"`;
 
             // Grups
-            svg += `<g stroke="${state.gridColor}" stroke-width="${state.thickness}" fill="none" ${strokeDash} stroke-linecap="round" stroke-linejoin="round">`;
+            svg += `<g stroke="${state.gridColor}" stroke-width="${finalThick}" fill="none" ${strokeDash} stroke-linecap="round" stroke-linejoin="round">`;
             
             state.layout.squares.forEach(sq => {
-                svg += `<rect x="${sq.x + PADDING}" y="${sq.y + PADDING}" width="${sq.s}" height="${sq.s}" />`;
+                svg += `<rect x="${sq.x + pad}" y="${sq.y + pad}" width="${sq.s}" height="${sq.s}" />`;
                 if(state.showNums) {
-                    let fSize = Math.max(sq.s * 0.4, 0.2);
+                    let fSize = Math.max(sq.s * 0.4, 0.05);
                     // text requereix ser fora de l'estil fill="none"
-                    svg += `<text x="${sq.x + PADDING + sq.s/2}" y="${sq.y + PADDING + sq.s/2}" fill="${state.gridColor}" font-family="Inter, sans-serif" font-size="${fSize}" font-weight="600" text-anchor="middle" dominant-baseline="central" stroke="none">${sq.s}</text>`;
+                    svg += `<text x="${sq.x + pad + sq.s/2}" y="${sq.y + pad + sq.s/2}" fill="${state.gridColor}" font-family="Inter, sans-serif" font-size="${fSize}" font-weight="600" text-anchor="middle" dominant-baseline="central" stroke="none">${sq.s}</text>`;
                 }
             });
             svg += `</g>`;
 
             // Espiral (Path amb arcs)
-            svg += `<g stroke="${state.spiralColor}" stroke-width="${state.thickness*1.5}" fill="none" stroke-linecap="round">`;
+            svg += `<g stroke="${state.spiralColor}" stroke-width="${finalThick*1.5}" fill="none" stroke-linecap="round">`;
             
             state.layout.squares.forEach((sq, i) => {
                 if (i >= state.animProgress) return; 
                 // Si l'animació està tallada, aquí exportem sencer l'arc per simplicitat de vector si ha passat d'ell.
                 if (i < Math.floor(state.animProgress)) {
                     // Start & End
-                    let sx = sq.cx + PADDING + sq.s * Math.cos(sq.startA);
-                    let sy = sq.cy + PADDING + sq.s * Math.sin(sq.startA);
-                    let ex = sq.cx + PADDING + sq.s * Math.cos(sq.endA);
-                    let ey = sq.cy + PADDING + sq.s * Math.sin(sq.endA);
+                    let sx = sq.cx + pad + sq.s * Math.cos(sq.startA);
+                    let sy = sq.cy + pad + sq.s * Math.sin(sq.startA);
+                    let ex = sq.cx + pad + sq.s * Math.cos(sq.endA);
+                    let ey = sq.cy + pad + sq.s * Math.sin(sq.endA);
                     // SVG Arc command: A rx ry x-axis-rotation large-arc-flag sweep-flag x y
                     // Donat que sweep-flag 0 = counter-clockwise en SVG (on Y va cap a baix).
                     svg += `<path d="M ${sx} ${sy} A ${sq.s} ${sq.s} 0 0 0 ${ex} ${ey}" />`;
