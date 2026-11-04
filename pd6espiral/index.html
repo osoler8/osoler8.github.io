@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proporció Àuria i Espiral de Fibonacci</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF per a l'exportació -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Ocultar scrollbar per a un disseny més net al panell lateral si cal */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Range slider personalitzat */
+        input[type=range] {
+            accent-color: #0f172a;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col md:flex-row overflow-x-hidden">
+
+    <!-- Panell de Control (Sidebar) -->
+    <aside class="w-full md:w-80 lg:w-96 bg-white border-b md:border-b-0 md:border-r border-slate-200 shadow-sm flex flex-col p-6 lg:p-8 z-10 shrink-0">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 mb-2">Secció Àuria</h1>
+            <p class="text-sm text-slate-500 leading-relaxed">
+                Genera la graella matemàtica i visualitza l'espiral de Fibonacci dibuixada pas a pas amb un compàs interactiu.
+            </p>
+        </div>
+
+        <!-- Controls Interactivs -->
+        <div class="space-y-6 flex-1">
+            
+            <!-- Selector de gruix -->
+            <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div class="flex justify-between items-center">
+                    <label for="thicknessSlider" class="text-sm font-semibold text-slate-700">Gruix de la línia</label>
+                    <span id="thicknessValue" class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded shadow-sm">Mitjà</span>
+                </div>
+                <input type="range" id="thicknessSlider" min="0.01" max="0.15" step="0.01" value="0.05" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- Botons d'acció principals -->
+            <div class="space-y-3">
+                <button id="btnGrid" class="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Restablir Graella
+                </button>
+                
+                <button id="btnSpiral" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl shadow-md shadow-slate-900/10 transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Dibuixar Espiral
+                </button>
+            </div>
+        </div>
+
+        <!-- Opcions d'Exportació -->
+        <div class="mt-8 pt-6 border-t border-slate-200">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Exportació (PDF A3)</h3>
+            <div class="space-y-3">
+                <button id="btnPDFGrid" class="w-full py-2.5 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Només Graella
+                </button>
+                <button id="btnPDFSpiral" class="w-full py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Graella + Espiral
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Àrea Principal del Llenç -->
+    <main class="flex-1 p-4 md:p-8 flex items-center justify-center bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]">
+        <div class="w-full max-w-5xl bg-white shadow-2xl shadow-slate-200/50 rounded-2xl overflow-hidden border border-slate-100 relative p-4 md:p-8">
+            <!-- Canvas amb Aspect Ratio bloquejat per no deformar -->
+            <div class="w-full relative" style="aspect-ratio: 38 / 25;">
+                <canvas id="fibCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuració del Canvas
+        const canvas = document.getElementById('fibCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Mides lògiques basades en la successió 34x21.
+        // Afegim +2 de PADDING a cada costat perquè res toqui les vores i no es talli la línia.
+        const PADDING = 2;
+        const width = 34 + (PADDING * 2);
+        const height = 21 + (PADDING * 2);
+        const scale = 120; // Multiplicador per alta resolució (Retina/PDF)
+
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+
+        // Dades de la seqüència: x,y centrades tenint en compte el padding
+        const fibSquares = [
+            { x: 9, y: 5, s: 1, cx: 9, cy: 6, startA: 0, endA: -Math.PI/2 },
+            { x: 8, y: 5, s: 1, cx: 9, cy: 6, startA: -Math.PI/2, endA: -Math.PI },
+            { x: 8, y: 6, s: 2, cx: 10, cy: 6, startA: Math.PI, endA: Math.PI/2 },
+            { x: 10, y: 5, s: 3, cx: 10, cy: 5, startA: Math.PI/2, endA: 0 },
+            { x: 8, y: 0, s: 5, cx: 8, cy: 5, startA: 0, endA: -Math.PI/2 },
+            { x: 0, y: 0, s: 8, cx: 8, cy: 8, startA: -Math.PI/2, endA: -Math.PI },
+            { x: 0, y: 8, s: 13, cx: 13, cy: 8, startA: Math.PI, endA: Math.PI/2 },
+            { x: 13, y: 0, s: 21, cx: 13, cy: 0, startA: Math.PI/2, endA: 0 }
+        ];
+
+        // Estat
+        let animationProgress = 0;
+        let isAnimating = false;
+        let reqAnimFrame;
+        let currentThickness = 0.05;
+
+        // Elements DOM
+        const slider = document.getElementById('thicknessSlider');
+        const thicknessLabel = document.getElementById('thicknessValue');
+        const btnGrid = document.getElementById('btnGrid');
+        const btnSpiral = document.getElementById('btnSpiral');
+        const btnPDFGrid = document.getElementById('btnPDFGrid');
+        const btnPDFSpiral = document.getElementById('btnPDFSpiral');
+
+        // Preparem context global
+        ctx.scale(scale, scale);
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        // Funcions de Dibuix
+        function clearCanvas() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function renderGrid() {
+            ctx.lineWidth = currentThickness;
+            ctx.strokeStyle = '#334155'; // Slate 700
+            
+            fibSquares.forEach(sq => {
+                ctx.beginPath();
+                // Desplacem les coordenades pel PADDING
+                ctx.rect(sq.x + PADDING, sq.y + PADDING, sq.s, sq.s);
+                ctx.stroke();
+            });
+        }
+
+        function drawCompass(cx, cy, radius, angle) {
+            const tipX = cx + radius * Math.cos(angle);
+            const tipY = cy + radius * Math.sin(angle);
+
+            // Braç del compàs
+            ctx.lineWidth = currentThickness * 0.6;
+            ctx.strokeStyle = '#ef4444'; // Vermell clar
+            ctx.setLineDash([0.1, 0.1]); 
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(tipX, tipY);
+            ctx.stroke();
+            ctx.setLineDash([]); 
+
+            // Punt fix i Punta
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath(); ctx.arc(cx, cy, 0.15, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(tipX, tipY, 0.12, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function renderSpiral(progress, showCompass = true) {
+            const fullArcs = Math.floor(progress);
+            const partialArc = progress - fullArcs;
+
+            ctx.lineWidth = currentThickness * 1.5; // Espiral lleugerament més gruixuda
+            ctx.strokeStyle = '#2563eb'; // Blau
+
+            // Arcs complets
+            for (let i = 0; i < fullArcs; i++) {
+                const sq = fibSquares[i];
+                ctx.beginPath();
+                ctx.arc(sq.cx + PADDING, sq.cy + PADDING, sq.s, sq.startA, sq.endA, true);
+                ctx.stroke();
+            }
+
+            // Arc animat
+            if (fullArcs < fibSquares.length && partialArc > 0) {
+                const sq = fibSquares[fullArcs];
+                const currentEndA = sq.startA + (-Math.PI/2) * partialArc;
+
+                ctx.beginPath();
+                ctx.arc(sq.cx + PADDING, sq.cy + PADDING, sq.s, sq.startA, currentEndA, true);
+                ctx.stroke();
+
+                if (showCompass) {
+                    drawCompass(sq.cx + PADDING, sq.cy + PADDING, sq.s, currentEndA);
+                }
+            }
+        }
+
+        // Bucle d'animació
+        function animate() {
+            if (!isAnimating) return;
+            
+            // Velocitat d'animació. S'ajusta depenent de si els quadrats són més grans
+            animationProgress += 0.02; 
+            
+            if (animationProgress > fibSquares.length) {
+                animationProgress = fibSquares.length;
+                isAnimating = false;
+                updateButtons(false);
+            }
+
+            clearCanvas();
+            renderGrid();
+            // Només mostrem el compàs si estem en plena animació
+            renderSpiral(animationProgress, isAnimating);
+
+            if (isAnimating) {
+                reqAnimFrame = requestAnimationFrame(animate);
+            }
+        }
+
+        function updateRenderState() {
+            clearCanvas();
+            renderGrid();
+            if (animationProgress > 0) {
+                renderSpiral(animationProgress, false);
+            }
+        }
+
+        // --- Controls d'UI i Esdeveniments ---
+
+        function updateButtons(disabled) {
+            btnGrid.disabled = disabled;
+            btnPDFGrid.disabled = disabled;
+            btnPDFSpiral.disabled = disabled;
+            if(disabled) {
+                btnGrid.classList.add('opacity-50', 'cursor-not-allowed');
+                btnPDFGrid.classList.add('opacity-50', 'cursor-not-allowed');
+                btnPDFSpiral.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnGrid.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnPDFGrid.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnPDFSpiral.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        slider.addEventListener('input', (e) => {
+            currentThickness = parseFloat(e.target.value);
+            
+            // Actualitzar text de la UI
+            if (currentThickness < 0.04) thicknessLabel.textContent = "Fí";
+            else if (currentThickness > 0.1) thicknessLabel.textContent = "Gruixut";
+            else thicknessLabel.textContent = "Mitjà";
+
+            // Redibuixar instantàniament si no està animant
+            if (!isAnimating) updateRenderState();
+        });
+
+        btnGrid.addEventListener('click', () => {
+            cancelAnimationFrame(reqAnimFrame);
+            isAnimating = false;
+            animationProgress = 0;
+            updateRenderState();
+            updateButtons(false);
+        });
+
+        btnSpiral.addEventListener('click', () => {
+            cancelAnimationFrame(reqAnimFrame);
+            animationProgress = 0;
+            isAnimating = true;
+            updateButtons(true);
+            animate();
+        });
+
+        // --- Lògica d'Exportació ---
+        
+        function exportPDF(type) {
+            // Guardem l'estat actual per no perdre l'animació de l'usuari
+            const savedProgress = animationProgress;
+
+            // Renderitzem forçosament l'estat desitjat pel PDF (Sense compàs)
+            clearCanvas();
+            renderGrid();
+            if (type === 'full') {
+                renderSpiral(fibSquares.length, false); 
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a3'); 
+            const pdfWidth = 420;
+            const pdfHeight = 297;
+            
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            
+            const ratio = width / height; 
+            
+            // Definim un marge de seguretat en el PDF d'uns 20mm a cada costat
+            const margin = 20; 
+            const maxDrawWidth = pdfWidth - (margin * 2);
+            const maxDrawHeight = pdfHeight - (margin * 2);
+            
+            let drawWidth = maxDrawWidth;
+            let drawHeight = maxDrawWidth / ratio;
+
+            // Ajust de seguretat si alçada supera
+            if (drawHeight > maxDrawHeight) {
+                drawHeight = maxDrawHeight;
+                drawWidth = maxDrawHeight * ratio;
+            }
+            
+            // Centrat total al PDF
+            const xOffset = (pdfWidth - drawWidth) / 2;
+            const yOffset = (pdfHeight - drawHeight) / 2; 
+            
+            doc.addImage(imgData, 'JPEG', xOffset, yOffset, drawWidth, drawHeight);
+            doc.save(`Taula_Fibonacci_${type === 'full' ? 'Espiral' : 'Graella'}_A3.pdf`);
+
+            // Restaurem l'estat original després d'exportar
+            animationProgress = savedProgress;
+            updateRenderState();
+        }
+
+        btnPDFGrid.addEventListener('click', () => exportPDF('grid'));
+        btnPDFSpiral.addEventListener('click', () => exportPDF('full'));
+
+        // Inici
+        updateRenderState();
+
+    </script>
+</body>
+</html>
