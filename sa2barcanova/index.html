@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matemàtiques interactives - Fraccions impròpies i el repte de la piscina</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              orange: '#f97316',
+              blue: '#0284c7',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              navy: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Plus+Jakarta Sans', sans-serif;
+    }
+    .perspective-pool {
+      perspective: 800px;
+    }
+    .preserve-3d {
+      transform-style: preserve-3d;
+    }
+    .water-wave {
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.7) 0%, rgba(2, 132, 199, 0.85) 100%);
+      box-shadow: 0 0 25px rgba(14, 165, 233, 0.5) inset;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header / Barra de Navegació -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="bg-amber-500 text-white font-extrabold px-3 py-1 rounded-xl text-lg shadow-sm flex items-center gap-2">
+          <i class="fa-solid fa-shapes"></i> Unitat 2
+        </span>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold text-slate-800 leading-tight">Matemàtiques pràctiques</h1>
+          <p class="text-xs text-slate-500">Fraccions impròpies, volum, capacitat i percentatges</p>
+        </div>
+      </div>
+
+      <!-- Selector de mòduls i mode -->
+      <div class="flex items-center flex-wrap gap-2">
+        <button id="navModule1" onclick="switchModule(1)" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-orange-500 text-white shadow-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-pizza-slice"></i> Mòdul 1: Pizzes
+        </button>
+        <button id="navModule2" onclick="switchModule(2)" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-water-ladder"></i> Mòdul 2: Piscina
+        </button>
+        <button id="toggleTeacherMode" onclick="toggleTeacherGuide()" class="ml-2 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold border border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition flex items-center gap-1">
+          <i class="fa-solid fa-chalkboard-user"></i> <span id="teacherBtnText">Solucionari per a docents</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Panell Desplegable Guia Docent / Solucions -->
+  <aside id="teacherGuidePanel" class="hidden bg-emerald-900 text-emerald-50 border-b-4 border-emerald-600 transition-all">
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <span class="inline-block bg-emerald-700 text-emerald-200 uppercase text-xs tracking-wider px-2.5 py-0.5 rounded-full font-bold mb-2">
+            Mode mestre / solucionari oficial
+          </span>
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap"></i> Resum didàctic i criteris de correcció
+          </h2>
+        </div>
+        <button onclick="toggleTeacherGuide()" class="text-emerald-300 hover:text-white text-xl p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-4 text-sm leading-relaxed">
+        <div class="bg-emerald-950/60 p-4 rounded-xl border border-emerald-700/50">
+          <h3 class="font-bold text-emerald-300 text-base mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-pizza-slice"></i> Solucions del mòdul 1: pizzes i fraccions
+          </h3>
+          <ul class="space-y-2 list-disc list-inside text-emerald-100">
+            <li><strong>Fraccions:</strong> 6/4 = 1 + 2/4 = 1,5; 4/3 = 1 + 1/3 ≈ 1,333; 4/2 = 2.</li>
+            <li><strong>Ordre decreixent:</strong> 4/2 (2) &gt; 6/4 (1,5) &gt; 4/3 (~1,33).</li>
+            <li><strong>Relació amb percentatges:</strong>
+              <br>• 150% = 150/100 = 3/2 = <strong>6/4</strong>
+              <br>• 133% ≈ 133,3% = <strong>4/3</strong>
+              <br>• 200% = 200/100 = <strong>4/2</strong> (2 unitats completes).
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-emerald-950/60 p-4 rounded-xl border border-emerald-700/50">
+          <h3 class="font-bold text-emerald-300 text-base mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-droplet"></i> Solucions del mòdul 2: la piscina
+          </h3>
+          <ul class="space-y-2 list-disc list-inside text-emerald-100">
+            <li><strong>Volum total:</strong> 10 m × 5 m × 1,2 m = <strong>60 m³ = 60.000 L</strong>.</li>
+            <li><strong>Volum permès (90%):</strong> 60.000 × 0,90 = <strong>54.000 L</strong> (o 54 m³).</li>
+            <li><strong>Unitats equivalents:</strong> 60 m³ = 60.000 dm³ = 60.000 L = 600 hL = 60.000.000 cm³.</li>
+            <li><strong>Clor (1/12):</strong>
+              <br>• Sobre capacitat nominal: 60.000 / 12 = <strong>5.000 L</strong>.
+              <br>• Sobre el límit del 90%: 54.000 / 12 = <strong>4.500 L</strong>.
+            </li>
+            <li><strong>Pèrdua en 4 dies (2% a 4% per dia):</strong>
+              <br>• Rang diari: entre 2% i 4% diari ➜ en 4 dies: entre 8% i 16%.
+              <br>• Sobre 60.000 L: entre <strong>4.800 L</strong> i <strong>9.600 L</strong>.
+              <br>• Sobre 54.000 L: entre <strong>4.320 L</strong> i <strong>8.640 L</strong>.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTINGUT PRINCIPAL -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+
+    <!-- ========================================== -->
+    <!-- MÒDUL 1: FRACCIONS IMPRÒPIES I PERCENTATGES -->
+    <!-- ========================================== -->
+    <section id="module1" class="space-y-8">
+      
+      <!-- Introducció teòrica -->
+      <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+              Activitat de la pàgina 41
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-orange-900 mt-2">
+              Fraccions impròpies i percentatges
+            </h2>
+            <p class="text-orange-800/80 mt-1 max-w-2xl text-sm md:text-base">
+              En una fracció, el <strong>numerador</strong> pot ser més gran que el <strong>denominador</strong>? Sí! Quan el numerador és més gran, la fracció representa <strong>més d'una unitat sencera</strong> i s'anomena <em>fracció impròpia</em>.
+            </p>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-orange-200 text-center shadow-sm w-fit self-start md:self-auto">
+            <span class="text-xs font-semibold text-slate-500 uppercase block">Exemple del llibre</span>
+            <div class="flex items-center justify-center gap-3 my-1">
+              <span class="text-2xl font-black text-orange-600">7 / 4</span>
+              <span class="text-slate-400">=</span>
+              <span class="text-sm font-semibold text-slate-700 bg-orange-100 px-2 py-1 rounded">1 pizza sencera + 3/4</span>
+            </div>
+            <span class="text-xs text-slate-500">7 quarts de pizza = 1,75 pizzes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulador interactiu de Fraccions de Pizza -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b pb-3">
+          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-orange-500"></i>
+            Visualitzador de fraccions impròpies
+          </h3>
+          <span class="text-xs text-slate-500">Manipula els valors per veure quantes pizzes senceres es formen</span>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">NUMERADOR (Trossos menjats): <span id="numVal" class="text-orange-600 text-base font-extrabold">7</span></label>
+              <input id="numInput" type="range" min="1" max="16" value="7" class="w-full accent-orange-500 cursor-pointer" oninput="updateInteractivePizza()">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">DENOMINADOR (Trossos per pizza): <span id="denVal" class="text-orange-600 text-base font-extrabold">4</span></label>
+              <input id="denInput" type="range" min="2" max="8" value="4" class="w-full accent-orange-500 cursor-pointer" oninput="updateInteractivePizza()">
+            </div>
+            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-sm space-y-1">
+              <p><strong>Fracció:</strong> <span id="pizzaFractionText" class="text-orange-600 font-bold">7/4</span></p>
+              <p><strong>Número mixt:</strong> <span id="pizzaMixedText" class="text-slate-700 font-semibold">1 pizza sencera i 3/4</span></p>
+              <p><strong>Decimal:</strong> <span id="pizzaDecimalText" class="text-slate-700 font-semibold">1,75</span> (<span id="pizzaPercentText" class="text-emerald-600 font-bold">175%</span>)</p>
+              <p id="pizzaTypeBadge" class="inline-block px-2 py-0.5 rounded text-xs font-bold mt-1 bg-amber-100 text-amber-800">Fracció impròpia (&gt; 1 unitat)</p>
+            </div>
+          </div>
+
+          <!-- Dibuix dinàmic de pizzes SVG -->
+          <div class="md:col-span-2 bg-amber-50/50 rounded-xl p-4 border border-amber-100 flex flex-col justify-center">
+            <div id="interactivePizzasContainer" class="flex flex-wrap items-center justify-center gap-4 min-h-[160px]">
+              <!-- Pizzes renderitzades dinàmicament per JS -->
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-2">Cada cercle groc és una pizza completa. Les porcions de color representen els trossos agafats.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITAT 10: EL GRUP DE 14 AMICS -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-xl bg-orange-600 text-white font-black flex items-center justify-center text-lg shadow-sm">10</span>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-lg">Activitat 10: les comandes del grup d'amics</h3>
+            <p class="text-xs md:text-sm text-slate-600">Un grup de 14 amics van a comprar pizzes de 3 varietats diferents. Han comprat:</p>
+          </div>
+        </div>
+
+        <!-- 3 varietats visuals -->
+        <div class="grid md:grid-cols-3 gap-4">
+          <!-- Varietat 1 -->
+          <div class="p-4 rounded-xl border-2 border-orange-200 bg-orange-50/30">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-slate-800 text-sm">Varietat 1</span>
+              <span class="bg-orange-500 text-white font-extrabold px-2.5 py-0.5 rounded-md text-sm">6 / 4</span>
+            </div>
+            <div id="svgV1" class="h-28 flex items-center justify-center"></div>
+            <p class="text-xs text-slate-600 text-center mt-2">Dividides en 4 trossos. Prenen 6 trossos (1 pizza i 2/4 = 1,5 pizzes).</p>
+          </div>
+
+          <!-- Varietat 2 -->
+          <div class="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/30">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-slate-800 text-sm">Varietat 2</span>
+              <span class="bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-md text-sm">4 / 3</span>
+            </div>
+            <div id="svgV2" class="h-28 flex items-center justify-center"></div>
+            <p class="text-xs text-slate-600 text-center mt-2">Dividides en 3 trossos. Prenen 4 trossos (1 pizza i 1/3 ≈ 1,33 pizzes).</p>
+          </div>
+
+          <!-- Varietat 3 -->
+          <div class="p-4 rounded-xl border-2 border-blue-200 bg-blue-50/30">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-slate-800 text-sm">Varietat 3</span>
+              <span class="bg-blue-600 text-white font-extrabold px-2.5 py-0.5 rounded-md text-sm">4 / 2</span>
+            </div>
+            <div id="svgV3" class="h-28 flex items-center justify-center"></div>
+            <p class="text-xs text-slate-600 text-center mt-2">Dividides en 2 meitats. Prenen 4 meitats (2 pizzes completes exactes).</p>
+          </div>
+        </div>
+
+        <!-- Pregunta 1: Ordenació -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-3">
+          <h4 class="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-arrow-down-wide-short text-orange-500"></i>
+            Pregunta A: de quina varietat n'han comprat més? Ordena de més gran a més petita (&gt;)
+          </h4>
+          <p class="text-xs text-slate-600">Arrossega o selecciona l'ordre correcte de les tres quantitats:</p>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <select id="order1" class="border border-slate-300 rounded-lg p-2 font-bold bg-white focus:ring-2 focus:ring-orange-400">
+              <option value="">1a posició (la més gran)</option>
+              <option value="4/2">4/2 (2 pizzes)</option>
+              <option value="6/4">6/4 (1,5 pizzes)</option>
+              <option value="4/3">4/3 (~1,33 pizzes)</option>
+            </select>
+            <span class="font-bold text-slate-500 text-lg">&gt;</span>
+            <select id="order2" class="border border-slate-300 rounded-lg p-2 font-bold bg-white focus:ring-2 focus:ring-orange-400">
+              <option value="">2a posició</option>
+              <option value="4/2">4/2 (2 pizzes)</option>
+              <option value="6/4">6/4 (1,5 pizzes)</option>
+              <option value="4/3">4/3 (~1,33 pizzes)</option>
+            </select>
+            <span class="font-bold text-slate-500 text-lg">&gt;</span>
+            <select id="order3" class="border border-slate-300 rounded-lg p-2 font-bold bg-white focus:ring-2 focus:ring-orange-400">
+              <option value="">3a posició (la més petita)</option>
+              <option value="4/2">4/2 (2 pizzes)</option>
+              <option value="6/4">6/4 (1,5 pizzes)</option>
+              <option value="4/3">4/3 (~1,33 pizzes)</option>
+            </select>
+
+            <button onclick="checkOrder()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition shadow-sm">
+              Comprova l'ordre
+            </button>
+          </div>
+
+          <div id="orderFeedback" class="hidden text-sm p-3 rounded-lg mt-2"></div>
+        </div>
+
+        <!-- Pregunta 2: Relació amb percentatges -->
+        <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+          <h4 class="font-bold text-slate-800 text-sm md:text-base flex items-center gap-2">
+            <i class="fa-solid fa-percent text-orange-500"></i>
+            Pregunta B: relaciona aquests percentatges amb les fraccions (150%, 133%, 200%)
+          </h4>
+          <p class="text-xs text-slate-600">Assigna quina fracció correspon a cada percentatge:</p>
+
+          <div class="grid sm:grid-cols-3 gap-4">
+            <!-- 150% -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xl font-extrabold text-slate-800 block mb-2">150 % &rarr;</span>
+              <select id="match150" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-semibold bg-white text-center">
+                <option value="">Tria fracció...</option>
+                <option value="6/4">6 / 4</option>
+                <option value="4/3">4 / 3</option>
+                <option value="4/2">4 / 2</option>
+              </select>
+            </div>
+
+            <!-- 133% -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xl font-extrabold text-slate-800 block mb-2">133 % &rarr;</span>
+              <select id="match133" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-semibold bg-white text-center">
+                <option value="">Tria fracció...</option>
+                <option value="6/4">6 / 4</option>
+                <option value="4/3">4 / 3</option>
+                <option value="4/2">4 / 2</option>
+              </select>
+            </div>
+
+            <!-- 200% -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+              <span class="text-xl font-extrabold text-slate-800 block mb-2">200 % &rarr;</span>
+              <select id="match200" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-semibold bg-white text-center">
+                <option value="">Tria fracció...</option>
+                <option value="6/4">6 / 4</option>
+                <option value="4/3">4 / 3</option>
+                <option value="4/2">4 / 2</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="checkPercentages()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition">
+              Comprova els percentatges
+            </button>
+            <button onclick="resetPercentages()" class="text-slate-500 hover:text-slate-700 text-xs underline">
+              Reinicia
+            </button>
+          </div>
+
+          <div id="percentFeedback" class="hidden text-sm p-3.5 rounded-lg"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MÒDUL 2: OMPLIM LA PISCINA!               -->
+    <!-- ========================================== -->
+    <section id="module2" class="hidden space-y-8">
+      
+      <!-- Capçalera del repte -->
+      <div class="bg-gradient-to-r from-sky-50 via-cyan-50 to-blue-50 rounded-2xl p-6 border border-sky-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-sky-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+              Repte de la pàgina 45
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-sky-950 mt-2">
+              Omplim la piscina comunitària!
+            </h2>
+            <p class="text-sky-900/80 mt-1 max-w-2xl text-sm md:text-base">
+              Al bloc de pisos on viu el Marcel hi ha una piscina rectangular. Segons la normativa, <strong>només es pot omplir fins al 90%</strong> de la seva capacitat total per seguretat.
+            </p>
+          </div>
+          <div class="bg-white p-3.5 rounded-xl border border-sky-200 shadow-sm text-xs space-y-1">
+            <div class="font-bold text-sky-900 mb-1 border-b pb-1">Dimensions de la piscina:</div>
+            <div><i class="fa-solid fa-arrows-left-right text-sky-600 w-4"></i> Llargada: <strong>10 m</strong></div>
+            <div><i class="fa-solid fa-arrows-up-down text-sky-600 w-4"></i> Amplada: <strong>5 m</strong></div>
+            <div><i class="fa-solid fa-up-down text-sky-600 w-4"></i> Altura: <strong>1,2 m</strong></div>
+            <div class="text-amber-700 font-semibold pt-1"><i class="fa-solid fa-triangle-exclamation"></i> Límit legal: <strong>90 %</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulador visual 3D isomètric interactiu de la piscina -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <i class="fa-solid fa-cube text-sky-600"></i>
+              Simulador visual isomètric de la piscina
+            </h3>
+            <p class="text-xs text-slate-500">Ajusta el percentatge d'ompliment per veure'n el volum i els litres d'aigua en temps real</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="setPoolPercent(90)" class="px-2.5 py-1 text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg transition">
+              Nivell de la normativa (90%)
+            </button>
+            <button onclick="setPoolPercent(100)" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition">
+              Capacitat total (100%)
+            </button>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-12 gap-6 items-center">
+          <!-- Controls i mètriques -->
+          <div class="lg:col-span-5 space-y-4">
+            <div>
+              <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                <span>NIVELL D'AIGUA:</span>
+                <span id="poolPercentLabel" class="text-sky-600 font-extrabold text-base">90 %</span>
+              </div>
+              <input id="poolSlider" type="range" min="0" max="100" value="90" class="w-full accent-sky-600 cursor-pointer" oninput="updatePoolVisual(this.value)">
+            </div>
+
+            <!-- Dades calculades en directe -->
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="bg-sky-50/70 p-3 rounded-xl border border-sky-100">
+                <span class="text-slate-500 block">Volum d'aigua actual:</span>
+                <span id="dispCurrentVolume" class="text-base font-extrabold text-sky-700">54,0 m³</span>
+              </div>
+              <div class="bg-sky-50/70 p-3 rounded-xl border border-sky-100">
+                <span class="text-slate-500 block">Litres actuals:</span>
+                <span id="dispCurrentLiters" class="text-base font-extrabold text-sky-700">54.000 L</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-slate-500 block">Capacitat 100% (màx):</span>
+                <span class="text-sm font-bold text-slate-700">60 m³ / 60.000 L</span>
+              </div>
+              <div class="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                <span class="text-amber-800 block">Alçària de l'aigua:</span>
+                <span id="dispCurrentHeight" class="text-sm font-bold text-amber-900">1,08 m de 1,2 m</span>
+              </div>
+            </div>
+
+            <div id="warningNormativa" class="p-2.5 rounded-lg text-xs bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-amber-600"></i>
+              <span><strong>Observació:</strong> Al 90% es compleix la normativa de seguretat (alçada d'aigua: 1,08 m).</span>
+            </div>
+          </div>
+
+          <!-- Gràfic Isomètric SVG de la piscina -->
+          <div class="lg:col-span-7 flex justify-center items-center bg-gradient-to-b from-slate-100 to-sky-50 p-4 rounded-2xl border border-slate-200 min-h-[260px]">
+            <svg id="poolSvg" viewBox="0 0 540 300" class="w-full max-w-[500px] h-auto drop-shadow-md">
+              <!-- La piscina s'actualitza dinàmicament mitjançant JavaScript -->
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARI D'ACTIVITATS I CORRECCIÓ AUTÒNOMA -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-8">
+        <div>
+          <h3 class="font-extrabold text-slate-900 text-xl flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-sky-600"></i>
+            Resolució i autocorrecció de les preguntes del repte
+          </h3>
+          <p class="text-xs md:text-sm text-slate-500">Introdueix les teves respostes per comprovar pas a pas si són correctes.</p>
+        </div>
+
+        <!-- Pregunta 1: Litres d'aigua -->
+        <div class="border-l-4 border-sky-500 pl-4 py-1 space-y-3">
+          <label class="block font-bold text-slate-800 text-sm md:text-base">
+            1. Quants litres d'aigua caben a la piscina?
+          </label>
+          <p class="text-xs text-slate-500">Recorda: Volum = Llargada × Amplada × Altura. A més, tingues en compte tant la capacitat màxima (100%) com el límit segons normativa (90%).</p>
+          
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">A) Capacitat total màxima (100%):</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP1Total" type="number" placeholder="Ex: 60000" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">B) Límit permès per normativa (90%):</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP1Norm" type="number" placeholder="Ex: 54000" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="checkP1()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-lg text-xs md:text-sm transition">
+            Comprova la pregunta 1
+          </button>
+          <div id="feedbackP1" class="hidden text-xs md:text-sm p-3 rounded-lg"></div>
+        </div>
+
+        <!-- Pregunta 2: Unitats de mesura -->
+        <div class="border-l-4 border-sky-500 pl-4 py-1 space-y-3">
+          <label class="block font-bold text-slate-800 text-sm md:text-base">
+            2. Podem expressar el resultat en unitats de mesura diferents? Amb quines?
+          </label>
+          <p class="text-xs text-slate-500">Selecciona totes les equivalències correctes per al volum total de la piscina:</p>
+          
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs md:text-sm">
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck1" class="accent-sky-600 rounded">
+              <span><strong>60 m³</strong> (metres cúbics)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck2" class="accent-sky-600 rounded">
+              <span><strong>60.000 dm³</strong> (decímetres cúbics)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck3" class="accent-sky-600 rounded">
+              <span><strong>600 hL</strong> (hectolitres)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck4" class="accent-sky-600 rounded">
+              <span><strong>600 L</strong> (sis-cents litres)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck5" class="accent-sky-600 rounded">
+              <span><strong>60.000.000 cm³</strong> (centímetres cúbics)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border hover:bg-slate-100 cursor-pointer">
+              <input type="checkbox" id="uCheck6" class="accent-sky-600 rounded">
+              <span><strong>600 m²</strong> (metres quadrats)</span>
+            </label>
+          </div>
+
+          <button onclick="checkP2()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-lg text-xs md:text-sm transition">
+            Comprova les equivalències
+          </button>
+          <div id="feedbackP2" class="hidden text-xs md:text-sm p-3 rounded-lg"></div>
+        </div>
+
+        <!-- Pregunta 3: Fracció de clor (1/12) -->
+        <div class="border-l-4 border-sky-500 pl-4 py-1 space-y-3">
+          <label class="block font-bold text-slate-800 text-sm md:text-base">
+            3. Si 1/12 del líquid que cap a la piscina ha de ser clor, quants litres de clor hi haurà?
+          </label>
+          <p class="text-xs text-slate-500">Calcula la fracció 1/12 del volum de líquid:</p>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">Si es calcula sobre els 60.000 L totals:</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP3Total" type="number" placeholder="Ex: 5000" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">Si es calcula sobre el 90% (54.000 L de normativa):</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP3Norm" type="number" placeholder="Ex: 4500" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="checkP3()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-lg text-xs md:text-sm transition">
+            Comprova la pregunta 3
+          </button>
+          <div id="feedbackP3" class="hidden text-xs md:text-sm p-3 rounded-lg"></div>
+        </div>
+
+        <!-- Pregunta 4: Pèrdua d'aigua en 4 dies -->
+        <div class="border-l-4 border-sky-500 pl-4 py-1 space-y-3">
+          <label class="block font-bold text-slate-800 text-sm md:text-base">
+            4. Si cada dia es perd entre el 2% i el 4% de la seva capacitat, quants litres cal afegir-hi en 4 dies?
+          </label>
+          <p class="text-xs text-slate-500">
+            • En 4 dies: pèrdua mínima = 4 × 2% = <strong>8%</strong>.
+            <br>• En 4 dies: pèrdua màxima = 4 × 4% = <strong>16%</strong>.
+            <br>Indica el rang en litres (calculat sobre la capacitat nominal de 60.000 L, o sobre els 54.000 L):
+          </p>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">Mínim de litres a reposar (al cap de 4 dies):</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP4Min" type="number" placeholder="Litres mínims" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+            <div>
+              <span class="text-xs font-semibold text-slate-600 block mb-1">Màxim de litres a reposar (al cap de 4 dies):</span>
+              <div class="flex items-center gap-2">
+                <input id="ansP4Max" type="number" placeholder="Litres màxims" class="border border-slate-300 rounded-lg p-2.5 text-sm w-full focus:ring-2 focus:ring-sky-500">
+                <span class="text-xs font-bold text-slate-500">Litres</span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="checkP4()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-4 py-2 rounded-lg text-xs md:text-sm transition">
+            Comprova la pregunta 4
+          </button>
+          <div id="feedbackP4" class="hidden text-xs md:text-sm p-3 rounded-lg"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT AMB TOTA LA LÒGICA EDUCATIVA I INTERACTIVA -->
+  <script>
+    // Canvi entre pestanyes / mòduls
+    function switchModule(modNum) {
+      const m1 = document.getElementById('module1');
+      const m2 = document.getElementById('module2');
+      const btn1 = document.getElementById('navModule1');
+      const btn2 = document.getElementById('navModule2');
+
+      if (modNum === 1) {
+        m1.classList.remove('hidden');
+        m2.classList.add('hidden');
+        btn1.className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-orange-500 text-white shadow-sm flex items-center gap-1.5";
+        btn2.className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1.5";
+      } else {
+        m1.classList.add('hidden');
+        m2.classList.remove('hidden');
+        btn2.className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-sky-600 text-white shadow-sm flex items-center gap-1.5";
+        btn1.className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1.5";
+        // Renderitza el SVG de la piscina quan es fa visible
+        updatePoolVisual(document.getElementById('poolSlider').value);
+      }
+    }
+
+    // Toggle de la guia del docent
+    function toggleTeacherGuide() {
+      const panel = document.getElementById('teacherGuidePanel');
+      const btnText = document.getElementById('teacherBtnText');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        btnText.innerText = "Tanca el solucionari";
+      } else {
+        panel.classList.add('hidden');
+        btnText.innerText = "Solucionari per a docents";
+      }
+    }
+
+    // ==========================================
+    // LÒGICA MÒDUL 1: FRACCIONS DE PIZZA
+    // ==========================================
+    function createPizzaSvg(totalSlices, filledSlices, size = 120, fillColor = '#ea580c') {
+      const radius = size * 0.42;
+      const cx = size / 2;
+      const cy = size / 2;
+      
+      let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="transition-transform hover:scale-105">`;
+      // Fons base de pizza (massa cruixent)
+      svg += `<circle cx="${cx}" cy="${cy}" r="${radius + 4}" fill="#d97706" stroke="#b45309" stroke-width="2" />`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="#fef3c7" stroke="#fcd34d" stroke-width="1.5" />`;
+
+      if (totalSlices === 1) {
+        if (filledSlices >= 1) {
+          svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${fillColor}" opacity="0.85" />`;
+        }
+      } else {
+        const sliceAngle = (2 * Math.PI) / totalSlices;
+
+        for (let i = 0; i < totalSlices; i++) {
+          const startAngle = i * sliceAngle - Math.PI / 2;
+          const endAngle = (i + 1) * sliceAngle - Math.PI / 2;
+
+          const x1 = cx + radius * Math.cos(startAngle);
+          const y1 = cy + radius * Math.sin(startAngle);
+          const x2 = cx + radius * Math.cos(endAngle);
+          const y2 = cy + radius * Math.sin(endAngle);
+
+          const isFilled = i < filledSlices;
+          const currentFill = isFilled ? fillColor : '#fef3c7';
+          const fillOpacity = isFilled ? '0.85' : '0.2';
+
+          // Dibuix de cada sector de pizza
+          svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z" 
+                         fill="${currentFill}" fill-opacity="${fillOpacity}" 
+                         stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/>`;
+          
+          // Detall de tomàquet/orenga a les porcions omplertes
+          if (isFilled) {
+            const midAngle = startAngle + sliceAngle / 2;
+            const dotR = radius * 0.55;
+            const dotX = cx + dotR * Math.cos(midAngle);
+            const dotY = cy + dotR * Math.sin(midAngle);
+            svg += `<circle cx="${dotX}" cy="${dotY}" r="3.5" fill="#dc2626" opacity="0.8"/>`;
+          }
+        }
+      }
+
+      svg += `</svg>`;
+      return svg;
+    }
+
+    function updateInteractivePizza() {
+      const num = parseInt(document.getElementById('numInput').value, 10);
+      const den = parseInt(document.getElementById('denInput').value, 10);
+
+      document.getElementById('numVal').innerText = num;
+      document.getElementById('denVal').innerText = den;
+
+      const wholePizzas = Math.floor(num / den);
+      const remainder = num % den;
+      const decimalVal = (num / den).toFixed(2);
+      const percentVal = Math.round((num / den) * 100);
+
+      document.getElementById('pizzaFractionText').innerText = `${num}/${den}`;
+      document.getElementById('pizzaDecimalText').innerText = decimalVal;
+      document.getElementById('pizzaPercentText').innerText = `${percentVal}%`;
+
+      let mixedText = "";
+      if (wholePizzas > 0 && remainder > 0) {
+        mixedText = `${wholePizzas} pizza${wholePizzas > 1 ? 's' : ''} sencera${wholePizzas > 1 ? 'es' : ''} i ${remainder}/${den}`;
+      } else if (wholePizzas > 0 && remainder === 0) {
+        mixedText = `${wholePizzas} pizza${wholePizzas > 1 ? 's' : ''} sencera${wholePizzas > 1 ? 'es' : ''} exacta${wholePizzas > 1 ? 'es' : ''}`;
+      } else {
+        mixedText = `Només ${remainder}/${den} de pizza (menys d'una unitat)`;
+      }
+      document.getElementById('pizzaMixedText').innerText = mixedText;
+
+      const badge = document.getElementById('pizzaTypeBadge');
+      if (num > den) {
+        badge.className = "inline-block px-2 py-0.5 rounded text-xs font-bold mt-1 bg-amber-100 text-amber-800";
+        badge.innerText = "Fracció impròpia (> 1 unitat)";
+      } else if (num === den) {
+        badge.className = "inline-block px-2 py-0.5 rounded text-xs font-bold mt-1 bg-emerald-100 text-emerald-800";
+        badge.innerText = "Fracció igual a 1 unitat sencera";
+      } else {
+        badge.className = "inline-block px-2 py-0.5 rounded text-xs font-bold mt-1 bg-sky-100 text-sky-800";
+        badge.innerText = "Fracció pròpia (< 1 unitat)";
+      }
+
+      // Render de les pizzes necessàries
+      const totalPizzasNeeded = Math.ceil(num / den);
+      let containerHtml = "";
+      let slicesLeft = num;
+
+      for (let p = 0; p < totalPizzasNeeded; p++) {
+        const slicesForThisPizza = Math.min(slicesLeft, den);
+        containerHtml += `
+          <div class="flex flex-col items-center">
+            ${createPizzaSvg(den, slicesForThisPizza, 120, '#ea580c')}
+            <span class="text-xs font-semibold text-slate-500 mt-1">Pizza ${p + 1}: ${slicesForThisPizza}/${den}</span>
+          </div>
+        `;
+        slicesLeft -= slicesForThisPizza;
+      }
+
+      document.getElementById('interactivePizzasContainer').innerHTML = containerHtml;
+    }
+
+    // Renderitza les 3 varietats fixes de l'activitat 10
+    function initActivity10Visuals() {
+      // Varietat 1: 6/4 -> 1 pizza de 4/4 + 1 pizza de 2/4
+      document.getElementById('svgV1').innerHTML = `
+        <div class="flex items-center gap-1">
+          ${createPizzaSvg(4, 4, 85, '#ea580c')}
+          <span class="font-bold text-slate-400">+</span>
+          ${createPizzaSvg(4, 2, 85, '#ea580c')}
+        </div>
+      `;
+
+      // Varietat 2: 4/3 -> 1 pizza de 3/3 + 1 pizza de 1/3
+      document.getElementById('svgV2').innerHTML = `
+        <div class="flex items-center gap-1">
+          ${createPizzaSvg(3, 3, 85, '#059669')}
+          <span class="font-bold text-slate-400">+</span>
+          ${createPizzaSvg(3, 1, 85, '#059669')}
+        </div>
+      `;
+
+      // Varietat 3: 4/2 -> 2 pizzes senceres de 2/2
+      document.getElementById('svgV3').innerHTML = `
+        <div class="flex items-center gap-1">
+          ${createPizzaSvg(2, 2, 85, '#2563eb')}
+          <span class="font-bold text-slate-400">+</span>
+          ${createPizzaSvg(2, 2, 85, '#2563eb')}
+        </div>
+      `;
+    }
+
+    // Comprovació de l'ordenació
+    function checkOrder() {
+      const o1 = document.getElementById('order1').value;
+      const o2 = document.getElementById('order2').value;
+      const o3 = document.getElementById('order3').value;
+      const fb = document.getElementById('orderFeedback');
+
+      fb.classList.remove('hidden');
+
+      if (!o1 || !o2 || !o3) {
+        fb.className = "text-sm p-3 rounded-lg bg-amber-50 text-amber-800 border border-amber-200";
+        fb.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> Si us plau, selecciona les tres posicions abans de comprovar.`;
+        return;
+      }
+
+      if (o1 === "4/2" && o2 === "6/4" && o3 === "4/3") {
+        fb.className = "text-sm p-3 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200";
+        fb.innerHTML = `
+          <div class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i>
+            <div>
+              <strong>Molt bé! Ordre totalment correcte:</strong><br>
+              <strong>4/2 (2 pizzes)</strong> &gt; <strong>6/4 (1,5 pizzes)</strong> &gt; <strong>4/3 (1,33 pizzes)</strong>.<br>
+              Per tant, la varietat de la qual n'han comprat més és la <strong>Varietat 3 (4/2)</strong>.
+            </div>
+          </div>
+        `;
+      } else {
+        fb.className = "text-sm p-3 rounded-lg bg-rose-50 text-rose-800 border border-rose-200";
+        fb.innerHTML = `
+          <div class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5"></i>
+            <div>
+              <strong>No és correcte encara.</strong> Recorda passar cada fracció a nombre decimal per comparar:<br>
+              • 4/2 = 4 &divide; 2 = <strong>2,0</strong><br>
+              • 6/4 = 6 &divide; 4 = <strong>1,5</strong><br>
+              • 4/3 = 4 &divide; 3 ≈ <strong>1,33</strong>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Comprovació de la relació amb percentatges
+    function checkPercentages() {
+      const p150 = document.getElementById('match150').value;
+      const p133 = document.getElementById('match133').value;
+      const p200 = document.getElementById('match200').value;
+      const fb = document.getElementById('percentFeedback');
+
+      fb.classList.remove('hidden');
+
+      const c150 = (p150 === '6/4');
+      const c133 = (p133 === '4/3');
+      const c200 = (p200 === '4/2');
+
+      if (c150 && c133 && c200) {
+        fb.className = "text-sm p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `
+          <div class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5"></i>
+            <div>
+              <strong>Excel·lent! Totes les relacions són correctes:</strong>
+              <ul class="list-disc list-inside mt-1 text-xs md:text-sm space-y-1">
+                <li><strong>150 % &rarr; 6/4:</strong> 150/100 = 1,5 = 6/4 (1 pizza i mitja).</li>
+                <li><strong>133 % &rarr; 4/3:</strong> 4/3 ≈ 1,333 = 133,3%.</li>
+                <li><strong>200 % &rarr; 4/2:</strong> 200/100 = 2 unitats senceres = 4/2.</li>
+              </ul>
+            </div>
+          </div>
+        `;
+      } else {
+        fb.className = "text-sm p-3.5 rounded-lg bg-rose-50 text-rose-900 border border-rose-200";
+        fb.innerHTML = `
+          <div class="flex items-start gap-2">
+            <i class="fa-solid fa-circle-exclamation text-rose-600 mt-0.5"></i>
+            <div>
+              <strong>Hi ha alguna correspondència incorrecta:</strong>
+              <ul class="list-disc list-inside mt-1 text-xs space-y-0.5">
+                <li>150%: ${c150 ? '<span class="text-emerald-700 font-bold">Correcte</span>' : '<span class="text-rose-600 font-bold">Revisa</span>'}</li>
+                <li>133%: ${c133 ? '<span class="text-emerald-700 font-bold">Correcte</span>' : '<span class="text-rose-600 font-bold">Revisa</span>'}</li>
+                <li>200%: ${c200 ? '<span class="text-emerald-700 font-bold">Correcte</span>' : '<span class="text-rose-600 font-bold">Revisa</span>'}</li>
+              </ul>
+              <span class="text-xs text-slate-600 mt-1 block">Pista: Pensa que 100% és 1 unitat sencera, i 200% són 2 unitats senceres.</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function resetPercentages() {
+      document.getElementById('match150').value = "";
+      document.getElementById('match133').value = "";
+      document.getElementById('match200').value = "";
+      document.getElementById('percentFeedback').classList.add('hidden');
+    }
+
+
+    // ==========================================
+    // LÒGICA MÒDUL 2: LA PISCINA
+    // ==========================================
+    function setPoolPercent(val) {
+      document.getElementById('poolSlider').value = val;
+      updatePoolVisual(val);
+    }
+
+    function updatePoolVisual(percent) {
+      const p = parseFloat(percent);
+      document.getElementById('poolPercentLabel').innerText = `${p} %`;
+
+      const totalCapLiters = 60000;
+      const currentL = (totalCapLiters * (p / 100));
+      const currentM3 = (currentL / 1000).toFixed(1);
+      const currentH = (1.2 * (p / 100)).toFixed(2);
+
+      document.getElementById('dispCurrentVolume').innerText = `${currentM3} m³`;
+      document.getElementById('dispCurrentLiters').innerText = `${Math.round(currentL).toLocaleString('ca-ES')} L`;
+      document.getElementById('dispCurrentHeight').innerText = `${currentH} m de 1,2 m`;
+
+      // Advertència de normativa
+      const warn = document.getElementById('warningNormativa');
+      if (p > 90) {
+        warn.className = "p-2.5 rounded-lg text-xs bg-rose-50 border border-rose-300 text-rose-800 flex items-center gap-2";
+        warn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> <span><strong>Atenció:</strong> S'ha superat el 90% permès per la normativa!</span>`;
+      } else if (p === 90) {
+        warn.className = "p-2.5 rounded-lg text-xs bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center gap-2";
+        warn.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> <span><strong>Límit exacte de la normativa (90%):</strong> Volum segur i autoritzat (54.000 L).</span>`;
+      } else {
+        warn.className = "p-2.5 rounded-lg text-xs bg-sky-50 border border-sky-200 text-sky-800 flex items-center gap-2";
+        warn.innerHTML = `<i class="fa-solid fa-water text-sky-600"></i> <span>Nivell per sota del límit màxim permès.</span>`;
+      }
+
+      renderPoolSvg(p);
+    }
+
+    // Dibuix isomètric en SVG de la piscina amb nivell d'aigua
+    function renderPoolSvg(percent) {
+      const svg = document.getElementById('poolSvg');
+      const maxH = 90; // alçada màxima visual de la piscina en píxels
+      const waterH = maxH * (percent / 100);
+
+      // Coordenades del prisma isomètric
+      // Base superior del recipient
+      // Punts: dalt(270, 40), dreta(460, 110), baix(270, 180), esquerra(80, 110)
+      const topP = { x: 270, y: 50 };
+      const rightP = { x: 470, y: 120 };
+      const bottomP = { x: 270, y: 190 };
+      const leftP = { x: 70, y: 120 };
+
+      // Desplaçament inferior per la paret de la piscina
+      const wallDrop = maxH;
+      const waterDrop = maxH - waterH; // quan més gran és waterH, més amunt puja l'aigua
+
+      // Nivell de la superfície de l'aigua
+      const wTop = { x: topP.x, y: topP.y + waterDrop };
+      const wRight = { x: rightP.x, y: rightP.y + waterDrop };
+      const wBottom = { x: bottomP.x, y: bottomP.y + waterDrop };
+      const wLeft = { x: leftP.x, y: leftP.y + waterDrop };
+
+      let html = `
+        <!-- Vora superior de rajoles (terra de la piscina) -->
+        <polygon points="${topP.x},${topP.y - 10} ${rightP.x + 15},${rightP.y - 5} ${bottomP.x},${bottomP.y + 10} ${leftP.x - 15},${leftP.y - 5}" 
+                 fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2" />
+
+        <!-- Interior buit del vas de la piscina -->
+        <polygon points="${topP.x},${topP.y} ${rightP.x},${rightP.y} ${bottomP.x},${bottomP.y} ${leftP.x},${leftP.y}" 
+                 fill="#94a3b8" opacity="0.25"/>
+
+        <!-- Parets interiors del vas de la piscina -->
+        <polygon points="${leftP.x},${leftP.y} ${bottomP.x},${bottomP.y} ${bottomP.x},${bottomP.y + wallDrop} ${leftP.x},${leftP.y + wallDrop}" 
+                 fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5" />
+        <polygon points="${bottomP.x},${bottomP.y} ${rightP.x},${rightP.y} ${rightP.x},${rightP.y + wallDrop} ${bottomP.x},${bottomP.y + wallDrop}" 
+                 fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />
+      `;
+
+      // Dibuix de l'aigua si percent > 0
+      if (percent > 0) {
+        html += `
+          <!-- Cos d'aigua lateral esquerre -->
+          <polygon points="${wLeft.x},${wLeft.y} ${wBottom.x},${wBottom.y} ${bottomP.x},${bottomP.y + wallDrop} ${leftP.x},${leftP.y + wallDrop}" 
+                   fill="#0284c7" opacity="0.8" />
+          <!-- Cos d'aigua lateral dret -->
+          <polygon points="${wBottom.x},${wBottom.y} ${wRight.x},${wRight.y} ${rightP.x},${rightP.y + wallDrop} ${bottomP.x},${bottomP.y + wallDrop}" 
+                   fill="#0369a1" opacity="0.85" />
+          <!-- Superfície de l'aigua (cara superior) -->
+          <polygon points="${wTop.x},${wTop.y} ${wRight.x},${wRight.y} ${wBottom.x},${wBottom.y} ${wLeft.x},${wLeft.y}" 
+                   fill="#38bdf8" opacity="0.8" stroke="#7dd3fc" stroke-width="1.5" />
+          <!-- Reflex de l'aigua -->
+          <ellipse cx="${(wLeft.x + wRight.x)/2}" cy="${(wTop.y + wBottom.y)/2}" rx="70" ry="20" fill="white" opacity="0.2" />
+        `;
+      }
+
+      // Línies de cotes i mesures
+      html += `
+        <!-- Cota llargada: 10 m -->
+        <line x1="${leftP.x - 15}" y1="${leftP.y + wallDrop + 10}" x2="${bottomP.x - 10}" y2="${bottomP.y + wallDrop + 18}" stroke="#0f172a" stroke-width="2" stroke-dasharray="3,3"/>
+        <text x="160" y="${bottomP.y + wallDrop + 20}" font-size="12" font-weight="bold" fill="#0f172a">Llargada: 10 m</text>
+
+        <!-- Cota amplada: 5 m -->
+        <line x1="${bottomP.x + 10}" y1="${bottomP.y + wallDrop + 18}" x2="${rightP.x + 15}" y2="${rightP.y + wallDrop + 10}" stroke="#0f172a" stroke-width="2" stroke-dasharray="3,3"/>
+        <text x="365" y="${bottomP.y + wallDrop + 20}" font-size="12" font-weight="bold" fill="#0f172a">Amplada: 5 m</text>
+
+        <!-- Cota alçada: 1,2 m -->
+        <line x1="${leftP.x - 25}" y1="${leftP.y}" x2="${leftP.x - 25}" y2="${leftP.y + wallDrop}" stroke="#b45309" stroke-width="2"/>
+        <text x="5" y="${leftP.y + wallDrop/2 + 4}" font-size="12" font-weight="bold" fill="#b45309">Alt: 1,2 m</text>
+      `;
+
+      svg.innerHTML = html;
+    }
+
+    // ==========================================
+    // VALIDACIONS ACTIVITATS PISCINA
+    // ==========================================
+    function checkP1() {
+      const tot = parseFloat(document.getElementById('ansP1Total').value);
+      const norm = parseFloat(document.getElementById('ansP1Norm').value);
+      const fb = document.getElementById('feedbackP1');
+      fb.classList.remove('hidden');
+
+      const isTotOk = (tot === 60000);
+      const isNormOk = (norm === 54000);
+
+      if (isTotOk && isNormOk) {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>
+          <strong>Molt bé! Càlculs exactes:</strong><br>
+          • <strong>Volum Total:</strong> 10 m × 5 m × 1,2 m = 60 m³ = <strong>60.000 litres</strong>.<br>
+          • <strong>Segons la normativa (90%):</strong> 60.000 × 0,90 = <strong>54.000 litres</strong>.
+        `;
+      } else {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-rose-50 text-rose-900 border border-rose-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i>
+          <strong>Revisa els càlculs:</strong><br>
+          ${!isTotOk ? '• Capacitat total: Multiplica 10 × 5 × 1,2 per obtenir els m³, i recorda que 1 m³ = 1.000 L (dona 60.000 L).<br>' : '• Capacitat total: ¡Correcta! (60.000 L).<br>'}
+          ${!isNormOk ? '• Normativa (90%): Calcula el 90% de la capacitat total (0,90 × 60.000 L = 54.000 L).' : '• Normativa (90%): ¡Correcta! (54.000 L).'}
+        `;
+      }
+    }
+
+    function checkP2() {
+      const u1 = document.getElementById('uCheck1').checked; // 60 m3 (SI)
+      const u2 = document.getElementById('uCheck2').checked; // 60.000 dm3 (SI)
+      const u3 = document.getElementById('uCheck3').checked; // 600 hL (SI)
+      const u4 = document.getElementById('uCheck4').checked; // 600 L (NO)
+      const u5 = document.getElementById('uCheck5').checked; // 60.000.000 cm3 (SI)
+      const u6 = document.getElementById('uCheck6').checked; // 600 m2 (NO - sup, no vol)
+      const fb = document.getElementById('feedbackP2');
+      fb.classList.remove('hidden');
+
+      if (u1 && u2 && u3 && !u4 && u5 && !u6) {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>
+          <strong>Excel·lent! Has identificat totes les unitats de volum i capacitat equivalents:</strong><br>
+          • <strong>60 m³</strong> (metres cúbics)<br>
+          • <strong>60.000 dm³</strong> (perquè 1 m³ = 1.000 dm³, i 1 dm³ = 1 Litre)<br>
+          • <strong>600 hL</strong> (1 hectolitre = 100 litres &rarr; 60.000 / 100 = 600 hL)<br>
+          • <strong>60.000.000 cm³</strong> (perquè 1 m³ = 1.000.000 cm³)<br>
+          <span class="text-xs text-slate-600 mt-1 block"><em>Recorda:</em> Els m² mesuren superfície (àrea), no pas volum; i 600 L és insuficient.</span>
+        `;
+      } else {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-rose-50 text-rose-900 border border-rose-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i>
+          <strong>Hi ha alguna opció que no quadra:</strong><br>
+          Tingues en compte les conversions bàsiques:<br>
+          • 1 m³ = 1.000 dm³ = 1.000 L<br>
+          • 1 hL = 100 L<br>
+          • 1 dm³ = 1.000 cm³<br>
+          • Els metres quadrats (m²) són unitats de superfície, mai de volum!
+        `;
+      }
+    }
+
+    function checkP3() {
+      const p3Tot = parseFloat(document.getElementById('ansP3Total').value);
+      const p3Norm = parseFloat(document.getElementById('ansP3Norm').value);
+      const fb = document.getElementById('feedbackP3');
+      fb.classList.remove('hidden');
+
+      const isTotOk = (p3Tot === 5000);
+      const isNormOk = (p3Norm === 4500);
+
+      if (isTotOk || isNormOk) {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>
+          <strong>Molt bé! Resolució detallada:</strong><br>
+          ${isTotOk ? '• Sobre la capacitat total (60.000 L): 60.000 &divide; 12 = <strong>5.000 litres de clor</strong>.<br>' : ''}
+          ${isNormOk ? '• Sobre el 90% de normativa (54.000 L): 54.000 &divide; 12 = <strong>4.500 litres de clor</strong>.<br>' : ''}
+          <em>Nota didàctica:</em> A classe s'accepten ambdós càlculs segons si el docent pren la capacitat màxima de l'estructura o la capacitat real permesa.
+        `;
+      } else {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-rose-50 text-rose-900 border border-rose-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i>
+          <strong>Càlcul incorrecte:</strong> Per trobar 1/12 d'una quantitat, has de dividir el volum entre 12.<br>
+          • Si prens el volum total: 60.000 &divide; 12 = 5.000 L.<br>
+          • Si prens el 90%: 54.000 &divide; 12 = 4.500 L.
+        `;
+      }
+    }
+
+    function checkP4() {
+      const minVal = parseFloat(document.getElementById('ansP4Min').value);
+      const maxVal = parseFloat(document.getElementById('ansP4Max').value);
+      const fb = document.getElementById('feedbackP4');
+      fb.classList.remove('hidden');
+
+      // Càlcul sobre 60.000:
+      // min: 4 * 2% = 8% de 60000 = 4800
+      // max: 4 * 4% = 16% de 60000 = 9600
+      // Càlcul sobre 54.000:
+      // min: 8% de 54000 = 4320
+      // max: 16% de 54000 = 8640
+
+      const okTotal = (minVal === 4800 && maxVal === 9600);
+      const okNorm = (minVal === 4320 && maxVal === 8640);
+
+      if (okTotal || okNorm) {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>
+          <strong>Completament encertat!</strong><br>
+          En 4 dies es perdrà entre el <strong>8%</strong> (2% × 4) i el <strong>16%</strong> (4% × 4):<br>
+          ${okTotal ? '• Sobre la capacitat de 60.000 L: cal afegir entre <strong>4.800 litres</strong> i <strong>9.600 litres</strong>.<br>' : ''}
+          ${okNorm ? '• Sobre els 54.000 L de normativa: cal afegir entre <strong>4.320 litres</strong> i <strong>8.640 litres</strong>.<br>' : ''}
+          Qualsevol de les dues interpretacions demostra un gran domini del raonament proporcional!
+        `;
+      } else {
+        fb.className = "text-xs md:text-sm p-3.5 rounded-lg bg-rose-50 text-rose-900 border border-rose-200";
+        fb.innerHTML = `
+          <i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i>
+          <strong>Revisa el plantejament:</strong><br>
+          1. En 4 dies, la pèrdua acumulada és:<br>
+          &nbsp;&nbsp;• Mínima: 4 dies × 2% = <strong>8%</strong><br>
+          &nbsp;&nbsp;• Màxima: 4 dies × 4% = <strong>16%</strong><br>
+          2. Aplica aquests percentatges a la capacitat (60.000 L dona entre 4.800 L i 9.600 L; sobre 54.000 L dona entre 4.320 L i 8.640 L).
+        `;
+      }
+    }
+
+    // Inicialització en carregar la pàgina
+    window.onload = function() {
+      updateInteractivePizza();
+      initActivity10Visuals();
+      updatePoolVisual(90);
+    };
+  </script>
+</body>
+</html>
