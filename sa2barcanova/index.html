@@ -428,8 +428,8 @@
           </div>
 
           <!-- Gràfic Isomètric SVG de la piscina -->
-          <div class="lg:col-span-7 flex justify-center items-center bg-gradient-to-b from-slate-100 to-sky-50 p-4 rounded-2xl border border-slate-200 min-h-[260px]">
-            <svg id="poolSvg" viewBox="0 0 540 300" class="w-full max-w-[500px] h-auto drop-shadow-md">
+          <div class="lg:col-span-7 flex justify-center items-center bg-gradient-to-b from-slate-100 to-sky-50 p-4 rounded-2xl border border-slate-200 min-h-[300px]">
+            <svg id="poolSvg" viewBox="0 0 620 370" class="w-full max-w-[560px] h-auto drop-shadow-md overflow-visible">
               <!-- La piscina s'actualitza dinàmicament mitjançant JavaScript -->
             </svg>
           </div>
@@ -900,16 +900,14 @@
     // Dibuix isomètric en SVG de la piscina amb nivell d'aigua
     function renderPoolSvg(percent) {
       const svg = document.getElementById('poolSvg');
-      const maxH = 90; // alçada màxima visual de la piscina en píxels
+      const maxH = 85; // alçada màxima visual de la piscina en píxels
       const waterH = maxH * (percent / 100);
 
-      // Coordenades del prisma isomètric
-      // Base superior del recipient
-      // Punts: dalt(270, 40), dreta(460, 110), baix(270, 180), esquerra(80, 110)
-      const topP = { x: 270, y: 50 };
-      const rightP = { x: 470, y: 120 };
-      const bottomP = { x: 270, y: 190 };
-      const leftP = { x: 70, y: 120 };
+      // Coordenades centrades del prisma isomètric dins del viewBox 620 x 370
+      const topP = { x: 310, y: 55 };
+      const rightP = { x: 495, y: 125 };
+      const bottomP = { x: 310, y: 195 };
+      const leftP = { x: 125, y: 125 };
 
       // Desplaçament inferior per la paret de la piscina
       const wallDrop = maxH;
@@ -922,8 +920,17 @@
       const wLeft = { x: leftP.x, y: leftP.y + waterDrop };
 
       let html = `
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#334155" />
+          </marker>
+          <marker id="arrowAmber" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#b45309" />
+          </marker>
+        </defs>
+
         <!-- Vora superior de rajoles (terra de la piscina) -->
-        <polygon points="${topP.x},${topP.y - 10} ${rightP.x + 15},${rightP.y - 5} ${bottomP.x},${bottomP.y + 10} ${leftP.x - 15},${leftP.y - 5}" 
+        <polygon points="${topP.x},${topP.y - 10} ${rightP.x + 14},${rightP.y - 5} ${bottomP.x},${bottomP.y + 10} ${leftP.x - 14},${leftP.y - 5}" 
                  fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2" />
 
         <!-- Interior buit del vas de la piscina -->
@@ -950,23 +957,35 @@
           <polygon points="${wTop.x},${wTop.y} ${wRight.x},${wRight.y} ${wBottom.x},${wBottom.y} ${wLeft.x},${wLeft.y}" 
                    fill="#38bdf8" opacity="0.8" stroke="#7dd3fc" stroke-width="1.5" />
           <!-- Reflex de l'aigua -->
-          <ellipse cx="${(wLeft.x + wRight.x)/2}" cy="${(wTop.y + wBottom.y)/2}" rx="70" ry="20" fill="white" opacity="0.2" />
+          <ellipse cx="${(wLeft.x + wRight.x)/2}" cy="${(wTop.y + wBottom.y)/2}" rx="75" ry="22" fill="white" opacity="0.2" />
         `;
       }
 
-      // Línies de cotes i mesures
+      // Cotes amb fletxes bidireccionals i targetes de fons per evitar que es tallin
       html += `
-        <!-- Cota llargada: 10 m -->
-        <line x1="${leftP.x - 15}" y1="${leftP.y + wallDrop + 10}" x2="${bottomP.x - 10}" y2="${bottomP.y + wallDrop + 18}" stroke="#0f172a" stroke-width="2" stroke-dasharray="3,3"/>
-        <text x="160" y="${bottomP.y + wallDrop + 20}" font-size="12" font-weight="bold" fill="#0f172a">Llargada: 10 m</text>
+        <!-- Cota llargada: 10 m (costat inferior esquerre) -->
+        <line x1="${leftP.x - 6}" y1="${leftP.y + wallDrop + 14}" x2="${bottomP.x - 12}" y2="${bottomP.y + wallDrop + 14}" 
+              stroke="#334155" stroke-width="1.75" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+        <g transform="translate(140, ${bottomP.y + wallDrop + 26})">
+          <rect x="-10" y="-14" width="138" height="24" rx="6" fill="#ffffff" fill-opacity="0.95" stroke="#cbd5e1" stroke-width="1"/>
+          <text x="59" y="3" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">Llargada: 10 m</text>
+        </g>
 
-        <!-- Cota amplada: 5 m -->
-        <line x1="${bottomP.x + 10}" y1="${bottomP.y + wallDrop + 18}" x2="${rightP.x + 15}" y2="${rightP.y + wallDrop + 10}" stroke="#0f172a" stroke-width="2" stroke-dasharray="3,3"/>
-        <text x="365" y="${bottomP.y + wallDrop + 20}" font-size="12" font-weight="bold" fill="#0f172a">Amplada: 5 m</text>
+        <!-- Cota amplada: 5 m (costat inferior dret) -->
+        <line x1="${bottomP.x + 12}" y1="${bottomP.y + wallDrop + 14}" x2="${rightP.x + 6}" y2="${rightP.y + wallDrop + 14}" 
+              stroke="#334155" stroke-width="1.75" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+        <g transform="translate(355, ${bottomP.y + wallDrop + 26})">
+          <rect x="-10" y="-14" width="136" height="24" rx="6" fill="#ffffff" fill-opacity="0.95" stroke="#cbd5e1" stroke-width="1"/>
+          <text x="58" y="3" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">Amplada: 5 m</text>
+        </g>
 
-        <!-- Cota alçada: 1,2 m -->
-        <line x1="${leftP.x - 25}" y1="${leftP.y}" x2="${leftP.x - 25}" y2="${leftP.y + wallDrop}" stroke="#b45309" stroke-width="2"/>
-        <text x="5" y="${leftP.y + wallDrop/2 + 4}" font-size="12" font-weight="bold" fill="#b45309">Alt: 1,2 m</text>
+        <!-- Cota alçada: 1,2 m (costat esquerre vertical) -->
+        <line x1="${leftP.x - 30}" y1="${leftP.y + 6}" x2="${leftP.x - 30}" y2="${leftP.y + wallDrop - 6}" 
+              stroke="#b45309" stroke-width="2" marker-start="url(#arrowAmber)" marker-end="url(#arrowAmber)"/>
+        <g transform="translate(${leftP.x - 118}, ${leftP.y + wallDrop/2 - 2})">
+          <rect x="0" y="-12" width="80" height="24" rx="6" fill="#fef3c7" fill-opacity="0.95" stroke="#fcd34d" stroke-width="1"/>
+          <text x="40" y="4" font-size="12" font-weight="700" fill="#92400e" text-anchor="middle">Alt: 1,2 m</text>
+        </g>
       `;
 
       svg.innerHTML = html;
