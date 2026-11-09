@@ -828,6 +828,7 @@
             for (let i = 1; i <= totalStairs; i++) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td class="py-2 font-bold">${i} ${i === 1 ? 'esglaó' : 'esglaons'}</td>
                     <td><input type="number" id="esc-input-${i}" class="w-20 p-1 border rounded font-bold text-center" placeholder="?"></td>
                 `;
                 tbody.appendChild(tr);
