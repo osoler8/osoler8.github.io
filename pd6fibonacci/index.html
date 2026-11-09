@@ -387,8 +387,8 @@
                             <table class="w-full text-xs sm:text-sm text-left border-collapse" id="stairs-table">
                                 <thead>
                                     <tr class="border-b border-stone-300 text-stone-500">
-                                        <th class="py-2">Quantitat d'esglaons</th>
-                                        <th class="py-2">Nº total de maneres</th>
+                                        <th class="py-2">Esglaons</th>
+                                        <th class="py-2">Opcions totals</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-stone-200" id="stairs-tbody">
@@ -828,7 +828,6 @@
             for (let i = 1; i <= totalStairs; i++) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-2 font-bold">${i} esglaó${i > 1 ? 's' : ''}</td>
                     <td><input type="number" id="esc-input-${i}" class="w-20 p-1 border rounded font-bold text-center" placeholder="?"></td>
                 `;
                 tbody.appendChild(tr);
