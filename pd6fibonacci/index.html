@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci a la natura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+            box-sizing: border-box;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: tabFadeIn 0.25s ease-out; }
+        @keyframes tabFadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .cell-correct { background-color: #dcfce7 !important; border-color: #16a34a !important; color: #166534 !important; font-weight: 800; }
+        .cell-incorrect { background-color: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b !important; }
+
+        .pyr-input {
+            width: 3.25rem;
+            height: 3.25rem;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border-radius: 0.6rem;
+            border: 2px solid #cbd5e1;
+            outline: none;
+            background: white;
+            transition: all 0.2s;
+        }
+        @media (min-width: 640px) {
+            .pyr-input { width: 3.75rem; height: 3.75rem; font-size: 1.25rem; }
+        }
+        .pyr-input:focus { border-color: #0284c7; background: #f0f9ff; }
+        .pyr-input[readonly] { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+        /* Hexàgons completament estàtics */
+        .hex-cell {
+            cursor: pointer;
+            pointer-events: auto;
+            transform: none !important;
+        }
+        .hex-cell:hover polygon, .hex-cell:hover use {
+            fill-opacity: 0.88;
+        }
+
+        /* Slider estilitzat */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #d97706;
+            cursor: pointer;
+            margin-top: -8px;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            background: #fde68a;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col">
+
+    <!-- Barra de navegació -->
+    <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-3 py-2.5">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🌻</span>
+                    <span class="font-bold text-lg sm:text-xl tracking-tight">Fibonacci a la natura</span>
+                </div>
+                <div class="text-xs text-emerald-200">PCMAT PD6</div>
+            </div>
+
+            <nav class="grid grid-cols-4 sm:grid-cols-8 gap-1.5 w-full" id="main-nav">
+                <button onclick="switchTab('inici')" id="btn-inici" class="nav-tab active flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-700 text-white border-2 border-emerald-400">
+                    <span class="text-base">👋</span>
+                    <span class="truncate w-full text-center">Inici</span>
+                </button>
+                <button onclick="switchTab('piramides')" id="btn-piramides" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">🔺</span>
+                    <span class="truncate w-full text-center">Piràmides</span>
+                </button>
+                <button onclick="switchTab('rectes')" id="btn-rectes" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">➡️</span>
+                    <span class="truncate w-full text-center">Rectes</span>
+                </button>
+                <button onclick="switchTab('escales')" id="btn-escales" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">🪜</span>
+                    <span class="truncate w-full text-center">Escales</span>
+                </button>
+                <button onclick="switchTab('sumes')" id="btn-sumes" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">➕</span>
+                    <span class="truncate w-full text-center">Sumes</span>
+                </button>
+                <button onclick="switchTab('espiral')" id="btn-espiral" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">🌀</span>
+                    <span class="truncate w-full text-center">Espiral</span>
+                </button>
+                <button onclick="switchTab('natura')" id="btn-natura" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">🌼</span>
+                    <span class="truncate w-full text-center">Natura</span>
+                </button>
+                <button onclick="switchTab('abelles')" id="btn-abelles" class="nav-tab flex flex-col items-center justify-center p-1.5 rounded-lg text-xs font-bold transition bg-emerald-900/60 hover:bg-emerald-700 text-emerald-100">
+                    <span class="text-base">🐝</span>
+                    <span class="truncate w-full text-center">Abelles</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contingut principal -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-3 sm:p-6 lg:p-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 sm:p-8 min-h-[550px]">
+            
+            <!-- 1. INICI -->
+            <section id="tab-inici" class="tab-panel active">
+                <div class="border-b border-stone-200 pb-4 mb-6">
+                    <span class="text-emerald-700 font-bold text-xs uppercase tracking-wider">Introducció</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Fibo... què? Coneix en Leonardo de Pisa</h1>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8">
+                    <div class="w-44 h-44 sm:w-56 sm:h-56 shrink-0 rounded-2xl border-4 border-emerald-100 bg-emerald-50 shadow-inner flex items-center justify-center p-3 relative overflow-hidden">
+                        <svg viewBox="0 0 160 160" class="w-full h-full text-emerald-900 fill-current opacity-85">
+                            <path d="M80 15 C50 15 40 35 40 50 C40 65 52 70 52 70 C48 85 45 105 45 125 C45 140 60 148 80 148 C100 148 115 140 115 125 C115 105 112 85 108 70 C108 70 120 65 120 50 C120 35 110 15 80 15 Z" fill="#e2e8f0"/>
+                            <path d="M42 46 C42 30 55 20 80 20 C105 20 118 30 118 46 C115 38 100 32 80 32 C60 32 45 38 42 46 Z" fill="#047857"/>
+                            <path d="M38 48 C48 40 70 38 82 48 C95 58 115 50 122 46 C124 55 120 62 114 66 C105 58 95 62 82 56 C70 50 50 56 40 64 C38 58 37 53 38 48 Z" fill="#065f46"/>
+                            <ellipse cx="80" cy="72" rx="22" ry="26" fill="#fcd34d"/>
+                            <ellipse cx="71" cy="68" rx="3" ry="2" fill="#1f2937"/>
+                            <ellipse cx="89" cy="68" rx="3" ry="2" fill="#1f2937"/>
+                            <path d="M67 63 Q72 61 76 64 M84 64 Q88 61 93 63" stroke="#1f2937" stroke-width="1.8" fill="none"/>
+                            <path d="M80 68 L78 77 L83 78" stroke="#78350f" stroke-width="1.5" fill="none"/>
+                            <path d="M74 85 Q80 88 86 85" stroke="#78350f" stroke-width="1.5" fill="none"/>
+                            <path d="M52 95 Q80 102 108 95 L118 150 L42 150 Z" fill="#064e3b"/>
+                            <path d="M42 50 C32 60 28 85 30 110 C32 115 38 112 36 100 C34 85 38 65 44 55 Z" fill="#047857"/>
+                        </svg>
+                        <span class="absolute bottom-1 text-[10px] bg-emerald-800 text-white px-2 py-0.5 rounded font-bold">Leonardo de Pisa</span>
+                    </div>
+
+                    <div class="space-y-4 text-stone-700 leading-relaxed text-sm sm:text-base">
+                        <p class="font-bold text-emerald-900 text-base sm:text-lg">
+                            Soc en Leonardo de Pisa, conegut com a Fibonacci. Matemàtic italià que va difondre el sistema de numeració aràbic a Europa.
+                        </p>
+                        <p>
+                            Mentre investigava patrons numèrics vaig trobar una successió infinita en què cada nombre s'obté sumant els dos anteriors.
+                        </p>
+                        <p>
+                            Aquesta mateixa successió apareix de manera natural en l'organització de les branques, les flors, les pinyes i la geometria de molts éssers vius.
+                        </p>
+
+                        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl">
+                            <h2 class="font-bold text-amber-900 text-sm sm:text-base">Com funciona aquesta aplicació?</h2>
+                            <p class="text-amber-800 text-xs sm:text-sm mt-1">
+                                Cada secció et proposa un repte: experimentaràs amb piràmides numèriques i decimals, successions lineals, combinatòria d'escales, regularitats de divisibilitat, geometria d'espirals i el model de creixement del gira-sol i del rusc.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. PIRÀMIDES -->
+            <section id="tab-piramides" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-blue-700 font-bold text-xs uppercase tracking-wider">Tasca diagnòstica</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Piràmides numèriques</h1>
+                    <p class="text-stone-600 text-sm mt-1">Regla: cada bloc superior és la suma dels dos blocs que té a sota.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Piràmide 1: Clàssica -->
+                    <div class="bg-slate-50 p-4 sm:p-6 rounded-2xl border border-slate-200">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-2">
+                            <h2 class="font-bold text-slate-800 text-base sm:text-lg">1. Piràmide numèrica</h2>
+                            <button onclick="checkPiramide1()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg shadow-sm transition">Comprovar piràmide 1</button>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-1.5 py-2">
+                            <div class="flex justify-center">
+                                <input type="number" id="p1-40" class="pyr-input" placeholder="?">
+                            </div>
+                            <div class="flex justify-center gap-1.5">
+                                <input type="number" id="p1-21" class="pyr-input" placeholder="?">
+                                <input type="number" id="p1-19" class="pyr-input" placeholder="?">
+                            </div>
+                            <div class="flex justify-center gap-1.5">
+                                <input type="number" id="p1-10" class="pyr-input" placeholder="?">
+                                <input type="number" id="p1-11" class="pyr-input" placeholder="?">
+                                <input type="number" id="p1-8" class="pyr-input" placeholder="?">
+                            </div>
+                            <div class="flex justify-center gap-1.5">
+                                <input type="text" readonly value="4" class="pyr-input">
+                                <input type="text" readonly value="6" class="pyr-input">
+                                <input type="text" readonly value="5" class="pyr-input">
+                                <input type="text" readonly value="3" class="pyr-input">
+                            </div>
+                        </div>
+                        <p id="msg-p1" class="text-center font-bold text-xs sm:text-sm mt-3 h-5"></p>
+                    </div>
+
+                    <!-- Piràmide 2: Deducció inversa (48 al cim, dossier pàg. 5) -->
+                    <div class="bg-indigo-50 p-4 sm:p-6 rounded-2xl border border-indigo-200">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-2">
+                            <div>
+                                <h2 class="font-bold text-indigo-900 text-base sm:text-lg">2. Deducció inversa: Troba la base a partir del cim</h2>
+                                <p class="text-xs text-indigo-800">Cim donat: 48. Nombres coneguts a la base: 3 i 12.</p>
+                            </div>
+                            <button onclick="checkPiramide48()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold px-4 py-2 rounded-lg shadow-sm transition">Comprovar piràmide 2</button>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-1.5 py-2">
+                            <!-- Cim 48 -->
+                            <div class="flex justify-center">
+                                <input type="text" readonly value="48" class="pyr-input bg-indigo-100 font-extrabold text-indigo-900 border-indigo-300">
+                            </div>
+                            <!-- Nivell 3 -->
+                            <div class="flex justify-center gap-1.5">
+                                <input type="number" id="p48-l3-1" class="pyr-input" placeholder="?">
+                                <input type="number" id="p48-l3-2" class="pyr-input" placeholder="?">
+                            </div>
+                            <!-- Nivell 2 -->
+                            <div class="flex justify-center gap-1.5">
+                                <input type="number" id="p48-l2-1" class="pyr-input" placeholder="?">
+                                <input type="number" id="p48-l2-2" class="pyr-input" placeholder="?">
+                                <input type="number" id="p48-l2-3" class="pyr-input" placeholder="?">
+                            </div>
+                            <!-- Nivell 1 (Base: [?], 3, [?], 12) -->
+                            <div class="flex justify-center gap-1.5">
+                                <input type="number" id="p48-b1" class="pyr-input" placeholder="?">
+                                <input type="text" readonly value="3" class="pyr-input">
+                                <input type="number" id="p48-b3" class="pyr-input" placeholder="?">
+                                <input type="text" readonly value="12" class="pyr-input">
+                            </div>
+                        </div>
+                        <p id="msg-p48" class="text-center font-bold text-xs sm:text-sm mt-3 h-5"></p>
+                    </div>
+
+                    <!-- Piràmide 3: Càlcul amb decimals (màxim i mínim, dossier pàg. 6) -->
+                    <div class="bg-amber-50 p-4 sm:p-6 rounded-2xl border border-amber-200">
+                        <h2 class="font-bold text-amber-900 text-base sm:text-lg mb-2">3. Nombres decimals: Troba el valor màxim i el mínim</h2>
+                        <p class="text-xs sm:text-sm text-amber-800 mb-4 leading-relaxed">
+                            Utilitzant exactament aquests quatre nombres decimals: <strong class="bg-amber-100 px-2 py-0.5 rounded border border-amber-300">2,5 · 4 · 1,25 · 3</strong> a la base de la piràmide, canvia'ls de lloc per aconseguir el resultat més gran possible a dalt de tot, i després el resultat més petit.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Màxim decimal -->
+                            <div class="bg-white p-4 rounded-xl border border-amber-300 flex flex-col items-center">
+                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-2">Valor màxim al cim</span>
+                                <input type="number" step="0.01" id="p-max-dec-top" class="pyr-input mb-3" placeholder="?">
+                                <span class="text-[11px] text-stone-500 mb-2">Nombres a la base:</span>
+                                <div class="flex gap-1 mb-3">
+                                    <input type="number" step="0.01" id="p-max-dec-b1" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-max-dec-b2" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-max-dec-b3" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-max-dec-b4" class="pyr-input text-xs sm:text-sm">
+                                </div>
+                                <button onclick="checkMaxDecimal()" class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-2 rounded-lg transition">Comprova màxim</button>
+                                <p id="msg-max-dec" class="text-xs font-bold mt-2 h-4 text-center"></p>
+                            </div>
+
+                            <!-- Mínim decimal -->
+                            <div class="bg-white p-4 rounded-xl border border-amber-300 flex flex-col items-center">
+                                <span class="text-xs font-bold text-stone-600 uppercase tracking-wider mb-2">Valor mínim al cim</span>
+                                <input type="number" step="0.01" id="p-min-dec-top" class="pyr-input mb-3" placeholder="?">
+                                <span class="text-[11px] text-stone-500 mb-2">Nombres a la base:</span>
+                                <div class="flex gap-1 mb-3">
+                                    <input type="number" step="0.01" id="p-min-dec-b1" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-min-dec-b2" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-min-dec-b3" class="pyr-input text-xs sm:text-sm">
+                                    <input type="number" step="0.01" id="p-min-dec-b4" class="pyr-input text-xs sm:text-sm">
+                                </div>
+                                <button onclick="checkMinDecimal()" class="w-full bg-stone-700 hover:bg-stone-800 text-white text-xs font-bold py-2 rounded-lg transition">Comprova mínim</button>
+                                <p id="msg-min-dec" class="text-xs font-bold mt-2 h-4 text-center"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. RECTES -->
+            <section id="tab-rectes" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-fuchsia-700 font-bold text-xs uppercase tracking-wider">Tasca de desenvolupament 1</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">De la piràmide a la recta</h1>
+                    <p class="text-stone-600 text-sm mt-1">Traslladem la regla de sumar els dos elements anteriors a una successió lineal.</p>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Sèrie 1 -->
+                    <div class="bg-fuchsia-50 p-4 sm:p-6 rounded-2xl border border-fuchsia-200">
+                        <h2 class="font-bold text-fuchsia-900 text-base sm:text-lg mb-2">Successió 1: Comença amb 1 i 3</h2>
+                        <p class="text-xs sm:text-sm text-fuchsia-800 mb-4">Completa els nombres que continuen la sèrie:</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-fuchsia-300 rounded-lg text-lg">1</span>
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-fuchsia-300 rounded-lg text-lg">3</span>
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-fuchsia-300 rounded-lg text-lg">4</span>
+                            <input type="number" id="rec1-7" class="w-12 h-12 text-center font-bold border-2 border-fuchsia-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="rec1-11" class="w-12 h-12 text-center font-bold border-2 border-fuchsia-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="rec1-18" class="w-12 h-12 text-center font-bold border-2 border-fuchsia-300 rounded-lg text-lg bg-white" placeholder="?">
+                        </div>
+                        <div class="mt-4 flex items-center gap-3">
+                            <button onclick="checkRecta1()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition">Comprova successió</button>
+                            <span id="msg-rec1" class="text-xs sm:text-sm font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Sèrie 2 (Dossier pàg. 7): Comença amb 2 i 5 -->
+                    <div class="bg-amber-50 p-4 sm:p-6 rounded-2xl border border-amber-200">
+                        <h2 class="font-bold text-amber-900 text-base sm:text-lg mb-2">Successió 2: Comença amb 2 i 5</h2>
+                        <p class="text-xs sm:text-sm text-amber-800 mb-4">La mateixa regla amb nombres d'inici diferents. Quins nombres continuen?</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-amber-300 rounded-lg text-lg">2</span>
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-amber-300 rounded-lg text-lg">5</span>
+                            <input type="number" id="rec2-7" class="w-12 h-12 text-center font-bold border-2 border-amber-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="rec2-12" class="w-12 h-12 text-center font-bold border-2 border-amber-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="rec2-19" class="w-12 h-12 text-center font-bold border-2 border-amber-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="rec2-31" class="w-12 h-12 text-center font-bold border-2 border-amber-300 rounded-lg text-lg bg-white" placeholder="?">
+                        </div>
+                        <div class="mt-4 flex items-center gap-3">
+                            <button onclick="checkRecta2()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition">Comprova successió 2</button>
+                            <span id="msg-rec2" class="text-xs sm:text-sm font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Sèrie 3: Fibonacci (1 i 1) -->
+                    <div class="bg-emerald-50 p-4 sm:p-6 rounded-2xl border border-emerald-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded font-bold uppercase">Clau</span>
+                            <h2 class="font-bold text-emerald-950 text-base sm:text-lg">La successió de Fibonacci: Comença amb 1 i 1</h2>
+                        </div>
+                        <p class="text-xs sm:text-sm text-emerald-800 mb-4 leading-relaxed">
+                            Aquesta és la successió de Fibonacci que investigarem durant tota la proposta:
+                        </p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-emerald-300 rounded-lg text-lg">1</span>
+                            <span class="w-12 h-12 flex items-center justify-center font-bold bg-white border-2 border-emerald-300 rounded-lg text-lg">1</span>
+                            <input type="number" id="fib-2" class="w-12 h-12 text-center font-bold border-2 border-emerald-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="fib-3" class="w-12 h-12 text-center font-bold border-2 border-emerald-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="fib-5" class="w-12 h-12 text-center font-bold border-2 border-emerald-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="fib-8" class="w-12 h-12 text-center font-bold border-2 border-emerald-300 rounded-lg text-lg bg-white" placeholder="?">
+                            <input type="number" id="fib-13" class="w-12 h-12 text-center font-bold border-2 border-emerald-300 rounded-lg text-lg bg-white" placeholder="?">
+                        </div>
+                        <div class="mt-4 flex items-center gap-3">
+                            <button onclick="checkRectaFib()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg transition">Validar Fibonacci</button>
+                            <span id="msg-fib" class="text-xs sm:text-sm font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. ESCALES AMPLIABLE DE 6 A 12 -->
+            <section id="tab-escales" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-teal-700 font-bold text-xs uppercase tracking-wider">Tasca de desenvolupament 2</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Pugem esglaons: Quantes maneres hi ha?</h1>
+                    <p class="text-stone-600 text-sm mt-1">Pots pujar d'1 en 1 o de 2 en 2 esglaons. Tria quants esglaons té l'escala per investigar:</p>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap mb-6 bg-stone-100 p-2 rounded-xl border border-stone-200">
+                    <span class="text-xs font-bold text-stone-600 px-2">Esglaons totals:</span>
+                    <button onclick="setStairCount(6)" id="btn-stair-6" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-700 text-white shadow-sm">6</button>
+                    <button onclick="setStairCount(7)" id="btn-stair-7" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">7</button>
+                    <button onclick="setStairCount(8)" id="btn-stair-8" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">8</button>
+                    <button onclick="setStairCount(9)" id="btn-stair-9" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">9</button>
+                    <button onclick="setStairCount(10)" id="btn-stair-10" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">10</button>
+                    <button onclick="setStairCount(11)" id="btn-stair-11" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">11</button>
+                    <button onclick="setStairCount(12)" id="btn-stair-12" class="stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200">12</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Simulador interactiu adaptable -->
+                    <div class="lg:col-span-7 bg-stone-50 p-4 sm:p-6 rounded-2xl border border-stone-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="font-bold text-stone-800 text-sm sm:text-base">Simulador visual (<span id="sim-stair-title">6</span> esglaons)</h2>
+                            <button onclick="resetEscalaSim()" class="text-xs font-bold text-stone-500 hover:text-stone-800 underline">Reiniciar</button>
+                        </div>
+
+                        <div id="stair-dynamic-container" class="bg-white border-2 border-stone-300 rounded-xl p-3 h-56 flex items-end justify-between gap-1 relative overflow-hidden shadow-inner">
+                        </div>
+
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="movePlayer(1)" id="btn-step-1" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs sm:text-sm shadow transition active:scale-95">
+                                Fer 1 pas (+1)
+                            </button>
+                            <button onclick="movePlayer(2)" id="btn-step-2" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-3 rounded-xl text-xs sm:text-sm shadow transition active:scale-95">
+                                Fer un salt (+2)
+                            </button>
+                        </div>
+
+                        <div class="mt-3 text-xs text-stone-600 bg-white p-2.5 rounded-lg border border-stone-200 flex justify-between items-center">
+                            <span>Recorregut actual: <strong id="step-path" class="text-emerald-700">Terra</strong></span>
+                            <span id="step-indicator" class="font-bold text-stone-800">Esglaó 0</span>
+                        </div>
+                    </div>
+
+                    <!-- Taula per validar -->
+                    <div class="lg:col-span-5 bg-stone-50 p-4 sm:p-6 rounded-2xl border border-stone-300">
+                        <h2 class="font-bold text-stone-800 text-sm sm:text-base mb-3">Taula de possibilitats</h2>
+                        <div class="max-h-[300px] overflow-y-auto pr-1">
+                            <table class="w-full text-xs sm:text-sm text-left border-collapse" id="stairs-table">
+                                <thead>
+                                    <tr class="border-b border-stone-300 text-stone-500">
+                                        <th class="py-2">Esglaons</th>
+                                        <th class="py-2">Opcions totals</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-stone-200" id="stairs-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <button onclick="checkTaulaEscales()" class="w-full mt-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs sm:text-sm shadow transition">
+                            Validar taula d'escales
+                        </button>
+                        <p id="msg-escales" class="text-xs font-bold mt-2 text-center h-4"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. SUMES I DIVISIBILITAT (TASCA 3 DEL DOSSIER) -->
+            <section id="tab-sumes" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-violet-700 font-bold text-xs uppercase tracking-wider">Tasca de desenvolupament 3</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Què amaga la successió de Fibonacci?</h1>
+                    <p class="text-stone-600 text-sm mt-1">Investiguem sumes i regularitats de divisibilitat en la successió.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Part 1: Sumes consecutives -->
+                    <div class="bg-stone-50 p-4 sm:p-6 rounded-2xl border border-stone-200">
+                        <h2 class="font-bold text-violet-900 text-base sm:text-lg mb-2">1. Què passa si els sumem?</h2>
+                        <div class="bg-violet-100 text-violet-950 font-mono text-xs sm:text-sm p-3 rounded-xl border border-violet-200 mb-4 text-center font-bold">
+                            Successió de referència: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144...
+                        </div>
+
+                        <div class="space-y-2.5 max-w-xl mx-auto">
+                            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200 text-xs sm:text-sm">
+                                <span class="font-bold">1 + 1 =</span>
+                                <input type="number" id="sum-step-1" class="w-20 p-1 text-center font-bold border rounded" placeholder="?">
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200 text-xs sm:text-sm">
+                                <span class="font-bold">1 + 1 + 2 =</span>
+                                <input type="number" id="sum-step-2" class="w-20 p-1 text-center font-bold border rounded" placeholder="?">
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200 text-xs sm:text-sm">
+                                <span class="font-bold">1 + 1 + 2 + 3 =</span>
+                                <input type="number" id="sum-step-3" class="w-20 p-1 text-center font-bold border rounded" placeholder="?">
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200 text-xs sm:text-sm">
+                                <span class="font-bold">1 + 1 + 2 + 3 + 5 =</span>
+                                <input type="number" id="sum-step-4" class="w-20 p-1 text-center font-bold border rounded" placeholder="?">
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-stone-200 text-xs sm:text-sm">
+                                <span class="font-bold">1 + 1 + 2 + 3 + 5 + 8 =</span>
+                                <input type="number" id="sum-step-5" class="w-20 p-1 text-center font-bold border rounded" placeholder="?">
+                            </div>
+
+                            <div class="mt-4 p-4 bg-violet-50 rounded-xl border border-violet-300">
+                                <h3 class="font-bold text-violet-900 text-xs sm:text-sm mb-1">Predicció sense fer el càlcul llarg:</h3>
+                                <p class="text-xs text-violet-800 mb-2">Compara cada resultat amb els nombres de la successió:</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-xs sm:text-sm font-bold truncate">1+1+2+3+5+8+13+21+34 =</span>
+                                    <input type="number" id="sum-prediccio" class="w-24 p-1.5 text-center font-black text-violet-900 bg-white border-2 border-violet-400 rounded-lg text-base" placeholder="?">
+                                </div>
+                            </div>
+
+                            <button onclick="checkSumes()" class="w-full bg-violet-700 hover:bg-violet-800 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm shadow transition">
+                                Validar sumes
+                            </button>
+                            <p id="msg-sumes" class="text-xs font-bold text-center h-4"></p>
+                        </div>
+                    </div>
+
+                    <!-- Part 2: Divisibilitat (Dossier pàg. 11) -->
+                    <div class="bg-indigo-50 p-4 sm:p-6 rounded-2xl border border-indigo-200">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-2">
+                            <div>
+                                <h2 class="font-bold text-indigo-950 text-base sm:text-lg">2. I si investiguem la divisibilitat?</h2>
+                                <p class="text-xs text-indigo-800">Descobreix amb quina freqüència apareixen els nombres divisibles per 2, per 3 i per 5.</p>
+                            </div>
+                        </div>
+
+                        <!-- Botons de filtre -->
+                        <div class="flex gap-2 mb-4 flex-wrap">
+                            <button onclick="highlightDivisibility(2)" id="btn-div-2" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-indigo-800 border border-indigo-300 shadow-sm transition hover:bg-indigo-100">
+                                Divisibles per 2
+                            </button>
+                            <button onclick="highlightDivisibility(3)" id="btn-div-3" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-indigo-800 border border-indigo-300 shadow-sm transition hover:bg-indigo-100">
+                                Divisibles per 3
+                            </button>
+                            <button onclick="highlightDivisibility(5)" id="btn-div-5" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-indigo-800 border border-indigo-300 shadow-sm transition hover:bg-indigo-100">
+                                Divisibles per 5
+                            </button>
+                            <button onclick="highlightDivisibility(0)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-stone-200 text-stone-700 hover:bg-stone-300 transition">
+                                Netejar
+                            </button>
+                        </div>
+
+                        <!-- Taula de termes de Fibonacci per investigar -->
+                        <div class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2 mb-4" id="fib-div-grid">
+                            <!-- Generat dinàmicament per JS -->
+                        </div>
+
+                        <!-- Patrons deduïts -->
+                        <div id="div-explanation" class="bg-white p-3.5 rounded-xl border border-indigo-200 text-xs sm:text-sm text-stone-700 leading-relaxed">
+                            Clica un dels botons de filtre per descobrir la regularitat de cada divisor.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. ESPIRAL GEOMÈTRICA -->
+            <section id="tab-espiral" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-amber-700 font-bold text-xs uppercase tracking-wider">Tasca de desenvolupament 4</span>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Dels nombres a les formes: L'espiral</h1>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="addSpiralStep()" id="btn-add-spiral" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg shadow transition">
+                            ➕ Afegir quadrat
+                        </button>
+                        <button onclick="resetSpiral()" class="bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold text-xs sm:text-sm px-3 py-2 rounded-lg transition">
+                            🔄 Reiniciar
+                        </button>
+                    </div>
+                </div>
+
+                <p class="text-stone-600 text-xs sm:text-sm mb-4">
+                    Els quadrats de costat 1, 1, 2, 3, 5, 8 i 13 es construeixen exactament un al costat de l'altre. Dins de cada quadrat s'inscriu un arc de 90 graus d'un quart de circumferència que forma l'espiral contínua.
+                </p>
+
+                <div class="bg-stone-50 border-2 border-amber-200 rounded-2xl p-2 sm:p-4 h-[380px] sm:h-[460px] flex items-center justify-center overflow-hidden">
+                    <svg id="spiral-svg-canvas" viewBox="-0.5 -0.5 14 22" class="w-full h-full max-h-full">
+                        <g id="spiral-shapes-group"></g>
+                    </svg>
+                </div>
+                <div class="mt-3 text-center">
+                    <span id="spiral-caption" class="text-xs sm:text-sm font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full">
+                        Prem "Afegir quadrat" per començar
+                    </span>
+                </div>
+            </section>
+
+            <!-- 7. NATURA (FULLA I SIMULADOR DE GIRA-SOL) -->
+            <section id="tab-natura" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-yellow-700 font-bold text-xs uppercase tracking-wider">Tasca de desenvolupament 5</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">Fibonacci a la natura</h1>
+                    <p class="text-stone-600 text-sm mt-1">De la disposició de les fulles d'una planta a les llavors del gira-sol.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Part 1: Fil·lotaxi de les fulles (Dossier pàg. 16-17) -->
+                    <div class="bg-emerald-50 p-4 sm:p-6 rounded-2xl border border-emerald-200">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-2">
+                            <div>
+                                <h2 class="font-bold text-emerald-950 text-base sm:text-lg">1. Investiguem l'angle de gir entre fulles</h2>
+                                <p class="text-xs text-emerald-800">Clica dues fulles consecutives per mesurar l'angle de gir des del centre de la planta.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                            <!-- Diagrama interactiu de la planta suculenta -->
+                            <div class="md:col-span-7 flex justify-center">
+                                <div class="w-64 h-64 sm:w-72 sm:h-72 bg-emerald-950 rounded-full border-4 border-emerald-400 p-2 relative shadow-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 300 300" class="w-full h-full" id="plant-svg">
+                                        <!-- Elements generats per JS amb fulles concèntriques 1 a 8 -->
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- Panell de mesura -->
+                            <div class="md:col-span-5 bg-white p-4 rounded-xl border border-emerald-200 space-y-3">
+                                <span class="text-xs font-bold text-stone-500 uppercase tracking-wider">Mesura entre fulles</span>
+                                <div class="text-xs text-stone-600 space-y-1.5" id="leaf-angle-data">
+                                    <div class="flex justify-between border-b border-stone-100 pb-1"><span>Fulla 1 ➔ Fulla 2:</span> <strong id="leaf-mesura-1" class="text-stone-400 font-medium">?</strong></div>
+                                    <div class="flex justify-between border-b border-stone-100 pb-1"><span>Fulla 2 ➔ Fulla 3:</span> <strong id="leaf-mesura-2" class="text-stone-400 font-medium">?</strong></div>
+                                    <div class="flex justify-between border-b border-stone-100 pb-1"><span>Fulla 3 ➔ Fulla 4:</span> <strong id="leaf-mesura-3" class="text-stone-400 font-medium">?</strong></div>
+                                    <div class="flex justify-between border-b border-stone-100 pb-1"><span>Fulla 4 ➔ Fulla 5:</span> <strong id="leaf-mesura-4" class="text-stone-400 font-medium">?</strong></div>
+                                </div>
+                                <p class="text-xs text-stone-600 leading-relaxed bg-emerald-50 p-2.5 rounded-lg border border-emerald-200 w-full mt-4">
+                                    A la natura cada fulla nova surt girant aproximadament el mateix angle respecte de l'anterior per no tapar-se la llum del sol.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Part 2: Simulador del gira-sol amb botons de prova -->
+                    <div class="bg-stone-50 p-4 sm:p-6 rounded-2xl border border-stone-200">
+                        <h2 class="font-bold text-stone-900 text-base sm:text-lg mb-2">2. Posem-ho a prova: El simulador del gira-sol</h2>
+                        <p class="text-xs text-stone-600 mb-4">Comprova què passa quan canviem l'angle de gir. Prova els angles proposats al dossier o mou el control:</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                            <div class="md:col-span-5 space-y-4 text-center">
+                                <!-- Botons del dossier: 90º, 120º, 144º -->
+                                <div class="flex justify-center gap-2 flex-wrap">
+                                    <button onclick="setNatureAngle(90)" class="px-2.5 py-1 text-xs font-bold bg-white text-stone-700 border border-stone-300 rounded shadow-sm hover:bg-stone-100">Prova 90º</button>
+                                    <button onclick="setNatureAngle(120)" class="px-2.5 py-1 text-xs font-bold bg-white text-stone-700 border border-stone-300 rounded shadow-sm hover:bg-stone-100">Prova 120º</button>
+                                    <button onclick="setNatureAngle(144)" class="px-2.5 py-1 text-xs font-bold bg-white text-stone-700 border border-stone-300 rounded shadow-sm hover:bg-stone-100">Prova 144º</button>
+                                </div>
+
+                                <div id="nature-angle-val" class="font-black text-4xl sm:text-5xl text-yellow-600">
+                                    120.0º
+                                </div>
+
+                                <input type="range" id="nature-slider" min="90" max="180" step="0.1" value="120" oninput="renderSunflower()" class="w-full">
+                                <div class="flex justify-between text-xs font-bold text-stone-400 px-1">
+                                    <span>90º</span>
+                                    <span>135º</span>
+                                    <span>180º</span>
+                                </div>
+
+                                <div id="nature-feedback-box" class="p-3 rounded-xl text-xs sm:text-sm font-bold bg-stone-100 text-stone-700 border border-stone-300">
+                                    Observa com es distribueixen els punts
+                                </div>
+                            </div>
+
+                            <div class="md:col-span-7 flex justify-center">
+                                <div class="w-64 h-64 sm:w-80 sm:h-80 bg-stone-900 rounded-full border-8 border-yellow-400 p-2 shadow-xl flex items-center justify-center relative">
+                                    <canvas id="sunflower-canvas" width="300" height="300" class="rounded-full"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. ABELLES (AMB TRAÇADOR INTERACTIU DE CAMINS REALS) -->
+            <section id="tab-abelles" class="tab-panel">
+                <div class="border-b border-stone-200 pb-3 mb-6">
+                    <span class="text-amber-700 font-bold text-xs uppercase tracking-wider">Tasca final</span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mt-1">El camí de les abelles</h1>
+                    <p class="text-stone-600 text-sm mt-1">
+                        L'abella es troba a la sortida i vol arribar a cada cel·la. Només pot passar d'una cel·la a una altra si comparteixen costat i sempre ha d'avançar cap a la dreta.
+                    </p>
+                </div>
+
+                <div class="bg-amber-50/60 p-4 sm:p-6 rounded-2xl border border-amber-200">
+                    <div class="max-w-2xl mx-auto flex flex-col items-center">
+
+                        <!-- Diagrama geomètric d'hexàgons regulars amb camí actiu -->
+                        <div class="w-full flex justify-center py-2 overflow-x-auto">
+                            <svg viewBox="0 0 540 280" class="w-full max-w-[540px] h-auto select-none" id="bee-svg">
+                                <defs>
+                                    <polygon id="hex-shape" points="40,0 80,23 80,69 40,92 0,69 0,23" />
+                                    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                        <path d="M 0 1 L 9 5 L 0 9 z" fill="#b45309" />
+                                    </marker>
+                                </defs>
+
+                                <!-- Línies direccionals bàsiques -->
+                                <g id="bee-connections" stroke="#b45309" stroke-width="2.5" stroke-dasharray="4,4" fill="none" opacity="0.65">
+                                    <line x1="120" y1="138" x2="160" y2="92" marker-end="url(#arrow)" />
+                                    <line x1="120" y1="138" x2="160" y2="184" marker-end="url(#arrow)" />
+                                    <line x1="200" y1="184" x2="200" y2="115" marker-end="url(#arrow)" />
+                                    <line x1="240" y1="184" x2="280" y2="184" marker-end="url(#arrow)" />
+                                    <line x1="240" y1="92" x2="280" y2="160" marker-end="url(#arrow)" />
+                                    <line x1="240" y1="92" x2="280" y2="92" marker-end="url(#arrow)" />
+                                    <line x1="320" y1="184" x2="320" y2="115" marker-end="url(#arrow)" />
+                                    <line x1="360" y1="184" x2="400" y2="138" marker-end="url(#arrow)" />
+                                    <line x1="360" y1="92" x2="400" y2="138" marker-end="url(#arrow)" />
+                                </g>
+
+                                <!-- Traç actiu del camí que s'està construint -->
+                                <g id="active-path-layer" stroke="#dc2626" stroke-width="4" fill="none"></g>
+
+                                <!-- Cel·les estàtiques -->
+                                <g transform="translate(40, 92)" class="hex-cell" onclick="handleBeeCellClick('Sortida')">
+                                    <use href="#hex-shape" fill="#f59e0b" stroke="#78350f" stroke-width="3" id="hex-bg-Sortida"/>
+                                    <text x="40" y="44" text-anchor="middle" font-size="22">🐝</text>
+                                    <text x="40" y="66" text-anchor="middle" font-size="11" font-weight="bold" fill="#78350f">Sortida</text>
+                                </g>
+
+                                <g transform="translate(160, 46)" class="hex-cell" onclick="handleBeeCellClick('B')">
+                                    <use href="#hex-shape" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5" id="hex-bg-B"/>
+                                    <text x="40" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#854d0e">B</text>
+                                </g>
+
+                                <g transform="translate(160, 138)" class="hex-cell" onclick="handleBeeCellClick('A')">
+                                    <use href="#hex-shape" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5" id="hex-bg-A"/>
+                                    <text x="40" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#854d0e">A</text>
+                                </g>
+
+                                <g transform="translate(280, 46)" class="hex-cell" onclick="handleBeeCellClick('D')">
+                                    <use href="#hex-shape" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5" id="hex-bg-D"/>
+                                    <text x="40" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#854d0e">D</text>
+                                </g>
+
+                                <g transform="translate(280, 138)" class="hex-cell" onclick="handleBeeCellClick('C')">
+                                    <use href="#hex-shape" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5" id="hex-bg-C"/>
+                                    <text x="40" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#854d0e">C</text>
+                                </g>
+
+                                <g transform="translate(400, 92)" class="hex-cell" onclick="handleBeeCellClick('E')">
+                                    <use href="#hex-shape" fill="#fde047" stroke="#b45309" stroke-width="3" id="hex-bg-E"/>
+                                    <text x="40" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#78350f">E</text>
+                                    <text x="40" y="58" text-anchor="middle" font-size="10" font-weight="bold" fill="#78350f">(Destí)</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Taula de traçador de camins interactiu -->
+                        <div class="w-full bg-white p-4 rounded-xl border border-amber-200 mt-2 space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <h3 class="text-xs font-bold text-stone-700 uppercase tracking-wider">Traçador de camins en directe</h3>
+                                    <button onclick="resetBeePath()" class="text-xs font-bold text-stone-500 hover:text-stone-800 underline">Reiniciar traç</button>
+                                </div>
+                                <p class="text-xs text-stone-600 mb-2">Clica sobre les cel·les per construir un camí vàlid (començant per Sortida):</p>
+                                <div class="p-2.5 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between">
+                                    <span class="text-xs font-bold text-amber-900" id="current-bee-path">Sortida</span>
+                                    <button onclick="saveCurrentBeePath()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1 rounded transition">Desar aquest camí</button>
+                                </div>
+                                <div class="mt-2 text-xs text-stone-600">
+                                    Camins trobats fins a la meta E (<span id="saved-paths-count" class="font-bold text-emerald-700">0</span> de 8):
+                                    <div id="saved-paths-list" class="mt-1 flex flex-wrap gap-1"></div>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-3">
+                                <h3 class="text-xs font-bold text-stone-700 uppercase tracking-wider mb-2 text-center">Nombre total de camins diferents fins a cada cel·la</h3>
+                                <div class="grid grid-cols-5 gap-2 text-center">
+                                    <div>
+                                        <span class="block text-xs font-bold text-amber-900 mb-1">A</span>
+                                        <input type="number" id="bee-val-a" class="w-full p-1.5 border-2 border-amber-300 rounded-lg text-center font-bold text-sm" placeholder="?">
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-amber-900 mb-1">B</span>
+                                        <input type="number" id="bee-val-b" class="w-full p-1.5 border-2 border-amber-300 rounded-lg text-center font-bold text-sm" placeholder="?">
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-amber-900 mb-1">C</span>
+                                        <input type="number" id="bee-val-c" class="w-full p-1.5 border-2 border-amber-300 rounded-lg text-center font-bold text-sm" placeholder="?">
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-amber-900 mb-1">D</span>
+                                        <input type="number" id="bee-val-d" class="w-full p-1.5 border-2 border-amber-300 rounded-lg text-center font-bold text-sm" placeholder="?">
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-amber-900 mb-1">E</span>
+                                        <input type="number" id="bee-val-e" class="w-full p-1.5 border-2 border-amber-400 bg-amber-50 rounded-lg text-center font-bold text-sm" placeholder="?">
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex justify-center">
+                                    <button onclick="checkBeeValues()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm px-6 py-2 rounded-lg shadow transition">
+                                        Comprova camins totals
+                                    </button>
+                                </div>
+                                <p id="msg-abelles" class="text-xs font-bold mt-2 text-center h-4"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(b => {
+                b.classList.remove('bg-emerald-700', 'text-white', 'border-2', 'border-emerald-400');
+                b.classList.add('bg-emerald-900/60', 'text-emerald-100');
+            });
+
+            const panel = document.getElementById(`tab-${tabId}`);
+            const btn = document.getElementById(`btn-${tabId}`);
+            if (panel && btn) {
+                panel.classList.add('active');
+                btn.classList.add('bg-emerald-700', 'text-white', 'border-2', 'border-emerald-400');
+                btn.classList.remove('bg-emerald-900/60', 'text-emerald-100');
+            }
+
+            if (tabId === 'natura') {
+                renderSunflower();
+                initPlantLeafViewer();
+            }
+            if (tabId === 'escales') resetEscalaSim();
+            if (tabId === 'sumes') initDivisibilityGrid();
+        }
+
+        // Piràmides
+        function checkPiramide1() {
+            const vals = {
+                'p1-10': 10, 'p1-11': 11, 'p1-8': 8,
+                'p1-21': 21, 'p1-19': 19,
+                'p1-40': 40
+            };
+            let allOk = true;
+            for (let id in vals) {
+                const el = document.getElementById(id);
+                if (parseInt(el.value) === vals[id]) {
+                    el.classList.add('cell-correct'); el.classList.remove('cell-incorrect');
+                } else {
+                    el.classList.add('cell-incorrect'); el.classList.remove('cell-correct');
+                    allOk = false;
+                }
+            }
+            const msg = document.getElementById('msg-p1');
+            if (allOk) {
+                msg.textContent = "Molt bé! Cada bloc és la suma dels dos que té a sota.";
+                msg.className = "text-center font-bold text-xs sm:text-sm mt-3 h-5 text-emerald-600";
+            } else {
+                msg.textContent = "Hi ha algun càlcul erroni. Revisa la suma de cada parella.";
+                msg.className = "text-center font-bold text-xs sm:text-sm mt-3 h-5 text-rose-600";
+            }
+        }
+
+        // Piràmide 48 al cim (Dossier pàg. 5: base [b1], 3, [b3], 12)
+        // a + 3b = 27 amb b1 i b3 positius. Al dossier: b1=0, b3=9 o bé b1=6, b3=7, etc.
+        // Al dossier original: b1=6, 3, b3=7, 12:
+        // L2: 6+3=9, 3+7=10, 7+12=19
+        // L3: 9+10=19, 10+19=29. 19+29 = 48!
+        function checkPiramide48() {
+            const b1 = parseInt(document.getElementById('p48-b1').value);
+            const b3 = parseInt(document.getElementById('p48-b3').value);
+            const l2_1 = parseInt(document.getElementById('p48-l2-1').value);
+            const l2_2 = parseInt(document.getElementById('p48-l2-2').value);
+            const l2_3 = parseInt(document.getElementById('p48-l2-3').value);
+            const l3_1 = parseInt(document.getElementById('p48-l3-1').value);
+            const l3_2 = parseInt(document.getElementById('p48-l3-2').value);
+
+            let ok = (l2_1 === b1 + 3) && (l2_2 === 3 + b3) && (l2_3 === b3 + 12) &&
+                     (l3_1 === l2_1 + l2_2) && (l3_2 === l2_2 + l2_3) &&
+                     (l3_1 + l3_2 === 48);
+
+            const msg = document.getElementById('msg-p48');
+            if (ok) {
+                msg.textContent = "Correcte! La piràmide suma exactament 48 al cim respectant la regla.";
+                msg.className = "text-center font-bold text-xs sm:text-sm mt-3 h-5 text-emerald-600";
+            } else {
+                msg.textContent = "Revisa els nombres: cada bloc ha de sumar els dos de sota i donar 48 al cim.";
+                msg.className = "text-center font-bold text-xs sm:text-sm mt-3 h-5 text-rose-600";
+            }
+        }
+
+        // Màxim i Mínim amb decimals (Dossier pàg. 6: 2.5, 4, 1.25, 3)
+        // Cim màxim = 24.75; Cim mínim = 18.25
+        function checkMaxDecimal() {
+            const top = parseFloat(document.getElementById('p-max-dec-top').value);
+            const msg = document.getElementById('msg-max-dec');
+            if (top === 24.75) {
+                msg.textContent = "Correcte! El valor màxim és 24,75 situant 4 i 3 al centre.";
+                msg.className = "text-xs font-bold mt-2 h-4 text-center text-emerald-600";
+            } else {
+                msg.textContent = "El valor màxim és 24,75. Comprova la posició dels nombres.";
+                msg.className = "text-xs font-bold mt-2 h-4 text-center text-rose-600";
+            }
+        }
+
+        function checkMinDecimal() {
+            const top = parseFloat(document.getElementById('p-min-dec-top').value);
+            const msg = document.getElementById('msg-min-dec');
+            if (top === 18.25) {
+                msg.textContent = "Correcte! El valor mínim és 18,25 situant 1,25 i 2,5 al centre.";
+                msg.className = "text-xs font-bold mt-2 h-4 text-center text-emerald-600";
+            } else {
+                msg.textContent = "El valor mínim és 18,25. Comprova la posició dels nombres.";
+                msg.className = "text-xs font-bold mt-2 h-4 text-center text-rose-600";
+            }
+        }
+
+        // Rectes
+        function checkRecta1() {
+            const v7 = parseInt(document.getElementById('rec1-7').value);
+            const v11 = parseInt(document.getElementById('rec1-11').value);
+            const v18 = parseInt(document.getElementById('rec1-18').value);
+            const msg = document.getElementById('msg-rec1');
+
+            if (v7 === 7 && v11 === 11 && v18 === 18) {
+                msg.textContent = "Correcte! 3+4=7, 4+7=11, 7+11=18.";
+                msg.className = "text-xs sm:text-sm font-bold text-emerald-600";
+            } else {
+                msg.textContent = "Recorda sumar els dos nombres immediatament anteriors.";
+                msg.className = "text-xs sm:text-sm font-bold text-rose-600";
+            }
+        }
+
+        function checkRecta2() {
+            const v7 = parseInt(document.getElementById('rec2-7').value);
+            const v12 = parseInt(document.getElementById('rec2-12').value);
+            const v19 = parseInt(document.getElementById('rec2-19').value);
+            const v31 = parseInt(document.getElementById('rec2-31').value);
+            const msg = document.getElementById('msg-rec2');
+
+            if (v7 === 7 && v12 === 12 && v19 === 19 && v31 === 31) {
+                msg.textContent = "Correcte! 2+5=7, 5+7=12, 7+12=19, 12+19=31.";
+                msg.className = "text-xs sm:text-sm font-bold text-emerald-600";
+            } else {
+                msg.textContent = "Recorda sumar els dos nombres immediatament anteriors.";
+                msg.className = "text-xs sm:text-sm font-bold text-rose-600";
+            }
+        }
+
+        function checkRectaFib() {
+            const v2 = parseInt(document.getElementById('fib-2').value);
+            const v3 = parseInt(document.getElementById('fib-3').value);
+            const v5 = parseInt(document.getElementById('fib-5').value);
+            const v8 = parseInt(document.getElementById('fib-8').value);
+            const v13 = parseInt(document.getElementById('fib-13').value);
+            const msg = document.getElementById('msg-fib');
+
+            if (v2 === 2 && v3 === 3 && v5 === 5 && v8 === 8 && v13 === 13) {
+                msg.textContent = "Molt bé! Has construït la successió de Fibonacci.";
+                msg.className = "text-xs sm:text-sm font-bold text-emerald-700";
+            } else {
+                msg.textContent = "Comprova la suma de cada parella consecutiva.";
+                msg.className = "text-xs sm:text-sm font-bold text-rose-600";
+            }
+        }
+
+        // Escales ampliable
+        let totalStairs = 6;
+        let currentStepPos = 0;
+        let stepHistory = [0];
+        const fibStairAnswers = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233];
+
+        function setStairCount(num) {
+            totalStairs = num;
+            document.querySelectorAll('.stair-tab-btn').forEach(btn => {
+                btn.className = "stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-stone-700 hover:bg-stone-200";
+            });
+            const activeBtn = document.getElementById(`btn-stair-${num}`);
+            if (activeBtn) activeBtn.className = "stair-tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-700 text-white shadow-sm";
+
+            document.getElementById('sim-stair-title').textContent = num;
+            buildStairUI();
+            buildStairTable();
+            resetEscalaSim();
+        }
+
+        function buildStairUI() {
+            const container = document.getElementById('stair-dynamic-container');
+            container.innerHTML = '';
+
+            const colTerra = document.createElement('div');
+            colTerra.id = 'step-col-0';
+            colTerra.className = 'flex-1 h-8 bg-stone-200 border border-stone-300 rounded flex flex-col items-center justify-end p-1 relative';
+            colTerra.innerHTML = '<span class="text-[10px] font-bold text-stone-600">Terra</span>';
+
+            const avatar = document.createElement('div');
+            avatar.id = 'avatar';
+            avatar.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-600 border-2 border-white text-white flex items-center justify-center text-xs sm:text-sm shadow mb-1';
+            avatar.textContent = '👧';
+            colTerra.appendChild(avatar);
+            container.appendChild(colTerra);
+
+            for (let i = 1; i <= totalStairs; i++) {
+                const col = document.createElement('div');
+                col.id = `step-col-${i}`;
+                const pct = Math.round((i / totalStairs) * 100);
+                col.style.height = `${pct}%`;
+                col.className = 'flex-1 bg-teal-400 border-t-2 border-teal-700 rounded-t flex flex-col items-center justify-end p-1 relative';
+                col.innerHTML = `<span class="text-[10px] font-bold text-white">${i}</span>`;
+                container.appendChild(col);
+            }
+        }
+
+        function buildStairTable() {
+            const tbody = document.getElementById('stairs-tbody');
+            tbody.innerHTML = '';
+            for (let i = 1; i <= totalStairs; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 font-bold">${i} ${i === 1 ? 'esglaó' : 'esglaons'}</td>
+                    <td><input type="number" id="esc-input-${i}" class="w-20 p-1 border rounded font-bold text-center" placeholder="?"></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function movePlayer(stepDelta) {
+            if (currentStepPos + stepDelta <= totalStairs) {
+                currentStepPos += stepDelta;
+                stepHistory.push(currentStepPos);
+                updateEscalaUI();
+            }
+        }
+
+        function resetEscalaSim() {
+            currentStepPos = 0;
+            stepHistory = [0];
+            updateEscalaUI();
+        }
+
+        function updateEscalaUI() {
+            const avatar = document.getElementById('avatar');
+            const targetCol = document.getElementById(`step-col-${currentStepPos}`);
+            if (targetCol && avatar) {
+                targetCol.appendChild(avatar);
+            }
+
+            const pathTxt = stepHistory.map(s => s === 0 ? "Terra" : `${s}`).join(" ➔ ");
+            document.getElementById('step-path').textContent = pathTxt;
+            document.getElementById('step-indicator').textContent = currentStepPos === totalStairs ? "Dalt de tot!" : `Esglaó ${currentStepPos}`;
+
+            document.getElementById('btn-step-1').disabled = (currentStepPos + 1 > totalStairs);
+            document.getElementById('btn-step-2').disabled = (currentStepPos + 2 > totalStairs);
+        }
+
+        function checkTaulaEscales() {
+            let allOk = true;
+            for (let i = 1; i <= totalStairs; i++) {
+                const el = document.getElementById(`esc-input-${i}`);
+                if (parseInt(el.value) === fibStairAnswers[i - 1]) {
+                    el.classList.add('cell-correct'); el.classList.remove('cell-incorrect');
+                } else {
+                    el.classList.add('cell-incorrect'); el.classList.remove('cell-correct');
+                    allOk = false;
+                }
+            }
+            const msg = document.getElementById('msg-escales');
+            if (allOk) {
+                msg.textContent = "Molt bé! El nombre de maneres coincideix amb la successió de Fibonacci.";
+                msg.className = "text-xs font-bold mt-2 text-center h-4 text-emerald-600";
+            } else {
+                msg.textContent = "Comprova les possibilitats d'algun esglaó.";
+                msg.className = "text-xs font-bold mt-2 text-center h-4 text-rose-600";
+            }
+        }
+
+        // Sumes
+        function checkSumes() {
+            const vals = {
+                'sum-step-1': 2,
+                'sum-step-2': 4,
+                'sum-step-3': 7,
+                'sum-step-4': 12,
+                'sum-step-5': 20,
+                'sum-prediccio': 88
+            };
+            let allOk = true;
+            for (let id in vals) {
+                const el = document.getElementById(id);
+                if (parseInt(el.value) === vals[id]) {
+                    el.classList.add('cell-correct'); el.classList.remove('cell-incorrect');
+                } else {
+                    el.classList.add('cell-incorrect'); el.classList.remove('cell-correct');
+                    allOk = false;
+                }
+            }
+            const msg = document.getElementById('msg-sumes');
+            if (allOk) {
+                msg.textContent = "Molt bé! La suma de termes coincideix amb el terme situat dues posicions més enllà, menys 1.";
+                msg.className = "text-xs font-bold text-center h-4 text-emerald-600";
+            } else {
+                msg.textContent = "Revisa els càlculs de les sumes.";
+                msg.className = "text-xs font-bold text-center h-4 text-rose-600";
+            }
+        }
+
+        // Divisibilitat (Dossier pàg. 11)
+        const fibList = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610];
+        function initDivisibilityGrid() {
+            const grid = document.getElementById('fib-div-grid');
+            if (!grid || grid.children.length > 0) return;
+            fibList.forEach((num, idx) => {
+                const div = document.createElement('div');
+                div.id = `fib-div-item-${idx}`;
+                div.className = "p-2 bg-white rounded-lg border border-indigo-200 text-center font-bold text-xs sm:text-sm text-stone-800 transition";
+                div.innerHTML = `<span class="text-[10px] text-stone-400 block">${idx + 1}r</span>${num}`;
+                grid.appendChild(div);
+            });
+        }
+
+        function highlightDivisibility(mod) {
+            initDivisibilityGrid();
+            document.querySelectorAll('.div-btn-active').forEach(b => b.classList.remove('div-btn-active', 'bg-indigo-700', 'text-white'));
+            const expl = document.getElementById('div-explanation');
+
+            fibList.forEach((num, idx) => {
+                const el = document.getElementById(`fib-div-item-${idx}`);
+                if (!el) return;
+                el.className = "p-2 bg-white rounded-lg border border-indigo-200 text-center font-bold text-xs sm:text-sm text-stone-800 transition";
+                if (mod > 0 && num % mod === 0) {
+                    el.classList.add('bg-indigo-600', 'text-white', 'border-indigo-800', 'shadow');
+                }
+            });
+
+            if (mod === 2) {
+                expl.innerHTML = "<strong>Divisible per 2:</strong> Apareix als termes 3r (2), 6è (8), 9è (34), 12è (144), 15è (610)... <strong>Cada 3 termes n'apareix un!</strong>";
+            } else if (mod === 3) {
+                expl.innerHTML = "<strong>Divisible per 3:</strong> Apareix als termes 4t (3), 8è (21), 12è (144)... <strong>Cada 4 termes n'apareix un!</strong>";
+            } else if (mod === 5) {
+                expl.innerHTML = "<strong>Divisible per 5:</strong> Apareix als termes 5è (5), 10è (55), 15è (610)... <strong>Cada 5 termes n'apareix un!</strong>";
+            } else {
+                expl.innerHTML = "Clica un dels botons de filtre per descobrir la regularitat de cada divisor.";
+            }
+        }
+
+        // Espiral geomètrica
+        const strictSpiral = [
+            { n: 1, x: 3, y: 5, w: 1, h: 1, c: '#fca5a5', arc: "M 3 6 A 1 1 0 0 1 4 5", vb: "2.5 4.5 3 2.5" },
+            { n: 1, x: 4, y: 5, w: 1, h: 1, c: '#fde047', arc: "M 4 5 A 1 1 0 0 1 5 6", vb: "2.5 4.5 3.5 2.5" },
+            { n: 2, x: 3, y: 6, w: 2, h: 2, c: '#86efac', arc: "M 5 6 A 2 2 0 0 1 3 8", vb: "2.5 4.5 3.5 4.5" },
+            { n: 3, x: 0, y: 5, w: 3, h: 3, c: '#93c5fd', arc: "M 3 8 A 3 3 0 0 1 0 5", vb: "-0.5 4.5 6.5 4.5" },
+            { n: 5, x: 0, y: 0, w: 5, h: 5, c: '#c4b5fd', arc: "M 0 5 A 5 5 0 0 1 5 0", vb: "-0.5 -0.5 6.5 9.5" },
+            { n: 8, x: 5, y: 0, w: 8, h: 8, c: '#fdba74', arc: "M 5 0 A 8 8 0 0 1 13 8", vb: "-0.5 -0.5 14 9.5" },
+            { n: 13, x: 0, y: 8, w: 13, h: 13, c: '#f9a8d4', arc: "M 13 8 A 13 13 0 0 1 0 21", vb: "-0.5 -0.5 14 22" }
+        ];
+
+        let spiralIndex = 0;
+
+        function addSpiralStep() {
+            if (spiralIndex < strictSpiral.length) {
+                const sq = strictSpiral[spiralIndex];
+                const group = document.getElementById('spiral-shapes-group');
+
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", sq.x);
+                rect.setAttribute("y", sq.y);
+                rect.setAttribute("width", sq.w);
+                rect.setAttribute("height", sq.h);
+                rect.setAttribute("fill", sq.c);
+                rect.setAttribute("stroke", "#475569");
+                rect.setAttribute("stroke-width", "0.08");
+                rect.setAttribute("opacity", "0.9");
+                group.appendChild(rect);
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", sq.x + sq.w / 2);
+                text.setAttribute("y", sq.y + sq.h / 2 + (sq.w >= 3 ? 0.4 : 0.25));
+                text.setAttribute("font-size", sq.w >= 5 ? "1.5" : (sq.w >= 2 ? "1.0" : "0.55"));
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("fill", "#1e293b");
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = sq.n;
+                group.appendChild(text);
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", sq.arc);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#b91c1c");
+                path.setAttribute("stroke-width", "0.22");
+                path.setAttribute("stroke-linecap", "round");
+                group.appendChild(path);
+
+                document.getElementById('spiral-svg-canvas').setAttribute('viewBox', sq.vb);
+
+                spiralIndex++;
+                document.getElementById('spiral-caption').textContent = `Quadrat de mida ${sq.n}x${sq.n} afegit`;
+
+                if (spiralIndex === strictSpiral.length) {
+                    document.getElementById('btn-add-spiral').disabled = true;
+                    document.getElementById('btn-add-spiral').classList.add('opacity-50');
+                    document.getElementById('spiral-caption').textContent = "";
+                    document.getElementById('spiral-caption').style.display = "none";
+                }
+            }
+        }
+
+        function resetSpiral() {
+            spiralIndex = 0;
+            document.getElementById('spiral-shapes-group').innerHTML = '';
+            document.getElementById('spiral-svg-canvas').setAttribute('viewBox', "-0.5 -0.5 14 22");
+            document.getElementById('btn-add-spiral').disabled = false;
+            document.getElementById('btn-add-spiral').classList.remove('opacity-50');
+            document.getElementById('spiral-caption').style.display = "inline-block";
+            document.getElementById('spiral-caption').textContent = "Prem 'Afegir quadrat' per començar";
+        }
+
+        // Natura: Visor de fulles concèntriques (Dossier pàg. 16-17)
+        
+        let selectedLeaves = [];
+        let leafAngles = {};
+        
+        function initPlantLeafViewer() {
+            const svg = document.getElementById('plant-svg');
+            if (!svg || svg.children.length > 0) return;
+            const cx = 150, cy = 150;
+            const goldenAngle = 137.5; // graus
+            const radFactor = Math.PI / 180;
+
+            // Capa de fons o fletxes
+            const arrowLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            arrowLayer.id = "plant-arrows";
+            svg.appendChild(arrowLayer);
+            
+            const sectorLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            sectorLayer.id = "plant-sectors";
+            svg.appendChild(sectorLayer);
+
+            for (let i = 8; i >= 1; i--) {
+                const r = 25 + i * 11;
+                // Ajustem l'angle base perquè quedi similar a la imatge:
+                // Leaf 1 cap a baix-esquerra aproximadament.
+                const theta = 120 + (i - 1) * goldenAngle;
+                leafAngles[i] = theta % 360;
+                const x = cx + r * Math.cos(theta * radFactor);
+                const y = cy + r * Math.sin(theta * radFactor);
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "cursor-pointer transition-transform hover:scale-105 origin-center");
+                g.setAttribute("onclick", `handleLeafClick(${i}, ${x}, ${y})`);
+                g.style.transformOrigin = `${x}px ${y}px`;
+
+                // Línia de radi al centre (verda, dashed)
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", cx);
+                line.setAttribute("y1", cy);
+                line.setAttribute("x2", x);
+                line.setAttribute("y2", y);
+                line.setAttribute("stroke", "#22c55e");
+                line.setAttribute("stroke-width", "1");
+                line.setAttribute("stroke-dasharray", "3,3");
+                line.setAttribute("opacity", "0.6");
+                svg.appendChild(line);
+
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", 12 + (i * 1.5));
+                circle.setAttribute("fill", "#86efac"); // Verd clar com a la imatge
+                circle.setAttribute("id", `leaf-circle-${i}`);
+                circle.setAttribute("transition", "all 0.2s");
+                g.appendChild(circle);
+
+                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                txt.setAttribute("x", x);
+                txt.setAttribute("y", y + 4);
+                txt.setAttribute("text-anchor", "middle");
+                txt.setAttribute("font-size", "12");
+                txt.setAttribute("font-weight", "bold");
+                txt.setAttribute("fill", "#064e3b");
+                txt.textContent = i;
+                g.appendChild(txt);
+
+                svg.appendChild(g);
+            }
+
+            // Centre de la planta (punt groc/taronja)
+            const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            centerCircle.setAttribute("cx", cx);
+            centerCircle.setAttribute("cy", cy);
+            centerCircle.setAttribute("r", 7);
+            centerCircle.setAttribute("fill", "#f59e0b");
+            svg.appendChild(centerCircle);
+        }
+
+        function handleLeafClick(leafNum, lx, ly) {
+            const circle = document.getElementById(`leaf-circle-${leafNum}`);
+            if(!circle) return;
+
+            // Si ja està seleccionada, la deseleccionem i reiniciem
+            if(selectedLeaves.includes(leafNum)) {
+                resetLeafSelection();
+                return;
+            }
+
+            selectedLeaves.push(leafNum);
+            circle.setAttribute("fill", "#34d399"); // Highlight color
+            circle.setAttribute("stroke", "#047857");
+            circle.setAttribute("stroke-width", "3");
+
+            if(selectedLeaves.length === 2) {
+                // Comprovem si són consecutives (diferència de 1)
+                const l1 = selectedLeaves[0];
+                const l2 = selectedLeaves[1];
+                const diff = Math.abs(l1 - l2);
+                
+                if(diff === 1) {
+                    // Mostrar arc d'angle
+                    drawLeafAngle(l1, l2);
+                    // Mostrar a la taula
+                    const minL = Math.min(l1, l2);
+                    updateLeafTable(minL, 137.5);
+                } else {
+                    alert("Selecciona dues fulles consecutives! (per exemple: 1 i 2)");
+                }
+                // Després de processar, resetejem per a la següent mesura al cap d'un instant
+                setTimeout(() => {
+                    resetLeafSelection();
+                }, 600);
+            }
+        }
+
+        function drawLeafAngle(l1, l2) {
+            const svg = document.getElementById('plant-svg');
+            const sectorLayer = document.getElementById('plant-sectors');
+            if(!sectorLayer) return;
+            sectorLayer.innerHTML = ''; // Netejar l'arc anterior
+            
+            const cx = 150, cy = 150;
+            const r_arc = 40;
+            const radFactor = Math.PI / 180;
+            
+            // Per anar de l1 a l2 correctament, mirem quin és quin angle
+            // L'angle sempre és de 137.5 deg
+            let th1 = leafAngles[l1];
+            let th2 = leafAngles[l2];
+            
+            // Volem dibuixar el sector curt
+            // Arc path
+            const x1 = cx + r_arc * Math.cos(th1 * radFactor);
+            const y1 = cy + r_arc * Math.sin(th1 * radFactor);
+            const x2 = cx + r_arc * Math.cos(th2 * radFactor);
+            const y2 = cy + r_arc * Math.sin(th2 * radFactor);
+            
+            // Com que sabem que l'angle és de 137.5 (< 180), l'arc gran serà 0.
+            // Calculem el sentit (sweep). Si th2 - th1 normalitzat és positiu:
+            let delta = (th2 - th1) % 360;
+            if (delta < 0) delta += 360;
+            let sweep = delta <= 180 ? 1 : 0;
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", `M ${cx} ${cy} L ${x1} ${y1} A ${r_arc} ${r_arc} 0 0 ${sweep} ${x2} ${y2} Z`);
+            path.setAttribute("fill", "rgba(250, 204, 21, 0.4)");
+            path.setAttribute("stroke", "#ca8a04");
+            path.setAttribute("stroke-width", "2");
+            sectorLayer.appendChild(path);
+        }
+
+        function resetLeafSelection() {
+            selectedLeaves.forEach(num => {
+                const c = document.getElementById(`leaf-circle-${num}`);
+                if(c) {
+                    c.setAttribute("fill", "#86efac");
+                    c.removeAttribute("stroke");
+                }
+            });
+            selectedLeaves = [];
+        }
+
+        function updateLeafTable(minL, val) {
+            // Busquem l'element per actualitzar
+            const elId = `leaf-mesura-${minL}`;
+            const el = document.getElementById(elId);
+            if(el) {
+                el.textContent = `${val}º`;
+                el.classList.add('text-emerald-700', 'font-bold', 'scale-110', 'transition-transform');
+                setTimeout(() => el.classList.remove('scale-110'), 300);
+            }
+        }
+
+
+        // Simulador de gira-sol (Model de Vogel)
+        function setNatureAngle(angle) {
+            document.getElementById('nature-slider').value = angle;
+            renderSunflower();
+        }
+
+        function renderSunflower() {
+            const slider = document.getElementById('nature-slider');
+            if (!slider) return;
+            const angleDeg = parseFloat(slider.value);
+            document.getElementById('nature-angle-val').textContent = angleDeg.toFixed(1) + "º";
+
+            const canvas = document.getElementById('sunflower-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const nSeeds = 350;
+            const cSpread = 7.5;
+            const angleRad = angleDeg * (Math.PI / 180);
+
+            for (let i = 1; i <= nSeeds; i++) {
+                const r = cSpread * Math.sqrt(i);
+                const theta = i * angleRad;
+                const x = cx + r * Math.cos(theta);
+                const y = cy + r * Math.sin(theta);
+
+                if (r > cx - 6) break;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 2.7, 0, 2 * Math.PI);
+
+                if (i < 80) ctx.fillStyle = '#fde047';
+                else if (i < 200) ctx.fillStyle = '#eab308';
+                else ctx.fillStyle = '#b45309';
+
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+            }
+
+            const feedback = document.getElementById('nature-feedback-box');
+            if (angleDeg >= 137.4 && angleDeg <= 137.6) {
+                feedback.className = "p-3 rounded-xl text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-900 border border-emerald-400";
+                feedback.textContent = "Distribució uniforme detectada. Es formen espirals netes.";
+                document.getElementById('nature-angle-val').className = "font-black text-4xl sm:text-5xl text-emerald-600";
+            } else {
+                feedback.className = "p-3 rounded-xl text-xs sm:text-sm font-bold bg-stone-100 text-stone-700 border border-stone-300";
+                feedback.textContent = "Els punts es concentren en radis o deixen espais sense ocupar.";
+                document.getElementById('nature-angle-val').className = "font-black text-4xl sm:text-5xl text-yellow-600";
+            }
+        }
+
+        // Abelles: Traçador de camins interactiu
+        const nodePositions = {
+            'Sortida': { x: 80, y: 138 },
+            'A': { x: 200, y: 184 },
+            'B': { x: 200, y: 92 },
+            'C': { x: 320, y: 184 },
+            'D': { x: 320, y: 92 },
+            'E': { x: 440, y: 138 }
+        };
+
+        const validTransitions = {
+            'Sortida': ['A', 'B'],
+            'A': ['B', 'C'],
+            'B': ['C', 'D'],
+            'C': ['D', 'E'],
+            'D': ['E'],
+            'E': []
+        };
+
+        let currentBeePath = ['Sortida'];
+        let savedPaths = new Set();
+
+        function handleBeeCellClick(cell) {
+            const lastCell = currentBeePath[currentBeePath.length - 1];
+            if (cell === 'Sortida') {
+                resetBeePath();
+                return;
+            }
+            if (validTransitions[lastCell] && validTransitions[lastCell].includes(cell)) {
+                currentBeePath.push(cell);
+                updateBeePathDisplay();
+            }
+        }
+
+        function resetBeePath() {
+            currentBeePath = ['Sortida'];
+            updateBeePathDisplay();
+        }
+
+        function updateBeePathDisplay() {
+            document.getElementById('current-bee-path').textContent = currentBeePath.join(" ➔ ");
+            const layer = document.getElementById('active-path-layer');
+            layer.innerHTML = '';
+
+            for (let i = 0; i < currentBeePath.length - 1; i++) {
+                const p1 = nodePositions[currentBeePath[i]];
+                const p2 = nodePositions[currentBeePath[i + 1]];
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", p1.x);
+                line.setAttribute("y1", p1.y);
+                line.setAttribute("x2", p2.x);
+                line.setAttribute("y2", p2.y);
+                line.setAttribute("stroke", "#dc2626");
+                line.setAttribute("stroke-width", "4");
+                line.setAttribute("stroke-linecap", "round");
+                layer.appendChild(line);
+            }
+        }
+
+        function saveCurrentBeePath() {
+            if (currentBeePath[currentBeePath.length - 1] === 'E') {
+                const pathStr = currentBeePath.join("➔");
+                if (!savedPaths.has(pathStr)) {
+                    savedPaths.add(pathStr);
+                    const list = document.getElementById('saved-paths-list');
+                    const span = document.createElement('span');
+                    span.className = "bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded text-[11px] font-bold";
+                    span.textContent = currentBeePath.join(" ➔ ");
+                    list.appendChild(span);
+                    document.getElementById('saved-paths-count').textContent = savedPaths.size;
+                }
+            } else {
+                alert("Completa el camí fins a la cel·la E per poder-lo desar!");
+            }
+        }
+
+        function checkBeeValues() {
+            const a = parseInt(document.getElementById('bee-val-a').value);
+            const b = parseInt(document.getElementById('bee-val-b').value);
+            const c = parseInt(document.getElementById('bee-val-c').value);
+            const d = parseInt(document.getElementById('bee-val-d').value);
+            const e = parseInt(document.getElementById('bee-val-e').value);
+
+            let okA = (a === 1);
+            let okB = (b === 2);
+            let okC = (c === 3);
+            let okD = (d === 5);
+            let okE = (e === 8);
+
+            document.getElementById('bee-val-a').className = okA ? 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-correct' : 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-incorrect';
+            document.getElementById('bee-val-b').className = okB ? 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-correct' : 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-incorrect';
+            document.getElementById('bee-val-c').className = okC ? 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-correct' : 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-incorrect';
+            document.getElementById('bee-val-d').className = okD ? 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-correct' : 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-incorrect';
+            document.getElementById('bee-val-e').className = okE ? 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-correct' : 'w-full p-1.5 border-2 rounded-lg text-center font-bold text-sm cell-incorrect';
+
+            const msg = document.getElementById('msg-abelles');
+            if (okA && okB && okC && okD && okE) {
+                msg.textContent = "Correcte! Els camins totals segueixen la successió: 1, 2, 3, 5, 8.";
+                msg.className = "text-xs sm:text-sm font-bold text-emerald-700 mt-2 text-center h-4";
+            } else {
+                msg.textContent = "Revisa el recompte: suma els camins de les cel·les que connecten cap endavant.";
+                msg.className = "text-xs sm:text-sm font-bold text-rose-600 mt-2 text-center h-4";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setStairCount(6);
+            renderSunflower();
+            resetSpiral();
+            initDivisibilityGrid();
+            initPlantLeafViewer();
+            updateBeePathDisplay();
+        });
+    </script>
+</body>
+</html>
