@@ -83,7 +83,6 @@
         <!-- VISTA 1: TAULER -->
         <main v-if="vistaActual === 'tauler'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
-                <!-- Registre d'absències múltiple -->
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-lg font-semibold border-b pb-2 mb-4">Registrar absència</h3>
                     <div class="space-y-4">
@@ -216,7 +215,6 @@
                         </div>
                     </div>
 
-                    <!-- NOU LECTOR DE WORD: Intel·ligent i avançat -->
                     <div v-if="mestreSeleccionatHorari" class="bg-indigo-50 border border-indigo-200 rounded p-4 mb-4">
                         <h4 class="font-bold text-indigo-900 mb-1"><i class="fa-solid fa-paste"></i> Màgia: Enganxa la taula del Word</h4>
                         <p class="text-xs text-indigo-700 mb-2">Selecciona la graella del Word (hores i dies), copia-la sencera i enganxa-la aquí dins.</p>
@@ -340,6 +338,7 @@
             
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-teal-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">3. Blocs horaris</h3>
+                <p class="text-xs text-gray-500 mb-3 leading-tight">Perquè la importació des del Word funcioni bé, pots posar als blocs el nom que vulguis, el sistema és intel·ligent i detectarà l'hora per números.</p>
                 <div class="flex flex-col gap-2 mb-4 bg-gray-50 p-2 rounded border">
                     <input v-model="nouBlocNom" type="text" placeholder="Nom (Ex: 09:00 - 10:00)" class="border p-1.5 rounded text-sm">
                     <div class="flex gap-2">
@@ -426,7 +425,6 @@
                 return agrupats;
             });
 
-            // --- CARREGAR DADES ---
             const carregarDadesBase = async () => {
                 const [resDocents, resBlocs, resAssignacions, resGrups] = await Promise.all([
                     db.from('docents').select('*').order('nom'),
@@ -498,12 +496,25 @@
                 mestreAClonar.value = '';
             };
 
-            // NOU MOTOR LECTOR DE WORD: Intel·ligent i a prova de cel·les fusionades
+            // NOU MOTOR LECTOR DE WORD: Intel·ligent, matemàtic i a prova de cel·les fusionades
             const importarGraellaWord = async () => {
                 if(!mestreSeleccionatHorari.value) return alert("Selecciona primer el mestre al desplegable de dalt.");
                 if(!textGraellaWord.value.trim()) return alert("El quadre de text està buit.");
 
-                // Funcio clau per evitar que els salts de línia de dins d'una casella de Word trenquin la taula
+                // Funcio clau per extreure les hores matemàticament (13:30h a 15h => 13:30-15:0)
+                const extreureTemps = (str) => {
+                    const matchers = [...str.matchAll(/(\d{1,2})(?:[:.](\d{2}))?/g)];
+                    if(matchers.length >= 2) {
+                        let h1 = parseInt(matchers[0][1]);
+                        let m1 = matchers[0][2] ? parseInt(matchers[0][2]) : 0;
+                        let h2 = parseInt(matchers[1][1]);
+                        let m2 = matchers[1][2] ? parseInt(matchers[1][2]) : 0;
+                        return `${h1}:${m1}-${h2}:${m2}`;
+                    }
+                    return null;
+                };
+
+                // Funcio per llegir TSV respectant salts de línia interns de cel·les
                 const parseTSV = (text) => {
                     let rows = [], curRow = [], curCell = '', inQuotes = false;
                     text = text.replace(/\r/g, ''); 
@@ -539,28 +550,25 @@
                     if(columnes.length < 2) continue; 
 
                     let horaWord = columnes[0].toLowerCase().trim();
-                    // Si la primera columna no té cap número, saltem (són els títols)
-                    if(horaWord === '' || !/\d/.test(horaWord)) continue; 
+                    // Ignorar la fila de títols
+                    if(horaWord === '' || horaWord.includes('hora') || horaWord.includes('dilluns') || !/\d/.test(horaWord)) continue; 
                     
                     horesTrobades.push(horaWord);
 
-                    // Lògica matemàtica de cerca d'hores
+                    // Lògica matemàtica imbatible de cerca d'hores
+                    const tempsWord = extreureTemps(horaWord);
+                    
                     const blocMatch = horariEscola.value.find(b => {
-                        const nW = horaWord.match(/\d+/g);
-                        const nA = b.nom.match(/\d+/g);
-                        if(nW && nA) {
-                            // Converteix a enters per treure els "0" de l'esquerra: 09 === 9
-                            return nW.map(n => parseInt(n)).join('-') === nA.map(n => parseInt(n)).join('-');
-                        }
-                        return false;
+                        const tempsApp = extreureTemps(b.nom);
+                        return tempsWord !== null && tempsWord === tempsApp;
                     });
 
                     if(!blocMatch) continue;
 
-                    // Iterem pels 5 dies
+                    // Les columnes 1 a 5 són de Dilluns a Divendres
                     for(let d=1; d<=5; d++) {
                         let textCasella = (columnes[d] || '').trim();
-                        textCasella = textCasella.replace(/^"|"$/g, '').trim(); 
+                        textCasella = textCasella.replace(/^"|"$/g, '').trim(); // Neteja cometes de fusió
                         
                         if(textCasella !== '') {
                             let isComodi = textCasella.toLowerCase().includes('comodí') || textCasella.toLowerCase().includes('guàrdia');
@@ -585,12 +593,12 @@
                     else {
                         assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== mestreSeleccionatHorari.value);
                         assignacionsHorari.value.push(...data);
-                        alert(`✅ Taula llegida perfectament! S'han assignat ${nousRegistres.length} hores al mestre.`);
+                        alert(`✅ Taula llegida perfectament! S'han assignat ${nousRegistres.length} caselles al mestre.`);
                         textGraellaWord.value = '';
                     }
                 } else {
-                    let horesUniques = [...new Set(horesTrobades)].slice(0, 5).join(" | ");
-                    alert("❌ No he pogut relacionar les hores.\n\nEl sistema ha intentat llegir aquestes hores de la teva taula:\n" + horesUniques + "\n\nAssegura't de que coincideixin exactament amb les hores que tens donades d'alta a la pestanya 'Configuració'.");
+                    let horesUniques = [...new Set(horesTrobades)].join("\n- ");
+                    alert("❌ No he pogut relacionar les hores.\n\nEl sistema ha extret aquests números de la teva taula:\n- " + horesUniques + "\n\nCap d'aquests números coincideix amb els que has creat a 'Configuració'.");
                 }
             };
 
@@ -708,7 +716,7 @@
                 dataAvui, nomDiaAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
                 horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, grupEditat, textGraellaWord,
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
-                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, nouGrupNom, nouBlocNom, nouBlocMinuts,
+                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, horarisMassius, nouGrupNom, nouBlocNom, nouBlocMinuts,
                 iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup, importarGraellaWord,
                 mestresDisponiblesAvui, obtenirNomDocent, registrarAbsencia, eliminarAbsencia, prepararNovaAssignacio, 
                 confirmarAssignacio, esborrarAssignacio, opcionsDurada, afegirMestre, iniciarEdicioMestre, guardarEdicioMestre, afegirMestresMassiu, esborrarMestre,
