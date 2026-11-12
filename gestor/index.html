@@ -6,6 +6,7 @@
     <title>Gestor de Substitucions - Escola Eugeni d'Ors</title>
     
     <style>
+        /* El v-cloak amaga l'aplicació fins que Vue està llest per evitar pampallugues */
         [v-cloak] { display: none !important; }
         .fila-fraccio td { padding-top: 4px; padding-bottom: 4px; border-bottom: none; }
     </style>
@@ -17,6 +18,15 @@
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
 
+<!-- Caixa d'Error Diagnòstic (Només es mostra si hi ha un error fatal) -->
+<div id="pantalla-error" style="display: none; max-width: 600px; margin: 40px auto; background: #fee2e2; color: #991b1b; padding: 20px; border-radius: 8px; border: 1px solid #f87171;">
+    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-triangle-exclamation"></i> S'ha aturat l'aplicació</h2>
+    <p>Hi ha un error tècnic que impedeix carregar el gestor. Aquest és el missatge de l'ordinador:</p>
+    <p id="text-error" style="margin-top: 10px; font-family: monospace; background: white; padding: 10px; border-radius: 4px;"></p>
+    <p style="margin-top: 15px; font-size: 0.9em;">Prem <b>F12</b> al teclat i ves a la pestanya "Console" per veure més detalls.</p>
+</div>
+
+<!-- INICI DE L'APLICACIÓ -->
 <div id="app" v-cloak>
     
     <!-- PANTALLA DE LOGIN -->
@@ -49,7 +59,6 @@
 
     <!-- PANELL PRINCIPAL -->
     <div v-else class="min-h-screen flex flex-col">
-        
         <header class="bg-blue-700 text-white shadow">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -70,10 +79,8 @@
         </header>
 
         <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
             <!-- COLUMNA ESQUERRA -->
             <div class="lg:col-span-1 space-y-6">
-                
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Registrar Absència</h3>
                     <div class="space-y-4">
@@ -84,7 +91,6 @@
                                 <option v-for="d in docents" :key="d.id" :value="d.id">{{ d.nom }}</option>
                             </select>
                         </div>
-                        
                         <div>
                             <label class="block text-sm text-gray-600 mb-1">Bloc Horari de l'Escola</label>
                             <select v-model="novaAbsencia.franja_escola" class="w-full border-gray-300 rounded-md shadow-sm border p-2 bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
@@ -92,7 +98,6 @@
                                 <option v-for="bloc in horariEscola" :key="bloc.id" :value="bloc">{{ bloc.nom }} ({{ bloc.minuts_totals }} min)</option>
                             </select>
                         </div>
-
                         <button @click="registrarAbsencia" class="w-full bg-blue-50 text-blue-700 font-semibold py-2 rounded border border-blue-200 hover:bg-blue-100 transition">
                             <i class="fa-solid fa-plus mr-2"></i>Afegir a la taula
                         </button>
@@ -114,13 +119,13 @@
                 </div>
             </div>
 
-            <!-- COLUMNA DRETA: Tauler amb fraccionament de substitucions -->
+            <!-- COLUMNA DRETA -->
             <div class="lg:col-span-2">
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-800">Tauler de Substitucions</h3>
                         <span v-if="minutsPendentsTotals > 0" class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-full border border-red-200">
-                            {{ minutsPendentsTotals }} min. pendents d'assignar
+                            {{ minutsPendentsTotals }} min. pendents
                         </span>
                         <span v-else-if="llistaAbsencies.length > 0" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full border border-green-200">
                             Tot cobert
@@ -138,7 +143,6 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                
                                 <tr v-if="llistaAbsencies.length === 0">
                                     <td colspan="4" class="px-6 py-8 text-center text-gray-500">
                                         <i class="fa-solid fa-mug-hot text-3xl mb-2 text-gray-300"></i>
@@ -147,7 +151,6 @@
                                 </tr>
 
                                 <template v-for="(abs, indexAbs) in llistaAbsencies" :key="abs.id">
-                                    
                                     <tr class="bg-gray-50">
                                         <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-bold">
                                             {{ abs.nomDocent }}
@@ -156,12 +159,8 @@
                                             <i class="fa-regular fa-clock text-gray-400 mr-1"></i> {{ abs.blocNom }}
                                         </td>
                                         <td class="px-6 py-3 whitespace-nowrap">
-                                            <span v-if="abs.minutsPendents > 0" class="text-xs font-bold text-red-600">
-                                                Falten {{ abs.minutsPendents }} min.
-                                            </span>
-                                            <span v-else class="text-xs font-bold text-green-600">
-                                                Cobertura completa
-                                            </span>
+                                            <span v-if="abs.minutsPendents > 0" class="text-xs font-bold text-red-600">Falten {{ abs.minutsPendents }} min.</span>
+                                            <span v-else class="text-xs font-bold text-green-600">Cobertura completa</span>
                                         </td>
                                         <td class="px-6 py-3 whitespace-nowrap text-right text-sm">
                                             <button v-if="abs.minutsPendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-300 rounded px-2 py-1 bg-white">
@@ -188,13 +187,13 @@
                                             <div class="flex items-center gap-2 justify-end w-full">
                                                 <span class="text-xs text-gray-500">Temps a cobrir:</span>
                                                 <select v-model="assignacioEnCurs.durada" class="border-gray-300 rounded shadow-sm text-xs p-1">
-                                                    <option v-for="opt in opcionsDurada(abs.minutsPendents)" :value="opt">{{ opt }} min</option>
+                                                    <option v-for="opt in opcionsDurada(abs.minutsPendents)" :key="opt" :value="opt">{{ opt }} min</option>
                                                 </select>
                                                 
                                                 <span class="text-xs text-gray-500 ml-2">Per:</span>
                                                 <select v-model="assignacioEnCurs.substitut" class="border-gray-300 rounded shadow-sm text-xs p-1">
                                                     <option value="" disabled>Selecciona docent...</option>
-                                                    <option v-for="d in docents" :value="d">{{ d.nom }}</option>
+                                                    <option v-for="d in docents" :key="d.id" :value="d">{{ d.nom }}</option>
                                                 </select>
 
                                                 <button @click="confirmarAssignacio()" class="ml-2 bg-green-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-green-700">Guardar</button>
@@ -202,10 +201,8 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    
                                     <tr class="border-t-2 border-gray-100"><td colspan="4" class="p-0"></td></tr>
                                 </template>
-
                             </tbody>
                         </table>
                     </div>
@@ -216,154 +213,171 @@
 </div>
 
 <script>
-    // Connexió real a Supabase activada amb les teves dades
-    const supabaseUrl = 'https://cdrubcjbbpcywrppkyma.supabase.co';
-    const supabaseKey = 'sb_publishable_iYZT4fhgUBGuCDIQ56Zhjw_smcwJG3b';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // 1. GESTOR D'ERRORS GLOBAL
+    // Si alguna cosa falla abans que s'iniciï, traurem el "v-cloak" i mostrarem l'error vermell.
+    window.onerror = function(missatge) {
+        document.getElementById('pantalla-error').style.display = 'block';
+        document.getElementById('text-error').innerText = missatge;
+        var appDiv = document.getElementById('app');
+        if(appDiv) appDiv.style.display = 'none';
+    };
 
-    const { createApp, ref, computed, onMounted } = Vue;
+    try {
+        // 2. CONNEXIÓ A SUPABASE
+        const supabaseUrl = 'https://cdrubcjbbpcywrppkyma.supabase.co';
+        const supabaseKey = 'sb_publishable_iYZT4fhgUBGuCDIQ56Zhjw_smcwJG3b';
+        
+        // Això fallarà si la clau no és vàlida
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    createApp({
-        setup() {
-            const usuariAutenticat = ref(false);
-            const correu = ref('');
-            const contrasenya = ref('');
-            const errorLogin = ref('');
-            const dataAvui = new Date().toLocaleDateString('ca-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            const docents = ref([
-                { id: '1', nom: 'Martínez, Laura' },
-                { id: '2', nom: 'Serra, Albert' },
-                { id: '3', nom: 'Garcia, M.' },
-                { id: '4', nom: 'López, J.' },
-                { id: '5', nom: 'Vidal, Carme' }
-            ]);
+        const { createApp, ref, computed, onMounted } = Vue;
 
-            const horariEscola = ref([
-                { id: 'h1', nom: '09:00 - 10:00', minuts_totals: 60, guardies: ['Garcia, M.', 'López, J.'] },
-                { id: 'h2', nom: '10:00 - 11:00', minuts_totals: 60, guardies: ['Serra, A.'] },
-                { id: 'h3', nom: '11:00 - 11:30 (Pati)', minuts_totals: 30, guardies: ['Vidal, C.'] },
-                { id: 'h4', nom: '11:30 - 12:30', minuts_totals: 60, guardies: ['Garcia, M.', 'Martínez, L.'] },
-                { id: 'h5', nom: '15:00 - 16:30', minuts_totals: 90, guardies: ['López, J.'] }
-            ]);
-            
-            const novaAbsencia = ref({ docent_id: '', franja_escola: '' });
-            const llistaAbsencies = ref([]);
-            const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
-
-            const minutsPendentsTotals = computed(() => {
-                let total = 0;
-                llistaAbsencies.value.forEach(abs => { total += abs.minutsPendents; });
-                return total;
-            });
-
-            // Comprova si ja tenim la sessió iniciada de l'última vegada en carregar la pàgina
-            onMounted(async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    usuariAutenticat.value = true;
-                    correu.value = session.user.email;
-                }
-            });
-
-            const iniciarSessio = async () => {
-                errorLogin.value = '';
-                if (!correu.value || !contrasenya.value) {
-                    errorLogin.value = "Has d'introduir correu i contrasenya.";
-                    return;
-                }
-
-                // Autenticació real amb Supabase
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: correu.value,
-                    password: contrasenya.value
-                });
-
-                if (error) {
-                    errorLogin.value = "Credencials incorrectes o usuari inexistent.";
-                } else {
-                    usuariAutenticat.value = true;
-                }
-            };
-
-            const tancarSessio = async () => {
-                await supabase.auth.signOut();
-                usuariAutenticat.value = false;
-                contrasenya.value = '';
-            };
-
-            const registrarAbsencia = () => {
-                if(!novaAbsencia.value.docent_id || !novaAbsencia.value.franja_escola) {
-                    alert("Si us plau, selecciona el docent i el bloc horari.");
-                    return;
-                }
-
-                const docent = docents.value.find(d => d.id === novaAbsencia.value.docent_id);
-                const bloc = novaAbsencia.value.franja_escola;
+        createApp({
+            setup() {
+                const usuariAutenticat = ref(false);
+                const correu = ref('');
+                const contrasenya = ref('');
+                const errorLogin = ref('');
+                const dataAvui = new Date().toLocaleDateString('ca-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 
-                llistaAbsencies.value.push({
-                    id: Date.now(),
-                    docentId: docent.id,
-                    nomDocent: docent.nom,
-                    blocId: bloc.id,
-                    blocNom: bloc.nom,
-                    minutsTotals: bloc.minuts_totals,
-                    minutsPendents: bloc.minuts_totals,
-                    assignacions: []
+                const docents = ref([
+                    { id: '1', nom: 'Martínez, Laura' },
+                    { id: '2', nom: 'Serra, Albert' },
+                    { id: '3', nom: 'Garcia, M.' },
+                    { id: '4', nom: 'López, J.' },
+                    { id: '5', nom: 'Vidal, Carme' }
+                ]);
+
+                const horariEscola = ref([
+                    { id: 'h1', nom: '09:00 - 10:00', minuts_totals: 60, guardies: ['Garcia, M.', 'López, J.'] },
+                    { id: 'h2', nom: '10:00 - 11:00', minuts_totals: 60, guardies: ['Serra, A.'] },
+                    { id: 'h3', nom: '11:00 - 11:30 (Pati)', minuts_totals: 30, guardies: ['Vidal, C.'] },
+                    { id: 'h4', nom: '11:30 - 12:30', minuts_totals: 60, guardies: ['Garcia, M.', 'Martínez, L.'] },
+                    { id: 'h5', nom: '15:00 - 16:30', minuts_totals: 90, guardies: ['López, J.'] }
+                ]);
+                
+                const novaAbsencia = ref({ docent_id: '', franja_escola: '' });
+                const llistaAbsencies = ref([]);
+                const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
+
+                const minutsPendentsTotals = computed(() => {
+                    let total = 0;
+                    llistaAbsencies.value.forEach(abs => { total += abs.minutsPendents; });
+                    return total;
                 });
 
-                novaAbsencia.value = { docent_id: '', franja_escola: '' };
-            };
+                onMounted(async () => {
+                    // Si hi ha error de connexió aquí, es mostrarà la caixa d'error
+                    try {
+                        const { data: { session }, error } = await supabase.auth.getSession();
+                        if (session) {
+                            usuariAutenticat.value = true;
+                            correu.value = session.user.email;
+                        }
+                    } catch (e) {
+                        console.error("Error al carregar la sessió:", e);
+                    }
+                });
 
-            const opcionsDurada = (maxMinuts) => {
-                const opcions = [];
-                for(let i = 15; i <= maxMinuts; i += 15) { opcions.push(i); }
-                return opcions;
-            };
+                const iniciarSessio = async () => {
+                    errorLogin.value = '';
+                    if (!correu.value || !contrasenya.value) {
+                        errorLogin.value = "Has d'introduir correu i contrasenya.";
+                        return;
+                    }
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: correu.value,
+                        password: contrasenya.value
+                    });
+                    if (error) {
+                        errorLogin.value = "Credencials incorrectes o usuari inexistent.";
+                    } else {
+                        usuariAutenticat.value = true;
+                    }
+                };
 
-            const prepararNovaAssignacio = (abs) => {
-                assignacioEnCurs.value = { absenciaId: abs.id, durada: abs.minutsPendents, substitut: '' };
-            };
+                const tancarSessio = async () => {
+                    await supabase.auth.signOut();
+                    usuariAutenticat.value = false;
+                    contrasenya.value = '';
+                };
 
-            const cancelarAssignacioEnCurs = () => {
-                assignacioEnCurs.value = { absenciaId: null, durada: null, substitut: '' };
-            };
+                const registrarAbsencia = () => {
+                    if(!novaAbsencia.value.docent_id || !novaAbsencia.value.franja_escola) {
+                        alert("Si us plau, selecciona el docent i el bloc horari.");
+                        return;
+                    }
+                    const docent = docents.value.find(d => d.id === novaAbsencia.value.docent_id);
+                    const bloc = novaAbsencia.value.franja_escola;
+                    
+                    llistaAbsencies.value.push({
+                        id: Date.now(),
+                        docentId: docent.id,
+                        nomDocent: docent.nom,
+                        blocId: bloc.id,
+                        blocNom: bloc.nom,
+                        minutsTotals: bloc.minuts_totals,
+                        minutsPendents: bloc.minuts_totals,
+                        assignacions: []
+                    });
+                    novaAbsencia.value = { docent_id: '', franja_escola: '' };
+                };
 
-            const confirmarAssignacio = () => {
-                if(!assignacioEnCurs.value.substitut || !assignacioEnCurs.value.durada) {
-                    alert("Selecciona el docent substitut i el temps.");
-                    return;
+                const opcionsDurada = (maxMinuts) => {
+                    const opcions = [];
+                    for(let i = 15; i <= maxMinuts; i += 15) { opcions.push(i); }
+                    return opcions;
+                };
+
+                const prepararNovaAssignacio = (abs) => {
+                    assignacioEnCurs.value = { absenciaId: abs.id, durada: abs.minutsPendents, substitut: '' };
+                };
+
+                const cancelarAssignacioEnCurs = () => {
+                    assignacioEnCurs.value = { absenciaId: null, durada: null, substitut: '' };
+                };
+
+                const confirmarAssignacio = () => {
+                    if(!assignacioEnCurs.value.substitut || !assignacioEnCurs.value.durada) {
+                        alert("Selecciona el docent substitut i el temps.");
+                        return;
+                    }
+                    const abs = llistaAbsencies.value.find(a => a.id === assignacioEnCurs.value.absenciaId);
+                    const tempsAsignat = parseInt(assignacioEnCurs.value.durada);
+
+                    abs.assignacions.push({
+                        durada: tempsAsignat,
+                        substitutId: assignacioEnCurs.value.substitut.id,
+                        nomSubstitut: assignacioEnCurs.value.substitut.nom
+                    });
+                    abs.minutsPendents -= tempsAsignat;
+                    cancelarAssignacioEnCurs();
+                };
+
+                const esborrarAssignacio = (abs, indexAssignacio) => {
+                    const minutsAlliberats = abs.assignacions[indexAssignacio].durada;
+                    abs.minutsPendents += minutsAlliberats;
+                    abs.assignacions.splice(indexAssignacio, 1);
+                };
+
+                return { 
+                    usuariAutenticat, correu, contrasenya, errorLogin, 
+                    dataAvui, docents, novaAbsencia, horariEscola,
+                    llistaAbsencies, minutsPendentsTotals, assignacioEnCurs,
+                    iniciarSessio, tancarSessio, registrarAbsencia,
+                    prepararNovaAssignacio, cancelarAssignacioEnCurs, confirmarAssignacio,
+                    esborrarAssignacio, opcionsDurada
                 }
-
-                const abs = llistaAbsencies.value.find(a => a.id === assignacioEnCurs.value.absenciaId);
-                const tempsAsignat = parseInt(assignacioEnCurs.value.durada);
-
-                abs.assignacions.push({
-                    durada: tempsAsignat,
-                    substitutId: assignacioEnCurs.value.substitut.id,
-                    nomSubstitut: assignacioEnCurs.value.substitut.nom
-                });
-
-                abs.minutsPendents -= tempsAsignat;
-                cancelarAssignacioEnCurs();
-            };
-
-            const esborrarAssignacio = (abs, indexAssignacio) => {
-                const minutsAlliberats = abs.assignacions[indexAssignacio].durada;
-                abs.minutsPendents += minutsAlliberats;
-                abs.assignacions.splice(indexAssignacio, 1);
-            };
-
-            return { 
-                usuariAutenticat, correu, contrasenya, errorLogin, 
-                dataAvui, docents, novaAbsencia, horariEscola,
-                llistaAbsencies, minutsPendentsTotals, assignacioEnCurs,
-                iniciarSessio, tancarSessio, registrarAbsencia,
-                prepararNovaAssignacio, cancelarAssignacioEnCurs, confirmarAssignacio,
-                esborrarAssignacio, opcionsDurada
             }
-        }
-    }).mount('#app');
+        }).mount('#app');
+
+    } catch (errorGeneral) {
+        // Captura d'error general
+        document.getElementById('pantalla-error').style.display = 'block';
+        document.getElementById('text-error').innerText = errorGeneral.message;
+        var appDiv = document.getElementById('app');
+        if(appDiv) appDiv.style.display = 'none';
+    }
 </script>
 
 </body>
