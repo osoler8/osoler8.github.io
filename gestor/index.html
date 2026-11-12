@@ -5,23 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Substitucions - Escola Eugeni d'Ors</title>
     
-    <!-- 1. DETECTOR D'ERRORS (A dalt de tot per capturar qualsevol problema) -->
     <script>
         window.onerror = function(msg, url, line) {
             document.body.innerHTML = `
                 <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
                     <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error</h2>
-                    <p>L'aplicació s'ha aturat. Si us plau, copia aquest text i passa-li a l'assistent:</p>
-                    <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">
-                        ${msg} (Línia: ${line})
-                    </div>
+                    <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${msg} (Línia: ${line})</div>
                 </div>`;
             return false;
         };
     </script>
 
     <style>
-        /* Amaga l'app fins que està carregada (això és el que deixava la pantalla grisa si hi havia error) */
         [v-cloak] { display: none !important; }
         .fila-fraccio td { padding-top: 4px; padding-bottom: 4px; border-bottom: none; }
         .tab-activa { background-color: #1e3a8a; border-bottom: 3px solid #60a5fa; color: white; }
@@ -266,7 +261,6 @@
 </div>
 
 <script>
-    // FIX: Utilitzem el nom "db" en comptes de "supabase" per evitar conflictes amb la llibreria de CDN
     const supabaseUrl = 'https://cdrubcjbbpcywrppkyma.supabase.co';
     const supabaseKey = 'sb_publishable_iYZT4fhgUBGuCDIQ56Zhjw_smcwJG3b';
     const db = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -308,6 +302,10 @@
                     db.from('blocs').select('*').order('ordre'),
                     db.from('assignacions').select('*')
                 ]);
+                
+                if (resDocents.error) alert("Error llegint mestres: " + resDocents.error.message);
+                if (resBlocs.error) alert("Error llegint horaris: " + resBlocs.error.message);
+                
                 if(resDocents.data) docents.value = resDocents.data;
                 if(resBlocs.data) horariEscola.value = resBlocs.data;
                 if(resAssignacions.data) assignacionsHorari.value = resAssignacions.data;
@@ -346,16 +344,19 @@
                     actual[camp] = valor; 
                     
                     if (actual.grup === '' && actual.materia.trim() === '' && actual.disponible === false) {
-                        await db.from('assignacions').delete().eq('id', actual.id);
-                        assignacionsHorari.value.splice(asigIndex, 1);
+                        const { error } = await db.from('assignacions').delete().eq('id', actual.id);
+                        if (error) alert("Error esborrant assignació: " + error.message);
+                        else assignacionsHorari.value.splice(asigIndex, 1);
                     } else {
-                        await db.from('assignacions').update({ [camp]: valor }).eq('id', actual.id);
+                        const { error } = await db.from('assignacions').update({ [camp]: valor }).eq('id', actual.id);
+                        if (error) alert("Error guardant horari: " + error.message);
                     }
                 } else {
                     let payload = { docent_id: docentId, dia: dia, bloc_id: blocId, grup: '', materia: '', disponible: false };
                     payload[camp] = valor;
-                    const { data } = await db.from('assignacions').insert(payload).select();
-                    if(data && data.length > 0) assignacionsHorari.value.push(data[0]);
+                    const { data, error } = await db.from('assignacions').insert(payload).select();
+                    if (error) alert("Error guardant nou horari: " + error.message);
+                    if (data && data.length > 0) assignacionsHorari.value.push(data[0]);
                 }
             };
 
@@ -366,35 +367,54 @@
             // --- CONFIGURACIÓ (ESCRIPTURA A SUPABASE) ---
             const afegirMestre = async () => {
                 if(nouMestreNom.value.trim()) {
-                    const { data } = await db.from('docents').insert({ nom: nouMestreNom.value.trim() }).select();
-                    if(data) docents.value.push(data[0]);
-                    nouMestreNom.value = '';
+                    const { data, error } = await db.from('docents').insert({ nom: nouMestreNom.value.trim() }).select();
+                    if (error) {
+                        alert("Error guardant el mestre: " + error.message);
+                    } else if (data) {
+                        docents.value.push(data[0]);
+                        nouMestreNom.value = '';
+                    }
                 }
             };
+
             const esborrarMestre = async (index) => {
                 if(confirm("Eliminar mestre i tot el seu horari de la base de dades?")) {
                     const idEsborrar = docents.value[index].id;
-                    await db.from('docents').delete().eq('id', idEsborrar);
-                    assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== idEsborrar);
-                    docents.value.splice(index, 1);
+                    const { error } = await db.from('docents').delete().eq('id', idEsborrar);
+                    if (error) {
+                        alert("Error esborrant el mestre: " + error.message);
+                    } else {
+                        assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== idEsborrar);
+                        docents.value.splice(index, 1);
+                    }
                 }
             };
+
             const afegirBloc = async () => {
                 if(nouBlocNom.value.trim()) {
                     const minuts = parseInt(nouBlocMinuts.value);
                     const ordreCalculat = horariEscola.value.length + 1;
-                    const { data } = await db.from('blocs').insert({ nom: nouBlocNom.value.trim(), minuts_totals: minuts, ordre: ordreCalculat }).select();
-                    if(data && data.length > 0) horariEscola.value.push(data[0]);
-                    nouBlocNom.value = '';
-                    nouBlocMinuts.value = '60';
+                    const { data, error } = await db.from('blocs').insert({ nom: nouBlocNom.value.trim(), minuts_totals: minuts, ordre: ordreCalculat }).select();
+                    if (error) {
+                        alert("Error afegint la franja horària: " + error.message);
+                    } else if(data && data.length > 0) {
+                        horariEscola.value.push(data[0]);
+                        nouBlocNom.value = '';
+                        nouBlocMinuts.value = '60';
+                    }
                 }
             };
+
             const esborrarBloc = async (index) => {
                 if(confirm("Segur que vols eliminar aquesta franja horària?")) {
                     const idEsborrar = horariEscola.value[index].id;
-                    await db.from('blocs').delete().eq('id', idEsborrar);
-                    assignacionsHorari.value = assignacionsHorari.value.filter(a => a.bloc_id !== idEsborrar);
-                    horariEscola.value.splice(index, 1);
+                    const { error } = await db.from('blocs').delete().eq('id', idEsborrar);
+                    if (error) {
+                        alert("Error esborrant la franja horària: " + error.message);
+                    } else {
+                        assignacionsHorari.value = assignacionsHorari.value.filter(a => a.bloc_id !== idEsborrar);
+                        horariEscola.value.splice(index, 1);
+                    }
                 }
             };
 
@@ -434,6 +454,14 @@
             }
         }
     });
+
+    app.config.errorHandler = (err) => {
+        document.body.innerHTML = `
+            <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
+                <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error</h2>
+                <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${err.message}</div>
+            </div>`;
+    };
 
     app.mount('#app');
 </script>
