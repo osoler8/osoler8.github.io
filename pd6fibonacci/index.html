@@ -1171,67 +1171,160 @@
         }
 
         // Natura: Visor de fulles concèntriques (Dossier pàg. 16-17)
+        
+        let selectedLeaves = [];
+        let leafAngles = {};
+
         function initPlantLeafViewer() {
             const svg = document.getElementById('plant-svg');
             if (!svg || svg.children.length > 0) return;
             const cx = 150, cy = 150;
-            const goldenAngle = 137.5 * (Math.PI / 180);
+            const goldenAngle = 137.5; // graus
+            const radFactor = Math.PI / 180;
+
+            const arrowLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            arrowLayer.id = "plant-arrows";
+            svg.appendChild(arrowLayer);
+            
+            const sectorLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            sectorLayer.id = "plant-sectors";
+            svg.appendChild(sectorLayer);
 
             for (let i = 8; i >= 1; i--) {
-                const r = 25 + i * 12;
-                const theta = i * goldenAngle;
-                const x = cx + r * Math.cos(theta);
-                const y = cy + r * Math.sin(theta);
+                const r = 25 + i * 11;
+                const theta = 120 + (i - 1) * goldenAngle;
+                leafAngles[i] = theta % 360;
+                const x = cx + r * Math.cos(theta * radFactor);
+                const y = cy + r * Math.sin(theta * radFactor);
 
                 const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                g.setAttribute("class", "cursor-pointer");
+                g.setAttribute("class", "cursor-pointer transition-transform hover:scale-105 origin-center");
+                g.setAttribute("onclick", `handleLeafClick(${i}, ${x}, ${y})`);
+                g.style.transformOrigin = `${x}px ${y}px`;
 
-                // Fulla
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", x);
-                circle.setAttribute("cy", y);
-                circle.setAttribute("r", 14 + (i * 1.5));
-                circle.setAttribute("fill", i % 2 === 0 ? "#86efac" : "#4ade80");
-                circle.setAttribute("stroke", "#14532d");
-                circle.setAttribute("stroke-width", "1.5");
-                circle.setAttribute("opacity", "0.9");
-                g.appendChild(circle);
-
-                // Número
-                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                txt.setAttribute("x", x);
-                txt.setAttribute("y", y + 4);
-                txt.setAttribute("text-anchor", "middle");
-                txt.setAttribute("font-size", "11");
-                txt.setAttribute("font-weight", "bold");
-                txt.setAttribute("fill", "#064e3b");
-                txt.textContent = i;
-                g.appendChild(txt);
-
-                // Línia de radi al centre
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", cx);
                 line.setAttribute("y1", cy);
                 line.setAttribute("x2", x);
                 line.setAttribute("y2", y);
-                line.setAttribute("stroke", "#15803d");
-                line.setAttribute("stroke-width", "0.8");
-                line.setAttribute("stroke-dasharray", "2,2");
-                line.setAttribute("opacity", "0.5");
-                g.appendChild(line);
+                line.setAttribute("stroke", "#22c55e");
+                line.setAttribute("stroke-width", "1");
+                line.setAttribute("stroke-dasharray", "3,3");
+                line.setAttribute("opacity", "0.6");
+                svg.appendChild(line);
+
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", 12 + (i * 1.5));
+                circle.setAttribute("fill", "#86efac"); 
+                circle.setAttribute("id", `leaf-circle-${i}`);
+                circle.setAttribute("transition", "all 0.2s");
+                g.appendChild(circle);
+
+                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                txt.setAttribute("x", x);
+                txt.setAttribute("y", y + 4);
+                txt.setAttribute("text-anchor", "middle");
+                txt.setAttribute("font-size", "12");
+                txt.setAttribute("font-weight", "bold");
+                txt.setAttribute("fill", "#064e3b");
+                txt.textContent = i;
+                g.appendChild(txt);
 
                 svg.appendChild(g);
             }
 
-            // Centre de la planta
             const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             centerCircle.setAttribute("cx", cx);
             centerCircle.setAttribute("cy", cy);
-            centerCircle.setAttribute("r", 8);
-            centerCircle.setAttribute("fill", "#facc15");
-            centerCircle.setAttribute("stroke", "#78350f");
+            centerCircle.setAttribute("r", 7);
+            centerCircle.setAttribute("fill", "#f59e0b");
             svg.appendChild(centerCircle);
         }
+
+        function handleLeafClick(leafNum, lx, ly) {
+            const circle = document.getElementById(`leaf-circle-${leafNum}`);
+            if(!circle) return;
+
+            if(selectedLeaves.includes(leafNum)) {
+                resetLeafSelection();
+                return;
+            }
+
+            selectedLeaves.push(leafNum);
+            circle.setAttribute("fill", "#34d399"); 
+            circle.setAttribute("stroke", "#047857");
+            circle.setAttribute("stroke-width", "3");
+
+            if(selectedLeaves.length === 2) {
+                const l1 = selectedLeaves[0];
+                const l2 = selectedLeaves[1];
+                const diff = Math.abs(l1 - l2);
+                
+                if(diff === 1) {
+                    drawLeafAngle(l1, l2);
+                    const minL = Math.min(l1, l2);
+                    updateLeafTable(minL, 137.5);
+                } else {
+                    alert("Selecciona dues fulles consecutives! (per exemple: 1 i 2)");
+                }
+                setTimeout(() => {
+                    resetLeafSelection();
+                }, 800);
+            }
+        }
+
+        function drawLeafAngle(l1, l2) {
+            const sectorLayer = document.getElementById('plant-sectors');
+            if(!sectorLayer) return;
+            sectorLayer.innerHTML = ''; 
+            
+            const cx = 150, cy = 150;
+            const r_arc = 40;
+            const radFactor = Math.PI / 180;
+            
+            let th1 = leafAngles[l1];
+            let th2 = leafAngles[l2];
+            
+            const x1 = cx + r_arc * Math.cos(th1 * radFactor);
+            const y1 = cy + r_arc * Math.sin(th1 * radFactor);
+            const x2 = cx + r_arc * Math.cos(th2 * radFactor);
+            const y2 = cy + r_arc * Math.sin(th2 * radFactor);
+            
+            let delta = (th2 - th1) % 360;
+            if (delta < 0) delta += 360;
+            let sweep = delta <= 180 ? 1 : 0;
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", `M ${cx} ${cy} L ${x1} ${y1} A ${r_arc} ${r_arc} 0 0 ${sweep} ${x2} ${y2} Z`);
+            path.setAttribute("fill", "rgba(250, 204, 21, 0.4)");
+            path.setAttribute("stroke", "#ca8a04");
+            path.setAttribute("stroke-width", "2");
+            sectorLayer.appendChild(path);
+        }
+
+        function resetLeafSelection() {
+            selectedLeaves.forEach(num => {
+                const c = document.getElementById(`leaf-circle-${num}`);
+                if(c) {
+                    c.setAttribute("fill", "#86efac");
+                    c.removeAttribute("stroke");
+                }
+            });
+            selectedLeaves = [];
+        }
+
+        function updateLeafTable(minL, val) {
+            const elId = `leaf-mesura-${minL}`;
+            const el = document.getElementById(elId);
+            if(el) {
+                el.textContent = `${val}º`;
+                el.classList.add('text-emerald-700', 'font-bold', 'scale-110', 'transition-transform');
+                setTimeout(() => el.classList.remove('scale-110'), 300);
+            }
+        }
+
 
         // Simulador de gira-sol (Model de Vogel)
         function setNatureAngle(angle) {
