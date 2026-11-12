@@ -83,7 +83,6 @@
         <!-- VISTA 1: TAULER -->
         <main v-if="vistaActual === 'tauler'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
-                <!-- Registre d'absències múltiple -->
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-lg font-semibold border-b pb-2 mb-4">Registrar absència</h3>
                     <div class="space-y-4">
@@ -219,9 +218,9 @@
                     <!-- EINA ESTRELLA: Lector Intel·ligent de Word -->
                     <div v-if="mestreSeleccionatHorari" class="bg-indigo-50 border border-indigo-200 rounded p-4 mb-4">
                         <h4 class="font-bold text-indigo-900 mb-1"><i class="fa-solid fa-paste"></i> Màgia: Enganxa la taula del Word</h4>
-                        <p class="text-xs text-indigo-700 mb-2">Selecciona la graella del Word (sense el nom del mestre, només les hores i els dies com a la imatge), copia-la sencera i enganxa-la aquí dins.</p>
+                        <p class="text-xs text-indigo-700 mb-2">Selecciona la graella del teu Word (només les hores i els dies, sense el títol), copia-la i enganxa-la aquí dins.</p>
                         <textarea v-model="textGraellaWord" class="w-full text-xs font-mono border border-indigo-300 p-2 rounded h-20 bg-white" placeholder="Fes clic aquí i prem Ctrl+V..."></textarea>
-                        <button @click="importarGraellaWord" class="mt-2 bg-indigo-600 text-white font-bold px-4 py-1.5 rounded text-sm hover:bg-indigo-700 shadow">Processar graella del Word</button>
+                        <button @click="importarGraellaWord" class="mt-2 bg-indigo-600 text-white font-bold px-4 py-1.5 rounded text-sm hover:bg-indigo-700 shadow">Llegir taula màgicament</button>
                     </div>
 
                     <table v-if="mestreSeleccionatHorari" class="w-full taula-horaris mt-4">
@@ -273,7 +272,7 @@
                     </table>
                 </div>
 
-                <!-- IMPORTACIÓ EXCEL COMPLETA -->
+                <!-- IMPORTACIÓ EXCEL COMPLETA (Opcional) -->
                 <div class="mt-8 border-t pt-6">
                     <details class="bg-blue-50 p-4 rounded-lg border border-blue-200 group">
                         <summary class="font-bold text-blue-900 cursor-pointer flex items-center gap-2">
@@ -364,7 +363,6 @@
             
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-teal-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">3. Blocs horaris</h3>
-                <p class="text-xs text-gray-500 mb-3 leading-tight">Perquè la importació des del Word funcioni bé, pots posar als blocs el nom que vulguis, el sistema és intel·ligent i detectarà l'hora per números.</p>
                 <div class="flex flex-col gap-2 mb-4 bg-gray-50 p-2 rounded border">
                     <input v-model="nouBlocNom" type="text" placeholder="Nom (Ex: 09:00 - 10:00)" class="border p-1.5 rounded text-sm">
                     <div class="flex gap-2">
@@ -453,7 +451,6 @@
                 return agrupats;
             });
 
-            // --- CARREGAR DADES ---
             const carregarDadesBase = async () => {
                 const [resDocents, resBlocs, resAssignacions, resGrups] = await Promise.all([
                     db.from('docents').select('*').order('nom'),
@@ -484,7 +481,6 @@
             };
             const tancarSessio = async () => { await db.auth.signOut(); usuariAutenticat.value = false; };
 
-            // --- GRAELLA HORARIS ---
             const getAssignacio = (docentId, dia, blocId) => {
                 const as = assignacionsHorari.value.find(a => a.docent_id === docentId && a.dia === dia && a.bloc_id === blocId);
                 return as ? as : { grup: '', materia: '', disponible: false };
@@ -526,37 +522,36 @@
                 mestreAClonar.value = '';
             };
 
-            // NOU MOTOR LECTOR DE WORD MULTILLINIA I INTEL·LIGENT
+            // NOU MOTOR LECTOR DE WORD: Intel·ligent i a prova de cel·les fusionades
             const importarGraellaWord = async () => {
-                if(!mestreSeleccionatHorari.value) return alert("Si us plau, selecciona primer el mestre al desplegable de dalt.");
-                if(!textGraellaWord.value.trim()) return alert("El quadre de text està buit.");
+                if(!mestreSeleccionatHorari.value) return alert("Selecciona primer el mestre a dalt.");
+                if(!textGraellaWord.value.trim()) return alert("El quadre està buit.");
 
-                // Funcio clau per evitar que els salts de linia de dins d'una casella de Word trenquin la taula
-                const parseTSV = (text) => {
-                    let rows = [], curRow = [], curCell = '', inQuotes = false;
-                    text = text.replace(/\r/g, ''); 
-                    for (let i = 0; i < text.length; i++) {
-                        let c = text[i];
-                        if (c === '"') inQuotes = !inQuotes;
-                        else if (c === '\t' && !inQuotes) { curRow.push(curCell.trim()); curCell = ''; }
-                        else if (c === '\n' && !inQuotes) { curRow.push(curCell.trim()); rows.push(curRow); curRow = []; curCell = ''; }
-                        else curCell += c;
+                const liniesRaw = textGraellaWord.value.split('\n');
+                const linies = [];
+                for(let l of liniesRaw) {
+                    let neta = l.replace(/\r/g, '').trim();
+                    if(!neta) continue;
+                    let cols = neta.split('\t');
+                    if(cols.length < 2 && neta.includes('  ')) {
+                        cols = neta.split(/\s{3,}/); // Fallback: si no hi ha tabuladors, parteix pels espais grans
                     }
-                    if (curCell || curRow.length > 0) { curRow.push(curCell.trim()); rows.push(curRow); }
-                    return rows;
-                };
+                    linies.push(cols);
+                }
 
-                const linies = parseTSV(textGraellaWord.value);
                 const nousRegistres = [];
+                let horesTrobades = [];
 
                 for(let i=0; i<linies.length; i++) {
                     const columnes = linies[i];
                     if(columnes.length < 2) continue; 
 
                     let horaWord = columnes[0].toLowerCase().trim();
-                    if(horaWord === 'hora' || horaWord === '') continue; 
+                    if(horaWord.includes('hora') || horaWord === '') continue; 
+                    
+                    horesTrobades.push(horaWord);
 
-                    // Super cercador d'hores: funciona per coincidència de números (13:30h a 15h = 13:30 - 15:00)
+                    // Lògica matemàtica avançada de cerca d'hores
                     const blocMatch = horariEscola.value.find(b => {
                         const wNet = horaWord.replace(/\s+/g, '');
                         const aNet = b.nom.toLowerCase().replace(/\s+/g, '');
@@ -566,8 +561,8 @@
                         const nA = b.nom.toLowerCase().match(/\d+/g);
                         if(nW && nA) {
                             if (nW.join('') === nA.join('')) return true;
-                            let w = nW.map(Number).filter(n => n !== 0);
-                            let a = nA.map(Number).filter(n => n !== 0);
+                            let w = nW.map(Number).filter(n => !isNaN(n) && n !== 0);
+                            let a = nA.map(Number).filter(n => !isNaN(n) && n !== 0);
                             if (w.length > 0 && w.join('-') === a.join('-')) return true;
                         }
                         return false;
@@ -575,10 +570,9 @@
 
                     if(!blocMatch) continue;
 
-                    // Les columnes d'1 a 5 són Dilluns a Divendres
                     for(let d=1; d<=5; d++) {
                         let textCasella = (columnes[d] || '').trim();
-                        textCasella = textCasella.replace(/^"|"$/g, '').trim(); // Netejem cometes externes si n'hi ha
+                        textCasella = textCasella.replace(/^"|"$/g, '').trim(); 
                         
                         if(textCasella !== '') {
                             let isComodi = textCasella.toLowerCase().includes('comodí') || textCasella.toLowerCase().includes('guàrdia');
@@ -586,7 +580,7 @@
                                 docent_id: mestreSeleccionatHorari.value,
                                 dia: diesSetmana[d-1],
                                 bloc_id: blocMatch.id,
-                                grup: textCasella, // Fiquem tot el text multilinia al camp grup
+                                grup: textCasella, 
                                 materia: '',
                                 disponible: isComodi
                             });
@@ -603,11 +597,12 @@
                     else {
                         assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== mestreSeleccionatHorari.value);
                         assignacionsHorari.value.push(...data);
-                        alert(`✅ Taula de Word processada! S'han assignat ${nousRegistres.length} hores. Ja pots revisar-ho a la graella de sota.`);
+                        alert(`✅ Taula llegida perfectament! S'han assignat ${nousRegistres.length} hores al mestre.`);
                         textGraellaWord.value = '';
                     }
                 } else {
-                    alert("No he pogut llegir les hores de la teva taula. Revisa que les hores s'assemblin una miqueta a les de 'Configuració'.");
+                    let horesUniques = [...new Set(horesTrobades)].slice(0, 5).join(" | ");
+                    alert("❌ No he pogut llegir correctament l'hora. \n\nEl sistema ha llegit això al teu text: \n" + horesUniques + "\n\nSi no l'ha trobat, és perquè no coincideix amb cap bloc de la pestanya 'Configuració'.");
                 }
             };
 
@@ -728,7 +723,6 @@
                 }
             };
 
-            // --- UTILITATS DEL TAULER ---
             const minutsPendentsTotals = computed(() => { let t = 0; llistaAbsencies.value.forEach(a => { t += a.minutsPendents; }); return t; });
             const obtenirNomDocent = (id) => { const d = docents.value.find(x => x.id === id); return d ? d.nom : 'Desconegut'; };
             
