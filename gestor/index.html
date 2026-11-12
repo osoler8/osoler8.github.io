@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Substitucions - Escola Eugeni d'Ors</title>
+    
+    <style>
+        [v-cloak] { display: none !important; }
+        .fila-fraccio td { padding-top: 4px; padding-bottom: 4px; border-bottom: none; }
+    </style>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+
+<div id="app" v-cloak>
+    
+    <!-- PANTALLA DE LOGIN -->
+    <div v-if="!usuariAutenticat" class="min-h-screen flex items-center justify-center bg-slate-800">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-graduation-cap text-4xl text-blue-600 mb-2"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Escola Eugeni d'Ors</h2>
+                <p class="text-gray-500 text-sm mt-1">Gestió de Guàrdies i Substitucions</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Correu de gestió</label>
+                    <input v-model="correu" type="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="escola@eugenidors.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Contrasenya</label>
+                    <input v-model="contrasenya" type="password" @keyup.enter="iniciarSessio" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
+                </div>
+                
+                <p v-if="errorLogin" class="text-red-500 text-sm text-center font-medium">{{ errorLogin }}</p>
+                
+                <button @click="iniciarSessio" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Iniciar Sessió
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANELL PRINCIPAL -->
+    <div v-else class="min-h-screen flex flex-col">
+        
+        <header class="bg-blue-700 text-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-clipboard-user text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold leading-tight">Gestor de Substitucions</h1>
+                        <p class="text-xs text-blue-200">Escola Eugeni d'Ors</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm bg-blue-800 px-3 py-1 rounded-full hidden sm:inline-block"><i class="fa-regular fa-calendar mr-2"></i>Avui: {{ dataAvui }}</span>
+                    <span class="text-sm font-medium">{{ correu }}</span>
+                    <button @click="tancarSessio" class="text-sm bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-white transition" title="Tancar Sessió">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- COLUMNA ESQUERRA -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Registrar Absència</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Docent Absent</label>
+                            <select v-model="novaAbsencia.docent_id" class="w-full border-gray-300 rounded-md shadow-sm border p-2 bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="" disabled>Selecciona docent...</option>
+                                <option v-for="d in docents" :key="d.id" :value="d.id">{{ d.nom }}</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Bloc Horari de l'Escola</label>
+                            <select v-model="novaAbsencia.franja_escola" class="w-full border-gray-300 rounded-md shadow-sm border p-2 bg-gray-50 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="" disabled>Tria el bloc sencer...</option>
+                                <option v-for="bloc in horariEscola" :key="bloc.id" :value="bloc">{{ bloc.nom }} ({{ bloc.minuts_totals }} min)</option>
+                            </select>
+                        </div>
+
+                        <button @click="registrarAbsencia" class="w-full bg-blue-50 text-blue-700 font-semibold py-2 rounded border border-blue-200 hover:bg-blue-100 transition">
+                            <i class="fa-solid fa-plus mr-2"></i>Afegir a la taula
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-5">
+                    <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Guàrdies Disponibles</h3>
+                    <div class="space-y-3">
+                        <div v-for="bloc in horariEscola" :key="bloc.id" class="bg-gray-50 p-2 rounded border border-gray-100 flex justify-between items-center">
+                            <span class="font-bold text-gray-700 text-xs w-1/3">{{ bloc.nom }}</span>
+                            <div class="w-2/3 flex flex-wrap gap-1 justify-end">
+                                <span v-for="guardia in bloc.guardies" :key="guardia" class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-200">
+                                    {{ guardia }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DRETA: Tauler amb fraccionament de substitucions -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-800">Tauler de Substitucions</h3>
+                        <span v-if="minutsPendentsTotals > 0" class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-full border border-red-200">
+                            {{ minutsPendentsTotals }} min. pendents d'assignar
+                        </span>
+                        <span v-else-if="llistaAbsencies.length > 0" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full border border-green-200">
+                            Tot cobert
+                        </span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-white text-xs text-gray-500 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3 text-left font-medium">Docent Absent</th>
+                                    <th class="px-6 py-3 text-left font-medium">Bloc Horari</th>
+                                    <th class="px-6 py-3 text-left font-medium">Estat de Cobertura</th>
+                                    <th class="px-6 py-3 text-right font-medium">Accions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                
+                                <tr v-if="llistaAbsencies.length === 0">
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                        <i class="fa-solid fa-mug-hot text-3xl mb-2 text-gray-300"></i>
+                                        <p>No hi ha cap absència registrada avui.</p>
+                                    </td>
+                                </tr>
+
+                                <template v-for="(abs, indexAbs) in llistaAbsencies" :key="abs.id">
+                                    
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 font-bold">
+                                            {{ abs.nomDocent }}
+                                        </td>
+                                        <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
+                                            <i class="fa-regular fa-clock text-gray-400 mr-1"></i> {{ abs.blocNom }}
+                                        </td>
+                                        <td class="px-6 py-3 whitespace-nowrap">
+                                            <span v-if="abs.minutsPendents > 0" class="text-xs font-bold text-red-600">
+                                                Falten {{ abs.minutsPendents }} min.
+                                            </span>
+                                            <span v-else class="text-xs font-bold text-green-600">
+                                                Cobertura completa
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-3 whitespace-nowrap text-right text-sm">
+                                            <button v-if="abs.minutsPendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 hover:text-blue-800 text-xs font-medium border border-blue-300 rounded px-2 py-1 bg-white">
+                                                <i class="fa-solid fa-plus text-[10px]"></i> Afegir substitució
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr v-for="(assignacio, indexAss) in abs.assignacions" :key="indexAss" class="fila-fraccio bg-white border-none">
+                                        <td class="pl-12 py-2 whitespace-nowrap text-xs text-gray-500" colspan="2">
+                                            <i class="fa-solid fa-turn-up fa-rotate-90 mr-2 text-gray-300"></i>
+                                            <strong>{{ assignacio.durada }} min.</strong> assignats a 
+                                            <span class="font-bold text-green-700">{{ assignacio.nomSubstitut }}</span>
+                                        </td>
+                                        <td class="px-6 py-2 whitespace-nowrap text-xs" colspan="2" style="text-align: right;">
+                                            <button @click="esborrarAssignacio(abs, indexAss)" class="text-red-400 hover:text-red-600 transition" title="Cancel·lar aquesta assignació">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr v-if="abs.id === assignacioEnCurs.absenciaId" class="fila-fraccio bg-blue-50/30">
+                                        <td class="pl-12 py-2 whitespace-nowrap text-sm" colspan="4">
+                                            <div class="flex items-center gap-2 justify-end w-full">
+                                                <span class="text-xs text-gray-500">Temps a cobrir:</span>
+                                                <select v-model="assignacioEnCurs.durada" class="border-gray-300 rounded shadow-sm text-xs p-1">
+                                                    <option v-for="opt in opcionsDurada(abs.minutsPendents)" :value="opt">{{ opt }} min</option>
+                                                </select>
+                                                
+                                                <span class="text-xs text-gray-500 ml-2">Per:</span>
+                                                <select v-model="assignacioEnCurs.substitut" class="border-gray-300 rounded shadow-sm text-xs p-1">
+                                                    <option value="" disabled>Selecciona docent...</option>
+                                                    <option v-for="d in docents" :value="d">{{ d.nom }}</option>
+                                                </select>
+
+                                                <button @click="confirmarAssignacio()" class="ml-2 bg-green-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-green-700">Guardar</button>
+                                                <button @click="cancelarAssignacioEnCurs()" class="ml-1 text-gray-500 hover:text-gray-700 text-xs">Cancel·lar</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr class="border-t-2 border-gray-100"><td colspan="4" class="p-0"></td></tr>
+                                </template>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    const supabaseUrl = 'https://cdrubcjbbpcywrppkyma.supabase.co';
+    const supabaseKey = 'sb_publishable_iYZT4fhgUBGuCDIQ56Zhjw_smcwJG3b';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            const usuariAutenticat = ref(false);
+            const correu = ref('');
+            const contrasenya = ref('');
+            const errorLogin = ref('');
+            const dataAvui = new Date().toLocaleDateString('ca-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const docents = ref([
+                { id: '1', nom: 'Martínez, Laura' },
+                { id: '2', nom: 'Serra, Albert' },
+                { id: '3', nom: 'Garcia, M.' },
+                { id: '4', nom: 'López, J.' },
+                { id: '5', nom: 'Vidal, Carme' }
+            ]);
+
+            const horariEscola = ref([
+                { id: 'h1', nom: '09:00 - 10:00', minuts_totals: 60, guardies: ['Garcia, M.', 'López, J.'] },
+                { id: 'h2', nom: '10:00 - 11:00', minuts_totals: 60, guardies: ['Serra, A.'] },
+                { id: 'h3', nom: '11:00 - 11:30 (Pati)', minuts_totals: 30, guardies: ['Vidal, C.'] },
+                { id: 'h4', nom: '11:30 - 12:30', minuts_totals: 60, guardies: ['Garcia, M.', 'Martínez, L.'] },
+                { id: 'h5', nom: '15:00 - 16:30', minuts_totals: 90, guardies: ['López, J.'] }
+            ]);
+            
+            const novaAbsencia = ref({ docent_id: '', franja_escola: '' });
+            
+            const llistaAbsencies = ref([]);
+
+            const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
+
+            const minutsPendentsTotals = computed(() => {
+                let total = 0;
+                llistaAbsencies.value.forEach(abs => { total += abs.minutsPendents; });
+                return total;
+            });
+
+            const iniciarSessio = () => {
+                errorLogin.value = '';
+                if (correu.value.toLowerCase() === 'escola@eugenidors.com' && contrasenya.value !== '') {
+                    usuariAutenticat.value = true;
+                } else if (correu.value.toLowerCase() !== 'escola@eugenidors.com') {
+                    errorLogin.value = "Aquest usuari no té accés al sistema.";
+                } else {
+                    errorLogin.value = "Has d'introduir la contrasenya.";
+                }
+            };
+
+            const tancarSessio = () => {
+                usuariAutenticat.value = false;
+                contrasenya.value = '';
+            };
+
+            const registrarAbsencia = () => {
+                if(!novaAbsencia.value.docent_id || !novaAbsencia.value.franja_escola) {
+                    alert("Si us plau, selecciona el docent i el bloc horari.");
+                    return;
+                }
+
+                const docent = docents.value.find(d => d.id === novaAbsencia.value.docent_id);
+                const bloc = novaAbsencia.value.franja_escola;
+                
+                llistaAbsencies.value.push({
+                    id: Date.now(),
+                    docentId: docent.id,
+                    nomDocent: docent.nom,
+                    blocId: bloc.id,
+                    blocNom: bloc.nom,
+                    minutsTotals: bloc.minuts_totals,
+                    minutsPendents: bloc.minuts_totals,
+                    assignacions: []
+                });
+
+                novaAbsencia.value = { docent_id: '', franja_escola: '' };
+            };
+
+            const opcionsDurada = (maxMinuts) => {
+                const opcions = [];
+                for(let i = 15; i <= maxMinuts; i += 15) {
+                    opcions.push(i);
+                }
+                return opcions;
+            };
+
+            const prepararNovaAssignacio = (abs) => {
+                assignacioEnCurs.value = {
+                    absenciaId: abs.id,
+                    durada: abs.minutsPendents,
+                    substitut: ''
+                };
+            };
+
+            const cancelarAssignacioEnCurs = () => {
+                assignacioEnCurs.value = { absenciaId: null, durada: null, substitut: '' };
+            };
+
+            const confirmarAssignacio = () => {
+                if(!assignacioEnCurs.value.substitut || !assignacioEnCurs.value.durada) {
+                    alert("Selecciona el docent substitut i el temps.");
+                    return;
+                }
+
+                const abs = llistaAbsencies.value.find(a => a.id === assignacioEnCurs.value.absenciaId);
+                const tempsAsignat = parseInt(assignacioEnCurs.value.durada);
+
+                abs.assignacions.push({
+                    durada: tempsAsignat,
+                    substitutId: assignacioEnCurs.value.substitut.id,
+                    nomSubstitut: assignacioEnCurs.value.substitut.nom
+                });
+
+                abs.minutsPendents -= tempsAsignat;
+                cancelarAssignacioEnCurs();
+            };
+
+            const esborrarAssignacio = (abs, indexAssignacio) => {
+                const minutsAlliberats = abs.assignacions[indexAssignacio].durada;
+                abs.minutsPendents += minutsAlliberats;
+                abs.assignacions.splice(indexAssignacio, 1);
+            };
+
+            return { 
+                usuariAutenticat, correu, contrasenya, errorLogin, 
+                dataAvui, docents, novaAbsencia, horariEscola,
+                llistaAbsencies, minutsPendentsTotals, assignacioEnCurs,
+                iniciarSessio, tancarSessio, registrarAbsencia,
+                prepararNovaAssignacio, cancelarAssignacioEnCurs, confirmarAssignacio,
+                esborrarAssignacio, opcionsDurada
+            }
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
