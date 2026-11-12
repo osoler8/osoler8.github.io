@@ -216,11 +216,12 @@
 </div>
 
 <script>
+    // Connexió real a Supabase activada amb les teves dades
     const supabaseUrl = 'https://cdrubcjbbpcywrppkyma.supabase.co';
     const supabaseKey = 'sb_publishable_iYZT4fhgUBGuCDIQ56Zhjw_smcwJG3b';
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
         setup() {
@@ -247,9 +248,7 @@
             ]);
             
             const novaAbsencia = ref({ docent_id: '', franja_escola: '' });
-            
             const llistaAbsencies = ref([]);
-
             const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
 
             const minutsPendentsTotals = computed(() => {
@@ -258,18 +257,37 @@
                 return total;
             });
 
-            const iniciarSessio = () => {
-                errorLogin.value = '';
-                if (correu.value.toLowerCase() === 'escola@eugenidors.com' && contrasenya.value !== '') {
+            // Comprova si ja tenim la sessió iniciada de l'última vegada en carregar la pàgina
+            onMounted(async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
                     usuariAutenticat.value = true;
-                } else if (correu.value.toLowerCase() !== 'escola@eugenidors.com') {
-                    errorLogin.value = "Aquest usuari no té accés al sistema.";
+                    correu.value = session.user.email;
+                }
+            });
+
+            const iniciarSessio = async () => {
+                errorLogin.value = '';
+                if (!correu.value || !contrasenya.value) {
+                    errorLogin.value = "Has d'introduir correu i contrasenya.";
+                    return;
+                }
+
+                // Autenticació real amb Supabase
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: correu.value,
+                    password: contrasenya.value
+                });
+
+                if (error) {
+                    errorLogin.value = "Credencials incorrectes o usuari inexistent.";
                 } else {
-                    errorLogin.value = "Has d'introduir la contrasenya.";
+                    usuariAutenticat.value = true;
                 }
             };
 
-            const tancarSessio = () => {
+            const tancarSessio = async () => {
+                await supabase.auth.signOut();
                 usuariAutenticat.value = false;
                 contrasenya.value = '';
             };
@@ -299,18 +317,12 @@
 
             const opcionsDurada = (maxMinuts) => {
                 const opcions = [];
-                for(let i = 15; i <= maxMinuts; i += 15) {
-                    opcions.push(i);
-                }
+                for(let i = 15; i <= maxMinuts; i += 15) { opcions.push(i); }
                 return opcions;
             };
 
             const prepararNovaAssignacio = (abs) => {
-                assignacioEnCurs.value = {
-                    absenciaId: abs.id,
-                    durada: abs.minutsPendents,
-                    substitut: ''
-                };
+                assignacioEnCurs.value = { absenciaId: abs.id, durada: abs.minutsPendents, substitut: '' };
             };
 
             const cancelarAssignacioEnCurs = () => {
