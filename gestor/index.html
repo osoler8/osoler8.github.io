@@ -83,6 +83,7 @@
         <!-- VISTA 1: TAULER -->
         <main v-if="vistaActual === 'tauler'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
+                <!-- Registre d'absències múltiple -->
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-lg font-semibold border-b pb-2 mb-4">Registrar absència</h3>
                     <div class="space-y-4">
@@ -206,7 +207,7 @@
                         <div v-if="mestreSeleccionatHorari" class="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
                             <span class="text-xs text-yellow-800 font-bold"><i class="fa-regular fa-copy"></i> Copiar horari de:</span>
                             <select v-model="mestreAClonar" class="border p-1 rounded text-xs">
-                                <option value="" disabled>Tria un company...</option>
+                                <option value="" disabled>Tria company...</option>
                                 <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
                                     <option v-for="d in mestres" :key="d.id" :value="d.id" v-show="d.id !== mestreSeleccionatHorari">{{ d.nom }}</option>
                                 </optgroup>
@@ -215,12 +216,12 @@
                         </div>
                     </div>
 
-                    <!-- EINA ESTRELLA: Lector Intel·ligent de Word -->
+                    <!-- NOU LECTOR DE WORD: Intel·ligent i avançat -->
                     <div v-if="mestreSeleccionatHorari" class="bg-indigo-50 border border-indigo-200 rounded p-4 mb-4">
                         <h4 class="font-bold text-indigo-900 mb-1"><i class="fa-solid fa-paste"></i> Màgia: Enganxa la taula del Word</h4>
-                        <p class="text-xs text-indigo-700 mb-2">Selecciona la graella del teu Word (només les hores i els dies, sense el títol), copia-la i enganxa-la aquí dins.</p>
+                        <p class="text-xs text-indigo-700 mb-2">Selecciona la graella del Word (hores i dies), copia-la sencera i enganxa-la aquí dins.</p>
                         <textarea v-model="textGraellaWord" class="w-full text-xs font-mono border border-indigo-300 p-2 rounded h-20 bg-white" placeholder="Fes clic aquí i prem Ctrl+V..."></textarea>
-                        <button @click="importarGraellaWord" class="mt-2 bg-indigo-600 text-white font-bold px-4 py-1.5 rounded text-sm hover:bg-indigo-700 shadow">Llegir taula màgicament</button>
+                        <button @click="importarGraellaWord" class="mt-2 bg-indigo-600 text-white font-bold px-4 py-1.5 rounded text-sm hover:bg-indigo-700 shadow">Processar graella</button>
                     </div>
 
                     <table v-if="mestreSeleccionatHorari" class="w-full taula-horaris mt-4">
@@ -233,8 +234,7 @@
                                         <textarea :value="getAssignacio(mestreSeleccionatHorari, dia, b.id).grup" 
                                                @blur="e => updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'grup', e.target.value)" 
                                                placeholder="Grup o text lliure..." 
-                                               class="w-full border border-gray-300 rounded p-1 text-xs font-bold text-blue-800 bg-blue-50/30 resize-none h-12"
-                                               title="Pots escriure el que vulguis"></textarea>
+                                               class="w-full border border-gray-300 rounded p-1 text-xs font-bold text-blue-800 bg-blue-50/30 resize-none h-12"></textarea>
                                         
                                         <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" 
                                                 :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600' : 'bg-gray-200 text-gray-700'" class="w-full py-1 text-[10px] font-bold rounded border hover:bg-gray-300 transition-colors">
@@ -270,29 +270,6 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
-
-                <!-- IMPORTACIÓ EXCEL COMPLETA (Opcional) -->
-                <div class="mt-8 border-t pt-6">
-                    <details class="bg-blue-50 p-4 rounded-lg border border-blue-200 group">
-                        <summary class="font-bold text-blue-900 cursor-pointer flex items-center gap-2">
-                            <i class="fa-solid fa-file-excel text-green-600"></i> Importar horaris sencers des d'un Excel (.xlsx)
-                        </summary>
-                        <div class="mt-4 text-sm text-blue-800 space-y-4">
-                            <p>Si vols penjar tots els horaris de l'escola de cop utilitzant un arxiu Excel, les columnes han d'estar en aquest ordre:</p>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs text-left border bg-white shadow-sm">
-                                    <thead class="bg-gray-100"><tr><th class="p-2 border">Nom del mestre</th><th class="p-2 border">Dia</th><th class="p-2 border">Bloc horari</th><th class="p-2 border">Grup (el que vulguis)</th><th class="p-2 border">Matèria</th><th class="p-2 border">Comodí (Sí/No)</th></tr></thead>
-                                    <tbody><tr><td class="p-2 border text-gray-500">Garcia, M.</td><td class="p-2 border text-gray-500">Dilluns</td><td class="p-2 border text-gray-500">09:00 - 10:00</td><td class="p-2 border text-gray-500">3r A</td><td class="p-2 border text-gray-500">Català</td><td class="p-2 border text-gray-500">sí</td></tr></tbody>
-                                </table>
-                            </div>
-                            <label class="block w-full text-center border-2 border-dashed border-blue-300 bg-white p-4 rounded-lg cursor-pointer hover:bg-blue-100 transition">
-                                <i class="fa-solid fa-cloud-arrow-up text-xl text-blue-500 mb-1 block"></i>
-                                <span class="font-bold text-blue-700">Fes clic per pujar l'Excel</span>
-                                <input type="file" @change="importarHorarisExcel" accept=".xlsx, .xls, .csv" class="hidden">
-                            </label>
-                        </div>
-                    </details>
                 </div>
             </div>
         </main>
@@ -401,7 +378,6 @@
             const nomsDiesSetmana = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
             const nomDiaAvui = nomsDiesSetmana[dataActual.getDay()];
             const diesSetmana = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres'];
-            const grupsAltres = ['Reunió', 'Coordinació', 'Suport', 'SEP', 'Pati', 'Tutoria', 'Piscina', 'Desdoblament'];
 
             const docents = ref([]);
             const horariEscola = ref([]);
@@ -423,7 +399,6 @@
             const mestreEditat = ref(null);
             
             const nomsMassius = ref(''); 
-            const horarisMassius = ref('');
             const nouGrupNom = ref('');
             const grupEditat = ref(null);
             
@@ -451,6 +426,7 @@
                 return agrupats;
             });
 
+            // --- CARREGAR DADES ---
             const carregarDadesBase = async () => {
                 const [resDocents, resBlocs, resAssignacions, resGrups] = await Promise.all([
                     db.from('docents').select('*').order('nom'),
@@ -524,21 +500,37 @@
 
             // NOU MOTOR LECTOR DE WORD: Intel·ligent i a prova de cel·les fusionades
             const importarGraellaWord = async () => {
-                if(!mestreSeleccionatHorari.value) return alert("Selecciona primer el mestre a dalt.");
-                if(!textGraellaWord.value.trim()) return alert("El quadre està buit.");
+                if(!mestreSeleccionatHorari.value) return alert("Selecciona primer el mestre al desplegable de dalt.");
+                if(!textGraellaWord.value.trim()) return alert("El quadre de text està buit.");
 
-                const liniesRaw = textGraellaWord.value.split('\n');
-                const linies = [];
-                for(let l of liniesRaw) {
-                    let neta = l.replace(/\r/g, '').trim();
-                    if(!neta) continue;
-                    let cols = neta.split('\t');
-                    if(cols.length < 2 && neta.includes('  ')) {
-                        cols = neta.split(/\s{3,}/); // Fallback: si no hi ha tabuladors, parteix pels espais grans
+                // Funcio clau per evitar que els salts de línia de dins d'una casella de Word trenquin la taula
+                const parseTSV = (text) => {
+                    let rows = [], curRow = [], curCell = '', inQuotes = false;
+                    text = text.replace(/\r/g, ''); 
+                    for (let i = 0; i < text.length; i++) {
+                        let c = text[i];
+                        if (c === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (c === '\t' && !inQuotes) {
+                            curRow.push(curCell.trim());
+                            curCell = '';
+                        } else if (c === '\n' && !inQuotes) {
+                            curRow.push(curCell.trim());
+                            rows.push(curRow);
+                            curRow = [];
+                            curCell = '';
+                        } else {
+                            curCell += c;
+                        }
                     }
-                    linies.push(cols);
-                }
+                    if (curCell || curRow.length > 0) {
+                        curRow.push(curCell.trim());
+                        rows.push(curRow);
+                    }
+                    return rows;
+                };
 
+                const linies = parseTSV(textGraellaWord.value);
                 const nousRegistres = [];
                 let horesTrobades = [];
 
@@ -547,29 +539,25 @@
                     if(columnes.length < 2) continue; 
 
                     let horaWord = columnes[0].toLowerCase().trim();
-                    if(horaWord.includes('hora') || horaWord === '') continue; 
+                    // Si la primera columna no té cap número, saltem (són els títols)
+                    if(horaWord === '' || !/\d/.test(horaWord)) continue; 
                     
                     horesTrobades.push(horaWord);
 
-                    // Lògica matemàtica avançada de cerca d'hores
+                    // Lògica matemàtica de cerca d'hores
                     const blocMatch = horariEscola.value.find(b => {
-                        const wNet = horaWord.replace(/\s+/g, '');
-                        const aNet = b.nom.toLowerCase().replace(/\s+/g, '');
-                        if(wNet === aNet) return true;
-                        
                         const nW = horaWord.match(/\d+/g);
-                        const nA = b.nom.toLowerCase().match(/\d+/g);
+                        const nA = b.nom.match(/\d+/g);
                         if(nW && nA) {
-                            if (nW.join('') === nA.join('')) return true;
-                            let w = nW.map(Number).filter(n => !isNaN(n) && n !== 0);
-                            let a = nA.map(Number).filter(n => !isNaN(n) && n !== 0);
-                            if (w.length > 0 && w.join('-') === a.join('-')) return true;
+                            // Converteix a enters per treure els "0" de l'esquerra: 09 === 9
+                            return nW.map(n => parseInt(n)).join('-') === nA.map(n => parseInt(n)).join('-');
                         }
                         return false;
                     });
 
                     if(!blocMatch) continue;
 
+                    // Iterem pels 5 dies
                     for(let d=1; d<=5; d++) {
                         let textCasella = (columnes[d] || '').trim();
                         textCasella = textCasella.replace(/^"|"$/g, '').trim(); 
@@ -602,50 +590,13 @@
                     }
                 } else {
                     let horesUniques = [...new Set(horesTrobades)].slice(0, 5).join(" | ");
-                    alert("❌ No he pogut llegir correctament l'hora. \n\nEl sistema ha llegit això al teu text: \n" + horesUniques + "\n\nSi no l'ha trobat, és perquè no coincideix amb cap bloc de la pestanya 'Configuració'.");
+                    alert("❌ No he pogut relacionar les hores.\n\nEl sistema ha intentat llegir aquestes hores de la teva taula:\n" + horesUniques + "\n\nAssegura't de que coincideixin exactament amb les hores que tens donades d'alta a la pestanya 'Configuració'.");
                 }
             };
 
             const getAssignacionsGrup = (grupId, dia, blocId) => { return assignacionsHorari.value.filter(a => a.grup === grupId && a.dia === dia && a.bloc_id === blocId); };
 
-            const importarHorarisExcel = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = window.XLSX.read(data, { type: 'array' });
-                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const rows = window.XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                        let errors = 0; const nousRegistres = [];
-
-                        for (let i = 1; i < rows.length; i++) {
-                            const row = rows[i]; if (!row || row.length < 3) continue; 
-                            const nomMestre = (row[0] || '').toString().trim(); const diaStr = (row[1] || '').toString().trim();
-                            const blocStr = (row[2] || '').toString().trim(); const grupStr = (row[3] || '').toString().trim();
-                            const materiaStr = (row[4] || '').toString().trim(); const comodiStr = (row[5] || '').toString().trim().toLowerCase();
-                            const isComodi = ['sí', 'si', 'x', '1', 'true', 'v'].includes(comodiStr);
-                            if(!nomMestre) continue;
-                            const docent = docents.value.find(d => d.nom.toLowerCase() === nomMestre.toLowerCase());
-                            const bloc = horariEscola.value.find(b => b.nom.toLowerCase() === blocStr.toLowerCase());
-                            if (docent && bloc && diesSetmana.includes(diaStr)) {
-                                nousRegistres.push({ docent_id: docent.id, dia: diaStr, bloc_id: bloc.id, grup: grupStr, materia: materiaStr, disponible: isComodi });
-                            } else { errors++; }
-                        }
-                        if (nousRegistres.length > 0) {
-                            for (let nr of nousRegistres) { await db.from('assignacions').delete().match({docent_id: nr.docent_id, dia: nr.dia, bloc_id: nr.bloc_id}); }
-                            const { data: inserted, error } = await db.from('assignacions').insert(nousRegistres).select();
-                            if (error) throw error;
-                            await carregarDadesBase(); alert(`✅ Excel processat! S'han importat ${inserted.length} hores. (Errors: ${errors})`);
-                        } else { alert("No s'ha pogut importar res. Revisa l'estructura."); }
-                    } catch (err) { alert("Error processant l'arxiu Excel: " + err.message); }
-                    event.target.value = null;
-                };
-                reader.readAsArrayBuffer(file);
-            };
-
-            // --- CONFIGURACIÓ ---
+            // --- CONFIGURACIÓ (MESTRES, GRUPS, BLOCS) ---
             const afegirMestre = async () => {
                 if(nouMestreNom.value.trim()) {
                     const { data, error } = await db.from('docents').insert({ nom: nouMestreNom.value.trim(), categoria: novaCategoriaMestre.value }).select();
@@ -723,6 +674,7 @@
                 }
             };
 
+            // --- UTILITATS DEL TAULER ---
             const minutsPendentsTotals = computed(() => { let t = 0; llistaAbsencies.value.forEach(a => { t += a.minutsPendents; }); return t; });
             const obtenirNomDocent = (id) => { const d = docents.value.find(x => x.id === id); return d ? d.nom : 'Desconegut'; };
             
@@ -756,8 +708,8 @@
                 dataAvui, nomDiaAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
                 horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, grupEditat, textGraellaWord,
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
-                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, horarisMassius, nouGrupNom, nouBlocNom, nouBlocMinuts,
-                iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup, importarHorarisExcel, importarGraellaWord,
+                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, nouGrupNom, nouBlocNom, nouBlocMinuts,
+                iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup, importarGraellaWord,
                 mestresDisponiblesAvui, obtenirNomDocent, registrarAbsencia, eliminarAbsencia, prepararNovaAssignacio, 
                 confirmarAssignacio, esborrarAssignacio, opcionsDurada, afegirMestre, iniciarEdicioMestre, guardarEdicioMestre, afegirMestresMassiu, esborrarMestre,
                 afegirGrup, iniciarEdicioGrup, guardarEdicioGrup, esborrarGrup, afegirBloc, esborrarBloc
