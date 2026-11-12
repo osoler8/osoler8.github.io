@@ -37,8 +37,7 @@
 
 <div id="app" v-cloak>
     <datalist id="llista-grups">
-        <option v-for="g in grupsTots" :key="g" :value="g"></option>
-        <option v-for="g in grupsAltres" :key="g" :value="g"></option>
+        <option v-for="g in llistaGrupsDinamica" :key="g" :value="g"></option>
     </datalist>
 
     <!-- LOGIN -->
@@ -81,9 +80,9 @@
         </header>
 
         <!-- VISTA 1: TAULER -->
-        <main v-if="vistaActual === 'tauler'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <main v-if="vistaActual === 'tauler'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div class="lg:col-span-1 space-y-6">
-                <!-- Nou registre d'absència múltiple -->
+                <!-- Registre d'absències múltiple -->
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-lg font-semibold border-b pb-2 mb-4">Registrar absència</h3>
                     <div class="space-y-4">
@@ -96,7 +95,7 @@
                         </div>
                         <div>
                             <label class="block text-sm text-gray-600 mb-1">Quines hores faltarà?</label>
-                            <div class="space-y-2 max-h-40 overflow-y-auto border p-2 rounded bg-gray-50">
+                            <div class="space-y-2 border p-2 rounded bg-gray-50">
                                 <label v-for="b in horariEscola" :key="b.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
                                     <input type="checkbox" :value="b" v-model="novaAbsencia.franges" class="rounded text-blue-600 w-4 h-4">
                                     {{ b.nom }}
@@ -106,25 +105,10 @@
                         <button @click="registrarAbsencia" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded hover:bg-blue-200 transition">Afegir al tauler</button>
                     </div>
                 </div>
-
-                <!-- Mestres Disponibles -->
-                <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
-                    <h3 class="text-lg font-semibold border-b pb-2 mb-4 text-green-700">Mestres disponibles (comodí)</h3>
-                    <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        <div v-for="b in horariEscola" :key="b.id" class="bg-green-50 p-2 rounded border border-green-100">
-                            <span class="font-bold text-xs border-b border-green-200 pb-1 block mb-2">{{ b.nom }}</span>
-                            <span v-if="mestresDisponiblesAvui(b.id).length === 0" class="text-xs text-gray-500 italic">Cap mestre disponible.</span>
-                            <div v-for="asig in mestresDisponiblesAvui(b.id)" :key="asig.id" class="text-xs bg-white px-2 py-1 mb-1 rounded border shadow-sm flex justify-between">
-                                <span class="font-bold text-green-800">{{ obtenirNomDocent(asig.docent_id) }}</span>
-                                <span class="text-gray-500 truncate ml-2">{{ asig.grup }} {{ asig.materia ? '('+asig.materia+')' : '' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Tauler Central -->
-            <div class="lg:col-span-2">
+            <div class="lg:col-span-3">
                 <div class="bg-white rounded-lg shadow p-5">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
                         <h3 class="text-lg font-semibold">Llista d'absències a cobrir</h3>
@@ -139,6 +123,7 @@
                         <tbody>
                             <tr v-if="llistaAbsencies.length === 0"><td colspan="4" class="p-6 text-center text-gray-400">Tot l'equip està operatiu avui.</td></tr>
                             <template v-for="(abs, i) in llistaAbsencies" :key="abs.id">
+                                <!-- Fila principal -->
                                 <tr class="border-b bg-gray-50/50">
                                     <td class="p-3 font-bold">{{ abs.nomDocent }}</td>
                                     <td class="p-3">{{ abs.blocNom }}</td>
@@ -151,16 +136,47 @@
                                         <button @click="eliminarAbsencia(i)" class="text-gray-400 hover:text-red-500 ml-2" title="Esborrar absència"><i class="fa-solid fa-xmark"></i></button>
                                     </td>
                                 </tr>
+                                
+                                <!-- Files de cobertura (si n'hi ha) -->
                                 <tr v-for="(ass, idxA) in abs.assignacions" :key="idxA" class="bg-gray-50">
                                     <td colspan="3" class="p-2 pl-10 text-xs text-gray-600"><i class="fa-solid fa-turn-up fa-rotate-90 mr-2"></i> {{ ass.durada }}' coberts per <b>{{ ass.nomSubstitut }}</b></td>
                                     <td class="p-2 text-right"><button @click="esborrarAssignacio(abs, idxA)" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button></td>
                                 </tr>
-                                <tr v-if="abs.id === assignacioEnCurs.absenciaId" class="bg-blue-50">
-                                    <td colspan="4" class="p-2 pl-10 text-xs flex items-center justify-end">
-                                        <select v-model="assignacioEnCurs.durada" class="border rounded p-1 mr-2"><option v-for="opt in opcionsDurada(abs.minutsPendents)" :key="opt" :value="opt">{{ opt }} min</option></select>
-                                        <select v-model="assignacioEnCurs.substitut" class="border rounded p-1 mr-2"><option value="" disabled>Substitut...</option><option v-for="d in docents" :key="d.id" :value="d">{{ d.nom }}</option></select>
-                                        <button @click="confirmarAssignacio" class="bg-green-600 text-white px-2 py-1 rounded font-bold hover:bg-green-700">Guardar</button>
-                                        <button @click="assignacioEnCurs.absenciaId = null" class="text-gray-500 hover:text-gray-700 ml-2 font-bold">X</button>
+
+                                <!-- INTEGRACIÓ: El desplegable i els comodins apareixen aquí directament! -->
+                                <tr v-if="abs.id === assignacioEnCurs.absenciaId" class="bg-blue-50/50 border-b border-blue-100">
+                                    <td colspan="4" class="p-4 pl-10">
+                                        <!-- Botons ràpids dels mestres lliures en aquesta franja -->
+                                        <div class="mb-3 bg-white p-3 rounded border border-blue-100 shadow-sm">
+                                            <span class="text-xs font-bold text-green-700 block mb-2"><i class="fa-solid fa-hand-sparkles"></i> Mestres lliures en aquesta franja:</span>
+                                            <div v-if="mestresDisponiblesAvui(abs.blocId).length === 0" class="text-xs text-gray-400 italic">Cap comodí disponible. Tria del claustre complert.</div>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button v-for="disp in mestresDisponiblesAvui(abs.blocId)" :key="disp.id" 
+                                                        @click="assignacioEnCurs.substitut = docents.find(d => d.id === disp.docent_id)"
+                                                        class="bg-green-50 border border-green-200 text-green-800 text-xs px-2 py-1 rounded hover:bg-green-100 transition shadow-sm">
+                                                    <b>{{ obtenirNomDocent(disp.docent_id) }}</b> <span class="text-gray-500">({{ disp.grup || 'Lliure' }})</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Selector final manual per guardar -->
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs text-gray-600 font-bold">Resolució:</span>
+                                            <select v-model="assignacioEnCurs.durada" class="border rounded text-sm p-1"><option v-for="opt in opcionsDurada(abs.minutsPendents)" :key="opt" :value="opt">{{ opt }} min</option></select>
+                                            <select v-model="assignacioEnCurs.substitut" class="border rounded text-sm p-1 flex-1">
+                                                <option value="" disabled>Selecciona qui farà la guàrdia...</option>
+                                                <optgroup label="✅ Disponibles ara (comodí)">
+                                                    <option v-for="disp in mestresDisponiblesAvui(abs.blocId)" :key="'d'+disp.id" :value="docents.find(d => d.id === disp.docent_id)">
+                                                        {{ obtenirNomDocent(disp.docent_id) }}
+                                                    </option>
+                                                </optgroup>
+                                                <optgroup label="Tots els mestres">
+                                                    <option v-for="d in docents" :key="d.id" :value="d">{{ d.nom }}</option>
+                                                </optgroup>
+                                            </select>
+                                            <button @click="confirmarAssignacio" class="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold hover:bg-green-700">Guardar</button>
+                                            <button @click="assignacioEnCurs.absenciaId = null" class="text-gray-500 hover:text-gray-700 px-2 text-sm">Cancel·lar</button>
+                                        </div>
                                     </td>
                                 </tr>
                             </template>
@@ -218,7 +234,7 @@
                                                class="input-horari">
                                         
                                         <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" 
-                                                :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600' : 'bg-gray-200 text-gray-700'" class="w-full py-1 text-[10px] font-bold rounded border hover:bg-gray-300">
+                                                :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600' : 'bg-gray-200 text-gray-700'" class="w-full py-1 text-[10px] font-bold rounded border hover:bg-gray-300 transition-colors">
                                             <i class="fa-solid fa-hand-sparkles"></i> Comodí / guàrdia
                                         </button>
                                     </div>
@@ -253,7 +269,7 @@
                     </table>
                 </div>
 
-                <!-- IMPORTACIÓ MASSIVA D'HORARIS (Novetat) -->
+                <!-- IMPORTACIÓ MASSIVA D'HORARIS -->
                 <div class="mt-8 border-t pt-6">
                     <details class="bg-blue-50 p-4 rounded-lg border border-blue-100 group">
                         <summary class="font-bold text-blue-900 cursor-pointer flex items-center gap-2">
@@ -276,38 +292,55 @@
         </main>
 
         <!-- VISTA 3: CONFIGURACIÓ -->
-        <main v-if="vistaActual === 'configuracio'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-indigo-600 flex flex-col h-full">
-                <h3 class="text-xl font-bold mb-4">Claustre de mestres</h3>
-                
-                <ul class="space-y-2 max-h-96 overflow-y-auto pr-2 mb-4 flex-1">
-                    <li v-if="docents.length === 0" class="text-gray-400 text-sm italic">Encara no hi ha cap mestre registrat.</li>
-                    <li v-for="(mestre, index) in docents" :key="mestre.id" class="flex justify-between p-3 bg-gray-50 rounded border">
+        <main v-if="vistaActual === 'configuracio'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- MESTRES -->
+            <div class="bg-white rounded-lg shadow p-5 border-t-4 border-indigo-600 flex flex-col">
+                <h3 class="text-lg font-bold mb-4">1. Claustre</h3>
+                <ul class="space-y-2 max-h-60 overflow-y-auto pr-2 mb-4 flex-1">
+                    <li v-if="docents.length === 0" class="text-gray-400 text-sm italic">Cap mestre registrat.</li>
+                    <li v-for="(mestre, index) in docents" :key="mestre.id" class="flex justify-between p-2 bg-gray-50 rounded border text-sm">
                         <span class="font-medium">{{ mestre.nom }}</span>
                         <button @click="esborrarMestre(index)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
                     </li>
                 </ul>
-
-                <div class="mt-4 border-t pt-4 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                    <h4 class="font-bold text-sm mb-2 text-indigo-900"><i class="fa-solid fa-bolt text-yellow-500"></i> Afegir mestres de cop</h4>
-                    <p class="text-xs text-indigo-700 mb-2">Copia la llista de noms d'un Excel i enganxa-la aquí sota (un nom per línia).</p>
-                    <textarea v-model="nomsMassius" class="w-full border border-indigo-200 p-2 rounded text-sm mb-2" rows="4" placeholder="Mestre 1&#10;Mestre 2..."></textarea>
-                    <button @click="afegirMestresMassiu" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-indigo-700 transition shadow">Importar tota la llista</button>
+                <div class="border-t pt-3 bg-indigo-50 p-3 rounded border border-indigo-100">
+                    <h4 class="font-bold text-xs mb-2 text-indigo-900"><i class="fa-solid fa-bolt text-yellow-500"></i> Afegir de cop (des d'Excel)</h4>
+                    <textarea v-model="nomsMassius" class="w-full border border-indigo-200 p-2 rounded text-xs mb-2" rows="3" placeholder="Mestre 1&#10;Mestre 2..."></textarea>
+                    <button @click="afegirMestresMassiu" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-bold w-full hover:bg-indigo-700">Importar llista</button>
                 </div>
             </div>
-            
-            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-teal-600">
-                <h3 class="text-xl font-bold mb-4">Estructura del dia (blocs)</h3>
+
+            <!-- GRUPS -->
+            <div class="bg-white rounded-lg shadow p-5 border-t-4 border-emerald-600 flex flex-col">
+                <h3 class="text-lg font-bold mb-4">2. Grups i classes</h3>
                 <div class="flex gap-2 mb-4">
-                    <input v-model="nouBlocNom" type="text" placeholder="Ex: 09:00 - 10:00" class="flex-1 border p-2 rounded text-sm">
-                    <select v-model="nouBlocMinuts" class="border p-2 rounded text-sm w-24">
-                        <option value="30">30'</option><option value="45">45'</option><option value="60">60'</option><option value="90">90'</option>
-                    </select>
-                    <button @click="afegirBloc" class="bg-teal-600 text-white px-4 rounded font-bold hover:bg-teal-700">+</button>
+                    <input v-model="nouGrupNom" type="text" placeholder="Ex: 6è C" class="flex-1 border p-2 rounded text-sm">
+                    <button @click="afegirGrup" class="bg-emerald-600 text-white px-3 rounded font-bold hover:bg-emerald-700">+</button>
                 </div>
-                <ul class="space-y-2 max-h-96 overflow-y-auto pr-2">
-                    <li v-for="(bloc, index) in horariEscola" :key="bloc.id" class="flex justify-between items-center p-3 bg-gray-50 rounded border">
-                        <span class="font-bold text-sm">{{ bloc.nom }} ({{ bloc.minuts_totals }}')</span>
+                <ul class="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    <li v-for="(grup, index) in grupsTots" :key="grup.id" class="flex justify-between items-center p-2 bg-gray-50 rounded border text-sm">
+                        <span class="font-medium">{{ grup.nom }}</span>
+                        <button @click="esborrarGrup(index)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- BLOCS HORARIS -->
+            <div class="bg-white rounded-lg shadow p-5 border-t-4 border-teal-600">
+                <h3 class="text-lg font-bold mb-4">3. Blocs horaris</h3>
+                <div class="flex flex-col gap-2 mb-4">
+                    <input v-model="nouBlocNom" type="text" placeholder="Nom (Ex: 09:00 - 10:00)" class="border p-2 rounded text-sm">
+                    <div class="flex gap-2">
+                        <select v-model="nouBlocMinuts" class="flex-1 border p-2 rounded text-sm">
+                            <option value="30">30'</option><option value="45">45'</option><option value="60">60'</option><option value="90">90'</option>
+                        </select>
+                        <button @click="afegirBloc" class="bg-teal-600 text-white px-4 rounded font-bold hover:bg-teal-700">+</button>
+                    </div>
+                </div>
+                <ul class="space-y-2 max-h-80 overflow-y-auto pr-2">
+                    <li v-for="(bloc, index) in horariEscola" :key="bloc.id" class="flex justify-between items-center p-2 bg-gray-50 rounded border text-sm">
+                        <span class="font-bold">{{ bloc.nom }} <span class="text-gray-500 font-normal">({{ bloc.minuts_totals }}')</span></span>
                         <button @click="esborrarBloc(index)" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can"></i></button>
                     </li>
                 </ul>
@@ -333,15 +366,14 @@
             const dataAvui = dataActual.toLocaleDateString('ca-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
             const nomsDiesSetmana = ['Diumenge', 'Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres', 'Dissabte'];
             const nomDiaAvui = nomsDiesSetmana[dataActual.getDay()];
-
             const diesSetmana = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres'];
-            const grupsTots = ['I3 A', 'I3 B', 'I4 A', 'I4 B', 'I5 A', 'I5 B', '1r A', '1r B', '2n A', '2n B', '3r A', '3r B', '4t A', '4t B', '5è A', '5è B', '6è A', '6è B'];
             const grupsAltres = ['Reunió', 'Coordinació', 'Suport', 'SEP', 'Pati', 'Tutoria', 'Piscina', 'Desdoblament'];
 
             const docents = ref([]);
             const horariEscola = ref([]);
             const assignacionsHorari = ref([]);
             const llistaAbsencies = ref([]); 
+            const grupsTots = ref([]); // Ara carregat des de Supabase!
             
             const novaAbsencia = ref({ docent_id: '', franges: [] });
             const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
@@ -353,29 +385,32 @@
             const nouMestreNom = ref('');
             const nomsMassius = ref(''); 
             const horarisMassius = ref('');
+            const nouGrupNom = ref('');
             
             const nouBlocNom = ref('');
             const nouBlocMinuts = ref('60');
 
             const llistaGrupsDinamica = computed(() => {
-                const totsElsGrups = assignacionsHorari.value.map(a => a.grup).filter(g => g !== '');
-                const unics = [...new Set([...grupsTots, ...totsElsGrups])].sort();
-                return unics;
+                const grupsBase = grupsTots.value.map(g => g.nom);
+                const totsElsGrupsTasca = assignacionsHorari.value.map(a => a.grup).filter(g => g !== '');
+                return [...new Set([...grupsBase, ...totsElsGrupsTasca])].sort();
             });
 
             // --- CARREGAR DADES ---
             const carregarDadesBase = async () => {
-                const [resDocents, resBlocs, resAssignacions] = await Promise.all([
+                const [resDocents, resBlocs, resAssignacions, resGrups] = await Promise.all([
                     db.from('docents').select('*').order('nom'),
                     db.from('blocs').select('*').order('ordre'),
-                    db.from('assignacions').select('*')
+                    db.from('assignacions').select('*'),
+                    db.from('grups').select('*').order('ordre')
                 ]);
+                
                 if (resDocents.error) alert("Error llegint mestres: " + resDocents.error.message);
-                if (resBlocs.error) alert("Error llegint horaris: " + resBlocs.error.message);
                 
                 if(resDocents.data) docents.value = resDocents.data;
                 if(resBlocs.data) horariEscola.value = resBlocs.data;
                 if(resAssignacions.data) assignacionsHorari.value = resAssignacions.data;
+                if(resGrups.data) grupsTots.value = resGrups.data;
             };
 
             onMounted(async () => {
@@ -436,7 +471,6 @@
 
             const getAssignacionsGrup = (grupId, dia, blocId) => { return assignacionsHorari.value.filter(a => a.grup === grupId && a.dia === dia && a.bloc_id === blocId); };
 
-            // --- IMPORTACIÓ MASSIVA HORARIS ---
             const importarHorarisMassius = async () => {
                 if(!horarisMassius.value.trim()) return;
                 const linies = horarisMassius.value.split('\n').filter(l => l.trim() !== '');
@@ -462,15 +496,11 @@
                     for (let nr of nousRegistres) { await db.from('assignacions').delete().match({docent_id: nr.docent_id, dia: nr.dia, bloc_id: nr.bloc_id}); }
                     const { data, error } = await db.from('assignacions').insert(nousRegistres).select();
                     if(error) { alert("Error guardant horaris: " + error.message); } 
-                    else {
-                        await carregarDadesBase();
-                        alert(`✅ S'han importat ${data.length} registres. (Línies ignorades/error: ${errors})`);
-                        horarisMassius.value = '';
-                    }
-                } else { alert("No s'ha pogut importar cap registre. Revisa que Mestre, Dia i Bloc coincideixin amb el programa."); }
+                    else { await carregarDadesBase(); alert(`✅ S'han importat ${data.length} registres. (Línies ignorades: ${errors})`); horarisMassius.value = ''; }
+                } else { alert("No s'ha pogut importar res. Revisa que Mestre, Dia i Bloc coincideixin exactament."); }
             };
 
-            // --- CONFIGURACIÓ (MESTRES) ---
+            // --- CONFIGURACIÓ (MESTRES, GRUPS, BLOCS) ---
             const afegirMestre = async () => {
                 if(nouMestreNom.value.trim()) {
                     const { data, error } = await db.from('docents').insert({ nom: nouMestreNom.value.trim() }).select();
@@ -494,6 +524,22 @@
                     docents.value.splice(index, 1);
                 }
             };
+
+            const afegirGrup = async () => {
+                if(nouGrupNom.value.trim()) {
+                    const ordreCalculat = grupsTots.value.length + 1;
+                    const { data } = await db.from('grups').insert({ nom: nouGrupNom.value.trim(), ordre: ordreCalculat }).select();
+                    if(data && data.length > 0) { grupsTots.value.push(data[0]); nouGrupNom.value = ''; }
+                }
+            };
+            const esborrarGrup = async (index) => {
+                if(confirm("Segur que vols eliminar aquesta classe del llistat?")) {
+                    const idEsborrar = grupsTots.value[index].id;
+                    await db.from('grups').delete().eq('id', idEsborrar);
+                    grupsTots.value.splice(index, 1);
+                }
+            };
+
             const afegirBloc = async () => {
                 if(nouBlocNom.value.trim()) {
                     const minuts = parseInt(nouBlocMinuts.value); const ordreCalculat = horariEscola.value.length + 1;
@@ -513,6 +559,7 @@
             // --- UTILITATS DEL TAULER ---
             const minutsPendentsTotals = computed(() => { let t = 0; llistaAbsencies.value.forEach(a => { t += a.minutsPendents; }); return t; });
             const obtenirNomDocent = (id) => { const d = docents.value.find(x => x.id === id); return d ? d.nom : 'Desconegut'; };
+            
             const mestresDisponiblesAvui = (blocId) => {
                 if(!diesSetmana.includes(nomDiaAvui)) return [];
                 return assignacionsHorari.value.filter(a => a.dia === nomDiaAvui && a.bloc_id === blocId && a.disponible === true);
@@ -529,6 +576,7 @@
             const eliminarAbsencia = (index) => { llistaAbsencies.value.splice(index, 1); };
             const opcionsDurada = (max) => { const ops = []; for(let i=15; i<=max; i+=15) ops.push(i); return ops; };
             const prepararNovaAssignacio = (abs) => { assignacioEnCurs.value = { absenciaId: abs.id, durada: abs.minutsPendents, substitut: '' }; };
+            
             const confirmarAssignacio = () => {
                 if(!assignacioEnCurs.value.substitut || !assignacioEnCurs.value.durada) return;
                 const abs = llistaAbsencies.value.find(a => a.id === assignacioEnCurs.value.absenciaId); const temps = parseInt(assignacioEnCurs.value.durada);
@@ -541,11 +589,11 @@
                 usuariAutenticat, correu, contrasenya, errorLogin, vistaActual, modeHorari, 
                 dataAvui, nomDiaAvui, docents, horariEscola, diesSetmana, grupsTots, grupsAltres, llistaGrupsDinamica,
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
-                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, horarisMassius, nouBlocNom, nouBlocMinuts,
+                minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nomsMassius, horarisMassius, nouGrupNom, nouBlocNom, nouBlocMinuts,
                 iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup, importarHorarisMassius,
                 mestresDisponiblesAvui, obtenirNomDocent, registrarAbsencia, eliminarAbsencia, prepararNovaAssignacio, 
                 confirmarAssignacio, esborrarAssignacio, opcionsDurada, afegirMestre, afegirMestresMassiu, esborrarMestre,
-                afegirBloc, esborrarBloc
+                afegirGrup, esborrarGrup, afegirBloc, esborrarBloc
             }
         }
     });
