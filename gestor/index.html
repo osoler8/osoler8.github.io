@@ -239,11 +239,11 @@
                         </div>
                     </div>
 
-                    <!-- EINA ESTRELLA: API DE GEMINI NATIVA -->
+                    <!-- EINA ESTRELLA: API DE GEMINI -->
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-wand-magic-sparkles text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Màgia amb Intel·ligència Artificial (Gemini)</h4>
-                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia tota la taula de Word sencer i enganxa-la aquí. La IA resoldrà els desdoblaments i franges rares automàticament.</p>
+                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia la taula del Word tal qual i enganxa-la aquí. La IA s'encarregarà de desxifrar les hores multillínia i encaixar-ho al teu horari.</p>
                         
                         <div v-if="!apiGeminiConfigurada" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-xs font-bold mb-3 flex items-center gap-3">
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i>
@@ -458,6 +458,9 @@
 
             const dataAvui = new Date().toLocaleDateString('ca-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
             
+            // LA VARIABLE RECUPERADA!
+            const nomDiaAvui = nomsDiesSetmana[new Date().getDay()];
+            
             const nomDiaSetmanaSeleccionat = computed(() => {
                 const d = new Date(dataSeleccionada.value);
                 return nomsDiesSetmana[d.getDay()];
@@ -584,7 +587,6 @@
                 else alert("✅ Clau de Gemini desada de forma segura a Supabase.");
             };
 
-            // CONNEXIÓ AVANÇADA AMB GEMINI 1.5 FLASH (MODE JSON STRICT)
             const processarAmbGemini = async () => {
                 if(!geminiApiKey.value) return alert("Falta la clau API.");
                 carregantIA.value = true;
@@ -713,7 +715,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarMestre = async (index) => {
-                if(confirm("Eliminar mestre i tot el seu horari?")) {
+                if(confirm("Eliminar mestre i tot el seu horari de la base de dades?")) {
                     const idEsborrar = docents.value[index].id;
                     await db.from('docents').delete().eq('id', idEsborrar);
                     assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== idEsborrar);
@@ -740,7 +742,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarGrup = async (index) => {
-                if(confirm("Eliminar aquesta classe?")) {
+                if(confirm("Segur que vols eliminar aquesta classe del llistat?")) {
                     const idEsborrar = grupsTots.value[index].id;
                     await db.from('grups').delete().eq('id', idEsborrar);
                     grupsTots.value.splice(index, 1);
@@ -755,7 +757,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarBloc = async (index) => {
-                if(confirm("Eliminar aquesta franja horària?")) {
+                if(confirm("Segur que vols eliminar aquesta franja horària?")) {
                     const idEsborrar = horariEscola.value[index].id;
                     await db.from('blocs').delete().eq('id', idEsborrar);
                     assignacionsHorari.value = assignacionsHorari.value.filter(a => a.bloc_id !== idEsborrar);
