@@ -227,7 +227,7 @@
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-wand-magic-sparkles text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Màgia amb Intel·ligència Artificial (Gemini)</h4>
-                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia la taula del Word tal qual (o qualsevol text d'horari) i enganxa'l aquí. La IA s'encarregarà d'entendre els dies, les hores, els desdoblaments i col·locar-ho tot a lloc sense que hagis de patir pels formats.</p>
+                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia tota la taula de Word sencer i enganxa-la aquí. La IA resoldrà els desdoblaments i franges rares automàticament.</p>
                         
                         <div v-if="!apiGeminiConfigurada" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-xs font-bold mb-3 flex items-center gap-3">
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i>
@@ -239,7 +239,7 @@
                             <button @click="processarAmbGemini" :disabled="carregantIA || !textGraellaWord" class="mt-3 bg-indigo-600 text-white font-bold px-6 py-2 rounded text-sm hover:bg-indigo-700 shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <i v-if="carregantIA" class="fa-solid fa-circle-notch fa-spin"></i>
                                 <i v-else class="fa-solid fa-wand-magic-sparkles"></i>
-                                {{ carregantIA ? 'Processant amb IA...' : 'Interpretar i construir horari' }}
+                                {{ carregantIA ? 'Processant amb IA (espera uns segons)...' : 'Interpretar i construir horari' }}
                             </button>
                         </div>
                     </div>
