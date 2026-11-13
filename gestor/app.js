@@ -180,13 +180,13 @@ const app = createApp({
             try {
                 const blocsDisponibles = horariEscola.value.map(b => b.nom).join(', ');
                 const prompt = `Analitza aquest text copiat d'una taula de Word i extreu-ne un calendari escolar.
-IMPORTANTÍSSIM: Retorna EXACTAMENT un array JSON pur sense cap caràcter addicional, ni la paraula json, només corxets.
+IMPORTANTÍSSIM: Retorna EXACTAMENT un array JSON pur.
 Cada objecte de l'array ha de tenir:
 - "dia": Un d'aquests (Dilluns, Dimarts, Dimecres, Dijous, Divendres). Dedueix-ho per la columna si cal.
 - "bloc_horari": Tria EXACTAMENT UN d'aquests valors literalment: [${blocsDisponibles}]. Relaciona les hores del text amb el bloc que quadri millor per números.
-- "grup": El contingut sencer de la cel·la (ex: "MATEMÀTIQUES" o "LLENGUA"). Fusiona cel·les multilínia si cal.
+- "grup": El contingut sencer de la cel·la (ex: "MATEMÀTIQUES" o "LLENGUA"). Si té salts de línia fusiona'ls en un sol text.
 - "es_comodi": true si és comodí, guàrdia o suport, sinó false.
-(Si la classe dura més d'un bloc, crea un objecte diferent per cada bloc que ocupi)
+(Si la classe dura més d'un bloc, crea un objecte diferent per cada bloc que ocupi. Ignora les hores de DINAR si no tenen text especial).
 
 Text a analitzar:
 ${textGraellaWord.value}`;
@@ -196,7 +196,7 @@ ${textGraellaWord.value}`;
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { responseMimeType: "application/json" } // Protecció contra col·lapses
+                        generationConfig: { responseMimeType: "application/json" } 
                     })
                 });
                 
@@ -426,5 +426,13 @@ ${textGraellaWord.value}`;
         }
     }
 });
+
+app.config.errorHandler = (err) => {
+    document.body.innerHTML = `
+        <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
+            <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error a Vue (app.js)</h2>
+            <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${err.message}</div>
+        </div>`;
+};
 
 app.mount('#app');
