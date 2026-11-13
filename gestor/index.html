@@ -6,7 +6,7 @@
     <title>Gestor de substitucions - Escola Eugeni d'Ors</title>
     
     <script>
-        // Nou escut: Ignora errors d'extensions de Chrome o CDNs emmascarats
+        // Escut: Ignora errors d'extensions de Chrome o CDNs emmascarats
         window.onerror = function(msg, url, line) {
             if (msg.includes('Script error') || line === 0) {
                 console.warn('S\'ha ignorat un error extern (extensió del navegador o bloquejador d\'anuncis).');
@@ -36,9 +36,10 @@
         .punt-absencia { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-top: 2px; }
     </style>
 
-    <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+    <!-- Hem tret el crossorigin d'aquí perquè el disseny torni a funcionar -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
@@ -239,11 +240,11 @@
                         </div>
                     </div>
 
-                    <!-- EINA ESTRELLA: API DE GEMINI -->
+                    <!-- EINA ESTRELLA: API DE GEMINI NATIVA -->
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-wand-magic-sparkles text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Màgia amb Intel·ligència Artificial (Gemini)</h4>
-                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia la taula del Word tal qual i enganxa-la aquí. La IA s'encarregarà de desxifrar les hores multillínia i encaixar-ho al teu horari.</p>
+                        <p class="text-xs text-indigo-700 mb-3 max-w-3xl">Copia tota la taula de Word sencer i enganxa-la aquí. La IA resoldrà els desdoblaments i franges rares automàticament.</p>
                         
                         <div v-if="!apiGeminiConfigurada" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-xs font-bold mb-3 flex items-center gap-3">
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i>
@@ -457,8 +458,6 @@
             const nouBlocMinuts = ref('60');
 
             const dataAvui = new Date().toLocaleDateString('ca-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            
-            // LA VARIABLE RECUPERADA!
             const nomDiaAvui = nomsDiesSetmana[new Date().getDay()];
             
             const nomDiaSetmanaSeleccionat = computed(() => {
@@ -715,7 +714,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarMestre = async (index) => {
-                if(confirm("Eliminar mestre i tot el seu horari de la base de dades?")) {
+                if(confirm("Eliminar mestre i tot el seu horari?")) {
                     const idEsborrar = docents.value[index].id;
                     await db.from('docents').delete().eq('id', idEsborrar);
                     assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== idEsborrar);
@@ -742,7 +741,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarGrup = async (index) => {
-                if(confirm("Segur que vols eliminar aquesta classe del llistat?")) {
+                if(confirm("Eliminar aquesta classe?")) {
                     const idEsborrar = grupsTots.value[index].id;
                     await db.from('grups').delete().eq('id', idEsborrar);
                     grupsTots.value.splice(index, 1);
@@ -757,7 +756,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarBloc = async (index) => {
-                if(confirm("Segur que vols eliminar aquesta franja horària?")) {
+                if(confirm("Eliminar aquesta franja horària?")) {
                     const idEsborrar = horariEscola.value[index].id;
                     await db.from('blocs').delete().eq('id', idEsborrar);
                     assignacionsHorari.value = assignacionsHorari.value.filter(a => a.bloc_id !== idEsborrar);
