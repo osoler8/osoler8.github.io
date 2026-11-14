@@ -142,7 +142,7 @@
                                     <td class="p-3 text-gray-600"><i class="fa-regular fa-clock text-gray-400 mr-1"></i> {{ obtenirNomBloc(abs.bloc_id) }}</td>
                                     <td class="p-3">
                                         <span v-if="abs.minuts_pendents > 0" class="text-red-600 font-bold">Falten {{ abs.minuts_pendents }}'</span>
-                                        <span v-else class="text-green-600 font-bold">Cobert completament</span>
+                                        <span v-else class="text-green-600 font-bold">Cobert</span>
                                     </td>
                                     <td class="p-3 text-right">
                                         <button v-if="abs.minuts_pendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 text-xs font-bold border border-blue-200 rounded px-3 py-1.5 bg-white hover:bg-blue-50 shadow-sm transition">+ Cobrir</button>
@@ -156,18 +156,18 @@
                                 <tr v-if="assignacioEnCurs.absenciaId === abs.id" class="bg-blue-50/80 border-b border-blue-200">
                                     <td colspan="4" class="p-4 pl-12">
                                         <div class="mb-3 bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                            <span class="text-xs font-bold text-green-700 block mb-2"><i class="fa-solid fa-hand-sparkles"></i> Mestres amb comodí lliure en aquesta franja:</span>
-                                            <div v-if="mestresDisponiblesDiaActual(abs.bloc_id).length === 0" class="text-xs text-gray-400 italic">Cap comodí disponible. Caldrà triar del claustre general.</div>
+                                            <span class="text-xs font-bold text-green-700 block mb-2"><i class="fa-solid fa-hand-sparkles"></i> Mestres disponibles ara mateix:</span>
+                                            <div v-if="mestresDisponiblesDiaActual(abs.bloc_id).length === 0" class="text-xs text-gray-400 italic">Cap comodí disponible. Tria del claustre.</div>
                                             <div class="flex flex-wrap gap-2">
                                                 <button v-for="disp in mestresDisponiblesDiaActual(abs.bloc_id)" :key="disp.id" @click="assignacioEnCurs.substitut = docents.find(d => d.id === disp.docent_id)" class="bg-green-50 border border-green-200 text-green-800 text-xs px-2 py-1 rounded hover:bg-green-100 transition shadow-sm">
-                                                    <b>{{ obtenirNomDocent(disp.docent_id) }}</b> <span class="text-gray-500">({{ disp.grup || 'Lliure' }})</span>
+                                                    <b>{{ obtenirNomDocent(disp.docent_id) }}</b>
                                                 </button>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <select v-model="assignacioEnCurs.durada" class="border rounded text-sm p-1.5 bg-white"><option v-for="opt in opcionsDurada(abs.minuts_pendents)" :key="opt" :value="opt">{{ opt }} minuts</option></select>
                                             <select v-model="assignacioEnCurs.substitut" class="border rounded text-sm p-1.5 flex-1 font-medium bg-white">
-                                                <option value="" disabled>Selecciona docent substitut...</option>
+                                                <option value="" disabled>Docent substitut...</option>
                                                 <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d">{{ d.nom }}</option></optgroup>
                                             </select>
                                             <button @click="confirmarAssignacio" class="bg-green-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-green-700 shadow-sm transition">Guardar</button>
@@ -209,7 +209,7 @@
                         </div>
                     </div>
 
-                    <!-- EINA DE VISIÓ: PUJAR IMATGE (Amb IA PRO) -->
+                    <!-- EINA DE VISIÓ: PUJAR IMATGE -->
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-camera text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Importar des de captura d'imatge</h4>
@@ -289,6 +289,7 @@
                 </div>
             </div>
 
+            <!-- CLAUSTRE -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-indigo-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">1. Claustre</h3>
                 <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
@@ -306,6 +307,7 @@
                 </ul>
             </div>
 
+            <!-- CLASSES -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-emerald-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">2. Classes</h3>
                 <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
@@ -320,6 +322,7 @@
                 </ul>
             </div>
             
+            <!-- BLOCS -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-teal-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">3. Blocs horaris</h3>
                 <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
@@ -466,7 +469,7 @@
                 if(!file) return;
                 
                 carregantIA.value = true;
-                missatgeCarregaIA.value = "Analitzant la imatge de l'horari...";
+                missatgeCarregaIA.value = "Analitzant la imatge...";
                 
                 const reader = new FileReader();
                 reader.onloadend = async function() {
@@ -475,7 +478,7 @@
                         const mimeType = file.type;
                         await enviarImatgeAGemini(base64data, mimeType);
                     } catch(err) {
-                        alert("Error intern en preparar la imatge: " + err.message);
+                        alert("Error desxifrant la imatge: " + err.message);
                         carregantIA.value = false;
                     }
                 };
@@ -486,25 +489,14 @@
             const enviarImatgeAGemini = async (base64data, mimeType) => {
                 try {
                     const blocsDisponibles = horariEscola.value.map(b => b.nom).join(', ');
-                    
-                    // PROMPT OPTIMITZAT A NIVELL DE COORDENADES
-                    const prompt = `Ets un assistent expert en desxifrar taules d'horaris escolars a partir d'imatges.
-Llegeix aquesta imatge analitzant com es creuen els dies i les hores. 
-Fes el següent pas a pas mentalment:
-1. Identifica els dies a la capçalera (Dilluns, Dimarts, Dimecres, Dijous, Divendres).
-2. Identifica les franges horàries a la primera columna.
-3. Creua les hores i els dies per llegir el contingut. Atenció especial a cel·les que ocupen 2 hores (assigna-ho a les 2 franges!)
-4. Ignora "PATI" i "DINAR".
-
-OBLIGATORI: El teu resultat FINAL ha de ser ÚNICAMENT un array JSON pur sense cap marca Markdown ni text addicional.
-Format esperat:
-[
-  { "dia": "Dilluns", "bloc_horari": "9h a 10h", "grup": "LLENGUA", "es_comodi": false }
-]
-Pistes clau:
-- Per a la clau "bloc_horari" Tria EXACTAMENT un dels següents blocs literalment: [${blocsDisponibles}]. 
-- Si la classe és de lectura escriu el text complet (ex: "30' LECTURA").
-- "es_comodi": true només si posa comodí, guàrdia, suport o similar.`;
+                    const prompt = `Extreu l'horari d'aquesta imatge.
+IMPORTANTÍSSIM: Retorna EXACTAMENT un array JSON pur sense cap caràcter addicional. No incloguis cap marca de format.
+Cada objecte de l'array ha de tenir:
+- "dia": (Dilluns, Dimarts, Dimecres, Dijous, Divendres).
+- "bloc_horari": Tria EXACTAMENT un dels següents blocs segons l'hora de la fila de la imatge: [${blocsDisponibles}]. 
+- "grup": El text de la classe (ex: "MATEMÀTIQUES" o "LLENGUA (1/2 grup A)").
+- "es_comodi": true si és comodí, guàrdia o suport, sinó false.
+(Crea un objecte per cada bloc horari que ocupi una classe).`;
 
                     const body = {
                         contents: [{
@@ -513,7 +505,6 @@ Pistes clau:
                                 { inlineData: { mimeType: mimeType, data: base64data } }
                             ]
                         }]
-                        // Hem eliminat el strict responseMimeType per evitar errors de compatibilitat d'algunes claus
                     };
 
                     let retries = 5;
@@ -521,8 +512,8 @@ Pistes clau:
                     let result;
 
                     while(retries > 0) {
-                        // LA IA CORRECTA I POTENT PER A VISIÓ: gemini-1.5-pro
-                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey.value}`, {
+                        // TOT ESTÀ FIXAT I BLINDAT A GEMINI-3.8-FLASH (Cap rastre del 1.5 enlloc del codi)
+                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey.value}`, {
                             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
                         });
                         
@@ -553,7 +544,6 @@ Pistes clau:
                     const nousRegistres = [];
 
                     for(let casella of llistaIA) {
-                        // Creuament intel·ligent ignorant espais extra
                         const blocMatch = horariEscola.value.find(b => b.nom.trim().toLowerCase() === casella.bloc_horari.trim().toLowerCase());
                         if(blocMatch && diesSetmana.includes(casella.dia)) {
                             nousRegistres.push({
