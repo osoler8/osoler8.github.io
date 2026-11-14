@@ -6,15 +6,11 @@
     <title>Gestor de substitucions - Escola Eugeni d'Ors</title>
     
     <script>
-        // Escut: Ignora errors d'extensions de Chrome o CDNs emmascarats
+        // Gestor d'errors net i transparent perquè veiem exactament què passa si alguna cosa falla
         window.onerror = function(msg, url, line) {
-            if (msg.includes('Script error') || line === 0) {
-                console.warn('S\'ha ignorat un error extern (extensió del navegador o bloquejador d\'anuncis).');
-                return true; 
-            }
             document.body.innerHTML = `
                 <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
-                    <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error intern</h2>
+                    <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error</h2>
                     <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${msg} (Línia: ${line})</div>
                 </div>`;
             return false;
@@ -36,6 +32,7 @@
         .punt-absencia { width: 6px; height: 6px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-top: 2px; }
     </style>
 
+    <!-- Enllaços NETS sense crossorigin perquè el disseny i el motor carreguin bé -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -422,7 +419,7 @@
             const correu = ref(''); const contrasenya = ref(''); const errorLogin = ref('');
             const vistaActual = ref('tauler'); const modeHorari = ref('mestre');
             
-            // LA CORRECCIÓ ARREGLADA DEL TOT: Lògica impecable per les dates (sense petar a Vue ni fallar de dia per l'UTC)
+            // LA CORRECCIÓ ARREGLADA DEL TOT: Creem la data directament ben formada sense dependre de funcions complexes
             const obtenirDataAvuiString = () => {
                 const ara = new Date();
                 return `${ara.getFullYear()}-${String(ara.getMonth() + 1).padStart(2, '0')}-${String(ara.getDate()).padStart(2, '0')}`;
@@ -462,6 +459,10 @@
             const nouBlocNom = ref('');
             const nouBlocMinuts = ref('60');
 
+            // I aquí la variable que faltava i feia saltar l'error!
+            const nomDiaAvui = nomsDiesSetmana[new Date().getDay()];
+            const dataAvui = new Date().toLocaleDateString('ca-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
             const nomDiaSetmanaSeleccionat = computed(() => {
                 if(!dataSeleccionada.value) return '';
                 const parts = dataSeleccionada.value.split('-');
@@ -593,6 +594,7 @@
                 else alert("✅ Clau de Gemini desada de forma segura a Supabase.");
             };
 
+            // CONNECTAT A GEMINI 3.8 EN FORMAT PUR
             const processarAmbGemini = async () => {
                 if(!geminiApiKey.value) return alert("Falta la clau API.");
                 carregantIA.value = true;
@@ -752,7 +754,7 @@ ${textGraellaWord.value}`;
                 }
             };
             const esborrarGrup = async (index) => {
-                if(confirm("Eliminar aquesta classe del llistat?")) {
+                if(confirm("Segur que vols eliminar aquesta classe del llistat?")) {
                     const idEsborrar = grupsTots.value[index].id;
                     await db.from('grups').delete().eq('id', idEsborrar);
                     grupsTots.value.splice(index, 1);
@@ -837,7 +839,7 @@ ${textGraellaWord.value}`;
 
             return { 
                 usuariAutenticat, correu, contrasenya, errorLogin, vistaActual, modeHorari, 
-                dataAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
+                dataAvui, nomDiaAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
                 horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, grupEditat, textGraellaWord,
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
                 minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nouGrupNom, nouBlocNom, nouBlocMinuts,
