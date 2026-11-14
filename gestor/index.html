@@ -6,7 +6,6 @@
     <title>Gestor de substitucions - Escola Eugeni d'Ors</title>
     
     <script>
-        // Escut: Ignora errors d'extensions de Chrome o CDNs emmascarats
         window.onerror = function(msg, url, line) {
             if (msg.includes('Script error') || line === 0) {
                 console.warn('S\'ha ignorat un error extern (extensió del navegador o bloquejador d\'anuncis).');
@@ -14,7 +13,7 @@
             }
             document.body.innerHTML = `
                 <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
-                    <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error intern</h2>
+                    <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error</h2>
                     <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${msg} (Línia: ${line})</div>
                 </div>`;
             return false;
@@ -39,7 +38,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- NOVA LLIBRERIA PER LLEGIR WORD NATIVAMENT -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -241,7 +239,7 @@
                         </div>
                     </div>
 
-                    <!-- NOU: EINA ESTRELLA DE PUJADA D'ARXIUS WORD (.DOCX) -->
+                    <!-- EINA ESTRELLA: API DE GEMINI I PUJADA DE WORD (.DOCX) -->
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-file-word text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Màgia amb Intel·ligència Artificial (Gemini)</h4>
@@ -466,6 +464,9 @@
             const nouBlocNom = ref('');
             const nouBlocMinuts = ref('60');
 
+            const nomDiaAvui = nomsDiesSetmana[new Date().getDay()];
+            const dataAvui = new Date().toLocaleDateString('ca-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
             const nomDiaSetmanaSeleccionat = computed(() => {
                 if(!dataSeleccionada.value) return '';
                 const parts = dataSeleccionada.value.split('-');
@@ -597,7 +598,6 @@
                 else alert("✅ Clau de Gemini desada de forma segura a Supabase.");
             };
 
-            // NOU MÈTODE: PUJAR EL WORD I LLEGIR-LO EN HTML
             const pujarIProcessarWord = (event) => {
                 if(!geminiApiKey.value) {
                     alert("Falta la clau API de Gemini a la pestanya 'Configuració'.");
@@ -612,7 +612,6 @@
                 reader.onload = function(e) {
                     const arrayBuffer = e.target.result;
                     
-                    // Converteix el document Word a HTML per mantenir l'estructura de la taula exacta per a la IA
                     window.mammoth.convertToHtml({arrayBuffer: arrayBuffer})
                         .then(function(result) {
                             const htmlText = result.value;
@@ -660,7 +659,6 @@ ${htmlText}`;
                     if(result.error) throw new Error(result.error.message);
                     
                     let textJson = result.candidates[0].content.parts[0].text;
-                    // Neteja extra de format per si la IA es despista
                     textJson = textJson.replace(/^```(json)?\n?/gi, '').replace(/\n?```$/g, '').trim();
                     
                     const llistaIA = JSON.parse(textJson);
@@ -875,20 +873,29 @@ ${htmlText}`;
 
             return { 
                 usuariAutenticat, correu, contrasenya, errorLogin, vistaActual, modeHorari, 
-                dataAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
-                horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, grupEditat, textGraellaWord,
+                dataAvui, nomDiaAvui, docents, docentsAgrupats, categoriesDocents, novaCategoriaMestre, mestreEditat,
+                horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, grupEditat,
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
                 minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nouGrupNom, nouBlocNom, nouBlocMinuts,
                 dataSeleccionada, mesActual, anyActual, nomMesActual, diesDelMes, espaisBuitsCalendari, 
                 nomDiaSetmanaSeleccionat, dataSeleccionadaFormatada, canviarMes, seleccionarData,
-                geminiApiKey, apiGeminiConfigurada, carregantIA, processarAmbGemini, guardarApiKey,
+                geminiApiKey, apiGeminiConfigurada, carregantIA, pujarIProcessarWord, guardarApiKey,
                 iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup,
                 mestresDisponiblesDiaActual, obtenirNomDocent, obtenirNomBloc, registrarAbsencia, eliminarAbsencia, prepararNovaAssignacio, 
                 confirmarAssignacio, esborrarAssignacio, opcionsDurada, afegirMestre, iniciarEdicioMestre, guardarEdicioMestre, esborrarMestre,
-                afegirGrup, iniciarEdicioGrup, guardarEdicioGrup, esborrarGrup, afegirBloc, esborrarBloc, pujarIProcessarWord
+                afegirGrup, iniciarEdicioGrup, guardarEdicioGrup, esborrarGrup, afegirBloc, esborrarBloc
             }
         }
     });
+
+    app.config.errorHandler = (err) => {
+        document.body.innerHTML = `
+            <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
+                <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 Error intern de Vue detectat</h2>
+                <div style="background:white; padding:10px; margin-top:10px; font-family:monospace; border:1px solid #fca5a5;">${err.message}</div>
+                <p style="margin-top:10px; font-size:0.8rem;">Revisa la consola del navegador per més detalls (F12).</p>
+            </div>`;
+    };
 
     app.mount('#app');
 </script>
