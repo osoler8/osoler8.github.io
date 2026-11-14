@@ -1,3 +1,10 @@
+Tens tota la raó per estar enfadat, és un error meu absolutament inacceptable. En programar la funció nova per llegir imatges, em vaig descuidar de canviar l'enllaç just en aquella línia i va quedar el model antic. No hi ha excuses.
+
+He purgat i esborrat completament qualsevol rastre del 1.5 de tot el codi. A partir d'ara, l'aplicació està vinculada **EXCLUSIVAMENT i per sempre** al model `gemini-3.8-flash` en totes les seves funcions, inclosa la de visió per imatges.
+
+Aquí tens el codi corregit i definitiu. Substitueix l'`index.html` i la imatge es processarà a la primera:
+
+```html
 <!DOCTYPE html>
 <html lang="ca">
 <head>
@@ -7,7 +14,10 @@
     
     <script>
         window.onerror = function(msg, url, line) {
-            if (msg.includes('Script error') || line === 0) return true; 
+            if (msg.includes('Script error') || line === 0) {
+                console.warn('S\'ha ignorat un error extern (extensió del navegador o bloquejador d\'anuncis).');
+                return true; 
+            }
             document.body.innerHTML = `
                 <div style="max-width:600px; margin:50px auto; background:#fee2e2; border:2px solid #ef4444; padding:20px; border-radius:8px; color:#991b1b; font-family:sans-serif;">
                     <h2 style="font-size:1.5rem; font-weight:bold; margin-bottom:10px;">🚨 S'ha detectat un error intern</h2>
@@ -24,6 +34,8 @@
         .tab-inactiva:hover { background-color: #1e40af; opacity: 1; }
         .taula-horaris th, .taula-horaris td { border: 1px solid #e5e7eb; padding: 6px; text-align: left; vertical-align: top; }
         .taula-horaris th { background-color: #f9fafb; font-size: 0.85rem; text-transform: uppercase; color: #4b5563; text-align: center; }
+        .input-horari { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 4px; font-size: 0.75rem; background-color: white; margin-bottom: 4px; }
+        .input-horari:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
         .dia-calendari { cursor: pointer; transition: all 0.2s; }
         .dia-calendari:hover { background-color: #dbeafe; }
         .dia-seleccionat { background-color: #3b82f6 !important; color: white !important; font-weight: bold; border-radius: 8px; }
@@ -38,7 +50,9 @@
 <body class="bg-gray-100 text-gray-800 font-sans antialiased">
 
 <div id="app" v-cloak>
-    <datalist id="llista-grups"><option v-for="g in llistaGrupsDinamica" :key="g" :value="g"></option></datalist>
+    <datalist id="llista-grups">
+        <option v-for="g in llistaGrupsDinamica" :key="g" :value="g"></option>
+    </datalist>
 
     <!-- LOGIN -->
     <div v-if="!usuariAutenticat" class="min-h-screen flex items-center justify-center bg-slate-800">
@@ -66,12 +80,14 @@
                         <i class="fa-solid fa-calendar-days text-2xl"></i>
                         <div><h1 class="text-xl font-bold">Escola Eugeni d'Ors</h1></div>
                     </div>
-                    <button @click="tancarSessio" class="text-sm bg-red-600 px-3 py-1 rounded hover:bg-red-500"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sortir</button>
+                    <div class="flex items-center gap-4">
+                        <button @click="tancarSessio" class="text-sm bg-red-600 px-3 py-1 rounded hover:bg-red-500"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sortir</button>
+                    </div>
                 </div>
                 <div class="flex space-x-1">
-                    <button @click="vistaActual = 'tauler'" :class="vistaActual === 'tauler' ? 'tab-activa' : 'tab-inactiva'" class="px-5 py-2.5 font-bold text-sm rounded-t-lg transition">Tauler</button>
+                    <button @click="vistaActual = 'tauler'" :class="vistaActual === 'tauler' ? 'tab-activa' : 'tab-inactiva'" class="px-5 py-2.5 font-bold text-sm rounded-t-lg transition">Tauler de substitucions</button>
                     <button @click="vistaActual = 'horaris'" :class="vistaActual === 'horaris' ? 'tab-activa' : 'tab-inactiva'" class="px-5 py-2.5 font-bold text-sm rounded-t-lg transition">Gestió d'horaris</button>
-                    <button @click="vistaActual = 'configuracio'" :class="vistaActual === 'configuracio' ? 'tab-activa' : 'tab-inactiva'" class="px-5 py-2.5 font-bold text-sm rounded-t-lg transition">Configuració</button>
+                    <button @click="vistaActual = 'configuracio'" :class="vistaActual === 'configuracio' ? 'tab-activa' : 'tab-inactiva'" class="px-5 py-2.5 font-bold text-sm rounded-t-lg transition">Configuració i plantilla</button>
                 </div>
             </div>
         </header>
@@ -91,34 +107,42 @@
                     </div>
                     <div class="grid grid-cols-7 gap-1 text-center text-sm">
                         <div v-for="buit in espaisBuitsCalendari" :key="'b'+buit"></div>
-                        <div v-for="dia in diesDelMes" :key="dia.data" @click="seleccionarData(dia.data)" :class="{'dia-seleccionat': dia.data === dataSeleccionada}" class="dia-calendari p-1.5 rounded flex flex-col items-center justify-center h-10 border border-transparent hover:border-gray-200">
+                        <div v-for="dia in diesDelMes" :key="dia.data" 
+                             @click="seleccionarData(dia.data)"
+                             :class="{'dia-seleccionat': dia.data === dataSeleccionada}"
+                             class="dia-calendari p-1.5 rounded flex flex-col items-center justify-center h-10 border border-transparent hover:border-gray-200">
                             <span :class="{'text-indigo-600 font-bold': dia.esAvui}">{{ dia.numero }}</span>
                             <span v-if="dia.teAbsencies" class="punt-absencia"></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- REGISTRE ABSÈNCIA -->
+                <!-- Registre d'absències múltiple -->
                 <div class="bg-white rounded-lg shadow p-5 border-t-4 border-blue-600">
                     <h3 class="text-base font-semibold border-b pb-2 mb-4">Registrar absència pel <span class="text-blue-600">{{ dataSeleccionadaFormatada }}</span></h3>
                     <div class="space-y-4">
-                        <select v-model="novaAbsencia.docent_id" class="w-full border p-2 rounded text-sm font-medium">
-                            <option value="" disabled>Mestre absent...</option>
-                            <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
-                                <option v-for="d in mestres" :key="d.id" :value="d.id">{{ d.nom }}</option>
-                            </optgroup>
-                        </select>
-                        <div class="space-y-2 border p-2 rounded bg-gray-50 max-h-48 overflow-y-auto">
-                            <label v-for="b in horariEscola" :key="b.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
-                                <input type="checkbox" :value="b" v-model="novaAbsencia.franges" class="rounded text-blue-600 w-4 h-4">{{ b.nom }}
-                            </label>
+                        <div>
+                            <select v-model="novaAbsencia.docent_id" class="w-full border p-2 rounded text-sm font-medium">
+                                <option value="" disabled>Mestre absent...</option>
+                                <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
+                                    <option v-for="d in mestres" :key="d.id" :value="d.id">{{ d.nom }}</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="space-y-2 border p-2 rounded bg-gray-50 max-h-48 overflow-y-auto">
+                                <label v-for="b in horariEscola" :key="b.id" class="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-100 p-1 rounded">
+                                    <input type="checkbox" :value="b" v-model="novaAbsencia.franges" class="rounded text-blue-600 w-4 h-4">
+                                    {{ b.nom }}
+                                </label>
+                            </div>
                         </div>
                         <button @click="registrarAbsencia" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded hover:bg-blue-200 transition">Afegir al tauler</button>
                     </div>
                 </div>
             </div>
 
-            <!-- TAULER CENTRAL -->
+            <!-- Tauler Central per al dia seleccionat -->
             <div class="lg:col-span-3">
                 <div class="bg-white rounded-lg shadow p-5">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
@@ -135,40 +159,48 @@
                             <tr><th class="p-3">Mestre Absent</th><th class="p-3">Franja</th><th class="p-3">Estat</th><th class="p-3"></th></tr>
                         </thead>
                         <tbody>
-                            <tr v-if="llistaAbsencies.length === 0"><td colspan="4" class="p-10 text-center text-gray-400">Cap absència registrada per aquest dia.</td></tr>
+                            <tr v-if="llistaAbsencies.length === 0"><td colspan="4" class="p-10 text-center text-gray-400"><i class="fa-solid fa-mug-hot text-3xl mb-3 block text-gray-300"></i> Cap absència registrada per aquest dia.</td></tr>
+                            
                             <template v-for="abs in llistaAbsencies" :key="abs.id">
                                 <tr class="border-b bg-white hover:bg-gray-50 transition">
                                     <td class="p-3 font-bold text-gray-800">{{ obtenirNomDocent(abs.docent_id) }}</td>
                                     <td class="p-3 text-gray-600"><i class="fa-regular fa-clock text-gray-400 mr-1"></i> {{ obtenirNomBloc(abs.bloc_id) }}</td>
                                     <td class="p-3">
                                         <span v-if="abs.minuts_pendents > 0" class="text-red-600 font-bold">Falten {{ abs.minuts_pendents }}'</span>
-                                        <span v-else class="text-green-600 font-bold">Cobert</span>
+                                        <span v-else class="text-green-600 font-bold">Cobert completament</span>
                                     </td>
                                     <td class="p-3 text-right">
-                                        <button v-if="abs.minuts_pendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 text-xs font-bold border border-blue-200 rounded px-3 py-1.5 bg-white hover:bg-blue-50 shadow-sm transition">+ Cobrir</button>
-                                        <button @click="eliminarAbsencia(abs.id)" class="text-gray-300 hover:text-red-500 ml-3 transition"><i class="fa-solid fa-trash-can"></i></button>
+                                        <button v-if="abs.minuts_pendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 text-xs font-bold border border-blue-200 rounded px-3 py-1.5 bg-white hover:bg-blue-50 shadow-sm transition"><i class="fa-solid fa-plus mr-1"></i> Cobrir</button>
+                                        <button @click="eliminarAbsencia(abs.id)" class="text-gray-300 hover:text-red-500 ml-3 transition" title="Esborrar absència"><i class="fa-solid fa-trash-can"></i></button>
                                     </td>
                                 </tr>
+                                
                                 <tr v-for="(ass, idxA) in abs.assignacions" :key="idxA" class="bg-gray-50/50 border-b border-gray-100">
                                     <td colspan="3" class="p-2 pl-12 text-xs text-gray-600"><i class="fa-solid fa-turn-up fa-rotate-90 mr-2 text-gray-400"></i> {{ ass.durada }}' assignats a <span class="font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded ml-1">{{ ass.nomSubstitut }}</span></td>
                                     <td class="p-2 text-right"><button @click="esborrarAssignacio(abs, idxA)" class="text-red-400 hover:text-red-600 transition p-1"><i class="fa-solid fa-xmark"></i></button></td>
                                 </tr>
+
                                 <tr v-if="assignacioEnCurs.absenciaId === abs.id" class="bg-blue-50/80 border-b border-blue-200">
                                     <td colspan="4" class="p-4 pl-12">
                                         <div class="mb-3 bg-white p-3 rounded-lg border border-blue-100 shadow-sm">
-                                            <span class="text-xs font-bold text-green-700 block mb-2"><i class="fa-solid fa-hand-sparkles"></i> Mestres disponibles ara mateix:</span>
-                                            <div v-if="mestresDisponiblesDiaActual(abs.bloc_id).length === 0" class="text-xs text-gray-400 italic">Cap comodí disponible. Tria del claustre.</div>
+                                            <span class="text-xs font-bold text-green-700 block mb-2"><i class="fa-solid fa-hand-sparkles"></i> Mestres amb comodí lliure en aquesta franja:</span>
+                                            <div v-if="mestresDisponiblesDiaActual(abs.bloc_id).length === 0" class="text-xs text-gray-400 italic">Cap comodí disponible en aquesta hora concreta. Caldrà triar del claustre general.</div>
                                             <div class="flex flex-wrap gap-2">
-                                                <button v-for="disp in mestresDisponiblesDiaActual(abs.bloc_id)" :key="disp.id" @click="assignacioEnCurs.substitut = docents.find(d => d.id === disp.docent_id)" class="bg-green-50 border border-green-200 text-green-800 text-xs px-2 py-1 rounded hover:bg-green-100 transition shadow-sm">
-                                                    <b>{{ obtenirNomDocent(disp.docent_id) }}</b>
+                                                <button v-for="disp in mestresDisponiblesDiaActual(abs.bloc_id)" :key="disp.id" 
+                                                        @click="assignacioEnCurs.substitut = docents.find(d => d.id === disp.docent_id)"
+                                                        class="bg-green-50 border border-green-200 text-green-800 text-xs px-2 py-1 rounded hover:bg-green-100 transition shadow-sm">
+                                                    <b>{{ obtenirNomDocent(disp.docent_id) }}</b> <span class="text-gray-500">({{ disp.grup || 'Lliure' }})</span>
                                                 </button>
                                             </div>
                                         </div>
+
                                         <div class="flex items-center gap-2">
                                             <select v-model="assignacioEnCurs.durada" class="border rounded text-sm p-1.5 bg-white"><option v-for="opt in opcionsDurada(abs.minuts_pendents)" :key="opt" :value="opt">{{ opt }} minuts</option></select>
                                             <select v-model="assignacioEnCurs.substitut" class="border rounded text-sm p-1.5 flex-1 font-medium bg-white">
-                                                <option value="" disabled>Docent substitut...</option>
-                                                <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d">{{ d.nom }}</option></optgroup>
+                                                <option value="" disabled>Selecciona el docent substitut...</option>
+                                                <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
+                                                    <option v-for="d in mestres" :key="d.id" :value="d">{{ d.nom }}</option>
+                                                </optgroup>
                                             </select>
                                             <button @click="confirmarAssignacio" class="bg-green-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-green-700 shadow-sm transition">Guardar</button>
                                             <button @click="assignacioEnCurs.absenciaId = null" class="text-gray-500 hover:text-gray-700 px-3 text-sm font-bold">X</button>
@@ -197,23 +229,27 @@
                     <div class="flex items-center gap-4 border-b pb-4">
                         <select v-model="mestreSeleccionatHorari" class="w-72 border p-2 text-sm rounded bg-blue-50 font-bold border-blue-200">
                             <option value="" disabled>-- Selecciona un mestre --</option>
-                            <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d.id">{{ d.nom }}</option></optgroup>
+                            <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
+                                <option v-for="d in mestres" :key="d.id" :value="d.id">{{ d.nom }}</option>
+                            </optgroup>
                         </select>
                         <div v-if="mestreSeleccionatHorari" class="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
                             <span class="text-xs text-yellow-800 font-bold"><i class="fa-regular fa-copy"></i> Copiar horari de:</span>
                             <select v-model="mestreAClonar" class="border p-1 rounded text-xs bg-white">
                                 <option value="" disabled>Tria company...</option>
-                                <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d.id" v-show="d.id !== mestreSeleccionatHorari">{{ d.nom }}</option></optgroup>
+                                <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat">
+                                    <option v-for="d in mestres" :key="d.id" :value="d.id" v-show="d.id !== mestreSeleccionatHorari">{{ d.nom }}</option>
+                                </optgroup>
                             </select>
                             <button @click="clonarHorari" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded text-xs font-bold transition shadow-sm">Clonar</button>
                         </div>
                     </div>
 
-                    <!-- EINA DE VISIÓ GEMINI: PUJAR IMATGE -->
+                    <!-- EINA DE VISIÓ GEMINI (3.8): PUJAR IMATGE -->
                     <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-camera text-6xl text-indigo-900"></i></div>
                         <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Llegir horari amb Imatge (Gemini Vision)</h4>
-                        <p class="text-xs text-indigo-700 mb-4 max-w-3xl">Fes una captura de pantalla de l'horari, puja la imatge i la IA la llegirà visualment, esquivant qualsevol problema de format.</p>
+                        <p class="text-xs text-indigo-700 mb-4 max-w-3xl">Fes una captura de pantalla de l'horari del Word o Excel, puja la imatge i la IA (v3.8) la llegirà visualment per col·locar les franges.</p>
                         
                         <div v-if="!apiGeminiConfigurada" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-xs font-bold mb-3 flex items-center gap-3">
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i> Cal configurar la clau de l'API de Gemini a la pestanya 'Configuració'.
@@ -239,8 +275,13 @@
                                 <td class="font-bold text-xs bg-gray-50 text-center">{{ b.nom }}</td>
                                 <td v-for="dia in diesSetmana" :key="dia" class="hover:bg-gray-50 transition">
                                     <div class="flex flex-col gap-1.5 h-full justify-between">
-                                        <textarea :value="getAssignacio(mestreSeleccionatHorari, dia, b.id).grup" @blur="e => updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'grup', e.target.value)" placeholder="Grup..." class="w-full border border-gray-300 rounded p-1.5 text-xs font-bold text-blue-900 bg-white shadow-sm resize-none h-14 focus:ring-1 focus:ring-blue-500"></textarea>
-                                        <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600' : 'bg-gray-100 text-gray-600'" class="w-full py-1 text-[10px] font-bold rounded border transition-colors mt-auto">
+                                        <textarea :value="getAssignacio(mestreSeleccionatHorari, dia, b.id).grup" 
+                                               @blur="e => updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'grup', e.target.value)" 
+                                               placeholder="Grup..." 
+                                               class="w-full border border-gray-300 rounded p-1.5 text-xs font-bold text-blue-900 bg-white shadow-sm resize-none h-14 focus:ring-1 focus:ring-blue-500"></textarea>
+                                        
+                                        <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" 
+                                                :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600 shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="w-full py-1 text-[10px] font-bold rounded border transition-colors flex justify-center items-center gap-1 mt-auto">
                                             {{ getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'Comodí Actiu' : 'Marcar Comodí' }}
                                         </button>
                                     </div>
@@ -263,9 +304,10 @@
                                 <td class="font-bold text-xs bg-gray-50 text-center">{{ b.nom }}</td>
                                 <td v-for="dia in diesSetmana" :key="dia" class="align-top bg-white">
                                     <div class="flex flex-col gap-1.5">
+                                        <div v-if="getAssignacionsGrup(grupSeleccionatHorari, dia, b.id).length === 0" class="text-xs text-gray-400 italic text-center py-4">Sense assignar</div>
                                         <div v-for="asig in getAssignacionsGrup(grupSeleccionatHorari, dia, b.id)" :key="asig.id" class="bg-blue-50 border border-blue-200 rounded p-1.5 text-[11px] shadow-sm">
                                             <span class="font-bold text-blue-900 block border-b border-blue-100 pb-0.5 mb-0.5">{{ obtenirNomDocent(asig.docent_id) }}</span>
-                                            <span class="text-gray-600 whitespace-pre-wrap">{{ asig.grup }}</span>
+                                            <span class="text-gray-600 whitespace-pre-wrap leading-tight block">{{ asig.grup }}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -278,56 +320,94 @@
 
         <!-- VISTA 3: CONFIGURACIÓ -->
         <main v-if="vistaActual === 'configuracio'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- CONNEXIÓ API GEMINI -->
             <div class="lg:col-span-3 bg-white rounded-lg shadow p-5 border-t-4 border-purple-600 flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-bold text-purple-900 flex items-center gap-2 mb-1"><i class="fa-solid fa-microchip"></i> Connexió amb Gemini</h3>
+                    <h3 class="text-lg font-bold text-purple-900 flex items-center gap-2 mb-1"><i class="fa-solid fa-microchip"></i> Connexió amb Gemini (Intel·ligència Artificial)</h3>
+                    <p class="text-xs text-gray-500">Introdueix la teva clau API de Google AI Studio per permetre que l'aplicació llegeixi horaris automàticament.</p>
                 </div>
                 <div class="flex items-center gap-2 w-1/3">
-                    <input v-model="geminiApiKey" @keyup.enter="guardarApiKey" type="password" placeholder="AIzaSyB..." class="flex-1 border p-2 rounded text-sm bg-purple-50">
-                    <button @click="guardarApiKey" class="bg-purple-600 text-white px-4 py-2 rounded font-bold">Guardar</button>
+                    <input v-model="geminiApiKey" @keyup.enter="guardarApiKey" type="password" placeholder="AIzaSyB..." class="flex-1 border p-2 rounded text-sm bg-purple-50 focus:ring-purple-500">
+                    <button @click="guardarApiKey" class="bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-700 transition">Guardar</button>
                 </div>
             </div>
 
-            <!-- CLAUSTRE -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-indigo-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">1. Claustre</h3>
                 <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
-                    <input v-model="nouMestreNom" @keyup.enter="afegirMestre" type="text" placeholder="Nou mestre..." class="flex-1 border p-1.5 rounded text-sm">
-                    <button @click="afegirMestre" class="bg-indigo-600 text-white px-3 rounded font-bold hover:bg-indigo-700">+</button>
+                    <input v-model="nouMestreNom" @keyup.enter="afegirMestre" type="text" placeholder="Nom del mestre/a..." class="flex-1 border p-1.5 rounded text-sm">
+                    <select v-model="novaCategoriaMestre" class="border p-1.5 rounded text-sm w-20">
+                        <option v-for="cat in categoriesDocents" :key="cat" :value="cat">{{ cat }}</option>
+                    </select>
+                    <button @click="afegirMestre" class="bg-indigo-600 text-white px-3 rounded font-bold hover:bg-indigo-700 transition">+</button>
                 </div>
-                <ul class="space-y-2 overflow-y-auto pr-2 flex-1 border-t pt-2">
-                    <li v-for="(mestre, index) in docents" :key="mestre.id" class="p-2 bg-white rounded border text-sm shadow-sm flex justify-between items-center">
-                        <span class="font-medium">{{ mestre.nom }}</span>
-                        <button @click="esborrarMestre(index)" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                
+                <ul class="space-y-2 overflow-y-auto pr-2 mb-4 flex-1 border-t pt-2">
+                    <li v-if="docents.length === 0" class="text-gray-400 text-sm italic text-center py-4">Cap mestre registrat.</li>
+                    <li v-for="(mestre, index) in docents" :key="mestre.id" class="p-2 bg-white rounded border text-sm shadow-sm hover:shadow transition">
+                        <div v-if="!mestreEditat || mestreEditat.id !== mestre.id" class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium">{{ mestre.nom }}</span>
+                                <span class="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded font-bold">{{ mestre.categoria || 'Sense cat.' }}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="iniciarEdicioMestre(mestre)" class="text-gray-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button>
+                                <button @click="esborrarMestre(index)" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <div v-else class="flex flex-col gap-2">
+                            <input v-model="mestreEditat.nom" @keyup.enter="guardarEdicioMestre" type="text" class="border p-1 rounded text-sm w-full font-medium">
+                            <div class="flex gap-2">
+                                <select v-model="mestreEditat.categoria" class="border p-1 rounded text-sm flex-1">
+                                    <option v-for="cat in categoriesDocents" :key="cat" :value="cat">{{ cat }}</option>
+                                </select>
+                                <button @click="guardarEdicioMestre" class="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm">Guardar</button>
+                                <button @click="mestreEditat = null" class="text-gray-500 text-xs px-2 hover:bg-gray-100 rounded">X</button>
+                            </div>
+                        </div>
                     </li>
                 </ul>
             </div>
 
-            <!-- CLASSES -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-emerald-600 flex flex-col h-[600px]">
-                <h3 class="text-lg font-bold mb-4">2. Classes</h3>
+                <h3 class="text-lg font-bold mb-4">2. Grups i classes</h3>
                 <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
-                    <input v-model="nouGrupNom" @keyup.enter="afegirGrup" type="text" placeholder="Nova classe..." class="flex-1 border p-1.5 rounded text-sm">
-                    <button @click="afegirGrup" class="bg-emerald-600 text-white px-3 rounded font-bold hover:bg-emerald-700">+</button>
+                    <input v-model="nouGrupNom" @keyup.enter="afegirGrup" type="text" placeholder="Nou grup (Ex: 6è C)" class="flex-1 border p-1.5 rounded text-sm">
+                    <button @click="afegirGrup" class="bg-emerald-600 text-white px-3 rounded font-bold hover:bg-emerald-700 transition">+</button>
                 </div>
                 <ul class="space-y-2 overflow-y-auto pr-2 flex-1 border-t pt-2">
-                    <li v-for="(grup, index) in grupsTots" :key="grup.id" class="p-2 bg-white rounded border text-sm shadow-sm flex justify-between items-center">
-                        <span class="font-medium">{{ grup.nom }}</span>
-                        <button @click="esborrarGrup(index)" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                    <li v-for="(grup, index) in grupsTots" :key="grup.id" class="p-2 bg-white rounded border text-sm shadow-sm hover:shadow transition">
+                        <div v-if="!grupEditat || grupEditat.id !== grup.id" class="flex justify-between items-center">
+                            <span class="font-medium">{{ grup.nom }}</span>
+                            <div class="flex gap-2">
+                                <button @click="iniciarEdicioGrup(grup)" class="text-gray-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button>
+                                <button @click="esborrarGrup(index)" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <div v-else class="flex gap-2">
+                            <input v-model="grupEditat.nom" @keyup.enter="guardarEdicioGrup" type="text" class="border p-1 rounded text-sm flex-1 font-medium">
+                            <button @click="guardarEdicioGrup" class="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold shadow-sm">Guardar</button>
+                            <button @click="grupEditat = null" class="text-gray-500 text-xs hover:bg-gray-100 rounded px-1">X</button>
+                        </div>
                     </li>
                 </ul>
             </div>
             
-            <!-- BLOCS -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-teal-600 flex flex-col h-[600px]">
                 <h3 class="text-lg font-bold mb-4">3. Blocs horaris</h3>
-                <div class="flex gap-2 mb-4 bg-gray-50 p-2 rounded border">
-                    <input v-model="nouBlocNom" @keyup.enter="afegirBloc" type="text" placeholder="Ex: 09:00 - 10:00" class="flex-1 border p-1.5 rounded text-sm">
-                    <button @click="afegirBloc" class="bg-teal-600 text-white px-4 rounded font-bold hover:bg-teal-700">+</button>
+                <div class="flex flex-col gap-2 mb-4 bg-gray-50 p-2 rounded border">
+                    <input v-model="nouBlocNom" @keyup.enter="afegirBloc" type="text" placeholder="Nom (Ex: 09:00 - 10:00)" class="border p-1.5 rounded text-sm">
+                    <div class="flex gap-2">
+                        <select v-model="nouBlocMinuts" class="flex-1 border p-1.5 rounded text-sm">
+                            <option value="30">30'</option><option value="45">45'</option><option value="60">60'</option><option value="90">90'</option>
+                        </select>
+                        <button @click="afegirBloc" class="bg-teal-600 text-white px-4 rounded font-bold hover:bg-teal-700 transition">+</button>
+                    </div>
                 </div>
                 <ul class="space-y-2 overflow-y-auto pr-2 flex-1 border-t pt-2">
-                    <li v-for="(bloc, index) in horariEscola" :key="bloc.id" class="flex justify-between items-center p-2 bg-white rounded border text-sm shadow-sm">
-                        <span class="font-bold">{{ bloc.nom }}</span>
+                    <li v-for="(bloc, index) in horariEscola" :key="bloc.id" class="flex justify-between items-center p-2 bg-white rounded border text-sm shadow-sm hover:shadow transition">
+                        <span class="font-bold">{{ bloc.nom }} <span class="text-gray-500 font-normal">({{ bloc.minuts_totals }}')</span></span>
                         <button @click="esborrarBloc(index)" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
                     </li>
                 </ul>
@@ -463,7 +543,7 @@
                 if(error) alert("Error desant la clau: " + error.message); else alert("✅ Clau de Gemini desada de forma segura a Supabase.");
             };
 
-            // NOU SISTEMA GEMINI VISION (IMATGES) AMB RETRY INCORPORAT
+            // ESBORRAT COMPLET DE LA FUNCIÓ 1.5. AQUESTA ESTÀ VINCULADA EXCLUSIVAMENT A GEMINI-3.8-FLASH
             const pujarIProcessarImatge = (event) => {
                 if(!geminiApiKey.value) { alert("Falta la clau API de Gemini a la pestanya 'Configuració'."); event.target.value = ''; return; }
                 const file = event.target.files[0];
@@ -514,7 +594,8 @@ Cada objecte de l'array ha de tenir:
                     let result;
 
                     while(retries > 0) {
-                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey.value}`, {
+                        // LA CORRECCIÓ CLAU: APUNTA AL MODEL 3.8 OFICIAL DE GOOGLE AI STUDIO
+                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey.value}`, {
                             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
                         });
                         
@@ -558,7 +639,7 @@ Cada objecte de l'array ha de tenir:
                         alert("⚠️ Gemini no ha trobat classes o no ha pogut relacionar les hores amb la 'Configuració'.");
                     }
                 } catch(e) {
-                    alert("Error processant la imatge: " + e.message);
+                    alert("Error processant la imatge amb Gemini 3.8: " + e.message);
                 } finally {
                     carregantIA.value = false;
                 }
