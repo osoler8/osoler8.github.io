@@ -142,7 +142,7 @@
                                     <td class="p-3 text-gray-600"><i class="fa-regular fa-clock text-gray-400 mr-1"></i> {{ obtenirNomBloc(abs.bloc_id) }}</td>
                                     <td class="p-3">
                                         <span v-if="abs.minuts_pendents > 0" class="text-red-600 font-bold">Falten {{ abs.minuts_pendents }}'</span>
-                                        <span v-else class="text-green-600 font-bold">Cobert</span>
+                                        <span v-else class="text-green-600 font-bold">Cobert completament</span>
                                     </td>
                                     <td class="p-3 text-right">
                                         <button v-if="abs.minuts_pendents > 0" @click="prepararNovaAssignacio(abs)" class="text-blue-600 text-xs font-bold border border-blue-200 rounded px-3 py-1.5 bg-white hover:bg-blue-50 shadow-sm transition">+ Cobrir</button>
@@ -194,42 +194,56 @@
                 </div>
 
                 <div v-if="modeHorari === 'mestre'" class="space-y-4">
-                    <div class="flex items-center gap-4 border-b pb-4">
+                    
+                    <!-- SELECTOR I ACCELERADORS NADIUS -->
+                    <div class="flex flex-wrap items-center gap-4 border-b pb-4">
                         <select v-model="mestreSeleccionatHorari" class="w-72 border p-2 text-sm rounded bg-blue-50 font-bold border-blue-200">
                             <option value="" disabled>-- Selecciona un mestre --</option>
                             <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d.id">{{ d.nom }}</option></optgroup>
                         </select>
+                        
                         <div v-if="mestreSeleccionatHorari" class="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded border border-yellow-200">
-                            <span class="text-xs text-yellow-800 font-bold"><i class="fa-regular fa-copy"></i> Copiar horari de:</span>
+                            <span class="text-xs text-yellow-800 font-bold"><i class="fa-regular fa-copy"></i> Clonar de:</span>
                             <select v-model="mestreAClonar" class="border p-1 rounded text-xs bg-white">
                                 <option value="" disabled>Tria company...</option>
                                 <optgroup v-for="(mestres, cat) in docentsAgrupats" :label="cat"><option v-for="d in mestres" :key="d.id" :value="d.id" v-show="d.id !== mestreSeleccionatHorari">{{ d.nom }}</option></optgroup>
                             </select>
-                            <button @click="clonarHorari" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded text-xs font-bold transition shadow-sm">Clonar</button>
+                            <button @click="clonarHorari" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1 rounded text-xs font-bold transition shadow-sm">Aplicar</button>
                         </div>
                     </div>
 
-                    <!-- EINA DE VISIÓ: PUJAR IMATGE -->
-                    <div v-if="mestreSeleccionatHorari" class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-5 mb-4 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-camera text-6xl text-indigo-900"></i></div>
-                        <h4 class="font-bold text-indigo-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-robot text-indigo-600"></i> Importar des de captura d'imatge</h4>
-                        <p class="text-xs text-indigo-700 mb-4 max-w-3xl">L'Assistent llegirà les columnes (dies) i files (hores) de la imatge i omplirà la graella automàticament.</p>
+                    <!-- EINES D'ACCELERACIÓ (SENSE IA) -->
+                    <div v-if="mestreSeleccionatHorari" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         
-                        <div v-if="!apiGeminiConfigurada" class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-xs font-bold mb-3 flex items-center gap-3">
-                            <i class="fa-solid fa-triangle-exclamation text-lg"></i> Cal configurar la clau de l'API a la pestanya 'Configuració'.
-                        </div>
-                        
-                        <div v-else>
-                            <label class="block w-full max-w-md border-2 border-dashed border-indigo-400 bg-white p-6 rounded-lg cursor-pointer hover:bg-indigo-100 hover:border-indigo-600 transition text-center shadow-sm">
-                                <i v-if="!carregantIA" class="fa-solid fa-image text-3xl text-indigo-500 mb-2 block"></i>
-                                <i v-else class="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-500 mb-2 block"></i>
-                                
-                                <span v-if="!carregantIA" class="block font-bold text-indigo-700">Puja la captura de l'horari (.png, .jpg)</span>
-                                <span v-else class="block font-bold text-indigo-700">{{ missatgeCarregaIA }}</span>
-                                
-                                <input type="file" @change="pujarIProcessarImatge" accept="image/*" class="hidden" :disabled="carregantIA">
+                        <!-- EINA 1: PINZELL RÀPID -->
+                        <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2"><i class="fa-solid fa-paint-roller"></i> Mode Pinzell</h4>
+                            <p class="text-xs text-indigo-700 mb-3">Escriu la classe un cop i fes clic a les caselles per pintar-les de cop.</p>
+                            
+                            <label class="flex items-center gap-2 mb-2 font-bold text-sm cursor-pointer">
+                                <input type="checkbox" v-model="modePinzell" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"> 
+                                Activar Pinzell
                             </label>
+                            
+                            <div v-if="modePinzell" class="flex gap-2">
+                                <input v-model="textPinzell" type="text" placeholder="Ex: 6è A Matemàtiques..." class="border border-indigo-300 rounded p-1.5 text-sm flex-1">
+                                <label class="flex items-center gap-1 text-xs font-bold bg-white border px-2 rounded cursor-pointer hover:bg-gray-50">
+                                    <input type="checkbox" v-model="comodiPinzell" class="w-3 h-3"> És comodí
+                                </label>
+                            </div>
                         </div>
+
+                        <!-- EINA 2: ENGANXAT D'EXCEL -->
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-emerald-900 mb-2 flex items-center gap-2"><i class="fa-solid fa-table"></i> Enganxar des d'Excel/Word</h4>
+                            <p class="text-xs text-emerald-700 mb-2">Copia el teu horari de dilluns a divendres (fila a fila) i enganxa'l aquí per importar-lo automàticament.</p>
+                            
+                            <div class="flex gap-2">
+                                <textarea v-model="textImportacioRapida" placeholder="Enganxa la taula aquí..." class="flex-1 h-12 text-xs p-2 border border-emerald-300 rounded resize-none"></textarea>
+                                <button @click="processarImportacioExcel" class="bg-emerald-600 text-white font-bold px-3 py-2 rounded hover:bg-emerald-700 transition h-12 text-sm whitespace-nowrap">Importar</button>
+                            </div>
+                        </div>
+
                     </div>
 
                     <table v-if="mestreSeleccionatHorari" class="w-full taula-horaris mt-4">
@@ -237,10 +251,19 @@
                         <tbody>
                             <tr v-for="b in horariEscola" :key="b.id">
                                 <td class="font-bold text-xs bg-gray-50 text-center">{{ b.nom }}</td>
-                                <td v-for="dia in diesSetmana" :key="dia" class="hover:bg-gray-50 transition">
-                                    <div class="flex flex-col gap-1.5 h-full justify-between">
-                                        <textarea :value="getAssignacio(mestreSeleccionatHorari, dia, b.id).grup" @blur="e => updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'grup', e.target.value)" placeholder="Classe..." class="w-full border border-gray-300 rounded p-1.5 text-xs font-bold text-blue-900 bg-white shadow-sm resize-none h-14 focus:ring-1 focus:ring-blue-500"></textarea>
-                                        <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="w-full py-1 text-[10px] font-bold rounded border transition-colors mt-auto">
+                                <td v-for="dia in diesSetmana" :key="dia" class="relative hover:bg-blue-50 transition" :class="{'ring-2 ring-indigo-400': modePinzell}">
+                                    
+                                    <!-- OVERLAY PINZELL -->
+                                    <div v-if="modePinzell" @click="aplicarPinzell(dia, b.id)" class="absolute inset-0 z-10 cursor-crosshair hover:bg-indigo-200/40 transition"></div>
+                                    
+                                    <div class="flex flex-col gap-1.5 h-full justify-between relative z-0">
+                                        <textarea :value="getAssignacio(mestreSeleccionatHorari, dia, b.id).grup" 
+                                               @blur="e => updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'grup', e.target.value)" 
+                                               placeholder="Classe..." 
+                                               class="w-full border border-gray-300 rounded p-1.5 text-xs font-bold text-blue-900 bg-white shadow-sm resize-none h-14 focus:ring-1 focus:ring-blue-500"></textarea>
+                                        
+                                        <button @click="updateAssignacio(mestreSeleccionatHorari, dia, b.id, 'disponible', !getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible)" 
+                                                :class="getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'bg-green-500 text-white border-green-600 shadow-inner' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'" class="w-full py-1 text-[10px] font-bold rounded border transition-colors mt-auto">
                                             {{ getAssignacio(mestreSeleccionatHorari, dia, b.id).disponible ? 'Comodí Actiu' : 'Marcar Comodí' }}
                                         </button>
                                     </div>
@@ -279,15 +302,6 @@
 
         <!-- VISTA 3: CONFIGURACIÓ -->
         <main v-if="vistaActual === 'configuracio'" class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-3 bg-white rounded-lg shadow p-5 border-t-4 border-purple-600 flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg font-bold text-purple-900 flex items-center gap-2 mb-1"><i class="fa-solid fa-key"></i> Clau API de Google</h3>
-                </div>
-                <div class="flex items-center gap-2 w-1/3">
-                    <input v-model="geminiApiKey" @keyup.enter="guardarApiKey" type="password" placeholder="AIzaSyB..." class="flex-1 border p-2 rounded text-sm bg-purple-50">
-                    <button @click="guardarApiKey" class="bg-purple-600 text-white px-4 py-2 rounded font-bold">Guardar</button>
-                </div>
-            </div>
 
             <!-- CLAUSTRE -->
             <div class="bg-white rounded-lg shadow p-5 border-t-4 border-indigo-600 flex flex-col h-[600px]">
@@ -374,9 +388,13 @@
             const assignacioEnCurs = ref({ absenciaId: null, durada: null, substitut: '' });
             
             const mestreSeleccionatHorari = ref(''); const mestreAClonar = ref(''); const grupSeleccionatHorari = ref(''); 
-            const geminiApiKey = ref(''); const apiGeminiConfigurada = computed(() => geminiApiKey.value.trim().length > 10);
-            const carregantIA = ref(false); const missatgeCarregaIA = ref('');
             
+            // NOVES VARIABLES D'ACCELERACIÓ
+            const textImportacioRapida = ref('');
+            const modePinzell = ref(false);
+            const textPinzell = ref('');
+            const comodiPinzell = ref(false);
+
             const nouMestreNom = ref(''); const nouGrupNom = ref(''); const nouBlocNom = ref(''); const nouBlocMinuts = ref('60');
 
             const nomDiaSetmanaSeleccionat = computed(() => {
@@ -419,13 +437,12 @@
             });
 
             const carregarDadesBase = async () => {
-                const [resDocents, resBlocs, resAsig, resGrups, resConfig] = await Promise.all([
+                const [resDocents, resBlocs, resAsig, resGrups] = await Promise.all([
                     db.from('docents').select('*').order('nom'), db.from('blocs').select('*').order('ordre'),
-                    db.from('assignacions').select('*'), db.from('grups').select('*').order('ordre'), db.from('configuracio').select('*').eq('clau', 'gemini_api_key')
+                    db.from('assignacions').select('*'), db.from('grups').select('*').order('ordre')
                 ]);
                 if(resDocents.data) docents.value = resDocents.data; if(resBlocs.data) horariEscola.value = resBlocs.data;
                 if(resAsig.data) assignacionsHorari.value = resAsig.data; if(resGrups.data) grupsTots.value = resGrups.data;
-                if(resConfig.data && resConfig.data.length > 0) geminiApiKey.value = resConfig.data[0].valor;
                 await carregarAbsenciesMes(); await carregarAbsenciesDia();
             };
 
@@ -458,121 +475,71 @@
                 if (error) { errorLogin.value = "Credencials incorrectes."; } else { usuariAutenticat.value = true; await carregarDadesBase(); }
             };
             const tancarSessio = async () => { await db.auth.signOut(); usuariAutenticat.value = false; };
-            const guardarApiKey = async () => {
-                const { error } = await db.from('configuracio').upsert({ clau: 'gemini_api_key', valor: geminiApiKey.value });
-                if(error) alert("Error desant la clau: " + error.message); else alert("✅ Clau de Gemini desada de forma segura a Supabase.");
-            };
 
-            const pujarIProcessarImatge = (event) => {
-                if(!geminiApiKey.value) { alert("Falta la clau API de Gemini a la pestanya 'Configuració'."); event.target.value = ''; return; }
-                const file = event.target.files[0];
-                if(!file) return;
+            // ⚡ EINES D'ACCELERACIÓ
+
+            // 1. PINZELL RÀPID
+            const aplicarPinzell = async (dia, blocId) => {
+                if(!modePinzell.value) return;
+                let actual = assignacionsHorari.value.find(a => a.docent_id === mestreSeleccionatHorari.value && a.dia === dia && a.bloc_id === blocId);
+                let actualitzat = actual ? { ...actual, grup: textPinzell.value, disponible: comodiPinzell.value } : { docent_id: mestreSeleccionatHorari.value, dia: dia, bloc_id: blocId, grup: textPinzell.value, materia: '', disponible: comodiPinzell.value };
                 
-                carregantIA.value = true;
-                missatgeCarregaIA.value = "Analitzant la imatge...";
-                
-                const reader = new FileReader();
-                reader.onloadend = async function() {
-                    try {
-                        const base64data = reader.result.split(',')[1];
-                        const mimeType = file.type;
-                        await enviarImatgeAGemini(base64data, mimeType);
-                    } catch(err) {
-                        alert("Error desxifrant la imatge: " + err.message);
-                        carregantIA.value = false;
-                    }
-                };
-                reader.readAsDataURL(file);
-                event.target.value = ''; 
-            };
-
-            const enviarImatgeAGemini = async (base64data, mimeType) => {
-                try {
-                    const blocsDisponibles = horariEscola.value.map(b => b.nom).join(', ');
-                    const prompt = `Extreu l'horari d'aquesta imatge.
-IMPORTANTÍSSIM: Retorna EXACTAMENT un array JSON pur sense cap caràcter addicional. No incloguis cap marca de format.
-Cada objecte de l'array ha de tenir:
-- "dia": (Dilluns, Dimarts, Dimecres, Dijous, Divendres).
-- "bloc_horari": Tria EXACTAMENT un dels següents blocs segons l'hora de la fila de la imatge: [${blocsDisponibles}]. 
-- "grup": El text de la classe (ex: "MATEMÀTIQUES" o "LLENGUA (1/2 grup A)").
-- "es_comodi": true si és comodí, guàrdia o suport, sinó false.
-(Crea un objecte per cada bloc horari que ocupi una classe).`;
-
-                    const body = {
-                        contents: [{
-                            parts: [
-                                { text: prompt },
-                                { inlineData: { mimeType: mimeType, data: base64data } }
-                            ]
-                        }]
-                    };
-
-                    let retries = 5;
-                    let response;
-                    let result;
-
-                    while(retries > 0) {
-                        // TOT ESTÀ FIXAT I BLINDAT A GEMINI-3.8-FLASH (Cap rastre del 1.5 enlloc del codi)
-                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${geminiApiKey.value}`, {
-                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-                        });
-                        
-                        if(response.status === 503 || response.status === 429) {
-                            retries--;
-                            if (retries === 0) { throw new Error("Els servidors de Google estan saturats al 100%. Torna-ho a provar més tard."); }
-                            missatgeCarregaIA.value = `Servidors ocupats. Reintentant en 4 segons... (Queden ${retries} intents)`;
-                            await new Promise(r => setTimeout(r, 4000));
-                        } else {
-                            result = await response.json();
-                            break;
-                        }
-                    }
-
-                    if(!result || result.error) throw new Error(result?.error?.message || "Error desconegut dels servidors.");
-                    
-                    let textJson = result.candidates[0].content.parts[0].text;
-                    
-                    // NETEJADOR AUTOMÀTIC DE FORMAT JSON 
-                    textJson = textJson.replace(/^```(json)?\n?/gi, '').replace(/\n?```$/g, '').trim();
-                    const startIndex = textJson.indexOf('[');
-                    const endIndex = textJson.lastIndexOf(']');
-                    if (startIndex !== -1 && endIndex !== -1) {
-                        textJson = textJson.substring(startIndex, endIndex + 1);
-                    }
-                    
-                    const llistaIA = JSON.parse(textJson);
-                    const nousRegistres = [];
-
-                    for(let casella of llistaIA) {
-                        const blocMatch = horariEscola.value.find(b => b.nom.trim().toLowerCase() === casella.bloc_horari.trim().toLowerCase());
-                        if(blocMatch && diesSetmana.includes(casella.dia)) {
-                            nousRegistres.push({
-                                docent_id: mestreSeleccionatHorari.value, dia: casella.dia, bloc_id: blocMatch.id,
-                                grup: casella.grup, materia: '', disponible: casella.es_comodi
-                            });
-                        }
-                    }
-
-                    if(nousRegistres.length > 0) {
-                        const actuals = assignacionsHorari.value.filter(a => a.docent_id === mestreSeleccionatHorari.value);
-                        for(let a of actuals) { await db.from('assignacions').delete().eq('id', a.id); }
-
-                        const { data, error } = await db.from('assignacions').insert(nousRegistres).select();
-                        if(error) throw error;
-
-                        assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== mestreSeleccionatHorari.value);
-                        assignacionsHorari.value.push(...data);
-                        alert(`🤖 Màgia completada! La IA ha analitzat la imatge i ha importat ${nousRegistres.length} franges horàries!`);
+                if (actual) {
+                    if (actualitzat.grup === '' && !actualitzat.disponible) {
+                        await db.from('assignacions').delete().eq('id', actual.id); 
+                        assignacionsHorari.value = assignacionsHorari.value.filter(a => a.id !== actual.id);
                     } else {
-                        alert("⚠️ Gemini no ha trobat classes o no ha quadrat les hores amb la 'Configuració'. Revisa que les hores existeixin.");
+                        await db.from('assignacions').update({ grup: textPinzell.value, disponible: comodiPinzell.value }).eq('id', actual.id); 
+                        const idx = assignacionsHorari.value.findIndex(a => a.id === actual.id); assignacionsHorari.value[idx] = actualitzat;
                     }
-                } catch(e) {
-                    alert("S'ha produït un error de lectura: " + e.message);
-                } finally {
-                    carregantIA.value = false;
-                    missatgeCarregaIA.value = "";
+                } else if(actualitzat.grup !== '' || actualitzat.disponible) {
+                    const { data } = await db.from('assignacions').insert(actualitzat).select();
+                    if (data) assignacionsHorari.value.push(data[0]);
                 }
             };
+
+            // 2. ENGANXAR DES D'EXCEL/WORD NADIU (Llegeix format tabular pur)
+            const processarImportacioExcel = async () => {
+                if(!textImportacioRapida.value.trim()) return;
+                if(!confirm("Això sobreescriurà l'horari actual d'aquest mestre. Vols continuar?")) return;
+
+                const files = textImportacioRapida.value.trim().split('\n');
+                let nousRegistres = [];
+
+                // Deduir si han copiat també la columna de les hores o només els 5 dies
+                const primeraFila = files[0].split('\t');
+                const iniciDies = primeraFila.length >= 6 ? 1 : 0; 
+
+                for(let i=0; i < Math.min(files.length, horariEscola.value.length); i++) {
+                    const columnes = files[i].split('\t');
+                    const blocId = horariEscola.value[i].id;
+
+                    for(let j=0; j < Math.min(columnes.length - iniciDies, diesSetmana.length); j++) {
+                        const contingut = columnes[j + iniciDies]?.trim();
+                        if(contingut) {
+                            const textNet = contingut.replace(/["']/g, ''); // Treu cometes residuals
+                            const esComodi = textNet.toLowerCase().includes('comod') || textNet.toLowerCase().includes('guàrdia') || textNet.toLowerCase().includes('suport');
+                            nousRegistres.push({ docent_id: mestreSeleccionatHorari.value, dia: diesSetmana[j], bloc_id: blocId, grup: textNet, materia: '', disponible: esComodi });
+                        }
+                    }
+                }
+
+                if(nousRegistres.length > 0) {
+                    const actuals = assignacionsHorari.value.filter(a => a.docent_id === mestreSeleccionatHorari.value);
+                    for(let a of actuals) { await db.from('assignacions').delete().eq('id', a.id); }
+
+                    const { data, error } = await db.from('assignacions').insert(nousRegistres).select();
+                    if(!error && data) {
+                        assignacionsHorari.value = assignacionsHorari.value.filter(a => a.docent_id !== mestreSeleccionatHorari.value);
+                        assignacionsHorari.value.push(...data);
+                        alert(`✅ Taula importada amb èxit! S'han assignat ${nousRegistres.length} franges.`);
+                    }
+                } else {
+                    alert("No s'ha detectat cap classe al text copiat. Assegura't de copiar les cel·les d'Excel.");
+                }
+                textImportacioRapida.value = '';
+            };
+
 
             const getAssignacio = (docentId, dia, blocId) => {
                 const as = assignacionsHorari.value.find(a => a.docent_id === docentId && a.dia === dia && a.bloc_id === blocId);
@@ -696,16 +663,17 @@ Cada objecte de l'array ha de tenir:
                 usuariAutenticat, correu, contrasenya, errorLogin, vistaActual, modeHorari, 
                 docents, docentsAgrupats, horariEscola, diesSetmana, grupsTots, llistaGrupsDinamica, 
                 mestreSeleccionatHorari, mestreAClonar, grupSeleccionatHorari, novaAbsencia, llistaAbsencies, 
+                textImportacioRapida, modePinzell, textPinzell, comodiPinzell, aplicarPinzell, processarImportacioExcel,
                 minutsPendentsTotals, assignacioEnCurs, nouMestreNom, nouGrupNom, nouBlocNom, nouBlocMinuts,
                 dataSeleccionada, mesActual, anyActual, nomMesActual, diesDelMes, espaisBuitsCalendari, 
                 nomDiaSetmanaSeleccionat, dataSeleccionadaFormatada, canviarMes, seleccionarData,
-                geminiApiKey, apiGeminiConfigurada, carregantIA, missatgeCarregaIA, pujarIProcessarImatge, guardarApiKey,
                 iniciarSessio, tancarSessio, getAssignacio, updateAssignacio, clonarHorari, getAssignacionsGrup,
                 mestresDisponiblesDiaActual, obtenirNomDocent, obtenirNomBloc, registrarAbsencia, eliminarAbsencia, prepararNovaAssignacio, 
                 confirmarAssignacio, esborrarAssignacio, opcionsDurada, afegirMestre, esborrarMestre, afegirGrup, esborrarGrup, afegirBloc, esborrarBloc
             }
         }
     });
+
     app.mount('#app');
 </script>
 </body>
