@@ -43,7 +43,7 @@
     <section id="view-join" class="w-full max-w-md bg-white p-7 md:p-8 rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 text-center space-y-5">
       <div class="space-y-1.5">
         <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Aula interactiva</span>
-        <h1 class="text-3xl font-extrabold text-slate-900">Entra a la partida</h1>
+        <h1 class="text-3xl font-extrabold text-slate-900">Entra a la sala</h1>
         <p class="text-sm text-slate-500">Escriu el codi de la pissarra i tria el teu personatge</p>
       </div>
       
@@ -137,9 +137,10 @@
           <p class="text-sm text-slate-500" id="teacher-email-display"></p>
         </div>
         <div class="flex flex-wrap gap-2.5">
-          <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition">Els meus qüestionaris</button>
+          <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition">Les meves activitats</button>
           <button onclick="switchDashTab('results')" id="tab-btn-results" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Resultats i avaluació</button>
-          <button onclick="openQuizEditor()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-emerald-100 transition">+ Nou qüestionari</button>
+          <button onclick="openQuizEditor('quiz')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-emerald-100 transition">+ Nou qüestionari</button>
+          <button onclick="openQuizEditor('poll')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-amber-100 transition">+ Nova enquesta</button>
           <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3.5 py-2.5 rounded-2xl font-bold text-sm transition">Sortir</button>
         </div>
       </div>
@@ -152,7 +153,7 @@
           <div class="flex justify-between items-center">
             <div>
               <h3 class="text-xl font-extrabold text-slate-900">Resultats</h3>
-              <p class="text-xs text-slate-500">Historial privat de les teves partides realitzades</p>
+              <p class="text-xs text-slate-500">Historial privat dels teus qüestionaris i enquestes</p>
             </div>
           </div>
           <div id="sessions-history-list" class="divide-y divide-slate-100">
@@ -165,7 +166,7 @@
       <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
         <div>
           <span id="report-date-badge" class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold mb-1">20/11/2026 - 11:00</span>
-          <h2 id="report-quiz-title" class="text-2xl font-extrabold text-slate-900">Informe de la partida</h2>
+          <h2 id="report-quiz-title" class="text-2xl font-extrabold text-slate-900">Informe de la sessió</h2>
         </div>
         <div class="flex gap-2.5">
           <button id="btn-export-pdf" onclick="exportReportPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-rose-100 transition">Descarregar informe pdf</button>
@@ -178,23 +179,23 @@
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-lg">D</div>
             <div>
-              <p class="font-extrabold text-lg text-slate-900 leading-tight">Domande · informe d'avaluació</p>
+              <p id="pdf-header-title" class="font-extrabold text-lg text-slate-900 leading-tight">Domande · informe d'avaluació</p>
               <p id="pdf-subtitle-info" class="text-xs text-slate-500">Activitat i data</p>
             </div>
           </div>
-          <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Registre d'aula</span>
+          <span id="pdf-type-tag" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Registre d'aula</span>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div id="report-stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
             <p class="text-xs text-slate-500 font-bold">Participants</p>
             <p id="rep-stat-players" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
           </div>
-          <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/70">
+          <div id="rep-card-accuracy" class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/70">
             <p class="text-xs text-emerald-700 font-bold">Mitjana d'encerts</p>
             <p id="rep-stat-accuracy" class="text-2xl font-extrabold text-emerald-600 mt-1">0%</p>
           </div>
-          <div class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-200/70">
+          <div id="rep-card-topscore" class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-200/70">
             <p class="text-xs text-indigo-700 font-bold">Puntuació màxima</p>
             <p id="rep-stat-topscore" class="text-2xl font-extrabold text-indigo-600 mt-1">0</p>
           </div>
@@ -205,7 +206,7 @@
         </div>
 
         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3">
-          <p class="text-xs font-extrabold text-slate-600">Preguntes del qüestionari i resposta correcta</p>
+          <p id="report-summary-heading" class="text-xs font-extrabold text-slate-600">Preguntes del qüestionari i resposta correcta</p>
           <div id="report-questions-summary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
 
@@ -227,12 +228,15 @@
 
     <section id="view-quiz-editor" class="hidden w-full max-w-4xl bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6">
       <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-        <h2 class="text-2xl font-extrabold text-slate-900">Nou qüestionari</h2>
+        <div class="flex items-center gap-3">
+          <h2 id="editor-heading" class="text-2xl font-extrabold text-slate-900">Nou qüestionari</h2>
+          <span id="editor-mode-badge" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Mode joc amb punts</span>
+        </div>
         <button onclick="showView('view-teacher-dash')" class="text-slate-500 hover:text-slate-800 font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-xl">Cancel·lar</button>
       </div>
       
       <div>
-        <label class="block text-xs font-bold text-slate-500 mb-1.5">Títol de l'activitat</label>
+        <label id="editor-title-label" class="block text-xs font-bold text-slate-500 mb-1.5">Títol de l'activitat</label>
         <input id="editor-title" type="text" placeholder="Ex: el sistema solar i els planetes" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none font-bold text-lg text-slate-900">
       </div>
       
@@ -240,11 +244,7 @@
 
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
         <p class="text-xs font-bold text-slate-500">Afegeix una pregunta:</p>
-        <div class="flex flex-wrap gap-2">
-          <button type="button" onclick="addQuestionBlock('quiz')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Opció múltiple</button>
-          <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Vertader o fals</button>
-          <button type="button" onclick="addQuestionBlock('type_answer')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Resposta curta</button>
-          <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+        <div id="editor-add-buttons" class="flex flex-wrap gap-2">
         </div>
       </div>
 
@@ -263,7 +263,7 @@
 
       <div id="host-lobby" class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
         <div class="space-y-2">
-          <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
+          <span id="host-lobby-badge" class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
           <p class="text-slate-500 font-semibold text-lg pt-2">Entra des del teu dispositiu amb el codi:</p>
           <div id="host-pin-display" class="text-6xl md:text-8xl font-black tracking-widest text-indigo-600 bg-slate-50 border-2 border-indigo-100 py-5 px-10 rounded-3xl inline-block shadow-inner">
             000000
@@ -275,7 +275,7 @@
           <div id="host-players-grid" class="flex flex-wrap justify-center gap-3 min-h-[90px]"></div>
         </div>
 
-        <button onclick="startGame()" class="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition">
+        <button id="btn-host-start" onclick="startGame()" class="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition">
           Començar partida
         </button>
       </div>
@@ -286,21 +286,21 @@
             <span class="text-sm font-bold text-slate-500">Temps:</span>
             <span id="host-timer" class="text-2xl font-black bg-indigo-600 text-white px-4 py-1.5 rounded-xl">20</span>
           </div>
-          <span id="host-answers-count" class="text-base font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200">Respostes: 0</span>
+          <span id="host-answers-count" class="text-base font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200">Vots: 0</span>
           <button onclick="showQuestionResults()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition">Veure resultats</button>
         </div>
 
         <h2 id="host-q-text" class="text-2xl md:text-4xl font-extrabold text-slate-900 py-2">Pregunta</h2>
         <img id="host-q-image" src="" class="hidden max-h-56 mx-auto rounded-2xl object-contain shadow-md">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div class="lg:col-span-2 space-y-6">
+        <div id="host-main-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div id="host-visual-col" class="lg:col-span-2 space-y-6">
             <div id="host-bars-display" class="hidden h-52 flex items-end justify-center gap-6 px-6 pt-8 pb-3 bg-slate-50 rounded-3xl border border-slate-100"></div>
             <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-lg font-bold text-white"></div>
             <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-3 p-8 bg-slate-50 rounded-3xl border border-slate-200 min-h-[220px]"></div>
           </div>
 
-          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-200/80 text-left space-y-3">
+          <div id="host-leaderboard-col" class="bg-slate-50 p-5 rounded-3xl border border-slate-200/80 text-left space-y-3">
             <div class="flex justify-between items-center border-b border-slate-200 pb-2">
               <span class="font-extrabold text-slate-800 text-sm">Classificació en directe</span>
               <span class="text-xs font-bold text-indigo-600">Top punts</span>
@@ -337,6 +337,19 @@
           <button onclick="returnToDashboard()" class="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition">Tornar al panell</button>
         </div>
       </div>
+
+      <div id="host-poll-finished-screen" class="hidden bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-6">
+        <div class="text-6xl">📊</div>
+        <div class="space-y-2">
+          <span class="px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-extrabold">Enquesta finalitzada</span>
+          <h2 class="text-3xl md:text-4xl font-black text-slate-900 pt-2">Tots els vots han quedat enregistrats</h2>
+          <p class="text-slate-500 max-w-md mx-auto">Pots consultar el resum visual de totes les opcions votades o descarregar l'informe complet en pdf.</p>
+        </div>
+        <div class="flex justify-center gap-4 pt-2">
+          <button onclick="openLatestReport()" class="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold shadow-lg shadow-amber-200 transition">Veure resultats de l'enquesta</button>
+          <button onclick="returnToDashboard()" class="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition">Tornar al panell</button>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -362,6 +375,8 @@
     let currentPlayer = null;
     let currentSession = null;
     let sessionQuestions = [];
+    let sessionKind = 'quiz';
+    let editorKind = 'quiz';
     let hostTimerInterval = null;
     let questionStartTimeMs = 0;
     let studentScore = 0;
@@ -509,13 +524,13 @@
 
       const { data: session, error } = await sb
         .from('game_sessions')
-        .select('*')
+        .select('*, quizzes(kind)')
         .eq('pin', pin)
         .eq('status', 'waiting')
         .single();
 
       if (error || !session) {
-        errEl.textContent = "Codi incorrecte o la partida ja ha començat.";
+        errEl.textContent = "Codi incorrecte o la sessió ja ha començat.";
         errEl.classList.remove('hidden');
         return;
       }
@@ -533,6 +548,7 @@
       }
 
       currentSession = session;
+      sessionKind = session.quizzes?.kind || 'quiz';
       currentPlayer = player;
       studentScore = 0;
       studentStreak = 0;
@@ -568,8 +584,21 @@
         document.getElementById('feedback-points').classList.add('hidden');
         document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
       } else if (session.status === 'finished') {
-        await showStudentFinalRank();
+        if (sessionKind === 'poll') {
+          showStudentPollFinished();
+        } else {
+          await showStudentFinalRank();
+        }
       }
+    }
+
+    function showStudentPollFinished() {
+      document.getElementById('student-final-medal').textContent = '🗳️';
+      document.getElementById('student-final-rank').textContent = 'Enquesta completada';
+      document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
+      document.getElementById('student-final-score').classList.add('hidden');
+      document.getElementById('student-final-msg').textContent = "Gràcies per participar i compartir la teva opinió!";
+      showView('view-student-podium');
     }
 
     async function showStudentFinalRank() {
@@ -587,6 +616,7 @@
       document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏅';
       document.getElementById('student-final-rank').textContent = `Posició ${rank} de ${list.length}`;
       document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
+      document.getElementById('student-final-score').classList.remove('hidden');
       document.getElementById('student-final-score').textContent = `${studentScore} punts`;
       
       if (rank === 1) {
@@ -608,7 +638,16 @@
       showView('view-student-play');
       document.getElementById('student-feedback').classList.add('hidden');
       document.getElementById('student-q-counter').textContent = `Pregunta ${qIndex + 1} de ${sessionQuestions.length}`;
-      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+      
+      const scorePill = document.getElementById('student-score-pill');
+      if (sessionKind === 'poll') {
+        scorePill.textContent = 'Enquesta';
+        scorePill.className = 'px-3.5 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold';
+      } else {
+        scorePill.textContent = `${studentScore} punts`;
+        scorePill.className = 'px-3.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-extrabold';
+      }
+
       document.getElementById('student-q-text').textContent = q.question_text;
 
       const grid = document.getElementById('student-options-grid');
@@ -635,7 +674,7 @@
     }
 
     function calculateGamifiedPoints(question, isCorrect) {
-      if (!isCorrect || question.points_multiplier === 0) return 0;
+      if (sessionKind === 'poll' || !isCorrect || question.points_multiplier === 0) return 0;
       const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
       const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
       const streakBonus = studentStreak * 100;
@@ -643,12 +682,17 @@
     }
 
     async function submitOptionAnswer(question, optionIndex) {
-      const isCorrect = question.options[optionIndex]?.is_correct || false;
-      if (isCorrect) {
-        studentStreak++;
-      } else {
-        studentStreak = 0;
+      const isPoll = sessionKind === 'poll' || question.type === 'poll';
+      const isCorrect = isPoll ? false : (question.options[optionIndex]?.is_correct || false);
+      
+      if (!isPoll) {
+        if (isCorrect) {
+          studentStreak++;
+        } else {
+          studentStreak = 0;
+        }
       }
+
       const points = calculateGamifiedPoints(question, isCorrect);
       studentScore += points;
 
@@ -661,25 +705,31 @@
         points_awarded: points
       });
 
-      await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-      showStudentWaitingFeedback(isCorrect, points, question.type === 'poll');
+      if (!isPoll) {
+        await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+        document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+      }
+
+      showStudentWaitingFeedback(isCorrect, points, isPoll);
     }
 
     async function submitTextAnswer() {
       const val = document.getElementById('student-text-answer').value.trim();
       if (!val) return;
       const q = sessionQuestions[currentSession.current_question_index];
+      const isPoll = sessionKind === 'poll' || q.type === 'word_cloud';
       
       let isCorrect = false;
-      if (q.type === 'type_answer') {
+      if (!isPoll && q.type === 'type_answer') {
         isCorrect = q.options.some(o => o.text.toLowerCase() === val.toLowerCase() && o.is_correct);
       }
 
-      if (isCorrect) {
-        studentStreak++;
-      } else {
-        studentStreak = 0;
+      if (!isPoll) {
+        if (isCorrect) {
+          studentStreak++;
+        } else {
+          studentStreak = 0;
+        }
       }
 
       const points = calculateGamifiedPoints(q, isCorrect);
@@ -694,9 +744,12 @@
         points_awarded: points
       });
 
-      await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-      showStudentWaitingFeedback(isCorrect, points, q.type === 'word_cloud');
+      if (!isPoll) {
+        await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+        document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+      }
+
+      showStudentWaitingFeedback(isCorrect, points, isPoll);
     }
 
     function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
@@ -707,8 +760,8 @@
       fb.classList.remove('hidden');
 
       if (isOpinion) {
-        document.getElementById('feedback-icon').textContent = '📨';
-        document.getElementById('feedback-title').textContent = 'Resposta enviada!';
+        document.getElementById('feedback-icon').textContent = '🗳️';
+        document.getElementById('feedback-title').textContent = 'Vot registrat!';
         ptsEl.classList.add('hidden');
       } else if (isCorrect) {
         document.getElementById('feedback-icon').textContent = '🎉';
@@ -783,26 +836,27 @@
       list.innerHTML = '';
 
       if (error) {
-        list.innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant qüestionaris: ${error.message}</p>`;
+        list.innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant activitats: ${error.message}</p>`;
         return;
       }
 
       if (!quizzes || quizzes.length === 0) {
-        list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no has creat cap qüestionari. Clica el botó superior per començar!</div>`;
+        list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no has creat cap qüestionari ni enquesta. Fes servir els botons superiors per començar!</div>`;
         return;
       }
 
       quizzes.forEach(q => {
+        const isPoll = q.kind === 'poll';
         const card = document.createElement('div');
         card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-slate-200/80 shadow-sm hover:shadow-md transition";
         card.innerHTML = `
           <div>
-            <span class="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold mb-2">Qüestionari</span>
+            <span class="inline-block px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold mb-2">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
             <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
             <p class="text-xs text-slate-400 mt-1">Creat el ${formatDateTime(q.created_at)}</p>
           </div>
-          <button onclick="createRoom('${q.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-bold text-sm shadow-md shadow-indigo-100 transition">
-            Obrir sala de joc
+          <button onclick="createRoom('${q.id}', '${q.kind || 'quiz'}')" class="w-full ${isPoll ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'} text-white py-3 rounded-2xl font-bold text-sm shadow-md transition">
+            ${isPoll ? 'Obrir enquesta' : 'Obrir sala de joc'}
           </button>
         `;
         list.appendChild(card);
@@ -821,36 +875,40 @@
 
     async function loadSessionsHistory() {
       const container = document.getElementById('sessions-history-list');
-      container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial de partides...</p>';
+      container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial...</p>';
 
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return;
 
       const { data: sessions, error } = await sb
         .from('game_sessions')
-        .select('id, pin, status, created_at, quiz_id, quizzes(title)')
+        .select('id, pin, status, created_at, quiz_id, quizzes(title, kind)')
         .eq('teacher_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error || !sessions || sessions.length === 0) {
-        container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap partida enregistrada al teu compte.</p>';
+        container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap sessió enregistrada al teu compte.</p>';
         return;
       }
 
       container.innerHTML = '';
       sessions.forEach(s => {
-        const title = s.quizzes?.title || 'Qüestionari sense títol';
+        const title = s.quizzes?.title || 'Activitat sense títol';
+        const isPoll = s.quizzes?.kind === 'poll';
         const dateStr = formatDateTime(s.created_at);
         const row = document.createElement('div');
         row.className = "py-4 flex flex-wrap justify-between items-center gap-4 hover:bg-slate-50 px-3 rounded-2xl transition";
         row.innerHTML = `
           <div>
-            <p class="text-xs font-extrabold text-indigo-600">${dateStr}</p>
-            <h4 class="text-base font-extrabold text-slate-900">${title}</h4>
+            <div class="flex items-center gap-2">
+              <p class="text-xs font-extrabold text-indigo-600">${dateStr}</p>
+              <span class="px-2 py-0.5 rounded-md text-xs font-bold ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'}">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
+            </div>
+            <h4 class="text-base font-extrabold text-slate-900 mt-0.5">${title}</h4>
             <p class="text-xs text-slate-400">Pin: ${s.pin}</p>
           </div>
           <button onclick="openSessionReport('${s.id}', '${title.replace(/'/g, "\\'")}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
-            Veure avaluació i detall
+            ${isPoll ? 'Veure resultats' : 'Veure avaluació i detall'}
           </button>
         `;
         container.appendChild(row);
@@ -863,7 +921,7 @@
 
       const { data: session, error: sErr } = await sb
         .from('game_sessions')
-        .select('quiz_id, teacher_id, quizzes(title)')
+        .select('quiz_id, teacher_id, quizzes(title, kind)')
         .eq('id', sessionId)
         .eq('teacher_id', user.id)
         .single();
@@ -874,10 +932,14 @@
       }
 
       const resolvedTitle = session.quizzes?.title || quizTitle;
+      const isPoll = session.quizzes?.kind === 'poll';
+
       showView('view-session-report');
       document.getElementById('report-date-badge').textContent = dateStr;
       document.getElementById('report-quiz-title').textContent = resolvedTitle;
+      document.getElementById('pdf-header-title').textContent = isPoll ? "Domande · resultats de l'enquesta" : "Domande · informe d'avaluació";
       document.getElementById('pdf-subtitle-info').textContent = `${resolvedTitle} · ${dateStr}`;
+      document.getElementById('pdf-type-tag').textContent = isPoll ? "Enquesta d'aula" : "Registre d'avaluació";
 
       const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
       const { data: players } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
@@ -887,25 +949,76 @@
       const pls = players || [];
       const ans = answers || [];
 
-      currentReportData = { quizTitle: resolvedTitle, dateStr, questions: qs, players: pls, answers: ans };
+      currentReportData = { quizTitle: resolvedTitle, dateStr, isPoll, questions: qs, players: pls, answers: ans };
 
       document.getElementById('rep-stat-players').textContent = pls.length;
       document.getElementById('rep-stat-questions').textContent = qs.length;
-      document.getElementById('rep-stat-topscore').textContent = pls.length > 0 ? pls[0].score : 0;
 
-      const gradableAns = ans.filter(a => {
-        const q = qs.find(item => item.id === a.question_id);
-        return q && q.type !== 'word_cloud' && q.type !== 'poll';
-      });
-      const correctCount = gradableAns.filter(a => a.is_correct).length;
-      const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
-      document.getElementById('rep-stat-accuracy').textContent = `${accuracy}%`;
+      if (isPoll) {
+        document.getElementById('rep-card-accuracy').classList.add('hidden');
+        document.getElementById('rep-card-topscore').classList.add('hidden');
+        document.getElementById('report-visual-bars').classList.add('hidden');
+        document.getElementById('report-summary-heading').textContent = "Desglossament de votacions per pregunta i color";
+      } else {
+        document.getElementById('rep-card-accuracy').classList.remove('hidden');
+        document.getElementById('rep-card-topscore').classList.remove('hidden');
+        document.getElementById('report-visual-bars').classList.remove('hidden');
+        document.getElementById('report-summary-heading').textContent = "Preguntes del qüestionari i resposta correcta";
+        document.getElementById('rep-stat-topscore').textContent = pls.length > 0 ? pls[0].score : 0;
+
+        const gradableAns = ans.filter(a => {
+          const q = qs.find(item => item.id === a.question_id);
+          return q && q.type !== 'word_cloud' && q.type !== 'poll';
+        });
+        const correctCount = gradableAns.filter(a => a.is_correct).length;
+        const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
+        document.getElementById('rep-stat-accuracy').textContent = `${accuracy}%`;
+      }
 
       const qSummaryContainer = document.getElementById('report-questions-summary');
       qSummaryContainer.innerHTML = '';
 
       if (qs.length === 0) {
         qSummaryContainer.innerHTML = `<p class="text-xs text-slate-400 col-span-full">No s'han trobat preguntes associades.</p>`;
+      } else if (isPoll) {
+        const barColors = ['bg-rose-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500'];
+        qs.forEach((q, idx) => {
+          const qAnsList = ans.filter(a => a.question_id === q.id);
+          const totalVotes = qAnsList.length;
+          let breakdownHTML = '';
+
+          if (q.type === 'word_cloud') {
+            const words = qAnsList.map(a => `<span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold">${a.answer_value?.text || ''}</span>`).join(' ');
+            breakdownHTML = `<div class="flex flex-wrap gap-1.5 pt-1">${words || '<span class="text-xs text-slate-400">Sense paraules enviades</span>'}</div>`;
+          } else {
+            (q.options || []).forEach((opt, oIdx) => {
+              const votes = qAnsList.filter(a => a.answer_value?.index === oIdx).length;
+              const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+              breakdownHTML += `
+                <div class="space-y-1">
+                  <div class="flex justify-between text-xs font-bold text-slate-700">
+                    <span>${opt.text}</span>
+                    <span>${votes} vots (${pct}%)</span>
+                  </div>
+                  <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div style="width: ${pct}%" class="h-full ${barColors[oIdx % 4]} rounded-full"></div>
+                  </div>
+                </div>
+              `;
+            });
+          }
+
+          qSummaryContainer.innerHTML += `
+            <div class="bg-white p-4 rounded-xl border border-slate-200/80 space-y-2.5">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-extrabold text-amber-600">Pregunta ${idx + 1}</span>
+                <span class="text-xs font-bold text-slate-400">${totalVotes} respostes</span>
+              </div>
+              <p class="text-sm font-extrabold text-slate-900">${q.question_text}</p>
+              <div class="space-y-2 pt-1">${breakdownHTML}</div>
+            </div>
+          `;
+        });
       } else {
         qs.forEach((q, idx) => {
           const correctOpts = (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
@@ -930,13 +1043,16 @@
       barsList.innerHTML = '';
 
       const thead = document.getElementById('report-table-head');
-      let headHTML = `<tr>
-        <th class="p-3.5 whitespace-nowrap">Posició</th>
-        <th class="p-3.5 whitespace-nowrap">Alumne/a</th>
-        <th class="p-3.5 whitespace-nowrap">Punts</th>
-        <th class="p-3.5 whitespace-nowrap">Encerts</th>`;
+      let headHTML = isPoll
+        ? `<tr><th class="p-3.5 whitespace-nowrap">Participant</th>`
+        : `<tr>
+            <th class="p-3.5 whitespace-nowrap">Posició</th>
+            <th class="p-3.5 whitespace-nowrap">Alumne/a</th>
+            <th class="p-3.5 whitespace-nowrap">Punts</th>
+            <th class="p-3.5 whitespace-nowrap">Encerts</th>`;
+
       qs.forEach((q, idx) => {
-        headHTML += `<th class="p-3.5 min-w-[200px] leading-snug"><span class="text-indigo-600 block text-xs">Pregunta ${idx + 1}</span>${q.question_text}</th>`;
+        headHTML += `<th class="p-3.5 min-w-[200px] leading-snug"><span class="${isPoll ? 'text-amber-600' : 'text-indigo-600'} block text-xs">Pregunta ${idx + 1}</span>${q.question_text}</th>`;
       });
       headHTML += `</tr>`;
       thead.innerHTML = headHTML;
@@ -945,7 +1061,7 @@
       tbody.innerHTML = '';
 
       if (pls.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${4 + qs.length}" class="p-6 text-center text-slate-400">Cap alumne va participar en aquesta sala.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${(isPoll ? 1 : 4) + qs.length}" class="p-6 text-center text-slate-400">Cap participant en aquesta sessió.</td></tr>`;
         barsList.innerHTML = `<p class="text-xs text-slate-400">Sense dades de participació.</p>`;
         return;
       }
@@ -955,33 +1071,45 @@
         const pCorrect = pAnswers.filter(a => a.is_correct).length;
         const pct = qs.length > 0 ? Math.round((pCorrect / qs.length) * 100) : 0;
 
-        barsList.innerHTML += `
-          <div class="flex items-center gap-3">
-            <div class="w-36 shrink-0 flex items-center gap-2 font-bold text-slate-800 text-xs truncate">
-              <span>${p.avatar}</span>
-              <span class="truncate">${p.nickname}</span>
+        if (!isPoll) {
+          barsList.innerHTML += `
+            <div class="flex items-center gap-3">
+              <div class="w-36 shrink-0 flex items-center gap-2 font-bold text-slate-800 text-xs truncate">
+                <span>${p.avatar}</span>
+                <span class="truncate">${p.nickname}</span>
+              </div>
+              <div class="flex-1 h-5 bg-slate-200/80 rounded-full overflow-hidden flex items-center">
+                <div style="width: ${Math.max(4, pct)}%" class="h-full ${pct >= 50 ? 'bg-emerald-500' : 'bg-amber-500'} rounded-full transition-all"></div>
+              </div>
+              <div class="w-24 shrink-0 text-right text-xs font-extrabold text-slate-700">${pct}% (${p.score} pts)</div>
             </div>
-            <div class="flex-1 h-5 bg-slate-200/80 rounded-full overflow-hidden flex items-center">
-              <div style="width: ${Math.max(4, pct)}%" class="h-full ${pct >= 50 ? 'bg-emerald-500' : 'bg-amber-500'} rounded-full transition-all"></div>
-            </div>
-            <div class="w-24 shrink-0 text-right text-xs font-extrabold text-slate-700">${pct}% (${p.score} pts)</div>
-          </div>
-        `;
+          `;
+        }
 
-        let rowHTML = `<tr class="hover:bg-slate-50/80">
-          <td class="p-3.5 font-extrabold text-slate-500 whitespace-nowrap">${rankIdx + 1}r</td>
-          <td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2 whitespace-nowrap"><span>${p.avatar}</span> <span>${p.nickname}</span></td>
-          <td class="p-3.5 font-black text-indigo-600 whitespace-nowrap">${p.score}</td>
-          <td class="p-3.5 font-bold text-slate-700 whitespace-nowrap">${pCorrect} / ${qs.length}</td>`;
+        let rowHTML = isPoll
+          ? `<tr class="hover:bg-slate-50/80"><td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2 whitespace-nowrap"><span>${p.avatar}</span> <span>${p.nickname}</span></td>`
+          : `<tr class="hover:bg-slate-50/80">
+              <td class="p-3.5 font-extrabold text-slate-500 whitespace-nowrap">${rankIdx + 1}r</td>
+              <td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2 whitespace-nowrap"><span>${p.avatar}</span> <span>${p.nickname}</span></td>
+              <td class="p-3.5 font-black text-indigo-600 whitespace-nowrap">${p.score}</td>
+              <td class="p-3.5 font-bold text-slate-700 whitespace-nowrap">${pCorrect} / ${qs.length}</td>`;
+
+        const badgeColors = [
+          'bg-rose-50 text-rose-700 border-rose-200',
+          'bg-blue-50 text-blue-700 border-blue-200',
+          'bg-amber-50 text-amber-700 border-amber-200',
+          'bg-emerald-50 text-emerald-700 border-emerald-200'
+        ];
 
         qs.forEach(q => {
           const a = pAnswers.find(item => item.question_id === q.id);
           if (!a) {
-            rowHTML += `<td class="p-3.5 text-slate-400 text-xs">Sense resposta</td>`;
+            rowHTML += `<td class="p-3.5 text-slate-400 text-xs">Sense vot</td>`;
           } else {
             const respText = a.answer_value?.text || (q.options[a.answer_value?.index]?.text) || 'Respost';
-            if (q.type === 'word_cloud' || q.type === 'poll') {
-              rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">${respText}</span></td>`;
+            if (isPoll || q.type === 'word_cloud' || q.type === 'poll') {
+              const cIdx = typeof a.answer_value?.index === 'number' ? a.answer_value.index % 4 : 1;
+              rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg border ${badgeColors[cIdx]} text-xs font-bold">${respText}</span></td>`;
             } else if (a.is_correct) {
               rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">✓ ${respText}</span></td>`;
             } else {
@@ -1028,10 +1156,45 @@
       openSessionReport(currentSession.id, 'Resultats de la sessió', dateStr);
     }
 
-    function openQuizEditor() {
+    function openQuizEditor(kind = 'quiz') {
+      editorKind = kind;
+      const isPoll = kind === 'poll';
+
+      document.getElementById('editor-heading').textContent = isPoll ? 'Nova enquesta' : 'Nou qüestionari';
+      const badge = document.getElementById('editor-mode-badge');
+      badge.textContent = isPoll ? 'Sense punts ni competició' : 'Mode joc amb punts';
+      badge.className = isPoll
+        ? 'px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold'
+        : 'px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold';
+
+      document.getElementById('editor-title-label').textContent = isPoll ? "Títol de l'enquesta" : "Títol de l'activitat";
+      document.getElementById('editor-title').placeholder = isPoll ? "Ex: on volem anar de colònies?" : "Ex: el sistema solar i els planetes";
       document.getElementById('editor-title').value = '';
       document.getElementById('editor-questions-container').innerHTML = '';
       document.getElementById('editor-error').classList.add('hidden');
+
+      const saveBtn = document.getElementById('btn-save-quiz');
+      saveBtn.textContent = isPoll ? 'Guardar enquesta' : 'Guardar qüestionari';
+      saveBtn.className = isPoll
+        ? 'w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-amber-200 transition'
+        : 'w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-emerald-200 transition';
+
+      const addBtns = document.getElementById('editor-add-buttons');
+      if (isPoll) {
+        addBtns.innerHTML = `
+          <button type="button" onclick="addQuestionBlock('quiz')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Opció múltiple</button>
+          <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Sí o no (vertader / fals)</button>
+          <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+        `;
+      } else {
+        addBtns.innerHTML = `
+          <button type="button" onclick="addQuestionBlock('quiz')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Opció múltiple</button>
+          <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Vertader o fals</button>
+          <button type="button" onclick="addQuestionBlock('type_answer')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Resposta curta</button>
+          <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+        `;
+      }
+
       addQuestionBlock('quiz');
       showView('view-quiz-editor');
     }
@@ -1039,32 +1202,38 @@
     function addQuestionBlock(type) {
       const container = document.getElementById('editor-questions-container');
       const idx = container.children.length + 1;
+      const isPoll = editorKind === 'poll';
       const div = document.createElement('div');
       div.className = "q-block bg-slate-50 p-5 rounded-2xl space-y-4 border border-slate-200";
       div.dataset.type = type;
 
       const typeNames = {
         quiz: 'opció múltiple',
-        true_false: 'vertader o fals',
+        true_false: isPoll ? 'sí o no' : 'vertader o fals',
         type_answer: 'resposta curta',
         word_cloud: 'núvol de paraules'
       };
 
+      const optColors = ['bg-rose-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500'];
+
       let optionsHTML = '';
       if (type === 'quiz') {
         optionsHTML = [0,1,2,3].map(i => `
-          <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200">
-            <input type="checkbox" class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">
-            <input type="text" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1.5 text-sm font-semibold text-slate-800 outline-none">
+          <div class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200">
+            ${isPoll
+              ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
+              : `<input type="checkbox" class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">`
+            }
+            <input type="text" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
           </div>
         `).join('');
       } else if (type === 'true_false') {
-        optionsHTML = `
-          <div class="flex gap-4 col-span-full bg-white p-3 rounded-xl border border-slate-200">
-            <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="0" checked class="opt-correct accent-indigo-600"> Vertader</label>
-            <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="1" class="opt-correct accent-indigo-600"> Fals</label>
-          </div>
-        `;
+        optionsHTML = isPoll
+          ? `<div class="col-span-full bg-white p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Opcions de votació automàtiques: Sí / No</div>`
+          : `<div class="flex gap-4 col-span-full bg-white p-3 rounded-xl border border-slate-200">
+              <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="0" checked class="opt-correct accent-indigo-600"> Vertader</label>
+              <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="1" class="opt-correct accent-indigo-600"> Fals</label>
+            </div>`;
       } else if (type === 'type_answer') {
         optionsHTML = `<input type="text" placeholder="Escriu la resposta exacta correcta" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 outline-none">`;
       } else if (type === 'word_cloud') {
@@ -1073,7 +1242,7 @@
 
       div.innerHTML = `
         <div class="flex flex-wrap justify-between items-center gap-2">
-          <span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">Pregunta ${idx} · ${typeNames[type]}</span>
+          <span class="text-xs font-extrabold ${isPoll ? 'text-amber-700 bg-amber-50' : 'text-indigo-600 bg-indigo-50'} px-3 py-1 rounded-lg">Pregunta ${idx} · ${typeNames[type]}</span>
           <div class="flex gap-2">
             <select class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
               <option value="10">10 segons</option>
@@ -1081,14 +1250,16 @@
               <option value="30">30 segons</option>
               <option value="60">60 segons</option>
             </select>
-            <select class="q-points bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
-              <option value="1" selected>Punts normals</option>
-              <option value="2">Doble puntuació</option>
-              <option value="0">Sense punts</option>
-            </select>
+            ${isPoll ? '' : `
+              <select class="q-points bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+                <option value="1" selected>Punts normals</option>
+                <option value="2">Doble puntuació</option>
+                <option value="0">Sense punts</option>
+              </select>
+            `}
           </div>
         </div>
-        <input type="text" placeholder="Escriu l'enunciat de la pregunta..." class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
+        <input type="text" placeholder="${isPoll ? 'Escriu la pregunta de l\'enquesta...' : 'Escriu l\'enunciat de la pregunta...'}" class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
         <input type="url" placeholder="Enllaç d'imatge opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${optionsHTML}</div>
       `;
@@ -1099,10 +1270,11 @@
       const title = document.getElementById('editor-title').value.trim();
       const errEl = document.getElementById('editor-error');
       const saveBtn = document.getElementById('btn-save-quiz');
+      const isPoll = editorKind === 'poll';
       errEl.classList.add('hidden');
 
       if (!title) {
-        errEl.textContent = "Escriu un títol per al qüestionari abans de guardar.";
+        errEl.textContent = isPoll ? "Escriu un títol per a l'enquesta abans de guardar." : "Escriu un títol per al qüestionari abans de guardar.";
         errEl.classList.remove('hidden');
         return;
       }
@@ -1122,47 +1294,58 @@
         errEl.textContent = "La sessió ha caducat. Torna a iniciar sessió.";
         errEl.classList.remove('hidden');
         saveBtn.disabled = false;
-        saveBtn.textContent = "Guardar qüestionari";
+        saveBtn.textContent = isPoll ? "Guardar enquesta" : "Guardar qüestionari";
         return;
       }
 
       const { data: quiz, error: quizError } = await sb
         .from('quizzes')
-        .insert({ teacher_id: authData.user.id, title })
+        .insert({ teacher_id: authData.user.id, title, kind: editorKind })
         .select()
         .single();
 
       if (quizError || !quiz) {
-        errEl.textContent = `No s'ha pogut guardar el qüestionari: ${quizError?.message || 'revisa els permisos'}`;
+        errEl.textContent = `No s'ha pogut guardar: ${quizError?.message || 'revisa els permisos'}`;
         errEl.classList.remove('hidden');
         saveBtn.disabled = false;
-        saveBtn.textContent = "Guardar qüestionari";
+        saveBtn.textContent = isPoll ? "Guardar enquesta" : "Guardar qüestionari";
         return;
       }
 
       const questionsToInsert = [];
 
       blocks.forEach((b, i) => {
-        const type = b.dataset.type;
+        const rawType = b.dataset.type;
+        const dbType = (isPoll && rawType === 'quiz') ? 'poll' : rawType;
         const question_text = b.querySelector('.q-title').value.trim() || `Pregunta ${i + 1}`;
         const media_url = b.querySelector('.q-media').value.trim() || null;
         const time_limit = parseInt(b.querySelector('.q-time').value);
-        const points_multiplier = parseInt(b.querySelector('.q-points').value);
+        const pointsEl = b.querySelector('.q-points');
+        const points_multiplier = isPoll ? 0 : parseInt(pointsEl ? pointsEl.value : '1');
         let options = [];
 
-        if (type === 'quiz') {
+        if (rawType === 'quiz') {
           const texts = b.querySelectorAll('.opt-text');
           const checks = b.querySelectorAll('.opt-correct');
           texts.forEach((t, idx) => {
-            if (t.value.trim()) options.push({ text: t.value.trim(), is_correct: checks[idx].checked });
+            if (t.value.trim()) {
+              options.push({ text: t.value.trim(), is_correct: isPoll ? false : (checks[idx]?.checked || false) });
+            }
           });
-        } else if (type === 'true_false') {
-          const radios = b.querySelectorAll('.opt-correct');
-          options = [
-            { text: 'Vertader', is_correct: radios[0].checked },
-            { text: 'Fals', is_correct: radios[1].checked }
-          ];
-        } else if (type === 'type_answer') {
+        } else if (rawType === 'true_false') {
+          if (isPoll) {
+            options = [
+              { text: 'Sí', is_correct: false },
+              { text: 'No', is_correct: false }
+            ];
+          } else {
+            const radios = b.querySelectorAll('.opt-correct');
+            options = [
+              { text: 'Vertader', is_correct: radios[0].checked },
+              { text: 'Fals', is_correct: radios[1].checked }
+            ];
+          }
+        } else if (rawType === 'type_answer') {
           const val = b.querySelector('.opt-text').value.trim();
           options = [{ text: val, is_correct: true }];
         }
@@ -1170,7 +1353,7 @@
         questionsToInsert.push({
           quiz_id: quiz.id,
           order_index: i,
-          type,
+          type: dbType,
           question_text,
           media_url,
           time_limit,
@@ -1182,7 +1365,7 @@
       const { error: qError } = await sb.from('questions').insert(questionsToInsert);
 
       saveBtn.disabled = false;
-      saveBtn.textContent = "Guardar qüestionari";
+      saveBtn.textContent = isPoll ? "Guardar enquesta" : "Guardar qüestionari";
 
       if (qError) {
         errEl.textContent = `Error guardant les preguntes: ${qError.message}`;
@@ -1193,9 +1376,11 @@
       loadTeacherDashboard(authData.user);
     }
 
-    async function createRoom(quizId) {
+    async function createRoom(quizId, kind = 'quiz') {
       const { data: { user } } = await sb.auth.getUser();
       const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      sessionKind = kind;
+      const isPoll = kind === 'poll';
 
       const { data: session, error } = await sb
         .from('game_sessions')
@@ -1217,6 +1402,28 @@
       currentSession = session;
       sessionQuestions = qs || [];
 
+      const lobbyBadge = document.getElementById('host-lobby-badge');
+      lobbyBadge.textContent = isPoll ? 'Enquesta oberta' : 'Sala oberta';
+      lobbyBadge.className = isPoll
+        ? 'px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-bold'
+        : 'px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold';
+
+      const startBtn = document.getElementById('btn-host-start');
+      startBtn.textContent = isPoll ? 'Començar enquesta' : 'Començar partida';
+      startBtn.className = isPoll
+        ? 'px-10 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-amber-200 transition'
+        : 'px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition';
+
+      const lbCol = document.getElementById('host-leaderboard-col');
+      const visCol = document.getElementById('host-visual-col');
+      if (isPoll) {
+        lbCol.classList.add('hidden');
+        visCol.className = 'lg:col-span-3 space-y-6';
+      } else {
+        lbCol.classList.remove('hidden');
+        visCol.className = 'lg:col-span-2 space-y-6';
+      }
+
       document.getElementById('host-pin-display').textContent = pin;
       document.getElementById('host-players-grid').innerHTML = '';
       document.getElementById('host-player-count').textContent = '0';
@@ -1226,6 +1433,7 @@
       document.getElementById('host-lobby').classList.remove('hidden');
       document.getElementById('host-question-screen').classList.add('hidden');
       document.getElementById('host-podium-screen').classList.add('hidden');
+      document.getElementById('host-poll-finished-screen').classList.add('hidden');
 
       sb.channel('host-players-' + session.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
@@ -1236,16 +1444,16 @@
           document.getElementById('host-players-grid').appendChild(badge);
           const countEl = document.getElementById('host-player-count');
           countEl.textContent = parseInt(countEl.textContent) + 1;
-          refreshLiveLeaderboard();
+          if (!isPoll) refreshLiveLeaderboard();
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, () => {
-          refreshLiveLeaderboard();
+          if (!isPoll) refreshLiveLeaderboard();
         })
         .subscribe();
     }
 
     async function refreshLiveLeaderboard() {
-      if (!currentSession) return;
+      if (!currentSession || sessionKind === 'poll') return;
       const { data: players } = await sb
         .from('players')
         .select('*')
@@ -1272,19 +1480,26 @@
     }
 
     async function startGame() {
-      if (sessionQuestions.length === 0) return alert("Aquest qüestionari no té cap pregunta.");
+      if (sessionQuestions.length === 0) return alert("Aquesta activitat no té cap pregunta.");
       await launchQuestion(0);
     }
 
     async function launchQuestion(index) {
       if (index >= sessionQuestions.length) {
         await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
-        await showHostPodium();
+        if (sessionKind === 'poll') {
+          setMusicMode('lobby');
+          document.getElementById('host-question-screen').classList.add('hidden');
+          document.getElementById('host-poll-finished-screen').classList.remove('hidden');
+        } else {
+          await showHostPodium();
+        }
         return;
       }
 
       setMusicMode('action');
       const q = sessionQuestions[index];
+      const isPoll = sessionKind === 'poll' || q.type === 'poll';
       currentSession.current_question_index = index;
 
       await sb.from('game_sessions').update({
@@ -1333,11 +1548,12 @@
       }
 
       let answersCount = 0;
-      document.getElementById('host-answers-count').textContent = 'Respostes: 0';
+      const counterPrefix = isPoll ? 'Vots' : 'Respostes';
+      document.getElementById('host-answers-count').textContent = `${counterPrefix}: 0`;
       const ansChannel = sb.channel('answers-' + q.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers', filter: `question_id=eq.${q.id}` }, payload => {
           answersCount++;
-          document.getElementById('host-answers-count').textContent = `Respostes: ${answersCount}`;
+          document.getElementById('host-answers-count').textContent = `${counterPrefix}: ${answersCount}`;
           if (q.type === 'word_cloud') {
             const word = document.createElement('span');
             word.className = "bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-extrabold text-2xl shadow-md";
@@ -1368,6 +1584,7 @@
       document.getElementById('btn-next-question').classList.remove('hidden');
 
       const q = sessionQuestions[currentSession.current_question_index];
+      const isPoll = sessionKind === 'poll' || q.type === 'poll';
       const { data: qAnswers } = await sb
         .from('answers')
         .select('*')
@@ -1375,7 +1592,8 @@
         .eq('question_id', q.id);
 
       const ansList = qAnswers || [];
-      await refreshLiveLeaderboard();
+      const totalVotes = ansList.length;
+      if (!isPoll) await refreshLiveLeaderboard();
 
       if (q.type === 'quiz' || q.type === 'true_false' || q.type === 'poll') {
         const counts = q.options.map((_, idx) => ansList.filter(a => a.answer_value?.index === idx).length);
@@ -1386,19 +1604,23 @@
         barsContainer.classList.remove('hidden');
 
         q.options.forEach((opt, i) => {
+          const pct = totalVotes > 0 ? Math.round((counts[i] / totalVotes) * 100) : 0;
           const countEl = document.getElementById(`host-opt-count-${i}`);
-          if (countEl) countEl.textContent = counts[i];
+          if (countEl) {
+            countEl.textContent = isPoll ? `${counts[i]} (${pct}%)` : counts[i];
+          }
 
           const el = document.getElementById(`host-opt-${i}`);
-          if (el && !opt.is_correct && q.type !== 'poll') {
+          if (el && !opt.is_correct && !isPoll) {
             el.classList.add('opacity-35');
           }
 
           const heightPct = Math.round((counts[i] / maxCount) * 100);
-          const showCheck = opt.is_correct && q.type !== 'poll';
+          const showCheck = opt.is_correct && !isPoll;
+          const labelTop = isPoll ? `${counts[i]} (${pct}%)` : `${counts[i]}`;
           barsContainer.innerHTML += `
-            <div class="flex flex-col items-center justify-end h-full w-20 gap-2">
-              <span class="font-extrabold text-slate-800 text-sm flex items-center gap-1">${counts[i]}${showCheck ? '<span class="text-emerald-600 font-black">✓</span>' : ''}</span>
+            <div class="flex flex-col items-center justify-end h-full w-24 gap-2">
+              <span class="font-extrabold text-slate-800 text-xs md:text-sm flex items-center gap-1 whitespace-nowrap">${labelTop}${showCheck ? '<span class="text-emerald-600 font-black">✓</span>' : ''}</span>
               <div style="height: ${heightPct}%" class="w-full min-h-[44px] ${barColors[i%4]} rounded-t-2xl flex items-center justify-center text-white shadow-md transition-all duration-500">
                 ${SHAPE_SVGS[i%4]}
               </div>
