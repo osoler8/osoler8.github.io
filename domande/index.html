@@ -24,7 +24,7 @@
 <body class="bg-pattern text-slate-800 min-h-screen flex flex-col select-none">
 
   <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-    <div onclick="showView('view-join')" class="flex items-center gap-3 cursor-pointer">
+    <div onclick="handleLogoClick()" class="flex items-center gap-3 cursor-pointer">
       <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-indigo-200">D</div>
       <span class="font-extrabold text-2xl tracking-tight text-slate-900">Domande</span>
     </div>
@@ -86,12 +86,16 @@
     </section>
 
     <section id="view-student-play" class="hidden w-full max-w-3xl flex-1 flex flex-col justify-between space-y-5">
+      <div class="bg-white p-5 rounded-3xl shadow-md border border-slate-100 flex justify-between items-center gap-4">
+        <span id="student-q-counter" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Pregunta 1</span>
+        <span id="student-score-pill" class="px-3.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-extrabold">0 punts</span>
+      </div>
+
       <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100 text-center">
-        <span id="student-q-counter" class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold mb-2">Pregunta 1</span>
         <h2 id="student-q-text" class="text-xl md:text-2xl font-extrabold text-slate-900">Text de la pregunta</h2>
       </div>
 
-      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[320px]">
+      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[300px]">
       </div>
 
       <div id="student-text-input-box" class="hidden bg-white p-6 rounded-3xl shadow-md border border-slate-100 space-y-4">
@@ -102,8 +106,20 @@
       <div id="student-feedback" class="hidden bg-white text-center p-10 rounded-3xl shadow-xl border border-slate-100 space-y-3">
         <div id="feedback-icon" class="text-7xl">⏳</div>
         <h3 id="feedback-title" class="text-2xl font-extrabold text-slate-900">Resposta enviada!</h3>
+        <p id="feedback-points" class="text-lg font-extrabold text-indigo-600 hidden">+0 punts</p>
         <p id="feedback-sub" class="text-slate-500">Esperant la resta de companys i companyes...</p>
       </div>
+    </section>
+
+    <section id="view-student-podium" class="hidden w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-slate-100 text-center space-y-6">
+      <div id="student-final-medal" class="text-7xl">🏆</div>
+      <div class="space-y-1">
+        <span id="student-final-rank" class="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-extrabold">Posició 1r</span>
+        <h2 id="student-final-name" class="text-3xl font-extrabold text-slate-900 pt-2">Nom</h2>
+        <p id="student-final-score" class="text-2xl font-black text-amber-500">0 punts</p>
+      </div>
+      <p id="student-final-msg" class="text-slate-500 text-sm">Gràcies per participar a la sessió d'avui!</p>
+      <button onclick="location.reload()" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold transition">Tornar a l'inici</button>
     </section>
 
     <section id="view-login" class="hidden w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-5">
@@ -123,16 +139,72 @@
     <section id="view-teacher-dash" class="hidden w-full space-y-6">
       <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
         <div>
-          <h2 class="text-2xl font-extrabold text-slate-900">Els meus qüestionaris</h2>
+          <h2 class="text-2xl font-extrabold text-slate-900">Panell docent</h2>
           <p class="text-sm text-slate-500" id="teacher-email-display"></p>
         </div>
-        <div class="flex gap-3">
-          <button onclick="openQuizEditor()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-indigo-200 transition">+ Crear qüestionari</button>
-          <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Tancar sessió</button>
+        <div class="flex flex-wrap gap-2.5">
+          <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition">Els meus qüestionaris</button>
+          <button onclick="switchDashTab('results')" id="tab-btn-results" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Resultats i avaluació</button>
+          <button onclick="openQuizEditor()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-emerald-100 transition">+ Nou qüestionari</button>
+          <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3.5 py-2.5 rounded-2xl font-bold text-sm transition">Sortir</button>
         </div>
       </div>
 
-      <div id="quizzes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div id="dash-tab-quizzes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      </div>
+
+      <div id="dash-tab-results" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-xl font-extrabold text-slate-900">Resultats</h3>
+              <p class="text-xs text-slate-500">Historial de partides realitzades per avaluar l'alumnat</p>
+            </div>
+          </div>
+          <div id="sessions-history-list" class="divide-y divide-slate-100">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-session-report" class="hidden w-full bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6">
+      <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span id="report-date-badge" class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold mb-1">20/11/2026 - 11:00</span>
+          <h2 id="report-quiz-title" class="text-2xl font-extrabold text-slate-900">Informe de la partida</h2>
+        </div>
+        <div class="flex gap-2.5">
+          <button onclick="exportReportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-emerald-100 transition">Descarregar csv (excel)</button>
+          <button onclick="backToResults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Tornar al llistat</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <p class="text-xs text-slate-500 font-bold">Participants</p>
+          <p id="rep-stat-players" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <p class="text-xs text-slate-500 font-bold">Mitjana d'encerts</p>
+          <p id="rep-stat-accuracy" class="text-2xl font-extrabold text-emerald-600 mt-1">0%</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <p class="text-xs text-slate-500 font-bold">Puntuació màxima</p>
+          <p id="rep-stat-topscore" class="text-2xl font-extrabold text-indigo-600 mt-1">0</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+          <p class="text-xs text-slate-500 font-bold">Total preguntes</p>
+          <p id="rep-stat-questions" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead id="report-table-head" class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+          </thead>
+          <tbody id="report-table-body" class="divide-y divide-slate-100">
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -194,17 +266,51 @@
           <button onclick="showQuestionResults()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition">Veure resultats</button>
         </div>
 
-        <h2 id="host-q-text" class="text-2xl md:text-4xl font-extrabold text-slate-900 py-4">Pregunta</h2>
-        <img id="host-q-image" src="" class="hidden max-h-64 mx-auto rounded-2xl object-contain shadow-md">
+        <h2 id="host-q-text" class="text-2xl md:text-4xl font-extrabold text-slate-900 py-2">Pregunta</h2>
+        <img id="host-q-image" src="" class="hidden max-h-56 mx-auto rounded-2xl object-contain shadow-md">
 
-        <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-xl font-bold text-white"></div>
-        
-        <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-3 p-8 bg-slate-50 rounded-3xl border border-slate-200 min-h-[220px]"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div class="lg:col-span-2 space-y-6">
+            <div id="host-bars-display" class="hidden h-48 flex items-end justify-center gap-6 px-6 pt-8 pb-2 bg-slate-50 rounded-3xl border border-slate-100"></div>
+            <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-lg font-bold text-white"></div>
+            <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-3 p-8 bg-slate-50 rounded-3xl border border-slate-200 min-h-[220px]"></div>
+          </div>
 
-        <div class="pt-4">
+          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-200/80 text-left space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+              <span class="font-extrabold text-slate-800 text-sm">Classificació en directe</span>
+              <span class="text-xs font-bold text-indigo-600">Top punts</span>
+            </div>
+            <div id="host-live-leaderboard" class="space-y-2 max-h-[320px] overflow-y-auto">
+              <p class="text-xs text-slate-400 text-center py-4">Esperant punts...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2">
           <button id="btn-next-question" onclick="nextQuestion()" class="hidden px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-xl shadow-lg shadow-indigo-200 transition">
             Següent pregunta ➔
           </button>
+        </div>
+      </div>
+
+      <div id="host-podium-screen" class="hidden bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
+        <div class="space-y-2">
+          <span class="px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-extrabold">Partida finalitzada</span>
+          <h2 class="text-3xl md:text-5xl font-black text-slate-900 pt-2">Podi de guanyadors</h2>
+        </div>
+
+        <div id="host-podium-pillars" class="flex items-end justify-center gap-4 md:gap-8 pt-8 min-h-[300px]">
+        </div>
+
+        <div class="max-w-xl mx-auto bg-slate-50 p-5 rounded-3xl border border-slate-100 text-left space-y-2">
+          <p class="text-xs font-bold text-slate-500 pb-1">Classificació general</p>
+          <div id="host-full-ranking" class="space-y-2 max-h-60 overflow-y-auto"></div>
+        </div>
+
+        <div class="flex justify-center gap-4 pt-2">
+          <button onclick="openLatestReport()" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition">Veure informe d'avaluació</button>
+          <button onclick="returnToDashboard()" class="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition">Tornar al panell</button>
         </div>
       </div>
     </section>
@@ -216,15 +322,35 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_2GArEBXYf4ompZsqebhE-g_FMQ7mq1e';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const SHAPE_SVGS = [
+      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L22 20H2L12 3Z"/></svg>',
+      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>',
+      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>',
+      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>'
+    ];
+
     let selectedAvatar = '🦊';
     let currentPlayer = null;
     let currentSession = null;
     let sessionQuestions = [];
     let hostTimerInterval = null;
+    let questionStartTimeMs = 0;
+    let studentScore = 0;
+    let studentStreak = 0;
+    let currentReportData = null;
 
     function showView(viewId) {
       document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    async function handleLogoClick() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        loadTeacherDashboard(session.user);
+      } else {
+        showView('view-join');
+      }
     }
 
     function selectAvatar(btn, emoji) {
@@ -264,7 +390,7 @@
 
       const { data: player, error: pError } = await sb
         .from('players')
-        .insert({ session_id: session.id, nickname, avatar: selectedAvatar })
+        .insert({ session_id: session.id, nickname, avatar: selectedAvatar, score: 0 })
         .select()
         .single();
 
@@ -276,6 +402,8 @@
 
       currentSession = session;
       currentPlayer = player;
+      studentScore = 0;
+      studentStreak = 0;
 
       const { data: qs } = await sb
         .from('questions')
@@ -295,7 +423,7 @@
         .subscribe();
     }
 
-    function handleSessionStateChange(session) {
+    async function handleSessionStateChange(session) {
       currentSession = session;
       if (session.status === 'question_active') {
         renderStudentQuestion(session.current_question_index);
@@ -305,20 +433,50 @@
         document.getElementById('student-feedback').classList.remove('hidden');
         document.getElementById('feedback-icon').textContent = '⏱️';
         document.getElementById('feedback-title').textContent = "Temps esgotat!";
+        document.getElementById('feedback-points').classList.add('hidden');
         document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
       } else if (session.status === 'finished') {
-        alert("Partida finalitzada! Gràcies per participar.");
-        location.reload();
+        await showStudentFinalRank();
       }
+    }
+
+    async function showStudentFinalRank() {
+      const { data: allPlayers } = await sb
+        .from('players')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('score', { ascending: false });
+
+      const list = allPlayers || [];
+      const myIndex = list.findIndex(p => p.id === currentPlayer.id);
+      const rank = myIndex >= 0 ? myIndex + 1 : list.length;
+
+      const medals = ['🥇', '🥈', '🥉'];
+      document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏅';
+      document.getElementById('student-final-rank').textContent = `Posició ${rank} de ${list.length}`;
+      document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
+      document.getElementById('student-final-score').textContent = `${studentScore} punts`;
+      
+      if (rank === 1) {
+        document.getElementById('student-final-msg').textContent = "Enhorabona! Has aconseguit la primera posició del rànquing.";
+      } else if (rank <= 3) {
+        document.getElementById('student-final-msg').textContent = "Molt bona feina! Has pujat al podi de la classe.";
+      } else {
+        document.getElementById('student-final-msg').textContent = "Bona partida! Continua practicant per pujar posicions.";
+      }
+
+      showView('view-student-podium');
     }
 
     function renderStudentQuestion(qIndex) {
       const q = sessionQuestions[qIndex];
       if (!q) return;
 
+      questionStartTimeMs = Date.now();
       showView('view-student-play');
       document.getElementById('student-feedback').classList.add('hidden');
       document.getElementById('student-q-counter').textContent = `Pregunta ${qIndex + 1} de ${sessionQuestions.length}`;
+      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
       document.getElementById('student-q-text').textContent = q.question_text;
 
       const grid = document.getElementById('student-options-grid');
@@ -329,12 +487,11 @@
         grid.classList.remove('hidden');
         textBox.classList.add('hidden');
         const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
-        const shapes = ['▲', '◆', '●', '■'];
 
         q.options.forEach((opt, idx) => {
           const btn = document.createElement('button');
-          btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-6 text-xl md:text-2xl font-extrabold flex items-center justify-center gap-3 transition`;
-          btn.innerHTML = `<span class="opacity-80">${shapes[idx % 4]}</span> <span>${opt.text}</span>`;
+          btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-6 text-xl md:text-2xl font-extrabold flex items-center gap-4 text-left transition`;
+          btn.innerHTML = `<div class="w-11 h-11 rounded-2xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[idx % 4]}</div> <span>${opt.text}</span>`;
           btn.onclick = () => submitOptionAnswer(q, idx);
           grid.appendChild(btn);
         });
@@ -345,20 +502,36 @@
       }
     }
 
+    function calculateGamifiedPoints(question, isCorrect) {
+      if (!isCorrect || question.points_multiplier === 0) return 0;
+      const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
+      const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
+      const streakBonus = studentStreak * 100;
+      return Math.round((1000 * ratio + streakBonus) * question.points_multiplier);
+    }
+
     async function submitOptionAnswer(question, optionIndex) {
       const isCorrect = question.options[optionIndex]?.is_correct || false;
-      const points = isCorrect ? (1000 * question.points_multiplier) : 0;
+      if (isCorrect) {
+        studentStreak++;
+      } else {
+        studentStreak = 0;
+      }
+      const points = calculateGamifiedPoints(question, isCorrect);
+      studentScore += points;
 
       await sb.from('answers').insert({
         session_id: currentSession.id,
         question_id: question.id,
         player_id: currentPlayer.id,
-        answer_value: { index: optionIndex },
+        answer_value: { index: optionIndex, text: question.options[optionIndex]?.text || '' },
         is_correct: isCorrect,
         points_awarded: points
       });
 
-      showStudentWaitingFeedback(isCorrect, question.type === 'poll');
+      await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+      showStudentWaitingFeedback(isCorrect, points, question.type === 'poll');
     }
 
     async function submitTextAnswer() {
@@ -371,25 +544,51 @@
         isCorrect = q.options.some(o => o.text.toLowerCase() === val.toLowerCase() && o.is_correct);
       }
 
+      if (isCorrect) {
+        studentStreak++;
+      } else {
+        studentStreak = 0;
+      }
+
+      const points = calculateGamifiedPoints(q, isCorrect);
+      studentScore += points;
+
       await sb.from('answers').insert({
         session_id: currentSession.id,
         question_id: q.id,
         player_id: currentPlayer.id,
         answer_value: { text: val },
         is_correct: isCorrect,
-        points_awarded: isCorrect ? (1000 * q.points_multiplier) : 0
+        points_awarded: points
       });
 
-      showStudentWaitingFeedback(isCorrect, q.type === 'word_cloud');
+      await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+      document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+      showStudentWaitingFeedback(isCorrect, points, q.type === 'word_cloud');
     }
 
-    function showStudentWaitingFeedback(isCorrect, isOpinion) {
+    function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
       document.getElementById('student-options-grid').classList.add('hidden');
       document.getElementById('student-text-input-box').classList.add('hidden');
       const fb = document.getElementById('student-feedback');
+      const ptsEl = document.getElementById('feedback-points');
       fb.classList.remove('hidden');
-      document.getElementById('feedback-icon').textContent = isOpinion ? '📨' : (isCorrect ? '🎉' : '💡');
-      document.getElementById('feedback-title').textContent = isOpinion ? 'Resposta enviada!' : (isCorrect ? 'Molt bé, encertat!' : 'No passa res, seguim!');
+
+      if (isOpinion) {
+        document.getElementById('feedback-icon').textContent = '📨';
+        document.getElementById('feedback-title').textContent = 'Resposta enviada!';
+        ptsEl.classList.add('hidden');
+      } else if (isCorrect) {
+        document.getElementById('feedback-icon').textContent = '🎉';
+        document.getElementById('feedback-title').textContent = studentStreak > 1 ? `Encertat! Ratxa de ${studentStreak}` : 'Molt bé, encertat!';
+        ptsEl.textContent = `+${points} punts`;
+        ptsEl.classList.remove('hidden');
+      } else {
+        document.getElementById('feedback-icon').textContent = '💡';
+        document.getElementById('feedback-title').textContent = 'No passa res, seguim!';
+        ptsEl.textContent = '+0 punts';
+        ptsEl.classList.remove('hidden');
+      }
     }
 
     async function loginTeacher() {
@@ -412,16 +611,42 @@
       showView('view-join');
     }
 
+    async function returnToDashboard() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) loadTeacherDashboard(user);
+    }
+
+    function switchDashTab(tab) {
+      const qTab = document.getElementById('dash-tab-quizzes');
+      const rTab = document.getElementById('dash-tab-results');
+      const qBtn = document.getElementById('tab-btn-quizzes');
+      const rBtn = document.getElementById('tab-btn-results');
+
+      if (tab === 'quizzes') {
+        qTab.classList.remove('hidden');
+        rTab.classList.add('hidden');
+        qBtn.className = "bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+        rBtn.className = "bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+      } else {
+        qTab.classList.add('hidden');
+        rTab.classList.remove('hidden');
+        rBtn.className = "bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+        qBtn.className = "bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+        loadSessionsHistory();
+      }
+    }
+
     async function loadTeacherDashboard(user) {
       document.getElementById('teacher-email-display').textContent = user.email;
       showView('view-teacher-dash');
+      switchDashTab('quizzes');
 
       const { data: quizzes, error } = await sb
         .from('quizzes')
         .select('*')
         .order('created_at', { ascending: false });
 
-      const list = document.getElementById('quizzes-list');
+      const list = document.getElementById('dash-tab-quizzes');
       list.innerHTML = '';
 
       if (error) {
@@ -441,7 +666,7 @@
           <div>
             <span class="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold mb-2">Qüestionari</span>
             <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
-            <p class="text-xs text-slate-400 mt-1">Creat el ${new Date(q.created_at).toLocaleDateString()}</p>
+            <p class="text-xs text-slate-400 mt-1">Creat el ${formatDateTime(q.created_at)}</p>
           </div>
           <button onclick="createRoom('${q.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-bold text-sm shadow-md shadow-indigo-100 transition">
             Obrir sala de joc
@@ -449,6 +674,169 @@
         `;
         list.appendChild(card);
       });
+    }
+
+    function formatDateTime(isoString) {
+      const d = new Date(isoString);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} - ${hours}:${mins}`;
+    }
+
+    async function loadSessionsHistory() {
+      const container = document.getElementById('sessions-history-list');
+      container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial de partides...</p>';
+
+      const { data: sessions, error } = await sb
+        .from('game_sessions')
+        .select('id, pin, status, created_at, quiz_id, quizzes(title)')
+        .order('created_at', { ascending: false });
+
+      if (error || !sessions || sessions.length === 0) {
+        container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap partida enregistrada.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      sessions.forEach(s => {
+        const title = s.quizzes?.title || 'Qüestionari sense títol';
+        const dateStr = formatDateTime(s.created_at);
+        const row = document.createElement('div');
+        row.className = "py-4 flex flex-wrap justify-between items-center gap-4 hover:bg-slate-50 px-3 rounded-2xl transition";
+        row.innerHTML = `
+          <div>
+            <p class="text-xs font-extrabold text-indigo-600">${dateStr}</p>
+            <h4 class="text-base font-extrabold text-slate-900">${title}</h4>
+            <p class="text-xs text-slate-400">Pin: ${s.pin}</p>
+          </div>
+          <button onclick="openSessionReport('${s.id}', '${title.replace(/'/g, "\\'")}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
+            Veure avaluació i detall
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    async function openSessionReport(sessionId, quizTitle, dateStr) {
+      showView('view-session-report');
+      document.getElementById('report-date-badge').textContent = dateStr;
+      document.getElementById('report-quiz-title').textContent = quizTitle;
+
+      const { data: session } = await sb.from('game_sessions').select('quiz_id').eq('id', sessionId).single();
+      const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
+      const { data: players } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
+      const { data: answers } = await sb.from('answers').select('*').eq('session_id', sessionId);
+
+      const qs = questions || [];
+      const pls = players || [];
+      const ans = answers || [];
+
+      currentReportData = { quizTitle, dateStr, questions: qs, players: pls, answers: ans };
+
+      document.getElementById('rep-stat-players').textContent = pls.length;
+      document.getElementById('rep-stat-questions').textContent = qs.length;
+      document.getElementById('rep-stat-topscore').textContent = pls.length > 0 ? pls[0].score : 0;
+
+      const gradableAns = ans.filter(a => {
+        const q = qs.find(item => item.id === a.question_id);
+        return q && q.type !== 'word_cloud' && q.type !== 'poll';
+      });
+      const correctCount = gradableAns.filter(a => a.is_correct).length;
+      const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
+      document.getElementById('rep-stat-accuracy').textContent = `${accuracy}%`;
+
+      const thead = document.getElementById('report-table-head');
+      let headHTML = `<tr>
+        <th class="p-3.5">Posició</th>
+        <th class="p-3.5">Alumne/a</th>
+        <th class="p-3.5">Punts</th>
+        <th class="p-3.5">Encerts</th>`;
+      qs.forEach((q, idx) => {
+        headHTML += `<th class="p-3.5 min-w-[140px]" title="${q.question_text}">P${idx + 1}: ${q.question_text.slice(0, 22)}${q.question_text.length > 22 ? '...' : ''}</th>`;
+      });
+      headHTML += `</tr>`;
+      thead.innerHTML = headHTML;
+
+      const tbody = document.getElementById('report-table-body');
+      tbody.innerHTML = '';
+
+      if (pls.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${4 + qs.length}" class="p-6 text-center text-slate-400">Cap alumne va participar en aquesta sala.</td></tr>`;
+        return;
+      }
+
+      pls.forEach((p, rankIdx) => {
+        const pAnswers = ans.filter(a => a.player_id === p.id);
+        const pCorrect = pAnswers.filter(a => a.is_correct).length;
+
+        let rowHTML = `<tr class="hover:bg-slate-50/80">
+          <td class="p-3.5 font-extrabold text-slate-500">${rankIdx + 1}r</td>
+          <td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2"><span>${p.avatar}</span> <span>${p.nickname}</span></td>
+          <td class="p-3.5 font-black text-indigo-600">${p.score}</td>
+          <td class="p-3.5 font-bold text-slate-700">${pCorrect} / ${qs.length}</td>`;
+
+        qs.forEach(q => {
+          const a = pAnswers.find(item => item.question_id === q.id);
+          if (!a) {
+            rowHTML += `<td class="p-3.5 text-slate-400 text-xs">Sense resposta</td>`;
+          } else {
+            const respText = a.answer_value?.text || (q.options[a.answer_value?.index]?.text) || 'Respost';
+            if (q.type === 'word_cloud' || q.type === 'poll') {
+              rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">${respText}</span></td>`;
+            } else if (a.is_correct) {
+              rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">✓ ${respText}</span></td>`;
+            } else {
+              rowHTML += `<td class="p-3.5"><span class="inline-block px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">✗ ${respText}</span></td>`;
+            }
+          }
+        });
+
+        rowHTML += `</tr>`;
+        tbody.innerHTML += rowHTML;
+      });
+    }
+
+    function exportReportCSV() {
+      if (!currentReportData) return;
+      const { quizTitle, dateStr, questions, players, answers } = currentReportData;
+
+      const headers = ['Posicio', 'Alumne', 'Puntuacio', 'Encerts', ...questions.map((q, i) => `P${i+1}: ${q.question_text.replace(/;/g, ',')}`)];
+      const rows = [headers.join(';')];
+
+      players.forEach((p, idx) => {
+        const pAnswers = answers.filter(a => a.player_id === p.id);
+        const pCorrect = pAnswers.filter(a => a.is_correct).length;
+        const qCols = questions.map(q => {
+          const a = pAnswers.find(item => item.question_id === q.id);
+          if (!a) return 'Sense resposta';
+          const respText = (a.answer_value?.text || q.options[a.answer_value?.index]?.text || '').replace(/;/g, ',');
+          if (q.type === 'word_cloud' || q.type === 'poll') return respText;
+          return `${a.is_correct ? 'BE' : 'MALAMENT'} (${respText})`;
+        });
+        rows.push([idx + 1, p.nickname.replace(/;/g, ','), p.score, `${pCorrect}/${questions.length}`, ...qCols].join(';'));
+      });
+
+      const csvContent = '\uFEFF' + rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `domande_${quizTitle.toLowerCase().replace(/\s+/g, '_')}_${dateStr.slice(0, 10).replace(/\//g, '-')}.csv`;
+      link.click();
+    }
+
+    function backToResults() {
+      showView('view-teacher-dash');
+      switchDashTab('results');
+    }
+
+    function openLatestReport() {
+      if (!currentSession) return returnToDashboard();
+      const dateStr = formatDateTime(currentSession.created_at || new Date().toISOString());
+      openSessionReport(currentSession.id, 'Resultats de la sessió', dateStr);
     }
 
     function openQuizEditor() {
@@ -556,7 +944,7 @@
         .single();
 
       if (quizError || !quiz) {
-        errEl.textContent = `No s'ha pogut guardar el qüestionari: ${quizError?.message || 'revisa les taules a supabase'}`;
+        errEl.textContent = `No s'ha pogut guardar el qüestionari: ${quizError?.message || 'revisa els permisos'}`;
         errEl.classList.remove('hidden');
         saveBtn.disabled = false;
         saveBtn.textContent = "Guardar qüestionari";
@@ -643,9 +1031,11 @@
       document.getElementById('host-pin-display').textContent = pin;
       document.getElementById('host-players-grid').innerHTML = '';
       document.getElementById('host-player-count').textContent = '0';
+      document.getElementById('host-live-leaderboard').innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Esperant punts...</p>';
       showView('view-teacher-host');
       document.getElementById('host-lobby').classList.remove('hidden');
       document.getElementById('host-question-screen').classList.add('hidden');
+      document.getElementById('host-podium-screen').classList.add('hidden');
 
       sb.channel('host-players-' + session.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
@@ -656,8 +1046,39 @@
           document.getElementById('host-players-grid').appendChild(badge);
           const countEl = document.getElementById('host-player-count');
           countEl.textContent = parseInt(countEl.textContent) + 1;
+          refreshLiveLeaderboard();
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, () => {
+          refreshLiveLeaderboard();
         })
         .subscribe();
+    }
+
+    async function refreshLiveLeaderboard() {
+      if (!currentSession) return;
+      const { data: players } = await sb
+        .from('players')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('score', { ascending: false });
+
+      const lb = document.getElementById('host-live-leaderboard');
+      if (!players || players.length === 0) return;
+
+      lb.innerHTML = '';
+      players.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center bg-white px-3.5 py-2.5 rounded-xl border border-slate-100 shadow-sm";
+        row.innerHTML = `
+          <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+            <span class="text-xs font-black text-slate-400 w-4">${idx + 1}.</span>
+            <span>${p.avatar}</span>
+            <span class="truncate max-w-[110px]">${p.nickname}</span>
+          </div>
+          <span class="font-extrabold text-indigo-600 text-sm">${p.score}</span>
+        `;
+        lb.appendChild(row);
+      });
     }
 
     async function startGame() {
@@ -668,9 +1089,8 @@
     async function launchQuestion(index) {
       if (index >= sessionQuestions.length) {
         await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
-        alert("Partida acabada!");
-        const { data: { user } } = await sb.auth.getUser();
-        return loadTeacherDashboard(user);
+        await showHostPodium();
+        return;
       }
 
       const q = sessionQuestions[index];
@@ -685,6 +1105,7 @@
       document.getElementById('host-lobby').classList.add('hidden');
       document.getElementById('host-question-screen').classList.remove('hidden');
       document.getElementById('btn-next-question').classList.add('hidden');
+      document.getElementById('host-bars-display').classList.add('hidden');
 
       document.getElementById('host-q-text').textContent = q.question_text;
       const imgEl = document.getElementById('host-q-image');
@@ -707,12 +1128,14 @@
         wcDisplay.classList.add('hidden');
         optDisplay.classList.remove('hidden');
         const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
-        const shapes = ['▲', '◆', '●', '■'];
         q.options.forEach((opt, i) => {
           optDisplay.innerHTML += `
-            <div id="host-opt-${i}" class="${colors[i%4]} p-5 rounded-2xl flex justify-between items-center">
-              <span>${shapes[i%4]} ${opt.text}</span>
-              <span class="opt-votes bg-black/20 px-3.5 py-1 rounded-xl text-base">0</span>
+            <div id="host-opt-${i}" class="${colors[i%4]} p-5 rounded-2xl flex justify-between items-center gap-3 transition">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[i%4]}</div>
+                <span>${opt.text}</span>
+              </div>
+              <span id="host-opt-count-${i}" class="bg-black/20 px-3.5 py-1 rounded-xl text-base">0</span>
             </div>
           `;
         });
@@ -753,11 +1176,88 @@
       document.getElementById('btn-next-question').classList.remove('hidden');
 
       const q = sessionQuestions[currentSession.current_question_index];
-      q.options.forEach((opt, i) => {
-        const el = document.getElementById(`host-opt-${i}`);
-        if (el && !opt.is_correct && q.type !== 'poll') {
-          el.classList.add('opacity-35');
-        }
+      const { data: qAnswers } = await sb
+        .from('answers')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .eq('question_id', q.id);
+
+      const ansList = qAnswers || [];
+      await refreshLiveLeaderboard();
+
+      if (q.type === 'quiz' || q.type === 'true_false' || q.type === 'poll') {
+        const counts = q.options.map((_, idx) => ansList.filter(a => a.answer_value?.index === idx).length);
+        const maxCount = Math.max(1, ...counts);
+        const barColors = ['bg-rose-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500'];
+        const barsContainer = document.getElementById('host-bars-display');
+        barsContainer.innerHTML = '';
+        barsContainer.classList.remove('hidden');
+
+        q.options.forEach((opt, i) => {
+          const countEl = document.getElementById(`host-opt-count-${i}`);
+          if (countEl) countEl.textContent = counts[i];
+
+          const el = document.getElementById(`host-opt-${i}`);
+          if (el && !opt.is_correct && q.type !== 'poll') {
+            el.classList.add('opacity-35');
+          }
+
+          const heightPct = Math.max(18, Math.round((counts[i] / maxCount) * 100));
+          barsContainer.innerHTML += `
+            <div class="flex flex-col items-center justify-end h-full w-20 gap-2">
+              <span class="font-extrabold text-slate-800 text-sm">${counts[i]} ${opt.is_correct && q.type !== 'poll' ? '✓' : ''}</span>
+              <div style="height: ${heightPct}%" class="w-full ${barColors[i%4]} rounded-t-2xl flex items-end justify-center pb-2 text-white shadow-md transition-all duration-500">
+                ${SHAPE_SVGS[i%4]}
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function showHostPodium() {
+      document.getElementById('host-question-screen').classList.add('hidden');
+      document.getElementById('host-podium-screen').classList.remove('hidden');
+
+      const { data: players } = await sb
+        .from('players')
+        .select('*')
+        .eq('session_id', currentSession.id)
+        .order('score', { ascending: false });
+
+      const list = players || [];
+      const pillars = document.getElementById('host-podium-pillars');
+      pillars.innerHTML = '';
+
+      const order = [1, 0, 2];
+      const heights = ['h-40', 'h-56', 'h-32'];
+      const bgColors = ['bg-slate-200 text-slate-800', 'bg-amber-400 text-slate-900', 'bg-amber-700/20 text-slate-800'];
+      const labels = ['2n', '1r', '3r'];
+
+      order.forEach((playerIdx, colIdx) => {
+        const p = list[playerIdx];
+        if (!p) return;
+        pillars.innerHTML += `
+          <div class="flex flex-col items-center w-28 md:w-36">
+            <div class="text-5xl mb-2">${p.avatar}</div>
+            <p class="font-extrabold text-slate-900 text-base md:text-lg truncate w-full">${p.nickname}</p>
+            <p class="text-xs font-extrabold text-indigo-600 mb-3">${p.score} pts</p>
+            <div class="w-full ${heights[colIdx]} ${bgColors[colIdx]} rounded-t-3xl flex flex-col items-center justify-start pt-4 shadow-inner">
+              <span class="text-2xl md:text-3xl font-black">${labels[colIdx]}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      const fullRank = document.getElementById('host-full-ranking');
+      fullRank.innerHTML = '';
+      list.forEach((p, i) => {
+        fullRank.innerHTML += `
+          <div class="flex justify-between items-center bg-white px-4 py-2.5 rounded-xl border border-slate-100">
+            <span class="font-bold text-slate-800 text-sm">${i + 1}. ${p.avatar} ${p.nickname}</span>
+            <span class="font-extrabold text-indigo-600 text-sm">${p.score} punts</span>
+          </div>
+        `;
       });
     }
 
