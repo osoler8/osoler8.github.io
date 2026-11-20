@@ -6,6 +6,7 @@
   <title>Domande - plataforma interactiva d'aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -19,6 +20,8 @@
       background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
       background-size: 24px 24px;
     }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-pattern text-slate-800 min-h-screen flex flex-col select-none">
@@ -28,7 +31,7 @@
       <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-indigo-200">D</div>
       <span class="font-extrabold text-2xl tracking-tight text-slate-900">Domande</span>
     </div>
-    <div id="nav-actions">
+    <div id="nav-actions" class="flex items-center gap-2">
       <button onclick="showView('view-login')" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold transition">
         Accés mestres
       </button>
@@ -37,8 +40,8 @@
 
   <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-6xl mx-auto">
 
-    <section id="view-join" class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 text-center space-y-6">
-      <div class="space-y-2">
+    <section id="view-join" class="w-full max-w-md bg-white p-7 md:p-8 rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 text-center space-y-5">
+      <div class="space-y-1.5">
         <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Aula interactiva</span>
         <h1 class="text-3xl font-extrabold text-slate-900">Entra a la partida</h1>
         <p class="text-sm text-slate-500">Escriu el codi de la pissarra i tria el teu personatge</p>
@@ -46,26 +49,17 @@
       
       <div class="space-y-3">
         <input id="input-pin" type="text" maxlength="6" placeholder="Codi pin (6 xifres)" 
-               class="w-full text-center text-2xl font-extrabold tracking-widest py-4 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
+               class="w-full text-center text-2xl font-extrabold tracking-widest py-3.5 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
         <input id="input-nickname" type="text" maxlength="15" placeholder="El teu nom" 
-               class="w-full text-center text-lg font-bold py-3.5 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
+               class="w-full text-center text-lg font-bold py-3 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
       </div>
       
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-        <p class="text-xs text-slate-500 mb-3 font-bold">Tria el teu avatar</p>
-        <div id="avatar-selector" class="grid grid-cols-6 gap-2 text-2xl">
-          <button type="button" onclick="selectAvatar(this, '🦊')" class="avatar-btn p-2 rounded-xl bg-indigo-600 text-white shadow-md scale-105 transition">🦊</button>
-          <button type="button" onclick="selectAvatar(this, '🐼')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐼</button>
-          <button type="button" onclick="selectAvatar(this, '🦁')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦁</button>
-          <button type="button" onclick="selectAvatar(this, '🐸')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐸</button>
-          <button type="button" onclick="selectAvatar(this, '🦄')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦄</button>
-          <button type="button" onclick="selectAvatar(this, '🚀')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🚀</button>
-          <button type="button" onclick="selectAvatar(this, '🐙')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐙</button>
-          <button type="button" onclick="selectAvatar(this, '🐯')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐯</button>
-          <button type="button" onclick="selectAvatar(this, '🦉')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦉</button>
-          <button type="button" onclick="selectAvatar(this, '🐢')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐢</button>
-          <button type="button" onclick="selectAvatar(this, '🦖')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦖</button>
-          <button type="button" onclick="selectAvatar(this, '🐝')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐝</button>
+      <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <p class="text-xs text-slate-500 font-bold">Tria el teu avatar</p>
+          <span id="selected-avatar-preview" class="text-lg bg-indigo-100 px-2.5 py-0.5 rounded-lg">🦊</span>
+        </div>
+        <div id="avatar-selector" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
         </div>
       </div>
 
@@ -174,37 +168,55 @@
           <h2 id="report-quiz-title" class="text-2xl font-extrabold text-slate-900">Informe de la partida</h2>
         </div>
         <div class="flex gap-2.5">
-          <button onclick="exportReportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-emerald-100 transition">Descarregar csv (excel)</button>
+          <button id="btn-export-pdf" onclick="exportReportPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-rose-100 transition">Descarregar informe pdf</button>
           <button onclick="backToResults()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Tornar al llistat</button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <p class="text-xs text-slate-500 font-bold">Participants</p>
-          <p id="rep-stat-players" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+      <div id="pdf-export-area" class="space-y-6 bg-white p-2 rounded-2xl">
+        <div class="flex items-center justify-between border-b-2 border-indigo-600 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-lg">D</div>
+            <div>
+              <p class="font-extrabold text-lg text-slate-900 leading-tight">Domande · informe d'avaluació</p>
+              <p id="pdf-subtitle-info" class="text-xs text-slate-500">Activitat i data</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Registre d'aula</span>
         </div>
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <p class="text-xs text-slate-500 font-bold">Mitjana d'encerts</p>
-          <p id="rep-stat-accuracy" class="text-2xl font-extrabold text-emerald-600 mt-1">0%</p>
-        </div>
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <p class="text-xs text-slate-500 font-bold">Puntuació màxima</p>
-          <p id="rep-stat-topscore" class="text-2xl font-extrabold text-indigo-600 mt-1">0</p>
-        </div>
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-          <p class="text-xs text-slate-500 font-bold">Total preguntes</p>
-          <p id="rep-stat-questions" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
-        </div>
-      </div>
 
-      <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead id="report-table-head" class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-          </thead>
-          <tbody id="report-table-body" class="divide-y divide-slate-100">
-          </tbody>
-        </table>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+            <p class="text-xs text-slate-500 font-bold">Participants</p>
+            <p id="rep-stat-players" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+          <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/70">
+            <p class="text-xs text-emerald-700 font-bold">Mitjana d'encerts</p>
+            <p id="rep-stat-accuracy" class="text-2xl font-extrabold text-emerald-600 mt-1">0%</p>
+          </div>
+          <div class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-200/70">
+            <p class="text-xs text-indigo-700 font-bold">Puntuació màxima</p>
+            <p id="rep-stat-topscore" class="text-2xl font-extrabold text-indigo-600 mt-1">0</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+            <p class="text-xs text-slate-500 font-bold">Total preguntes</p>
+            <p id="rep-stat-questions" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+        </div>
+
+        <div id="report-visual-bars" class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3">
+          <p class="text-xs font-extrabold text-slate-600">Rendiment individual i percentatge d'encert</p>
+          <div id="report-bars-list" class="space-y-2.5"></div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead id="report-table-head" class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+            </thead>
+            <tbody id="report-table-body" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -237,6 +249,13 @@
     </section>
 
     <section id="view-teacher-host" class="hidden w-full space-y-6 text-center">
+      <div class="flex justify-end">
+        <button id="btn-music-toggle" onclick="toggleGameMusic()" class="inline-flex items-center gap-2 bg-white hover:bg-indigo-50 text-slate-800 border border-slate-200 px-4 py-2 rounded-2xl font-bold text-sm shadow-sm transition">
+          <span id="music-icon">🔇</span>
+          <span id="music-label">Activar música</span>
+        </button>
+      </div>
+
       <div id="host-lobby" class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
         <div class="space-y-2">
           <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
@@ -271,7 +290,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div class="lg:col-span-2 space-y-6">
-            <div id="host-bars-display" class="hidden h-48 flex items-end justify-center gap-6 px-6 pt-8 pb-2 bg-slate-50 rounded-3xl border border-slate-100"></div>
+            <div id="host-bars-display" class="hidden h-52 flex items-end justify-center gap-6 px-6 pt-8 pb-3 bg-slate-50 rounded-3xl border border-slate-100"></div>
             <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-lg font-bold text-white"></div>
             <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-3 p-8 bg-slate-50 rounded-3xl border border-slate-200 min-h-[220px]"></div>
           </div>
@@ -322,11 +341,16 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_2GArEBXYf4ompZsqebhE-g_FMQ7mq1e';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const AVATARS = [
+      '🦊', '🐼', '🦁', '🐸', '🦄', '🚀', '🐙', '🐯', '🦉', '🐢', '🦖', '🐝',
+      '🐧', '🐨', '🦋', '🐬', '🦩', ' Hedge'.replace(' Hedge', '🦔'), '🐶', '🐱', '🐵', '🐺', '🐲', '🌟'
+    ];
+
     const SHAPE_SVGS = [
-      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L22 20H2L12 3Z"/></svg>',
-      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>',
-      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>',
-      '<svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>'
+      '<svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L22 20H2L12 3Z"/></svg>',
+      '<svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>',
+      '<svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>',
+      '<svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>'
     ];
 
     let selectedAvatar = '🦊';
@@ -339,7 +363,120 @@
     let studentStreak = 0;
     let currentReportData = null;
 
+    let audioCtx = null;
+    let musicInterval = null;
+    let isMusicPlaying = false;
+    let musicMode = 'lobby';
+    let musicStep = 0;
+
+    function initAvatars() {
+      const container = document.getElementById('avatar-selector');
+      container.innerHTML = '';
+      AVATARS.forEach((emoji, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = emoji;
+        btn.className = idx === 0
+          ? 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition'
+          : 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition';
+        btn.onclick = () => selectAvatar(btn, emoji);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectAvatar(btn, emoji) {
+      selectedAvatar = emoji;
+      document.getElementById('selected-avatar-preview').textContent = emoji;
+      document.querySelectorAll('.avatar-btn').forEach(b => {
+        b.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition';
+      });
+      btn.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition';
+    }
+
+    function playSynthNote(freq, duration, type = 'triangle', gainVal = 0.08) {
+      if (!audioCtx || !isMusicPlaying) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function toggleGameMusic() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      isMusicPlaying = !isMusicPlaying;
+      const iconEl = document.getElementById('music-icon');
+      const labelEl = document.getElementById('music-label');
+
+      if (isMusicPlaying) {
+        iconEl.textContent = '🔊';
+        labelEl.textContent = 'Silenciar música';
+        startMusicLoop();
+      } else {
+        iconEl.textContent = '🔇';
+        labelEl.textContent = 'Activar música';
+        clearInterval(musicInterval);
+      }
+    }
+
+    function startMusicLoop() {
+      clearInterval(musicInterval);
+      if (!isMusicPlaying) return;
+
+      const lobbyNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 392.00];
+      const actionNotes = [220.00, 220.00, 261.63, 293.66, 329.63, 293.66, 261.63, 392.00];
+      const speed = musicMode === 'action' ? 240 : 360;
+
+      musicInterval = setInterval(() => {
+        if (!isMusicPlaying) return;
+        const seq = musicMode === 'action' ? actionNotes : lobbyNotes;
+        const note = seq[musicStep % seq.length];
+        playSynthNote(note, 0.22, musicMode === 'action' ? 'sawtooth' : 'triangle', musicMode === 'action' ? 0.045 : 0.07);
+        if (musicStep % 2 === 0) {
+          playSynthNote(note / 2, 0.28, 'sine', 0.09);
+        }
+        musicStep++;
+      }, speed);
+    }
+
+    function setMusicMode(mode) {
+      musicMode = mode;
+      if (isMusicPlaying) {
+        if (mode === 'podium') {
+          clearInterval(musicInterval);
+          const fanfare = [523.25, 659.25, 783.99, 1046.50];
+          fanfare.forEach((f, idx) => {
+            setTimeout(() => playSynthNote(f, 0.45, 'triangle', 0.1), idx * 140);
+          });
+        } else {
+          startMusicLoop();
+        }
+      }
+    }
+
+    function stopMusicCompletely() {
+      isMusicPlaying = false;
+      clearInterval(musicInterval);
+      const iconEl = document.getElementById('music-icon');
+      const labelEl = document.getElementById('music-label');
+      if (iconEl) iconEl.textContent = '🔇';
+      if (labelEl) labelEl.textContent = 'Activar música';
+    }
+
     function showView(viewId) {
+      if (viewId !== 'view-teacher-host') {
+        stopMusicCompletely();
+      }
       document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
     }
@@ -351,16 +488,6 @@
       } else {
         showView('view-join');
       }
-    }
-
-    function selectAvatar(btn, emoji) {
-      selectedAvatar = emoji;
-      document.querySelectorAll('.avatar-btn').forEach(b => {
-        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'scale-105');
-        b.classList.add('bg-white', 'border', 'border-slate-200');
-      });
-      btn.classList.remove('bg-white', 'border', 'border-slate-200');
-      btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'scale-105');
     }
 
     async function joinGame() {
@@ -724,6 +851,7 @@
       showView('view-session-report');
       document.getElementById('report-date-badge').textContent = dateStr;
       document.getElementById('report-quiz-title').textContent = quizTitle;
+      document.getElementById('pdf-subtitle-info').textContent = `${quizTitle} · ${dateStr}`;
 
       const { data: session } = await sb.from('game_sessions').select('quiz_id').eq('id', sessionId).single();
       const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
@@ -748,6 +876,9 @@
       const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
       document.getElementById('rep-stat-accuracy').textContent = `${accuracy}%`;
 
+      const barsList = document.getElementById('report-bars-list');
+      barsList.innerHTML = '';
+
       const thead = document.getElementById('report-table-head');
       let headHTML = `<tr>
         <th class="p-3.5">Posició</th>
@@ -765,12 +896,27 @@
 
       if (pls.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${4 + qs.length}" class="p-6 text-center text-slate-400">Cap alumne va participar en aquesta sala.</td></tr>`;
+        barsList.innerHTML = `<p class="text-xs text-slate-400">Sense dades de participació.</p>`;
         return;
       }
 
       pls.forEach((p, rankIdx) => {
         const pAnswers = ans.filter(a => a.player_id === p.id);
         const pCorrect = pAnswers.filter(a => a.is_correct).length;
+        const pct = qs.length > 0 ? Math.round((pCorrect / qs.length) * 100) : 0;
+
+        barsList.innerHTML += `
+          <div class="flex items-center gap-3">
+            <div class="w-36 shrink-0 flex items-center gap-2 font-bold text-slate-800 text-xs truncate">
+              <span>${p.avatar}</span>
+              <span class="truncate">${p.nickname}</span>
+            </div>
+            <div class="flex-1 h-5 bg-slate-200/80 rounded-full overflow-hidden flex items-center">
+              <div style="width: ${Math.max(4, pct)}%" class="h-full ${pct >= 50 ? 'bg-emerald-500' : 'bg-amber-500'} rounded-full transition-all"></div>
+            </div>
+            <div class="w-24 shrink-0 text-right text-xs font-extrabold text-slate-700">${pct}% (${p.score} pts)</div>
+          </div>
+        `;
 
         let rowHTML = `<tr class="hover:bg-slate-50/80">
           <td class="p-3.5 font-extrabold text-slate-500">${rankIdx + 1}r</td>
@@ -799,33 +945,26 @@
       });
     }
 
-    function exportReportCSV() {
+    function exportReportPDF() {
       if (!currentReportData) return;
-      const { quizTitle, dateStr, questions, players, answers } = currentReportData;
+      const element = document.getElementById('pdf-export-area');
+      const btn = document.getElementById('btn-export-pdf');
+      btn.disabled = true;
+      btn.textContent = "Generant pdf...";
 
-      const headers = ['Posicio', 'Alumne', 'Puntuacio', 'Encerts', ...questions.map((q, i) => `P${i+1}: ${q.question_text.replace(/;/g, ',')}`)];
-      const rows = [headers.join(';')];
+      const filename = `domande_${currentReportData.quizTitle.toLowerCase().replace(/\s+/g, '_')}_${currentReportData.dateStr.slice(0, 10).replace(/\//g, '-')}.pdf`;
+      const opt = {
+        margin: 8,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
 
-      players.forEach((p, idx) => {
-        const pAnswers = answers.filter(a => a.player_id === p.id);
-        const pCorrect = pAnswers.filter(a => a.is_correct).length;
-        const qCols = questions.map(q => {
-          const a = pAnswers.find(item => item.question_id === q.id);
-          if (!a) return 'Sense resposta';
-          const respText = (a.answer_value?.text || q.options[a.answer_value?.index]?.text || '').replace(/;/g, ',');
-          if (q.type === 'word_cloud' || q.type === 'poll') return respText;
-          return `${a.is_correct ? 'BE' : 'MALAMENT'} (${respText})`;
-        });
-        rows.push([idx + 1, p.nickname.replace(/;/g, ','), p.score, `${pCorrect}/${questions.length}`, ...qCols].join(';'));
+      html2pdf().set(opt).from(element).save().then(() => {
+        btn.disabled = false;
+        btn.textContent = "Descarregar informe pdf";
       });
-
-      const csvContent = '\uFEFF' + rows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `domande_${quizTitle.toLowerCase().replace(/\s+/g, '_')}_${dateStr.slice(0, 10).replace(/\//g, '-')}.csv`;
-      link.click();
     }
 
     function backToResults() {
@@ -1033,6 +1172,7 @@
       document.getElementById('host-player-count').textContent = '0';
       document.getElementById('host-live-leaderboard').innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Esperant punts...</p>';
       showView('view-teacher-host');
+      setMusicMode('lobby');
       document.getElementById('host-lobby').classList.remove('hidden');
       document.getElementById('host-question-screen').classList.add('hidden');
       document.getElementById('host-podium-screen').classList.add('hidden');
@@ -1093,6 +1233,7 @@
         return;
       }
 
+      setMusicMode('action');
       const q = sessionQuestions[index];
       currentSession.current_question_index = index;
 
@@ -1172,6 +1313,7 @@
 
     async function showQuestionResults() {
       clearInterval(hostTimerInterval);
+      setMusicMode('lobby');
       await sb.from('game_sessions').update({ status: 'question_results' }).eq('id', currentSession.id);
       document.getElementById('btn-next-question').classList.remove('hidden');
 
@@ -1202,11 +1344,12 @@
             el.classList.add('opacity-35');
           }
 
-          const heightPct = Math.max(18, Math.round((counts[i] / maxCount) * 100));
+          const heightPct = Math.round((counts[i] / maxCount) * 100);
+          const showCheck = opt.is_correct && q.type !== 'poll';
           barsContainer.innerHTML += `
             <div class="flex flex-col items-center justify-end h-full w-20 gap-2">
-              <span class="font-extrabold text-slate-800 text-sm">${counts[i]} ${opt.is_correct && q.type !== 'poll' ? '✓' : ''}</span>
-              <div style="height: ${heightPct}%" class="w-full ${barColors[i%4]} rounded-t-2xl flex items-end justify-center pb-2 text-white shadow-md transition-all duration-500">
+              <span class="font-extrabold text-slate-800 text-sm flex items-center gap-1">${counts[i]}${showCheck ? '<span class="text-emerald-600 font-black">✓</span>' : ''}</span>
+              <div style="height: ${heightPct}%" class="w-full min-h-[44px] ${barColors[i%4]} rounded-t-2xl flex items-center justify-center text-white shadow-md transition-all duration-500">
                 ${SHAPE_SVGS[i%4]}
               </div>
             </div>
@@ -1216,6 +1359,7 @@
     }
 
     async function showHostPodium() {
+      setMusicMode('podium');
       document.getElementById('host-question-screen').classList.add('hidden');
       document.getElementById('host-podium-screen').classList.remove('hidden');
 
@@ -1266,6 +1410,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      initAvatars();
       const { data: { session } } = await sb.auth.getSession();
       if (session) loadTeacherDashboard(session.user);
     });
