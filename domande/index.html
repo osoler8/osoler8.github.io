@@ -204,6 +204,11 @@
           </div>
         </div>
 
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3">
+          <p class="text-xs font-extrabold text-slate-600">Preguntes del qüestionari i resposta correcta</p>
+          <div id="report-questions-summary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </div>
+
         <div id="report-visual-bars" class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3">
           <p class="text-xs font-extrabold text-slate-600">Rendiment individual i percentatge d'encert</p>
           <div id="report-bars-list" class="space-y-2.5"></div>
@@ -858,7 +863,7 @@
 
       const { data: session, error: sErr } = await sb
         .from('game_sessions')
-        .select('quiz_id, teacher_id')
+        .select('quiz_id, teacher_id, quizzes(title)')
         .eq('id', sessionId)
         .eq('teacher_id', user.id)
         .single();
@@ -868,10 +873,11 @@
         return backToResults();
       }
 
+      const resolvedTitle = session.quizzes?.title || quizTitle;
       showView('view-session-report');
       document.getElementById('report-date-badge').textContent = dateStr;
-      document.getElementById('report-quiz-title').textContent = quizTitle;
-      document.getElementById('pdf-subtitle-info').textContent = `${quizTitle} · ${dateStr}`;
+      document.getElementById('report-quiz-title').textContent = resolvedTitle;
+      document.getElementById('pdf-subtitle-info').textContent = `${resolvedTitle} · ${dateStr}`;
 
       const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
       const { data: players } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
@@ -881,7 +887,7 @@
       const pls = players || [];
       const ans = answers || [];
 
-      currentReportData = { quizTitle, dateStr, questions: qs, players: pls, answers: ans };
+      currentReportData = { quizTitle: resolvedTitle, dateStr, questions: qs, players: pls, answers: ans };
 
       document.getElementById('rep-stat-players').textContent = pls.length;
       document.getElementById('rep-stat-questions').textContent = qs.length;
@@ -895,17 +901,42 @@
       const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
       document.getElementById('rep-stat-accuracy').textContent = `${accuracy}%`;
 
+      const qSummaryContainer = document.getElementById('report-questions-summary');
+      qSummaryContainer.innerHTML = '';
+
+      if (qs.length === 0) {
+        qSummaryContainer.innerHTML = `<p class="text-xs text-slate-400 col-span-full">No s'han trobat preguntes associades.</p>`;
+      } else {
+        qs.forEach((q, idx) => {
+          const correctOpts = (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
+          const qAnsList = ans.filter(a => a.question_id === q.id);
+          const qCorrectCount = qAnsList.filter(a => a.is_correct).length;
+          const qPct = qAnsList.length > 0 ? Math.round((qCorrectCount / qAnsList.length) * 100) : 0;
+
+          qSummaryContainer.innerHTML += `
+            <div class="bg-white p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+              <div class="flex justify-between items-start gap-2">
+                <span class="text-xs font-extrabold text-indigo-600">Pregunta ${idx + 1}</span>
+                ${q.type !== 'word_cloud' && q.type !== 'poll' ? `<span class="text-xs font-bold px-2 py-0.5 rounded-md ${qPct >= 50 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${qPct}% d'encert</span>` : ''}
+              </div>
+              <p class="text-sm font-extrabold text-slate-900">${q.question_text}</p>
+              ${correctOpts ? `<p class="text-xs text-emerald-700 font-semibold">Resposta correcta: ${correctOpts}</p>` : ''}
+            </div>
+          `;
+        });
+      }
+
       const barsList = document.getElementById('report-bars-list');
       barsList.innerHTML = '';
 
       const thead = document.getElementById('report-table-head');
       let headHTML = `<tr>
-        <th class="p-3.5">Posició</th>
-        <th class="p-3.5">Alumne/a</th>
-        <th class="p-3.5">Punts</th>
-        <th class="p-3.5">Encerts</th>`;
+        <th class="p-3.5 whitespace-nowrap">Posició</th>
+        <th class="p-3.5 whitespace-nowrap">Alumne/a</th>
+        <th class="p-3.5 whitespace-nowrap">Punts</th>
+        <th class="p-3.5 whitespace-nowrap">Encerts</th>`;
       qs.forEach((q, idx) => {
-        headHTML += `<th class="p-3.5 min-w-[140px]" title="${q.question_text}">P${idx + 1}: ${q.question_text.slice(0, 22)}${q.question_text.length > 22 ? '...' : ''}</th>`;
+        headHTML += `<th class="p-3.5 min-w-[200px] leading-snug"><span class="text-indigo-600 block text-xs">Pregunta ${idx + 1}</span>${q.question_text}</th>`;
       });
       headHTML += `</tr>`;
       thead.innerHTML = headHTML;
@@ -938,10 +969,10 @@
         `;
 
         let rowHTML = `<tr class="hover:bg-slate-50/80">
-          <td class="p-3.5 font-extrabold text-slate-500">${rankIdx + 1}r</td>
-          <td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2"><span>${p.avatar}</span> <span>${p.nickname}</span></td>
-          <td class="p-3.5 font-black text-indigo-600">${p.score}</td>
-          <td class="p-3.5 font-bold text-slate-700">${pCorrect} / ${qs.length}</td>`;
+          <td class="p-3.5 font-extrabold text-slate-500 whitespace-nowrap">${rankIdx + 1}r</td>
+          <td class="p-3.5 font-extrabold text-slate-900 flex items-center gap-2 whitespace-nowrap"><span>${p.avatar}</span> <span>${p.nickname}</span></td>
+          <td class="p-3.5 font-black text-indigo-600 whitespace-nowrap">${p.score}</td>
+          <td class="p-3.5 font-bold text-slate-700 whitespace-nowrap">${pCorrect} / ${qs.length}</td>`;
 
         qs.forEach(q => {
           const a = pAnswers.find(item => item.question_id === q.id);
