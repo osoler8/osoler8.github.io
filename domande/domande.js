@@ -23,18 +23,22 @@ let editorKind = 'quiz';
 let editingQuizId = null;
 let hostTimerInterval = null;
 let activeAnsChannel = null;
+let hostBroadcastChannel = null;
 let studentRoomChannel = null;
+let studentWatchdogInterval = null;
 let questionStartTimeMs = 0;
 let studentScore = 0;
 let studentStreak = 0;
 let studentBestStreak = 0;
 let studentCorrectCount = 0;
 let studentWrongCount = 0;
+let studentLastRenderedIndex = -1;
 let studentPuzzleOrder = [];
 let currentReportData = null;
 let cachedTeacherQuizzes = [];
 let selectedTagFilter = 'all';
 let hostPlayersList = [];
+let latestRanksMap = {};
 
 let audioCtx = null;
 let musicInterval = null;
@@ -73,6 +77,30 @@ function evaluateShortAnswer(userText, question) {
   });
 }
 
+function setConnectionWarning(isLost) {
+  const overlay = document.getElementById('connection-lost-overlay');
+  if (!overlay) return;
+  if (isLost) {
+    overlay.classList.remove('hidden');
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+window.addEventListener('offline', () => {
+  setConnectionWarning(true);
+});
+
+window.addEventListener('online', () => {
+  setConnectionWarning(false);
+});
+
+window.addEventListener('beforeunload', () => {
+  if (currentSession && currentSession.status !== 'finished' && hostBroadcastChannel) {
+    broadcastRoomState('closed_by_teacher', currentSession.current_question_index || 0);
+  }
+});
+
 function initAvatars() {
   const container = document.getElementById('avatar-selector');
   container.innerHTML = '';
@@ -98,15 +126,20 @@ function selectAvatar(btn, emoji) {
 }
 
 function openQrModal() {
-  const src = document.getElementById('host-qr-img').src;
-  const pin = document.getElementById('host-pin-display').textContent;
-  document.getElementById('modal-qr-img').src = src.replace('200x200', '400x400');
-  document.getElementById('modal-qr-pin').textContent = pin;
-  document.getElementById('qr-modal').classList.remove('hidden');
+  const qrEl = document.getElementById('host-qr-img');
+  const pinEl = document.getElementById('host-pin-display');
+  const modalQr = document.getElementById('modal-qr-img');
+  const modalPin = document.getElementById('modal-qr-pin');
+  const modal = document.getElementById('qr-modal');
+  if (!qrEl || !modal) return;
+  modalQr.src = qrEl.src;
+  modalPin.textContent = pinEl ? pinEl.textContent : '';
+  modal.classList.remove('hidden');
 }
 
 function closeQrModal() {
-  document.getElementById('qr-modal').classList.add('hidden');
+  const modal = document.getElementById('qr-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function playSynthNote(freq, duration, type = 'triangle', gainVal = 0.08) {
@@ -197,7 +230,14 @@ function showView(viewId) {
   document.getElementById(viewId).classList.remove('hidden');
 }
 
+function stopStudentWatchdog() {
+  clearInterval(studentWatchdogInterval);
+  studentWatchdogInterval = null;
+}
+
 function resetToPinScreen() {
+  stopStudentWatchdog();
+  setConnectionWarning(false);
   if (studentRoomChannel) {
     sb.removeChannel(studentRoomChannel);
     studentRoomChannel = null;
@@ -210,6 +250,8 @@ function resetToPinScreen() {
   studentBestStreak = 0;
   studentCorrectCount = 0;
   studentWrongCount = 0;
+  studentLastRenderedIndex = -1;
+  latestRanksMap = {};
   document.getElementById('input-pin').value = '';
   document.getElementById('join-error').classList.add('hidden');
   if (window.history && window.history.replaceState) {
@@ -218,13 +260,56 @@ function resetToPinScreen() {
   showView('view-join');
 }
 
+function showStudentSessionClosed(reasonText) {
+  stopStudentWatchdog();
+  setConnectionWarning(false);
+  if (studentRoomChannel) {
+    sb.removeChannel(studentRoomChannel);
+    studentRoomChannel = null;
+  }
+  if (currentSession) {
+    currentSession.status = 'finished';
+  }
+  const reasonEl = document.getElementById('student-closed-reason');
+  if (reasonEl && reasonText) {
+    reasonEl.textContent = reasonText;
+  }
+  showView('view-student-closed');
+}
+
 async function handleLogoClick() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
+    if (currentSession && currentSession.status !== 'finished') {
+      await closeHostRoomSilently();
+    }
     loadTeacherDashboard(session.user);
   } else {
     resetToPinScreen();
   }
+}
+
+async function closeHostRoomSilently() {
+  clearInterval(hostTimerInterval);
+  if (activeAnsChannel) {
+    sb.removeChannel(activeAnsChannel);
+    activeAnsChannel = null;
+  }
+  if (currentSession && currentSession.status !== 'finished') {
+    broadcastRoomState('closed_by_teacher', currentSession.current_question_index || 0);
+    await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
+    currentSession.status = 'finished';
+  }
+  if (hostBroadcastChannel) {
+    sb.removeChannel(hostBroadcastChannel);
+    hostBroadcastChannel = null;
+  }
+}
+
+async function closeHostRoomAndExit() {
+  if (!confirm("Segur que vols tancar aquesta sala i finalitzar la sessió per a tot l'alumnat?")) return;
+  await closeHostRoomSilently();
+  returnToDashboard();
 }
 
 async function joinGame() {
@@ -285,6 +370,8 @@ async function joinGame() {
   studentBestStreak = 0;
   studentCorrectCount = 0;
   studentWrongCount = 0;
+  studentLastRenderedIndex = -1;
+  latestRanksMap = {};
 
   document.getElementById('student-badge').textContent = selectedAvatar;
   document.getElementById('student-display-name').textContent = nickname;
@@ -294,15 +381,94 @@ async function joinGame() {
     sb.removeChannel(studentRoomChannel);
   }
 
-  studentRoomChannel = sb.channel('room-' + session.id + '-' + player.id)
+  studentRoomChannel = sb.channel('live-session-' + session.id)
+    .on('broadcast', { event: 'state' }, ({ payload }) => {
+      setConnectionWarning(false);
+      if (payload.ranks) {
+        latestRanksMap = payload.ranks;
+      }
+      handleSessionStateChange({
+        ...currentSession,
+        status: payload.status,
+        current_question_index: payload.current_question_index
+      });
+    })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
+      setConnectionWarning(false);
       handleSessionStateChange(payload.new);
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'players', filter: `id=eq.${player.id}` }, () => {
-      alert("Has estat desconnectat/da de la sala pel/per la mestre/a.");
-      resetToPinScreen();
+      showStudentSessionClosed("El/la mestre/a t'ha desconnectat de la sala.");
     })
-    .subscribe();
+    .subscribe((status) => {
+      if (!currentPlayer || !currentSession || currentSession.status === 'finished') return;
+      if (status === 'SUBSCRIBED') {
+        setConnectionWarning(false);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        setConnectionWarning(true);
+      }
+    });
+
+  startStudentWatchdog();
+}
+
+function startStudentWatchdog() {
+  stopStudentWatchdog();
+  studentWatchdogInterval = setInterval(async () => {
+    if (!currentPlayer || !currentSession || currentSession.status === 'finished') {
+      stopStudentWatchdog();
+      return;
+    }
+
+    if (!navigator.onLine) {
+      setConnectionWarning(true);
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('game_sessions')
+      .select('status, current_question_index')
+      .eq('id', currentSession.id)
+      .maybeSingle();
+
+    if (error) {
+      setConnectionWarning(true);
+      return;
+    }
+
+    setConnectionWarning(false);
+
+    if (!data) {
+      showStudentSessionClosed("La sala s'ha tancat abans d'acabar l'activitat.");
+      return;
+    }
+
+    if (data.status === 'finished' && currentSession.status !== 'finished') {
+      const totalQs = sessionQuestions.length;
+      const isNaturalEnd = currentSession.current_question_index >= totalQs - 1 &&
+        (currentSession.status === 'question_results' || currentSession.status === 'question_active');
+      if (isNaturalEnd) {
+        handleSessionStateChange({ ...currentSession, status: 'finished' });
+      } else {
+        showStudentSessionClosed("El/la mestre/a ha tancat la sessió abans de finalitzar totes les preguntes.");
+      }
+    }
+  }, 4000);
+}
+
+function applyCachedStudentRank() {
+  if (!currentPlayer || sessionKind === 'poll') return;
+  const info = latestRanksMap[currentPlayer.id];
+  if (!info) return;
+
+  const pill = document.getElementById('student-rank-pill');
+  if (pill) pill.textContent = `Posició: ${formatRankOrdinal(info.rank)}`;
+
+  const fbPos = document.getElementById('feedback-live-pos');
+  if (fbPos && !fbPos.dataset.hideForOpinion) {
+    fbPos.textContent = `Vas en la posició ${formatRankOrdinal(info.rank)} de ${info.total}`;
+    fbPos.classList.remove('hidden');
+  }
 }
 
 async function updateStudentLivePosition() {
@@ -316,22 +482,21 @@ async function updateStudentLivePosition() {
   const list = allPlayers || [];
   const idx = list.findIndex(p => p.id === currentPlayer.id);
   const rank = idx >= 0 ? idx + 1 : list.length;
-  const rankText = `${formatRankOrdinal(rank)} de ${list.length}`;
-
-  const pill = document.getElementById('student-rank-pill');
-  if (pill) pill.textContent = `Posició: ${formatRankOrdinal(rank)}`;
-
-  const fbPos = document.getElementById('feedback-live-pos');
-  if (fbPos && !fbPos.dataset.hideForOpinion) {
-    fbPos.textContent = `Vas en la posició ${rankText}`;
-    fbPos.classList.remove('hidden');
-  }
+  latestRanksMap[currentPlayer.id] = { rank, total: list.length };
+  applyCachedStudentRank();
 }
 
-async function handleSessionStateChange(session) {
+function handleSessionStateChange(session) {
   currentSession = session;
+  if (session.status === 'closed_by_teacher') {
+    showStudentSessionClosed("El/la mestre/a ha tancat la sala a mig joc. Torna a l'inici per entrar a una nova partida.");
+    return;
+  }
+
   if (session.status === 'question_active') {
-    await renderStudentQuestion(session.current_question_index);
+    if (studentLastRenderedIndex === session.current_question_index) return;
+    studentLastRenderedIndex = session.current_question_index;
+    renderStudentQuestion(session.current_question_index);
   } else if (session.status === 'question_results') {
     const q = sessionQuestions[session.current_question_index];
     if (q && q.type === 'slide') return;
@@ -353,14 +518,16 @@ async function handleSessionStateChange(session) {
       if (isOpinion) fbPos.classList.add('hidden');
     }
     if (!isOpinion) {
-      await updateStudentLivePosition();
+      applyCachedStudentRank();
+      updateStudentLivePosition();
     }
     document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
   } else if (session.status === 'finished') {
+    stopStudentWatchdog();
     if (sessionKind === 'poll') {
       showStudentPollFinished();
     } else {
-      await showStudentFinalRank();
+      showStudentFinalRank();
     }
   }
 }
@@ -452,7 +619,7 @@ async function showStudentFinalRank() {
   showView('view-student-podium');
 }
 
-async function renderStudentQuestion(qIndex) {
+function renderStudentQuestion(qIndex) {
   const q = sessionQuestions[qIndex];
   if (!q) return;
 
@@ -491,7 +658,7 @@ async function renderStudentQuestion(qIndex) {
     } else {
       streakPill.classList.add('hidden');
     }
-    await updateStudentLivePosition();
+    applyCachedStudentRank();
   }
 
   document.getElementById('student-q-text').textContent = q.question_text;
@@ -587,8 +754,10 @@ async function submitPuzzleAnswer() {
   registerStudentOutcome(isCorrect);
   const points = calculateGamifiedPoints(q, isCorrect);
   studentScore += points;
+  document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+  showStudentWaitingFeedback(isCorrect, points, false);
 
-  await sb.from('answers').insert({
+  const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: q.id,
     player_id: currentPlayer.id,
@@ -597,14 +766,18 @@ async function submitPuzzleAnswer() {
     points_awarded: points
   });
 
+  if (error) {
+    setConnectionWarning(true);
+    return;
+  }
+
   await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-  document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-  await updateStudentLivePosition();
-  showStudentWaitingFeedback(isCorrect, points, false);
+  updateStudentLivePosition();
 }
 
 async function submitNpsAnswer(question, val) {
-  await sb.from('answers').insert({
+  showStudentWaitingFeedback(false, 0, true);
+  const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: question.id,
     player_id: currentPlayer.id,
@@ -612,8 +785,7 @@ async function submitNpsAnswer(question, val) {
     is_correct: false,
     points_awarded: 0
   });
-
-  showStudentWaitingFeedback(false, 0, true);
+  if (error) setConnectionWarning(true);
 }
 
 function calculateGamifiedPoints(question, isCorrect) {
@@ -634,8 +806,12 @@ async function submitOptionAnswer(question, optionIndex) {
 
   const points = calculateGamifiedPoints(question, isCorrect);
   studentScore += points;
+  if (!isPoll) {
+    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+  }
+  showStudentWaitingFeedback(isCorrect, points, isPoll);
 
-  await sb.from('answers').insert({
+  const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: question.id,
     player_id: currentPlayer.id,
@@ -644,13 +820,15 @@ async function submitOptionAnswer(question, optionIndex) {
     points_awarded: points
   });
 
-  if (!isPoll) {
-    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-    await updateStudentLivePosition();
+  if (error) {
+    setConnectionWarning(true);
+    return;
   }
 
-  showStudentWaitingFeedback(isCorrect, points, isPoll);
+  if (!isPoll) {
+    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+    updateStudentLivePosition();
+  }
 }
 
 async function submitTextAnswer() {
@@ -670,8 +848,12 @@ async function submitTextAnswer() {
 
   const points = calculateGamifiedPoints(q, isCorrect);
   studentScore += points;
+  if (!isOpinion) {
+    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+  }
+  showStudentWaitingFeedback(isCorrect, points, isOpinion);
 
-  await sb.from('answers').insert({
+  const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: q.id,
     player_id: currentPlayer.id,
@@ -680,13 +862,15 @@ async function submitTextAnswer() {
     points_awarded: points
   });
 
-  if (!isOpinion) {
-    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-    await updateStudentLivePosition();
+  if (error) {
+    setConnectionWarning(true);
+    return;
   }
 
-  showStudentWaitingFeedback(isCorrect, points, isOpinion);
+  if (!isOpinion) {
+    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+    updateStudentLivePosition();
+  }
 }
 
 function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
@@ -751,6 +935,9 @@ async function logoutTeacher() {
 }
 
 async function returnToDashboard() {
+  if (currentSession && currentSession.status !== 'finished') {
+    await closeHostRoomSilently();
+  }
   const { data: { user } } = await sb.auth.getUser();
   if (user) loadTeacherDashboard(user);
 }
@@ -764,13 +951,13 @@ function switchDashTab(tab) {
   if (tab === 'quizzes') {
     qWrap.classList.remove('hidden');
     rTab.classList.add('hidden');
-    qBtn.className = "bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition";
-    rBtn.className = "bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+    qBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl bg-indigo-50/70 ring-2 ring-indigo-600 transition";
+    rBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition";
   } else {
     qWrap.classList.add('hidden');
     rTab.classList.remove('hidden');
-    rBtn.className = "bg-indigo-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm transition";
-    qBtn.className = "bg-slate-100 text-slate-700 hover:bg-slate-200 px-4 py-2.5 rounded-2xl font-bold text-sm transition";
+    rBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl bg-sky-50/70 ring-2 ring-sky-500 transition";
+    qBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition";
     loadSessionsHistory();
   }
 }
@@ -1674,7 +1861,7 @@ async function createRoom(quizId, kind = 'quiz') {
   sessionQuestions = qs || [];
 
   const joinUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
-  document.getElementById('host-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
+  document.getElementById('host-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(joinUrl)}`;
 
   const lobbyBadge = document.getElementById('host-lobby-badge');
   lobbyBadge.textContent = isPoll ? 'Enquesta oberta' : 'Sala oberta';
@@ -1710,6 +1897,12 @@ async function createRoom(quizId, kind = 'quiz') {
   document.getElementById('host-podium-screen').classList.add('hidden');
   document.getElementById('host-poll-finished-screen').classList.add('hidden');
 
+  if (hostBroadcastChannel) {
+    sb.removeChannel(hostBroadcastChannel);
+  }
+  hostBroadcastChannel = sb.channel('live-session-' + session.id);
+  hostBroadcastChannel.subscribe();
+
   sb.channel('host-players-' + session.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
       const p = payload.new;
@@ -1726,6 +1919,19 @@ async function createRoom(quizId, kind = 'quiz') {
       if (!isPoll) refreshLiveLeaderboard();
     })
     .subscribe();
+}
+
+function broadcastRoomState(status, questionIndex, ranksMap = null) {
+  if (!hostBroadcastChannel) return;
+  hostBroadcastChannel.send({
+    type: 'broadcast',
+    event: 'state',
+    payload: {
+      status,
+      current_question_index: questionIndex,
+      ranks: ranksMap
+    }
+  });
 }
 
 function renderHostPlayersLobby() {
@@ -1752,18 +1958,24 @@ async function kickPlayerFromLobby(playerId, nickname) {
 }
 
 async function refreshLiveLeaderboard() {
-  if (!currentSession || sessionKind === 'poll') return;
+  if (!currentSession || sessionKind === 'poll') return null;
   const { data: players } = await sb
     .from('players')
     .select('*')
     .eq('session_id', currentSession.id)
     .order('score', { ascending: false });
 
+  const list = players || [];
+  const ranksMap = {};
+  list.forEach((p, idx) => {
+    ranksMap[p.id] = { rank: idx + 1, total: list.length };
+  });
+
   const lb = document.getElementById('host-live-leaderboard');
-  if (!players || players.length === 0) return;
+  if (list.length === 0) return ranksMap;
 
   lb.innerHTML = '';
-  players.forEach((p, idx) => {
+  list.forEach((p, idx) => {
     const row = document.createElement('div');
     row.className = "flex justify-between items-center bg-white px-3.5 py-2.5 rounded-xl border border-slate-100 shadow-sm";
     row.innerHTML = `
@@ -1776,6 +1988,7 @@ async function refreshLiveLeaderboard() {
     `;
     lb.appendChild(row);
   });
+  return ranksMap;
 }
 
 async function startGame() {
@@ -1790,7 +2003,9 @@ async function launchQuestion(index) {
   }
 
   if (index >= sessionQuestions.length) {
+    broadcastRoomState('finished', index);
     await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
+    currentSession.status = 'finished';
     if (sessionKind === 'poll') {
       setMusicMode('lobby');
       document.getElementById('host-question-screen').classList.add('hidden');
@@ -1806,12 +2021,9 @@ async function launchQuestion(index) {
   const isPoll = sessionKind === 'poll' || q.type === 'poll';
   const isSlide = q.type === 'slide';
   currentSession.current_question_index = index;
+  currentSession.status = 'question_active';
 
-  await sb.from('game_sessions').update({
-    status: 'question_active',
-    current_question_index: index,
-    question_started_at: new Date().toISOString()
-  }).eq('id', currentSession.id);
+  broadcastRoomState('question_active', index);
 
   document.getElementById('host-lobby').classList.add('hidden');
   document.getElementById('host-partial-podium-screen').classList.add('hidden');
@@ -1851,6 +2063,11 @@ async function launchQuestion(index) {
     slideDisplay.classList.remove('hidden');
     document.getElementById('btn-next-question').classList.remove('hidden');
     setMusicMode('lobby');
+    sb.from('game_sessions').update({
+      status: 'question_active',
+      current_question_index: index,
+      question_started_at: new Date().toISOString()
+    }).eq('id', currentSession.id);
     return;
   }
 
@@ -1923,7 +2140,7 @@ async function launchQuestion(index) {
       }
 
       if (totalPlayers > 0 && answersCount >= totalPlayers) {
-        setTimeout(() => showQuestionResults(), 600);
+        setTimeout(() => showQuestionResults(), 400);
       }
     })
     .subscribe();
@@ -1939,6 +2156,12 @@ async function launchQuestion(index) {
       showQuestionResults();
     }
   }, 1000);
+
+  sb.from('game_sessions').update({
+    status: 'question_active',
+    current_question_index: index,
+    question_started_at: new Date().toISOString()
+  }).eq('id', currentSession.id);
 }
 
 async function showQuestionResults() {
@@ -1949,7 +2172,6 @@ async function showQuestionResults() {
   }
 
   setMusicMode('lobby');
-  await sb.from('game_sessions').update({ status: 'question_results' }).eq('id', currentSession.id);
   document.getElementById('btn-next-question').classList.remove('hidden');
 
   const isLast = currentSession.current_question_index >= sessionQuestions.length - 1;
@@ -1959,6 +2181,12 @@ async function showQuestionResults() {
 
   const q = sessionQuestions[currentSession.current_question_index];
   const isPoll = sessionKind === 'poll' || q.type === 'poll';
+  const ranksMap = !isPoll ? await refreshLiveLeaderboard() : null;
+
+  currentSession.status = 'question_results';
+  broadcastRoomState('question_results', currentSession.current_question_index, ranksMap);
+  await sb.from('game_sessions').update({ status: 'question_results' }).eq('id', currentSession.id);
+
   const { data: qAnswers } = await sb
     .from('answers')
     .select('*')
@@ -1967,8 +2195,6 @@ async function showQuestionResults() {
 
   const ansList = qAnswers || [];
   const totalVotes = ansList.length;
-  if (!isPoll) await refreshLiveLeaderboard();
-
   const saDisplay = document.getElementById('host-shortanswer-display');
 
   if (q.type === 'type_answer') {
