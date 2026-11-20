@@ -6,181 +6,203 @@
   <title>Domande - plataforma interactiva d'aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    .btn-red { background-color: #e21b3c; }
-    .btn-blue { background-color: #1368ce; }
-    .btn-yellow { background-color: #d89e00; }
-    .btn-green { background-color: #26890c; }
-    .btn-opt:active { transform: scale(0.97); }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .btn-red { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); box-shadow: 0 6px 0 #be123c; }
+    .btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 6px 0 #1d4ed8; }
+    .btn-yellow { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 6px 0 #b45309; }
+    .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 0 #047857; }
+    .btn-opt:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .bg-pattern {
+      background-color: #f8fafc;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
   </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans select-none">
+<body class="bg-pattern text-slate-800 min-h-screen flex flex-col select-none">
 
-  <!-- Barra superior -->
-  <header class="bg-slate-800 px-4 py-3 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-2 font-black text-2xl tracking-tight text-indigo-400">
-      <span>❓ Domande</span>
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div onclick="showView('view-join')" class="flex items-center gap-3 cursor-pointer">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-indigo-200">D</div>
+      <span class="font-extrabold text-2xl tracking-tight text-slate-900">Domande</span>
     </div>
     <div id="nav-actions">
-      <button onclick="showView('view-login')" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg font-medium transition">
+      <button onclick="showView('view-login')" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold transition">
         Accés mestres
       </button>
     </div>
   </header>
 
-  <!-- Contenidor principal -->
-  <main class="flex-1 flex flex-col items-center justify-center p-4 w-full max-w-5xl mx-auto">
+  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 w-full max-w-6xl mx-auto">
 
-    <!-- 1. Vista inicial: entrada alumnes amb pin -->
-    <section id="view-join" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl text-center space-y-5">
-      <div>
-        <h1 class="text-3xl font-black text-indigo-400">Domande</h1>
-        <p class="text-sm text-slate-400 mt-1">Introdueix el pin de la classe per jugar</p>
+    <section id="view-join" class="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 text-center space-y-6">
+      <div class="space-y-2">
+        <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Aula interactiva</span>
+        <h1 class="text-3xl font-extrabold text-slate-900">Entra a la partida</h1>
+        <p class="text-sm text-slate-500">Escriu el codi de la pissarra i tria el teu personatge</p>
       </div>
       
       <div class="space-y-3">
-        <input id="input-pin" type="text" maxlength="6" placeholder="Pin del joc (ex: 482910)" 
-               class="w-full text-center text-2xl font-bold tracking-widest py-3 rounded-xl bg-slate-700 text-white border-2 border-slate-600 focus:border-indigo-500 outline-none">
+        <input id="input-pin" type="text" maxlength="6" placeholder="Codi pin (6 xifres)" 
+               class="w-full text-center text-2xl font-extrabold tracking-widest py-4 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
         <input id="input-nickname" type="text" maxlength="15" placeholder="El teu nom" 
-               class="w-full text-center text-lg py-3 rounded-xl bg-slate-700 text-white border-2 border-slate-600 focus:border-indigo-500 outline-none">
+               class="w-full text-center text-lg font-bold py-3.5 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
       </div>
       
-      <!-- Selector d'avatar -->
-      <div>
-        <p class="text-xs text-slate-400 mb-2 font-semibold">Tria el teu avatar</p>
-        <div id="avatar-selector" class="flex justify-center gap-2 flex-wrap text-2xl">
-          <button type="button" onclick="selectAvatar(this, '🦊')" class="avatar-btn p-2 rounded-xl bg-indigo-600 ring-2 ring-white">🦊</button>
-          <button type="button" onclick="selectAvatar(this, '🐼')" class="avatar-btn p-2 rounded-xl bg-slate-700">🐼</button>
-          <button type="button" onclick="selectAvatar(this, '🦁')" class="avatar-btn p-2 rounded-xl bg-slate-700">🦁</button>
-          <button type="button" onclick="selectAvatar(this, '🐸')" class="avatar-btn p-2 rounded-xl bg-slate-700">🐸</button>
-          <button type="button" onclick="selectAvatar(this, '🦄')" class="avatar-btn p-2 rounded-xl bg-slate-700">🦄</button>
-          <button type="button" onclick="selectAvatar(this, '🚀')" class="avatar-btn p-2 rounded-xl bg-slate-700">🚀</button>
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <p class="text-xs text-slate-500 mb-3 font-bold">Tria el teu avatar</p>
+        <div id="avatar-selector" class="grid grid-cols-6 gap-2 text-2xl">
+          <button type="button" onclick="selectAvatar(this, '🦊')" class="avatar-btn p-2 rounded-xl bg-indigo-600 text-white shadow-md scale-105 transition">🦊</button>
+          <button type="button" onclick="selectAvatar(this, '🐼')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐼</button>
+          <button type="button" onclick="selectAvatar(this, '🦁')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦁</button>
+          <button type="button" onclick="selectAvatar(this, '🐸')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐸</button>
+          <button type="button" onclick="selectAvatar(this, '🦄')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦄</button>
+          <button type="button" onclick="selectAvatar(this, '🚀')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🚀</button>
+          <button type="button" onclick="selectAvatar(this, '🐙')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐙</button>
+          <button type="button" onclick="selectAvatar(this, '🐯')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐯</button>
+          <button type="button" onclick="selectAvatar(this, '🦉')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦉</button>
+          <button type="button" onclick="selectAvatar(this, '🐢')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐢</button>
+          <button type="button" onclick="selectAvatar(this, '🦖')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🦖</button>
+          <button type="button" onclick="selectAvatar(this, '🐝')" class="avatar-btn p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 transition">🐝</button>
         </div>
       </div>
 
-      <button onclick="joinGame()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg shadow-lg transition">
-        Entrar a domande
+      <button onclick="joinGame()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-indigo-200 transition">
+        Som-hi!
       </button>
-      <p id="join-error" class="text-red-400 text-sm hidden"></p>
+      <p id="join-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-sm font-semibold hidden"></p>
     </section>
 
-    <!-- 2. Sala d'espera alumne -->
-    <section id="view-student-lobby" class="hidden text-center space-y-4">
-      <div id="student-badge" class="text-6xl mb-2">🦊</div>
-      <h2 class="text-3xl font-extrabold" id="student-display-name">Nom</h2>
-      <p class="text-slate-300 text-lg animate-pulse">Ja ets dins de domande! Espera que el/la mestre/a arrenqui la partida...</p>
+    <section id="view-student-lobby" class="hidden w-full max-w-md bg-white p-10 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
+      <div id="student-badge" class="w-24 h-24 mx-auto bg-indigo-50 rounded-3xl flex items-center justify-center text-6xl shadow-inner">🦊</div>
+      <h2 class="text-3xl font-extrabold text-slate-900" id="student-display-name">Nom</h2>
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-bold">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+        <span>Connectat a la sala</span>
+      </div>
+      <p class="text-slate-500 text-base">Mira la pantalla de classe. Quan el/la mestre/a doni el tret de sortida començarem!</p>
     </section>
 
-    <!-- 3. Pantalla de joc alumne (responsive) -->
-    <section id="view-student-play" class="hidden w-full h-full flex flex-col justify-between space-y-4">
-      <div class="bg-slate-800 p-4 rounded-xl text-center">
-        <span id="student-q-counter" class="text-xs tracking-wider text-indigo-400 font-bold">Pregunta 1</span>
-        <h2 id="student-q-text" class="text-lg md:text-2xl font-bold mt-1">Text de la pregunta</h2>
+    <section id="view-student-play" class="hidden w-full max-w-3xl flex-1 flex flex-col justify-between space-y-5">
+      <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100 text-center">
+        <span id="student-q-counter" class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold mb-2">Pregunta 1</span>
+        <h2 id="student-q-text" class="text-xl md:text-2xl font-extrabold text-slate-900">Text de la pregunta</h2>
       </div>
 
-      <!-- Botons de colors (quiz / vertader-fals) -->
-      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-[300px]">
-        <!-- S'omple dinàmicament -->
+      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-[320px]">
       </div>
 
-      <!-- Input per a resposta curta o núvol de paraules -->
-      <div id="student-text-input-box" class="hidden space-y-3">
-        <input id="student-text-answer" type="text" placeholder="Escriu la teva resposta..." class="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-600 text-xl text-center">
-        <button onclick="submitTextAnswer()" class="w-full py-4 bg-indigo-600 rounded-xl font-bold text-xl">Enviar</button>
+      <div id="student-text-input-box" class="hidden bg-white p-6 rounded-3xl shadow-md border border-slate-100 space-y-4">
+        <input id="student-text-answer" type="text" placeholder="Escriu aquí la teva resposta..." class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none text-xl font-bold text-center text-slate-900">
+        <button onclick="submitTextAnswer()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-xl shadow-lg shadow-indigo-200 transition">Enviar resposta</button>
       </div>
 
-      <div id="student-feedback" class="hidden text-center p-8 rounded-2xl bg-slate-800 space-y-2">
-        <div id="feedback-icon" class="text-6xl">⏳</div>
-        <h3 id="feedback-title" class="text-2xl font-bold">Resposta enviada!</h3>
-        <p id="feedback-sub" class="text-slate-400">Esperant la resta de la classe...</p>
+      <div id="student-feedback" class="hidden bg-white text-center p-10 rounded-3xl shadow-xl border border-slate-100 space-y-3">
+        <div id="feedback-icon" class="text-7xl">⏳</div>
+        <h3 id="feedback-title" class="text-2xl font-extrabold text-slate-900">Resposta enviada!</h3>
+        <p id="feedback-sub" class="text-slate-500">Esperant la resta de companys i companyes...</p>
       </div>
     </section>
 
-    <!-- 4. Login mestres (supabase auth) -->
-    <section id="view-login" class="hidden w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-      <h2 class="text-2xl font-bold text-center">Accés docents</h2>
-      <p class="text-xs text-slate-400 text-center">Només usuaris autoritzats per l'escola</p>
-      <input id="login-email" type="email" placeholder="Correu electrònic del centre" class="w-full p-3 rounded-xl bg-slate-700 border border-slate-600">
-      <input id="login-password" type="password" placeholder="Contrasenya" class="w-full p-3 rounded-xl bg-slate-700 border border-slate-600">
-      <button onclick="loginTeacher()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold">Iniciar sessió</button>
-      <button onclick="showView('view-join')" class="w-full py-2 text-sm text-slate-400 hover:text-white">Tornar a l'entrada d'alumnes</button>
-      <p id="login-error" class="text-red-400 text-sm text-center hidden"></p>
+    <section id="view-login" class="hidden w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-100 space-y-5">
+      <div class="text-center space-y-1">
+        <h2 class="text-2xl font-extrabold text-slate-900">Espai docent</h2>
+        <p class="text-sm text-slate-500">Inicia sessió amb el teu compte autoritzat</p>
+      </div>
+      <div class="space-y-3">
+        <input id="login-email" type="email" placeholder="Correu electrònic de l'escola" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none">
+        <input id="login-password" type="password" placeholder="Contrasenya" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none">
+      </div>
+      <button onclick="loginTeacher()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition">Entrar al panell</button>
+      <button onclick="showView('view-join')" class="w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-800">Tornar a l'entrada d'alumnes</button>
+      <p id="login-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-sm font-semibold text-center hidden"></p>
     </section>
 
-    <!-- 5. Panell del mestre (dashboard) -->
     <section id="view-teacher-dash" class="hidden w-full space-y-6">
-      <div class="flex flex-wrap justify-between items-center gap-4 bg-slate-800 p-4 rounded-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80">
         <div>
-          <h2 class="text-xl font-bold">Els meus qüestionaris</h2>
-          <p class="text-sm text-slate-400" id="teacher-email-display"></p>
+          <h2 class="text-2xl font-extrabold text-slate-900">Els meus qüestionaris</h2>
+          <p class="text-sm text-slate-500" id="teacher-email-display"></p>
         </div>
-        <div class="flex gap-2">
-          <button onclick="openQuizEditor()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-bold text-sm">+ Nou qüestionari</button>
-          <button onclick="logoutTeacher()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-xl text-sm">Sortir</button>
+        <div class="flex gap-3">
+          <button onclick="openQuizEditor()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-2xl font-bold text-sm shadow-md shadow-indigo-200 transition">+ Crear qüestionari</button>
+          <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl font-bold text-sm transition">Tancar sessió</button>
         </div>
       </div>
 
-      <div id="quizzes-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Llista de qüestionaris del mestre -->
+      <div id="quizzes-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       </div>
     </section>
 
-    <!-- 6. Creador / editor de preguntes -->
-    <section id="view-quiz-editor" class="hidden w-full bg-slate-800 p-6 rounded-2xl space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-xl font-bold">Editor de qüestionari</h2>
-        <button onclick="showView('view-teacher-dash')" class="text-slate-400 hover:text-white">Cancel·lar</button>
+    <section id="view-quiz-editor" class="hidden w-full max-w-4xl bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+        <h2 class="text-2xl font-extrabold text-slate-900">Nou qüestionari</h2>
+        <button onclick="showView('view-teacher-dash')" class="text-slate-500 hover:text-slate-800 font-bold text-sm bg-slate-100 px-3 py-1.5 rounded-xl">Cancel·lar</button>
       </div>
-      <input id="editor-title" type="text" placeholder="Títol del tema (ex: els animals vertebrats)" class="w-full p-3 rounded-xl bg-slate-700 font-bold text-lg">
       
-      <div id="editor-questions-container" class="space-y-4"></div>
+      <div>
+        <label class="block text-xs font-bold text-slate-500 mb-1.5">Títol de l'activitat</label>
+        <input id="editor-title" type="text" placeholder="Ex: el sistema solar i els planetes" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none font-bold text-lg text-slate-900">
+      </div>
+      
+      <div id="editor-questions-container" class="space-y-5"></div>
 
-      <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-700">
-        <button onclick="addQuestionBlock('quiz')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Quiz (4 opcions)</button>
-        <button onclick="addQuestionBlock('true_false')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Vertader / fals</button>
-        <button onclick="addQuestionBlock('type_answer')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Resposta curta</button>
-        <button onclick="addQuestionBlock('word_cloud')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Núvol de paraules</button>
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2">
+        <p class="text-xs font-bold text-slate-500">Afegeix una pregunta:</p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="addQuestionBlock('quiz')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Opció múltiple</button>
+          <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Vertader o fals</button>
+          <button type="button" onclick="addQuestionBlock('type_answer')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Resposta curta</button>
+          <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+        </div>
       </div>
 
-      <button onclick="saveQuiz()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg">Guardar qüestionari</button>
+      <p id="editor-error" class="text-rose-600 bg-rose-50 p-3 rounded-xl text-sm font-semibold hidden"></p>
+
+      <button id="btn-save-quiz" type="button" onclick="saveQuiz()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-emerald-200 transition">Guardar qüestionari</button>
     </section>
 
-    <!-- 7. Pantalla de projecció del mestre (sala en viu) -->
     <section id="view-teacher-host" class="hidden w-full space-y-6 text-center">
-      <!-- Estat: esperant alumnes -->
-      <div id="host-lobby" class="bg-slate-800 p-8 rounded-2xl space-y-6">
-        <p class="text-slate-400 tracking-widest font-bold">Entra amb el pin:</p>
-        <div id="host-pin-display" class="text-6xl md:text-8xl font-black tracking-widest text-indigo-400 bg-slate-900 py-4 px-8 rounded-2xl inline-block">
-          000000
+      <div id="host-lobby" class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
+        <div class="space-y-2">
+          <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
+          <p class="text-slate-500 font-semibold text-lg pt-2">Entra des del teu dispositiu amb el codi:</p>
+          <div id="host-pin-display" class="text-6xl md:text-8xl font-black tracking-widest text-indigo-600 bg-slate-50 border-2 border-indigo-100 py-5 px-10 rounded-3xl inline-block shadow-inner">
+            000000
+          </div>
         </div>
-        <div>
-          <p class="text-lg font-semibold mb-3">Alumnes connectats (<span id="host-player-count">0</span>):</p>
-          <div id="host-players-grid" class="flex flex-wrap justify-center gap-3 min-h-[80px]"></div>
+        
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+          <p class="text-base font-bold text-slate-700 mb-4">Alumnes a la sala (<span id="host-player-count" class="text-indigo-600">0</span>)</p>
+          <div id="host-players-grid" class="flex flex-wrap justify-center gap-3 min-h-[90px]"></div>
         </div>
-        <button onclick="startGame()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-extrabold text-2xl shadow-lg">
-          🚀 Arrancar partida
+
+        <button onclick="startGame()" class="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition">
+          Començar partida
         </button>
       </div>
 
-      <!-- Estat: pregunta activa a la pissarra -->
-      <div id="host-question-screen" class="hidden bg-slate-800 p-6 rounded-2xl space-y-6">
-        <div class="flex justify-between items-center">
-          <span id="host-timer" class="text-3xl font-black bg-indigo-600 px-4 py-2 rounded-xl">20</span>
-          <span id="host-answers-count" class="text-lg font-bold text-slate-300">Respostes: 0</span>
-          <button onclick="showQuestionResults()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl font-bold">Mostrar resultats</button>
+      <div id="host-question-screen" class="hidden bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100 space-y-6">
+        <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-slate-500">Temps:</span>
+            <span id="host-timer" class="text-2xl font-black bg-indigo-600 text-white px-4 py-1.5 rounded-xl">20</span>
+          </div>
+          <span id="host-answers-count" class="text-base font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200">Respostes: 0</span>
+          <button onclick="showQuestionResults()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition">Veure resultats</button>
         </div>
 
-        <h2 id="host-q-text" class="text-3xl md:text-4xl font-extrabold bg-white text-slate-900 p-6 rounded-2xl">Pregunta</h2>
-        <img id="host-q-image" src="" class="hidden max-h-60 mx-auto rounded-xl object-contain">
+        <h2 id="host-q-text" class="text-2xl md:text-4xl font-extrabold text-slate-900 py-4">Pregunta</h2>
+        <img id="host-q-image" src="" class="hidden max-h-64 mx-auto rounded-2xl object-contain shadow-md">
 
-        <!-- Graella visual de resultats / opcions -->
-        <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-xl font-bold"></div>
+        <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-xl font-bold text-white"></div>
         
-        <!-- Contenidor núvol de paraules -->
-        <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-4 p-6 bg-slate-900 rounded-2xl min-h-[200px]"></div>
+        <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-3 p-8 bg-slate-50 rounded-3xl border border-slate-200 min-h-[220px]"></div>
 
         <div class="pt-4">
-          <button id="btn-next-question" onclick="nextQuestion()" class="hidden px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-xl">
+          <button id="btn-next-question" onclick="nextQuestion()" class="hidden px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-xl shadow-lg shadow-indigo-200 transition">
             Següent pregunta ➔
           </button>
         </div>
@@ -190,33 +212,29 @@
   </main>
 
   <script>
-    // Configuració de supabase connectada al teu projecte
     const SUPABASE_URL = 'https://wbngqwpwkbkokcjefyon.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_2GArEBXYf4ompZsqebhE-g_FMQ7mq1e';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Estat global
     let selectedAvatar = '🦊';
     let currentPlayer = null;
     let currentSession = null;
     let sessionQuestions = [];
     let hostTimerInterval = null;
 
-    // Gestió de vistes
     function showView(viewId) {
       document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
       document.getElementById(viewId).classList.remove('hidden');
     }
 
-    // Lògica d'alumnes
     function selectAvatar(btn, emoji) {
       selectedAvatar = emoji;
       document.querySelectorAll('.avatar-btn').forEach(b => {
-        b.classList.remove('bg-indigo-600', 'ring-2', 'ring-white');
-        b.classList.add('bg-slate-700');
+        b.classList.remove('bg-indigo-600', 'text-white', 'shadow-md', 'scale-105');
+        b.classList.add('bg-white', 'border', 'border-slate-200');
       });
-      btn.classList.remove('bg-slate-700');
-      btn.classList.add('bg-indigo-600', 'ring-2', 'ring-white');
+      btn.classList.remove('bg-white', 'border', 'border-slate-200');
+      btn.classList.add('bg-indigo-600', 'text-white', 'shadow-md', 'scale-105');
     }
 
     async function joinGame() {
@@ -226,12 +244,11 @@
       errEl.classList.add('hidden');
 
       if (!pin || !nickname) {
-        errEl.textContent = "Introdueix el pin i el teu nom.";
+        errEl.textContent = "Introdueix el codi pin i el teu nom.";
         errEl.classList.remove('hidden');
         return;
       }
 
-      // Buscar sala activa
       const { data: session, error } = await sb
         .from('game_sessions')
         .select('*')
@@ -240,12 +257,11 @@
         .single();
 
       if (error || !session) {
-        errEl.textContent = "Pin incorrecte o la partida ja ha començat.";
+        errEl.textContent = "Codi incorrecte o la partida ja ha començat.";
         errEl.classList.remove('hidden');
         return;
       }
 
-      // Registrar alumne a la sala
       const { data: player, error: pError } = await sb
         .from('players')
         .insert({ session_id: session.id, nickname, avatar: selectedAvatar })
@@ -253,7 +269,7 @@
         .single();
 
       if (pError) {
-        errEl.textContent = "Aquest nom ja està en ús a la sala.";
+        errEl.textContent = "Aquest nom ja el fa servir un altre company o companya.";
         errEl.classList.remove('hidden');
         return;
       }
@@ -261,7 +277,6 @@
       currentSession = session;
       currentPlayer = player;
 
-      // Carregar preguntes del qüestionari
       const { data: qs } = await sb
         .from('questions')
         .select('*')
@@ -273,7 +288,6 @@
       document.getElementById('student-display-name').textContent = nickname;
       showView('view-student-lobby');
 
-      // Escoltar canvis de la sala en temps real
       sb.channel('room-' + session.id)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
           handleSessionStateChange(payload.new);
@@ -289,8 +303,9 @@
         document.getElementById('student-options-grid').classList.add('hidden');
         document.getElementById('student-text-input-box').classList.add('hidden');
         document.getElementById('student-feedback').classList.remove('hidden');
+        document.getElementById('feedback-icon').textContent = '⏱️';
         document.getElementById('feedback-title').textContent = "Temps esgotat!";
-        document.getElementById('feedback-sub').textContent = "Mira la pantalla principal per veure els resultats.";
+        document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
       } else if (session.status === 'finished') {
         alert("Partida finalitzada! Gràcies per participar.");
         location.reload();
@@ -318,8 +333,8 @@
 
         q.options.forEach((opt, idx) => {
           const btn = document.createElement('button');
-          btn.className = `btn-opt ${colors[idx % 4]} rounded-2xl p-6 text-xl md:text-2xl font-bold flex items-center justify-center gap-3 shadow-lg`;
-          btn.innerHTML = `<span>${shapes[idx % 4]}</span> <span>${opt.text}</span>`;
+          btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-6 text-xl md:text-2xl font-extrabold flex items-center justify-center gap-3 transition`;
+          btn.innerHTML = `<span class="opacity-80">${shapes[idx % 4]}</span> <span>${opt.text}</span>`;
           btn.onclick = () => submitOptionAnswer(q, idx);
           grid.appendChild(btn);
         });
@@ -373,19 +388,19 @@
       document.getElementById('student-text-input-box').classList.add('hidden');
       const fb = document.getElementById('student-feedback');
       fb.classList.remove('hidden');
-      document.getElementById('feedback-icon').textContent = isOpinion ? '📨' : (isCorrect ? '✅' : '❌');
-      document.getElementById('feedback-title').textContent = isOpinion ? 'Enviat!' : (isCorrect ? 'Correcte!' : 'Incorrecte');
+      document.getElementById('feedback-icon').textContent = isOpinion ? '📨' : (isCorrect ? '🎉' : '💡');
+      document.getElementById('feedback-title').textContent = isOpinion ? 'Resposta enviada!' : (isCorrect ? 'Molt bé, encertat!' : 'No passa res, seguim!');
     }
 
-    // Lògica de mestres (supabase auth)
     async function loginTeacher() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-error');
+      errEl.classList.add('hidden');
 
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
-        errEl.textContent = "Credencials incorrectes o usuari no autoritzat.";
+        errEl.textContent = "Correu o contrasenya incorrectes.";
         errEl.classList.remove('hidden');
         return;
       }
@@ -401,33 +416,45 @@
       document.getElementById('teacher-email-display').textContent = user.email;
       showView('view-teacher-dash');
 
-      const { data: quizzes } = await sb
+      const { data: quizzes, error } = await sb
         .from('quizzes')
         .select('*')
         .order('created_at', { ascending: false });
 
       const list = document.getElementById('quizzes-list');
       list.innerHTML = '';
-      (quizzes || []).forEach(q => {
+
+      if (error) {
+        list.innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant qüestionaris: ${error.message}</p>`;
+        return;
+      }
+
+      if (!quizzes || quizzes.length === 0) {
+        list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no has creat cap qüestionari. Clica el botó superior per començar!</div>`;
+        return;
+      }
+
+      quizzes.forEach(q => {
         const card = document.createElement('div');
-        card.className = "bg-slate-800 p-5 rounded-2xl flex justify-between items-center border border-slate-700";
+        card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-slate-200/80 shadow-sm hover:shadow-md transition";
         card.innerHTML = `
           <div>
-            <h3 class="font-bold text-lg">${q.title}</h3>
-            <p class="text-xs text-slate-400">${new Date(q.created_at).toLocaleDateString()}</p>
+            <span class="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold mb-2">Qüestionari</span>
+            <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
+            <p class="text-xs text-slate-400 mt-1">Creat el ${new Date(q.created_at).toLocaleDateString()}</p>
           </div>
-          <button onclick="createRoom('${q.id}')" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl font-bold text-sm">
-            ▶ Obrir sala
+          <button onclick="createRoom('${q.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-2xl font-bold text-sm shadow-md shadow-indigo-100 transition">
+            Obrir sala de joc
           </button>
         `;
         list.appendChild(card);
       });
     }
 
-    // Editor de preguntes personalitzables
     function openQuizEditor() {
       document.getElementById('editor-title').value = '';
       document.getElementById('editor-questions-container').innerHTML = '';
+      document.getElementById('editor-error').classList.add('hidden');
       addQuestionBlock('quiz');
       showView('view-quiz-editor');
     }
@@ -436,11 +463,11 @@
       const container = document.getElementById('editor-questions-container');
       const idx = container.children.length + 1;
       const div = document.createElement('div');
-      div.className = "q-block bg-slate-900 p-4 rounded-xl space-y-3 border border-slate-700";
+      div.className = "q-block bg-slate-50 p-5 rounded-2xl space-y-4 border border-slate-200";
       div.dataset.type = type;
 
       const typeNames = {
-        quiz: 'quiz',
+        quiz: 'opció múltiple',
         true_false: 'vertader o fals',
         type_answer: 'resposta curta',
         word_cloud: 'núvol de paraules'
@@ -449,67 +476,98 @@
       let optionsHTML = '';
       if (type === 'quiz') {
         optionsHTML = [0,1,2,3].map(i => `
-          <div class="flex items-center gap-2">
-            <input type="checkbox" class="opt-correct w-5 h-5 accent-emerald-500">
-            <input type="text" placeholder="Opció ${i+1}" class="opt-text flex-1 p-2 rounded bg-slate-800 text-sm">
+          <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-slate-200">
+            <input type="checkbox" class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">
+            <input type="text" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1.5 text-sm font-semibold text-slate-800 outline-none">
           </div>
         `).join('');
       } else if (type === 'true_false') {
         optionsHTML = `
-          <div class="flex gap-4">
-            <label class="flex items-center gap-2"><input type="radio" name="tf-${idx}" value="0" checked class="opt-correct"> Vertader</label>
-            <label class="flex items-center gap-2"><input type="radio" name="tf-${idx}" value="1" class="opt-correct"> Fals</label>
+          <div class="flex gap-4 col-span-full bg-white p-3 rounded-xl border border-slate-200">
+            <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="0" checked class="opt-correct accent-indigo-600"> Vertader</label>
+            <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}" value="1" class="opt-correct accent-indigo-600"> Fals</label>
           </div>
         `;
       } else if (type === 'type_answer') {
-        optionsHTML = `<input type="text" placeholder="Resposta exacta correcta" class="opt-text w-full p-2 rounded bg-slate-800 text-sm">`;
+        optionsHTML = `<input type="text" placeholder="Escriu la resposta exacta correcta" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 outline-none">`;
       } else if (type === 'word_cloud') {
-        optionsHTML = `<p class="text-xs text-slate-400">Els alumnes escriuran paraules lliures per formar el núvol.</p>`;
+        optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els alumnes enviaran paraules lliures que apareixeran a la pantalla.</p>`;
       }
 
       div.innerHTML = `
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold text-indigo-400">Pregunta ${idx} (${typeNames[type]})</span>
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <span class="text-xs font-extrabold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">Pregunta ${idx} · ${typeNames[type]}</span>
           <div class="flex gap-2">
-            <select class="q-time bg-slate-800 text-xs p-1 rounded">
+            <select class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
               <option value="10">10 segons</option>
               <option value="20" selected>20 segons</option>
               <option value="30">30 segons</option>
               <option value="60">60 segons</option>
             </select>
-            <select class="q-points bg-slate-800 text-xs p-1 rounded">
+            <select class="q-points bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
               <option value="1" selected>Punts normals</option>
               <option value="2">Doble puntuació</option>
               <option value="0">Sense punts</option>
             </select>
           </div>
         </div>
-        <input type="text" placeholder="Enunciat de la pregunta..." class="q-title w-full p-2.5 rounded-lg bg-slate-800 font-semibold">
-        <input type="url" placeholder="Adreça d'imatge opcional (https://...)" class="q-media w-full p-2 rounded-lg bg-slate-800 text-xs">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${optionsHTML}</div>
+        <input type="text" placeholder="Escriu l'enunciat de la pregunta..." class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
+        <input type="url" placeholder="Enllaç d'imatge opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${optionsHTML}</div>
       `;
       container.appendChild(div);
     }
 
     async function saveQuiz() {
       const title = document.getElementById('editor-title').value.trim();
-      if (!title) return alert("Posa un títol al qüestionari.");
+      const errEl = document.getElementById('editor-error');
+      const saveBtn = document.getElementById('btn-save-quiz');
+      errEl.classList.add('hidden');
 
-      const { data: { user } } = await sb.auth.getUser();
-      const { data: quiz, error } = await sb
+      if (!title) {
+        errEl.textContent = "Escriu un títol per al qüestionari abans de guardar.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const blocks = document.querySelectorAll('.q-block');
+      if (blocks.length === 0) {
+        errEl.textContent = "Afegeix com a mínim una pregunta.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Guardant...";
+
+      const { data: authData, error: authError } = await sb.auth.getUser();
+      if (authError || !authData?.user) {
+        errEl.textContent = "La sessió ha caducat. Torna a iniciar sessió.";
+        errEl.classList.remove('hidden');
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Guardar qüestionari";
+        return;
+      }
+
+      const { data: quiz, error: quizError } = await sb
         .from('quizzes')
-        .insert({ teacher_id: user.id, title })
+        .insert({ teacher_id: authData.user.id, title })
         .select()
         .single();
 
-      if (error) return alert("Error guardant el qüestionari.");
+      if (quizError || !quiz) {
+        errEl.textContent = `No s'ha pogut guardar el qüestionari: ${quizError?.message || 'revisa les taules a supabase'}`;
+        errEl.classList.remove('hidden');
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Guardar qüestionari";
+        return;
+      }
 
-      const blocks = document.querySelectorAll('.q-block');
       const questionsToInsert = [];
 
       blocks.forEach((b, i) => {
         const type = b.dataset.type;
-        const question_text = b.querySelector('.q-title').value.trim();
+        const question_text = b.querySelector('.q-title').value.trim() || `Pregunta ${i + 1}`;
         const media_url = b.querySelector('.q-media').value.trim() || null;
         const time_limit = parseInt(b.querySelector('.q-time').value);
         const points_multiplier = parseInt(b.querySelector('.q-points').value);
@@ -544,20 +602,34 @@
         });
       });
 
-      await sb.from('questions').insert(questionsToInsert);
-      loadTeacherDashboard(user);
+      const { error: qError } = await sb.from('questions').insert(questionsToInsert);
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Guardar qüestionari";
+
+      if (qError) {
+        errEl.textContent = `Error guardant les preguntes: ${qError.message}`;
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      loadTeacherDashboard(authData.user);
     }
 
-    // Control de sala en viu (mestre)
     async function createRoom(quizId) {
       const { data: { user } } = await sb.auth.getUser();
       const pin = Math.floor(100000 + Math.random() * 900000).toString();
 
-      const { data: session } = await sb
+      const { data: session, error } = await sb
         .from('game_sessions')
         .insert({ quiz_id: quizId, teacher_id: user.id, pin, status: 'waiting' })
         .select()
         .single();
+
+      if (error) {
+        alert("Error creant la sala: " + error.message);
+        return;
+      }
 
       const { data: qs } = await sb
         .from('questions')
@@ -566,7 +638,7 @@
         .order('order_index', { ascending: true });
 
       currentSession = session;
-      sessionQuestions = qs;
+      sessionQuestions = qs || [];
 
       document.getElementById('host-pin-display').textContent = pin;
       document.getElementById('host-players-grid').innerHTML = '';
@@ -575,13 +647,12 @@
       document.getElementById('host-lobby').classList.remove('hidden');
       document.getElementById('host-question-screen').classList.add('hidden');
 
-      // Escoltar alumnes que entren a la sala
       sb.channel('host-players-' + session.id)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
           const p = payload.new;
           const badge = document.createElement('div');
-          badge.className = "bg-slate-700 px-4 py-2 rounded-xl font-bold text-lg flex items-center gap-2 animate-bounce";
-          badge.innerHTML = `<span>${p.avatar}</span> <span>${p.nickname}</span>`;
+          badge.className = "bg-white border border-slate-200 shadow-sm px-4 py-2.5 rounded-2xl font-extrabold text-slate-800 text-lg flex items-center gap-2";
+          badge.innerHTML = `<span class="text-2xl">${p.avatar}</span> <span>${p.nickname}</span>`;
           document.getElementById('host-players-grid').appendChild(badge);
           const countEl = document.getElementById('host-player-count');
           countEl.textContent = parseInt(countEl.textContent) + 1;
@@ -590,14 +661,14 @@
     }
 
     async function startGame() {
-      if (sessionQuestions.length === 0) return alert("Aquest qüestionari no té preguntes.");
+      if (sessionQuestions.length === 0) return alert("Aquest qüestionari no té cap pregunta.");
       await launchQuestion(0);
     }
 
     async function launchQuestion(index) {
       if (index >= sessionQuestions.length) {
         await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
-        alert("Joc acabat!");
+        alert("Partida acabada!");
         const { data: { user } } = await sb.auth.getUser();
         return loadTeacherDashboard(user);
       }
@@ -624,7 +695,6 @@
         imgEl.classList.add('hidden');
       }
 
-      // Mostrar opcions a la pissarra
       const optDisplay = document.getElementById('host-options-display');
       const wcDisplay = document.getElementById('host-wordcloud-display');
       optDisplay.innerHTML = '';
@@ -640,15 +710,14 @@
         const shapes = ['▲', '◆', '●', '■'];
         q.options.forEach((opt, i) => {
           optDisplay.innerHTML += `
-            <div id="host-opt-${i}" class="${colors[i%4]} p-4 rounded-xl flex justify-between items-center">
+            <div id="host-opt-${i}" class="${colors[i%4]} p-5 rounded-2xl flex justify-between items-center">
               <span>${shapes[i%4]} ${opt.text}</span>
-              <span class="opt-votes bg-black/30 px-3 py-1 rounded-lg text-sm">0</span>
+              <span class="opt-votes bg-black/20 px-3.5 py-1 rounded-xl text-base">0</span>
             </div>
           `;
         });
       }
 
-      // Comptador de respostes en temps real
       let answersCount = 0;
       document.getElementById('host-answers-count').textContent = 'Respostes: 0';
       const ansChannel = sb.channel('answers-' + q.id)
@@ -657,14 +726,13 @@
           document.getElementById('host-answers-count').textContent = `Respostes: ${answersCount}`;
           if (q.type === 'word_cloud') {
             const word = document.createElement('span');
-            word.className = "bg-indigo-600 px-4 py-2 rounded-xl font-extrabold text-2xl";
+            word.className = "bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-extrabold text-2xl shadow-md";
             word.textContent = payload.new.answer_value.text;
             wcDisplay.appendChild(word);
           }
         })
         .subscribe();
 
-      // Temporitzador
       let timeLeft = q.time_limit;
       document.getElementById('host-timer').textContent = timeLeft;
       clearInterval(hostTimerInterval);
@@ -688,7 +756,7 @@
       q.options.forEach((opt, i) => {
         const el = document.getElementById(`host-opt-${i}`);
         if (el && !opt.is_correct && q.type !== 'poll') {
-          el.classList.add('opacity-40');
+          el.classList.add('opacity-35');
         }
       });
     }
@@ -697,7 +765,6 @@
       launchQuestion(currentSession.current_question_index + 1);
     }
 
-    // Comprovar sessió activa en carregar la pàgina
     window.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await sb.auth.getSession();
       if (session) loadTeacherDashboard(session.user);
