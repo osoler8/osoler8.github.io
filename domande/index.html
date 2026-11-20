@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domande - plataforma interactiva d'aula</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .btn-red { background-color: #e21b3c; }
+    .btn-blue { background-color: #1368ce; }
+    .btn-yellow { background-color: #d89e00; }
+    .btn-green { background-color: #26890c; }
+    .btn-opt:active { transform: scale(0.97); }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans select-none">
+
+  <!-- Barra superior -->
+  <header class="bg-slate-800 px-4 py-3 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-2 font-black text-2xl tracking-tight text-indigo-400">
+      <span>❓ Domande</span>
+    </div>
+    <div id="nav-actions">
+      <button onclick="showView('view-login')" class="text-sm bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg font-medium transition">
+        Accés mestres
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenidor principal -->
+  <main class="flex-1 flex flex-col items-center justify-center p-4 w-full max-w-5xl mx-auto">
+
+    <!-- 1. Vista inicial: entrada alumnes amb pin -->
+    <section id="view-join" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl text-center space-y-5">
+      <div>
+        <h1 class="text-3xl font-black text-indigo-400">Domande</h1>
+        <p class="text-sm text-slate-400 mt-1">Introdueix el pin de la classe per jugar</p>
+      </div>
+      
+      <div class="space-y-3">
+        <input id="input-pin" type="text" maxlength="6" placeholder="Pin del joc (ex: 482910)" 
+               class="w-full text-center text-2xl font-bold tracking-widest py-3 rounded-xl bg-slate-700 text-white border-2 border-slate-600 focus:border-indigo-500 outline-none">
+        <input id="input-nickname" type="text" maxlength="15" placeholder="El teu nom" 
+               class="w-full text-center text-lg py-3 rounded-xl bg-slate-700 text-white border-2 border-slate-600 focus:border-indigo-500 outline-none">
+      </div>
+      
+      <!-- Selector d'avatar -->
+      <div>
+        <p class="text-xs text-slate-400 mb-2 font-semibold">Tria el teu avatar</p>
+        <div id="avatar-selector" class="flex justify-center gap-2 flex-wrap text-2xl">
+          <button type="button" onclick="selectAvatar(this, '🦊')" class="avatar-btn p-2 rounded-xl bg-indigo-600 ring-2 ring-white">🦊</button>
+          <button type="button" onclick="selectAvatar(this, '🐼')" class="avatar-btn p-2 rounded-xl bg-slate-700">🐼</button>
+          <button type="button" onclick="selectAvatar(this, '🦁')" class="avatar-btn p-2 rounded-xl bg-slate-700">🦁</button>
+          <button type="button" onclick="selectAvatar(this, '🐸')" class="avatar-btn p-2 rounded-xl bg-slate-700">🐸</button>
+          <button type="button" onclick="selectAvatar(this, '🦄')" class="avatar-btn p-2 rounded-xl bg-slate-700">🦄</button>
+          <button type="button" onclick="selectAvatar(this, '🚀')" class="avatar-btn p-2 rounded-xl bg-slate-700">🚀</button>
+        </div>
+      </div>
+
+      <button onclick="joinGame()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg shadow-lg transition">
+        Entrar a domande
+      </button>
+      <p id="join-error" class="text-red-400 text-sm hidden"></p>
+    </section>
+
+    <!-- 2. Sala d'espera alumne -->
+    <section id="view-student-lobby" class="hidden text-center space-y-4">
+      <div id="student-badge" class="text-6xl mb-2">🦊</div>
+      <h2 class="text-3xl font-extrabold" id="student-display-name">Nom</h2>
+      <p class="text-slate-300 text-lg animate-pulse">Ja ets dins de domande! Espera que el/la mestre/a arrenqui la partida...</p>
+    </section>
+
+    <!-- 3. Pantalla de joc alumne (responsive) -->
+    <section id="view-student-play" class="hidden w-full h-full flex flex-col justify-between space-y-4">
+      <div class="bg-slate-800 p-4 rounded-xl text-center">
+        <span id="student-q-counter" class="text-xs tracking-wider text-indigo-400 font-bold">Pregunta 1</span>
+        <h2 id="student-q-text" class="text-lg md:text-2xl font-bold mt-1">Text de la pregunta</h2>
+      </div>
+
+      <!-- Botons de colors (quiz / vertader-fals) -->
+      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-[300px]">
+        <!-- S'omple dinàmicament -->
+      </div>
+
+      <!-- Input per a resposta curta o núvol de paraules -->
+      <div id="student-text-input-box" class="hidden space-y-3">
+        <input id="student-text-answer" type="text" placeholder="Escriu la teva resposta..." class="w-full p-4 rounded-xl bg-slate-800 border-2 border-slate-600 text-xl text-center">
+        <button onclick="submitTextAnswer()" class="w-full py-4 bg-indigo-600 rounded-xl font-bold text-xl">Enviar</button>
+      </div>
+
+      <div id="student-feedback" class="hidden text-center p-8 rounded-2xl bg-slate-800 space-y-2">
+        <div id="feedback-icon" class="text-6xl">⏳</div>
+        <h3 id="feedback-title" class="text-2xl font-bold">Resposta enviada!</h3>
+        <p id="feedback-sub" class="text-slate-400">Esperant la resta de la classe...</p>
+      </div>
+    </section>
+
+    <!-- 4. Login mestres (supabase auth) -->
+    <section id="view-login" class="hidden w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+      <h2 class="text-2xl font-bold text-center">Accés docents</h2>
+      <p class="text-xs text-slate-400 text-center">Només usuaris autoritzats per l'escola</p>
+      <input id="login-email" type="email" placeholder="Correu electrònic del centre" class="w-full p-3 rounded-xl bg-slate-700 border border-slate-600">
+      <input id="login-password" type="password" placeholder="Contrasenya" class="w-full p-3 rounded-xl bg-slate-700 border border-slate-600">
+      <button onclick="loginTeacher()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold">Iniciar sessió</button>
+      <button onclick="showView('view-join')" class="w-full py-2 text-sm text-slate-400 hover:text-white">Tornar a l'entrada d'alumnes</button>
+      <p id="login-error" class="text-red-400 text-sm text-center hidden"></p>
+    </section>
+
+    <!-- 5. Panell del mestre (dashboard) -->
+    <section id="view-teacher-dash" class="hidden w-full space-y-6">
+      <div class="flex flex-wrap justify-between items-center gap-4 bg-slate-800 p-4 rounded-2xl">
+        <div>
+          <h2 class="text-xl font-bold">Els meus qüestionaris</h2>
+          <p class="text-sm text-slate-400" id="teacher-email-display"></p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openQuizEditor()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl font-bold text-sm">+ Nou qüestionari</button>
+          <button onclick="logoutTeacher()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-xl text-sm">Sortir</button>
+        </div>
+      </div>
+
+      <div id="quizzes-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Llista de qüestionaris del mestre -->
+      </div>
+    </section>
+
+    <!-- 6. Creador / editor de preguntes -->
+    <section id="view-quiz-editor" class="hidden w-full bg-slate-800 p-6 rounded-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold">Editor de qüestionari</h2>
+        <button onclick="showView('view-teacher-dash')" class="text-slate-400 hover:text-white">Cancel·lar</button>
+      </div>
+      <input id="editor-title" type="text" placeholder="Títol del tema (ex: els animals vertebrats)" class="w-full p-3 rounded-xl bg-slate-700 font-bold text-lg">
+      
+      <div id="editor-questions-container" class="space-y-4"></div>
+
+      <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-700">
+        <button onclick="addQuestionBlock('quiz')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Quiz (4 opcions)</button>
+        <button onclick="addQuestionBlock('true_false')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Vertader / fals</button>
+        <button onclick="addQuestionBlock('type_answer')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Resposta curta</button>
+        <button onclick="addQuestionBlock('word_cloud')" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm">+ Núvol de paraules</button>
+      </div>
+
+      <button onclick="saveQuiz()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-lg">Guardar qüestionari</button>
+    </section>
+
+    <!-- 7. Pantalla de projecció del mestre (sala en viu) -->
+    <section id="view-teacher-host" class="hidden w-full space-y-6 text-center">
+      <!-- Estat: esperant alumnes -->
+      <div id="host-lobby" class="bg-slate-800 p-8 rounded-2xl space-y-6">
+        <p class="text-slate-400 tracking-widest font-bold">Entra amb el pin:</p>
+        <div id="host-pin-display" class="text-6xl md:text-8xl font-black tracking-widest text-indigo-400 bg-slate-900 py-4 px-8 rounded-2xl inline-block">
+          000000
+        </div>
+        <div>
+          <p class="text-lg font-semibold mb-3">Alumnes connectats (<span id="host-player-count">0</span>):</p>
+          <div id="host-players-grid" class="flex flex-wrap justify-center gap-3 min-h-[80px]"></div>
+        </div>
+        <button onclick="startGame()" class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-extrabold text-2xl shadow-lg">
+          🚀 Arrancar partida
+        </button>
+      </div>
+
+      <!-- Estat: pregunta activa a la pissarra -->
+      <div id="host-question-screen" class="hidden bg-slate-800 p-6 rounded-2xl space-y-6">
+        <div class="flex justify-between items-center">
+          <span id="host-timer" class="text-3xl font-black bg-indigo-600 px-4 py-2 rounded-xl">20</span>
+          <span id="host-answers-count" class="text-lg font-bold text-slate-300">Respostes: 0</span>
+          <button onclick="showQuestionResults()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl font-bold">Mostrar resultats</button>
+        </div>
+
+        <h2 id="host-q-text" class="text-3xl md:text-4xl font-extrabold bg-white text-slate-900 p-6 rounded-2xl">Pregunta</h2>
+        <img id="host-q-image" src="" class="hidden max-h-60 mx-auto rounded-xl object-contain">
+
+        <!-- Graella visual de resultats / opcions -->
+        <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-xl font-bold"></div>
+        
+        <!-- Contenidor núvol de paraules -->
+        <div id="host-wordcloud-display" class="hidden flex flex-wrap justify-center items-center gap-4 p-6 bg-slate-900 rounded-2xl min-h-[200px]"></div>
+
+        <div class="pt-4">
+          <button id="btn-next-question" onclick="nextQuestion()" class="hidden px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-xl">
+            Següent pregunta ➔
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Configuració de supabase connectada al teu projecte
+    const SUPABASE_URL = 'https://wbngqwpwkbkokcjefyon.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_2GArEBXYf4ompZsqebhE-g_FMQ7mq1e';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Estat global
+    let selectedAvatar = '🦊';
+    let currentPlayer = null;
+    let currentSession = null;
+    let sessionQuestions = [];
+    let hostTimerInterval = null;
+
+    // Gestió de vistes
+    function showView(viewId) {
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    // Lògica d'alumnes
+    function selectAvatar(btn, emoji) {
+      selectedAvatar = emoji;
+      document.querySelectorAll('.avatar-btn').forEach(b => {
+        b.classList.remove('bg-indigo-600', 'ring-2', 'ring-white');
+        b.classList.add('bg-slate-700');
+      });
+      btn.classList.remove('bg-slate-700');
+      btn.classList.add('bg-indigo-600', 'ring-2', 'ring-white');
+    }
+
+    async function joinGame() {
+      const pin = document.getElementById('input-pin').value.trim();
+      const nickname = document.getElementById('input-nickname').value.trim();
+      const errEl = document.getElementById('join-error');
+      errEl.classList.add('hidden');
+
+      if (!pin || !nickname) {
+        errEl.textContent = "Introdueix el pin i el teu nom.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Buscar sala activa
+      const { data: session, error } = await sb
+        .from('game_sessions')
+        .select('*')
+        .eq('pin', pin)
+        .eq('status', 'waiting')
+        .single();
+
+      if (error || !session) {
+        errEl.textContent = "Pin incorrecte o la partida ja ha començat.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Registrar alumne a la sala
+      const { data: player, error: pError } = await sb
+        .from('players')
+        .insert({ session_id: session.id, nickname, avatar: selectedAvatar })
+        .select()
+        .single();
+
+      if (pError) {
+        errEl.textContent = "Aquest nom ja està en ús a la sala.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      currentSession = session;
+      currentPlayer = player;
+
+      // Carregar preguntes del qüestionari
+      const { data: qs } = await sb
+        .from('questions')
+        .select('*')
+        .eq('quiz_id', session.quiz_id)
+        .order('order_index', { ascending: true });
+      sessionQuestions = qs || [];
+
+      document.getElementById('student-badge').textContent = selectedAvatar;
+      document.getElementById('student-display-name').textContent = nickname;
+      showView('view-student-lobby');
+
+      // Escoltar canvis de la sala en temps real
+      sb.channel('room-' + session.id)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
+          handleSessionStateChange(payload.new);
+        })
+        .subscribe();
+    }
+
+    function handleSessionStateChange(session) {
+      currentSession = session;
+      if (session.status === 'question_active') {
+        renderStudentQuestion(session.current_question_index);
+      } else if (session.status === 'question_results') {
+        document.getElementById('student-options-grid').classList.add('hidden');
+        document.getElementById('student-text-input-box').classList.add('hidden');
+        document.getElementById('student-feedback').classList.remove('hidden');
+        document.getElementById('feedback-title').textContent = "Temps esgotat!";
+        document.getElementById('feedback-sub').textContent = "Mira la pantalla principal per veure els resultats.";
+      } else if (session.status === 'finished') {
+        alert("Partida finalitzada! Gràcies per participar.");
+        location.reload();
+      }
+    }
+
+    function renderStudentQuestion(qIndex) {
+      const q = sessionQuestions[qIndex];
+      if (!q) return;
+
+      showView('view-student-play');
+      document.getElementById('student-feedback').classList.add('hidden');
+      document.getElementById('student-q-counter').textContent = `Pregunta ${qIndex + 1} de ${sessionQuestions.length}`;
+      document.getElementById('student-q-text').textContent = q.question_text;
+
+      const grid = document.getElementById('student-options-grid');
+      const textBox = document.getElementById('student-text-input-box');
+      grid.innerHTML = '';
+
+      if (q.type === 'quiz' || q.type === 'true_false' || q.type === 'poll') {
+        grid.classList.remove('hidden');
+        textBox.classList.add('hidden');
+        const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
+        const shapes = ['▲', '◆', '●', '■'];
+
+        q.options.forEach((opt, idx) => {
+          const btn = document.createElement('button');
+          btn.className = `btn-opt ${colors[idx % 4]} rounded-2xl p-6 text-xl md:text-2xl font-bold flex items-center justify-center gap-3 shadow-lg`;
+          btn.innerHTML = `<span>${shapes[idx % 4]}</span> <span>${opt.text}</span>`;
+          btn.onclick = () => submitOptionAnswer(q, idx);
+          grid.appendChild(btn);
+        });
+      } else {
+        grid.classList.add('hidden');
+        textBox.classList.remove('hidden');
+        document.getElementById('student-text-answer').value = '';
+      }
+    }
+
+    async function submitOptionAnswer(question, optionIndex) {
+      const isCorrect = question.options[optionIndex]?.is_correct || false;
+      const points = isCorrect ? (1000 * question.points_multiplier) : 0;
+
+      await sb.from('answers').insert({
+        session_id: currentSession.id,
+        question_id: question.id,
+        player_id: currentPlayer.id,
+        answer_value: { index: optionIndex },
+        is_correct: isCorrect,
+        points_awarded: points
+      });
+
+      showStudentWaitingFeedback(isCorrect, question.type === 'poll');
+    }
+
+    async function submitTextAnswer() {
+      const val = document.getElementById('student-text-answer').value.trim();
+      if (!val) return;
+      const q = sessionQuestions[currentSession.current_question_index];
+      
+      let isCorrect = false;
+      if (q.type === 'type_answer') {
+        isCorrect = q.options.some(o => o.text.toLowerCase() === val.toLowerCase() && o.is_correct);
+      }
+
+      await sb.from('answers').insert({
+        session_id: currentSession.id,
+        question_id: q.id,
+        player_id: currentPlayer.id,
+        answer_value: { text: val },
+        is_correct: isCorrect,
+        points_awarded: isCorrect ? (1000 * q.points_multiplier) : 0
+      });
+
+      showStudentWaitingFeedback(isCorrect, q.type === 'word_cloud');
+    }
+
+    function showStudentWaitingFeedback(isCorrect, isOpinion) {
+      document.getElementById('student-options-grid').classList.add('hidden');
+      document.getElementById('student-text-input-box').classList.add('hidden');
+      const fb = document.getElementById('student-feedback');
+      fb.classList.remove('hidden');
+      document.getElementById('feedback-icon').textContent = isOpinion ? '📨' : (isCorrect ? '✅' : '❌');
+      document.getElementById('feedback-title').textContent = isOpinion ? 'Enviat!' : (isCorrect ? 'Correcte!' : 'Incorrecte');
+    }
+
+    // Lògica de mestres (supabase auth)
+    async function loginTeacher() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = "Credencials incorrectes o usuari no autoritzat.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+      loadTeacherDashboard(data.user);
+    }
+
+    async function logoutTeacher() {
+      await sb.auth.signOut();
+      showView('view-join');
+    }
+
+    async function loadTeacherDashboard(user) {
+      document.getElementById('teacher-email-display').textContent = user.email;
+      showView('view-teacher-dash');
+
+      const { data: quizzes } = await sb
+        .from('quizzes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const list = document.getElementById('quizzes-list');
+      list.innerHTML = '';
+      (quizzes || []).forEach(q => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-800 p-5 rounded-2xl flex justify-between items-center border border-slate-700";
+        card.innerHTML = `
+          <div>
+            <h3 class="font-bold text-lg">${q.title}</h3>
+            <p class="text-xs text-slate-400">${new Date(q.created_at).toLocaleDateString()}</p>
+          </div>
+          <button onclick="createRoom('${q.id}')" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl font-bold text-sm">
+            ▶ Obrir sala
+          </button>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    // Editor de preguntes personalitzables
+    function openQuizEditor() {
+      document.getElementById('editor-title').value = '';
+      document.getElementById('editor-questions-container').innerHTML = '';
+      addQuestionBlock('quiz');
+      showView('view-quiz-editor');
+    }
+
+    function addQuestionBlock(type) {
+      const container = document.getElementById('editor-questions-container');
+      const idx = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = "q-block bg-slate-900 p-4 rounded-xl space-y-3 border border-slate-700";
+      div.dataset.type = type;
+
+      const typeNames = {
+        quiz: 'quiz',
+        true_false: 'vertader o fals',
+        type_answer: 'resposta curta',
+        word_cloud: 'núvol de paraules'
+      };
+
+      let optionsHTML = '';
+      if (type === 'quiz') {
+        optionsHTML = [0,1,2,3].map(i => `
+          <div class="flex items-center gap-2">
+            <input type="checkbox" class="opt-correct w-5 h-5 accent-emerald-500">
+            <input type="text" placeholder="Opció ${i+1}" class="opt-text flex-1 p-2 rounded bg-slate-800 text-sm">
+          </div>
+        `).join('');
+      } else if (type === 'true_false') {
+        optionsHTML = `
+          <div class="flex gap-4">
+            <label class="flex items-center gap-2"><input type="radio" name="tf-${idx}" value="0" checked class="opt-correct"> Vertader</label>
+            <label class="flex items-center gap-2"><input type="radio" name="tf-${idx}" value="1" class="opt-correct"> Fals</label>
+          </div>
+        `;
+      } else if (type === 'type_answer') {
+        optionsHTML = `<input type="text" placeholder="Resposta exacta correcta" class="opt-text w-full p-2 rounded bg-slate-800 text-sm">`;
+      } else if (type === 'word_cloud') {
+        optionsHTML = `<p class="text-xs text-slate-400">Els alumnes escriuran paraules lliures per formar el núvol.</p>`;
+      }
+
+      div.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-indigo-400">Pregunta ${idx} (${typeNames[type]})</span>
+          <div class="flex gap-2">
+            <select class="q-time bg-slate-800 text-xs p-1 rounded">
+              <option value="10">10 segons</option>
+              <option value="20" selected>20 segons</option>
+              <option value="30">30 segons</option>
+              <option value="60">60 segons</option>
+            </select>
+            <select class="q-points bg-slate-800 text-xs p-1 rounded">
+              <option value="1" selected>Punts normals</option>
+              <option value="2">Doble puntuació</option>
+              <option value="0">Sense punts</option>
+            </select>
+          </div>
+        </div>
+        <input type="text" placeholder="Enunciat de la pregunta..." class="q-title w-full p-2.5 rounded-lg bg-slate-800 font-semibold">
+        <input type="url" placeholder="Adreça d'imatge opcional (https://...)" class="q-media w-full p-2 rounded-lg bg-slate-800 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${optionsHTML}</div>
+      `;
+      container.appendChild(div);
+    }
+
+    async function saveQuiz() {
+      const title = document.getElementById('editor-title').value.trim();
+      if (!title) return alert("Posa un títol al qüestionari.");
+
+      const { data: { user } } = await sb.auth.getUser();
+      const { data: quiz, error } = await sb
+        .from('quizzes')
+        .insert({ teacher_id: user.id, title })
+        .select()
+        .single();
+
+      if (error) return alert("Error guardant el qüestionari.");
+
+      const blocks = document.querySelectorAll('.q-block');
+      const questionsToInsert = [];
+
+      blocks.forEach((b, i) => {
+        const type = b.dataset.type;
+        const question_text = b.querySelector('.q-title').value.trim();
+        const media_url = b.querySelector('.q-media').value.trim() || null;
+        const time_limit = parseInt(b.querySelector('.q-time').value);
+        const points_multiplier = parseInt(b.querySelector('.q-points').value);
+        let options = [];
+
+        if (type === 'quiz') {
+          const texts = b.querySelectorAll('.opt-text');
+          const checks = b.querySelectorAll('.opt-correct');
+          texts.forEach((t, idx) => {
+            if (t.value.trim()) options.push({ text: t.value.trim(), is_correct: checks[idx].checked });
+          });
+        } else if (type === 'true_false') {
+          const radios = b.querySelectorAll('.opt-correct');
+          options = [
+            { text: 'Vertader', is_correct: radios[0].checked },
+            { text: 'Fals', is_correct: radios[1].checked }
+          ];
+        } else if (type === 'type_answer') {
+          const val = b.querySelector('.opt-text').value.trim();
+          options = [{ text: val, is_correct: true }];
+        }
+
+        questionsToInsert.push({
+          quiz_id: quiz.id,
+          order_index: i,
+          type,
+          question_text,
+          media_url,
+          time_limit,
+          points_multiplier,
+          options
+        });
+      });
+
+      await sb.from('questions').insert(questionsToInsert);
+      loadTeacherDashboard(user);
+    }
+
+    // Control de sala en viu (mestre)
+    async function createRoom(quizId) {
+      const { data: { user } } = await sb.auth.getUser();
+      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+
+      const { data: session } = await sb
+        .from('game_sessions')
+        .insert({ quiz_id: quizId, teacher_id: user.id, pin, status: 'waiting' })
+        .select()
+        .single();
+
+      const { data: qs } = await sb
+        .from('questions')
+        .select('*')
+        .eq('quiz_id', quizId)
+        .order('order_index', { ascending: true });
+
+      currentSession = session;
+      sessionQuestions = qs;
+
+      document.getElementById('host-pin-display').textContent = pin;
+      document.getElementById('host-players-grid').innerHTML = '';
+      document.getElementById('host-player-count').textContent = '0';
+      showView('view-teacher-host');
+      document.getElementById('host-lobby').classList.remove('hidden');
+      document.getElementById('host-question-screen').classList.add('hidden');
+
+      // Escoltar alumnes que entren a la sala
+      sb.channel('host-players-' + session.id)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
+          const p = payload.new;
+          const badge = document.createElement('div');
+          badge.className = "bg-slate-700 px-4 py-2 rounded-xl font-bold text-lg flex items-center gap-2 animate-bounce";
+          badge.innerHTML = `<span>${p.avatar}</span> <span>${p.nickname}</span>`;
+          document.getElementById('host-players-grid').appendChild(badge);
+          const countEl = document.getElementById('host-player-count');
+          countEl.textContent = parseInt(countEl.textContent) + 1;
+        })
+        .subscribe();
+    }
+
+    async function startGame() {
+      if (sessionQuestions.length === 0) return alert("Aquest qüestionari no té preguntes.");
+      await launchQuestion(0);
+    }
+
+    async function launchQuestion(index) {
+      if (index >= sessionQuestions.length) {
+        await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
+        alert("Joc acabat!");
+        const { data: { user } } = await sb.auth.getUser();
+        return loadTeacherDashboard(user);
+      }
+
+      const q = sessionQuestions[index];
+      currentSession.current_question_index = index;
+
+      await sb.from('game_sessions').update({
+        status: 'question_active',
+        current_question_index: index,
+        question_started_at: new Date().toISOString()
+      }).eq('id', currentSession.id);
+
+      document.getElementById('host-lobby').classList.add('hidden');
+      document.getElementById('host-question-screen').classList.remove('hidden');
+      document.getElementById('btn-next-question').classList.add('hidden');
+
+      document.getElementById('host-q-text').textContent = q.question_text;
+      const imgEl = document.getElementById('host-q-image');
+      if (q.media_url) {
+        imgEl.src = q.media_url;
+        imgEl.classList.remove('hidden');
+      } else {
+        imgEl.classList.add('hidden');
+      }
+
+      // Mostrar opcions a la pissarra
+      const optDisplay = document.getElementById('host-options-display');
+      const wcDisplay = document.getElementById('host-wordcloud-display');
+      optDisplay.innerHTML = '';
+      wcDisplay.innerHTML = '';
+
+      if (q.type === 'word_cloud') {
+        optDisplay.classList.add('hidden');
+        wcDisplay.classList.remove('hidden');
+      } else {
+        wcDisplay.classList.add('hidden');
+        optDisplay.classList.remove('hidden');
+        const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
+        const shapes = ['▲', '◆', '●', '■'];
+        q.options.forEach((opt, i) => {
+          optDisplay.innerHTML += `
+            <div id="host-opt-${i}" class="${colors[i%4]} p-4 rounded-xl flex justify-between items-center">
+              <span>${shapes[i%4]} ${opt.text}</span>
+              <span class="opt-votes bg-black/30 px-3 py-1 rounded-lg text-sm">0</span>
+            </div>
+          `;
+        });
+      }
+
+      // Comptador de respostes en temps real
+      let answersCount = 0;
+      document.getElementById('host-answers-count').textContent = 'Respostes: 0';
+      const ansChannel = sb.channel('answers-' + q.id)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers', filter: `question_id=eq.${q.id}` }, payload => {
+          answersCount++;
+          document.getElementById('host-answers-count').textContent = `Respostes: ${answersCount}`;
+          if (q.type === 'word_cloud') {
+            const word = document.createElement('span');
+            word.className = "bg-indigo-600 px-4 py-2 rounded-xl font-extrabold text-2xl";
+            word.textContent = payload.new.answer_value.text;
+            wcDisplay.appendChild(word);
+          }
+        })
+        .subscribe();
+
+      // Temporitzador
+      let timeLeft = q.time_limit;
+      document.getElementById('host-timer').textContent = timeLeft;
+      clearInterval(hostTimerInterval);
+      hostTimerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('host-timer').textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(hostTimerInterval);
+          sb.removeChannel(ansChannel);
+          showQuestionResults();
+        }
+      }, 1000);
+    }
+
+    async function showQuestionResults() {
+      clearInterval(hostTimerInterval);
+      await sb.from('game_sessions').update({ status: 'question_results' }).eq('id', currentSession.id);
+      document.getElementById('btn-next-question').classList.remove('hidden');
+
+      const q = sessionQuestions[currentSession.current_question_index];
+      q.options.forEach((opt, i) => {
+        const el = document.getElementById(`host-opt-${i}`);
+        if (el && !opt.is_correct && q.type !== 'poll') {
+          el.classList.add('opacity-40');
+        }
+      });
+    }
+
+    function nextQuestion() {
+      launchQuestion(currentSession.current_question_index + 1);
+    }
+
+    // Comprovar sessió activa en carregar la pàgina
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) loadTeacherDashboard(session.user);
+    });
+  </script>
+</body>
+</html>
