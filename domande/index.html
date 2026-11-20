@@ -1,10 +1,3 @@
-L'error apareix perquè en la versió anterior l'alumne (que accedeix sense iniciar sessió, com a rol `anon`) intentava fer una consulta creuada (`select('*, quizzes(kind)')`), però la taula `quizzes` només té permisos de lectura per als docents autenticats (`authenticated`). Quan Supabase intenta unir una taula protegida per RLS per a un usuari anònim, la consulta falla i retorna el missatge de codi incorrecte.
-
-A més, per evitar que els alumnes tinguin problemes de permisos en validar la sala o en carregar una enquesta, la consulta de l'alumne només ha de llegir la taula `game_sessions` i deduir si és una enquesta a partir dels tipus de preguntes carregades.
-
-Aquí tens l'HTML complet i corregit, sense comentaris i amb només la primera paraula de cada frase en majúscula:
-
-```html
 <!DOCTYPE html>
 <html lang="ca">
 <head>
