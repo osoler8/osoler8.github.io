@@ -24,6 +24,7 @@ const SHAPE_SVGS = [
 ];
 
 let selectedAvatar = '🦊';
+let currentUser = null;
 let currentPlayer = null;
 let currentSession = null;
 let sessionQuestions = [];
@@ -71,6 +72,12 @@ let musicInterval = null;
 let isMusicPlaying = false;
 let musicMode = 'lobby';
 let musicStep = 0;
+
+function formatAuthorLabel(emailStr) {
+  if (!emailStr) return 'Docent del centre';
+  const namePart = emailStr.split('@')[0] || emailStr;
+  return namePart.replace(/[._-]/g, ' ');
+}
 
 function domandeAlert(message, title = 'Avís', icon = '💬') {
   return new Promise(resolve => {
@@ -417,10 +424,15 @@ async function startStudyMode(quizId) {
     return resetToPinScreen();
   }
 
+  if (quizRes.data.kind === 'poll') {
+    await domandeAlert("Les enquestes només es poden respondre en directe dins d'una sessió d'aula.", "Mode estudi no disponible", "📊");
+    return resetToPinScreen();
+  }
+
   isStudyMode = true;
   studyQuizMeta = quizRes.data;
   sessionQuestions = qsRes.data;
-  sessionKind = quizRes.data.kind || 'quiz';
+  sessionKind = 'quiz';
   studyIndex = 0;
   studentScore = 0;
   studentStreak = 0;
@@ -437,11 +449,7 @@ async function startStudyMode(quizId) {
 function advanceStudyQuestion() {
   studyIndex++;
   if (studyIndex >= sessionQuestions.length) {
-    if (sessionKind === 'poll') {
-      showStudentPollFinished();
-    } else {
-      showStudentFinalRank();
-    }
+    showStudentFinalRank();
     return;
   }
   currentSession.current_question_index = studyIndex;
@@ -767,7 +775,7 @@ function hideAllStudentInputs() {
 function showStudentPollFinished() {
   if (studentFinalShown) return;
   studentFinalShown = true;
-  document.getElementById('student-end-banner').textContent = isStudyMode ? 'Repàs completat' : 'Enquesta finalitzada';
+  document.getElementById('student-end-banner').textContent = 'Enquesta finalitzada';
   document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-extrabold';
   document.getElementById('student-final-medal').textContent = '🙌';
   document.getElementById('student-final-rank').textContent = 'Participació registrada';
@@ -776,11 +784,7 @@ function showStudentPollFinished() {
   document.getElementById('student-chart-and-stats').classList.add('hidden');
   document.getElementById('student-final-leaderboard-box').classList.add('hidden');
   document.getElementById('student-final-msg').textContent = "Moltes gràcies per la teva participació!";
-  if (isStudyMode) {
-    document.getElementById('btn-study-retry').classList.remove('hidden');
-  } else {
-    document.getElementById('btn-study-retry').classList.add('hidden');
-  }
+  document.getElementById('btn-study-retry').classList.add('hidden');
   showView('view-student-podium');
 }
 
@@ -1295,6 +1299,7 @@ async function loginTeacher() {
 }
 
 async function logoutTeacher() {
+  currentUser = null;
   await sb.auth.signOut();
   showView('view-join');
 }
@@ -1348,13 +1353,14 @@ function switchDashTab(tab) {
 }
 
 async function loadTeacherDashboard(user) {
+  currentUser = user;
   document.getElementById('teacher-email-display').textContent = user.email;
   showView('view-teacher-dash');
   switchDashTab('quizzes');
 
   const [myQuizzesRes, schoolQuizzesRes, sessionsRes] = await Promise.all([
-    sb.from('quizzes').select('id, title, kind, tag, is_shared, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
-    sb.from('quizzes').select('id, title, kind, tag, is_shared, teacher_id, created_at').eq('is_shared', true).order('created_at', { ascending: false }),
+    sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
+    sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('is_shared', true).order('created_at', { ascending: false }),
     sb.from('game_sessions').select('id, pin, status, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
   ]);
 
@@ -1459,14 +1465,20 @@ function renderFilteredQuizzes() {
       </div>
 
       <div class="space-y-2 pt-2 border-t border-slate-100">
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="openLaunchModal('${q.id}', '${q.kind || 'quiz'}', '${safeTitle}')" class="col-span-2 ${isPoll ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-100' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100'} text-white py-3 rounded-2xl font-bold text-sm shadow-md transition">
-            ${isPoll ? 'Obrir enquesta' : 'Obrir sala'}
+        ${isPoll ? `
+          <button onclick="openLaunchModal('${q.id}', 'poll', '${safeTitle}')" class="w-full bg-amber-500 hover:bg-amber-600 shadow-amber-100 text-white py-3 rounded-2xl font-bold text-sm shadow-md transition">
+            Obrir enquesta
           </button>
-          <button onclick="openStudyModal('${q.id}')" title="Enllaç de repàs autònom" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 py-3 rounded-2xl font-extrabold text-xs transition">
-            Repàs
-          </button>
-        </div>
+        ` : `
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="openLaunchModal('${q.id}', 'quiz', '${safeTitle}')" class="col-span-2 bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 text-white py-3 rounded-2xl font-bold text-sm shadow-md transition">
+              Obrir sala
+            </button>
+            <button onclick="openStudyModal('${q.id}')" title="Enllaç de repàs autònom" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 py-3 rounded-2xl font-extrabold text-xs transition">
+              Repàs
+            </button>
+          </div>
+        `}
         <div class="grid grid-cols-4 gap-1.5">
           <button onclick="editExistingQuiz('${q.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl font-bold text-xs transition">Editar</button>
           <button onclick="duplicateQuiz('${q.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl font-bold text-xs transition">Duplicar</button>
@@ -1492,7 +1504,10 @@ function renderSchoolQuizzes() {
 
   cachedSchoolQuizzes.forEach(q => {
     const isPoll = q.kind === 'poll';
-    const isMine = myIds.has(q.id);
+    const isMine = myIds.has(q.id) || (currentUser && q.teacher_id === currentUser.id);
+    const authorDisplay = isMine
+      ? 'Tu (propietari/a)'
+      : formatAuthorLabel(q.author_email);
     const safeTitle = q.title.replace(/'/g, "\\'");
     const card = document.createElement('div');
     card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-teal-200/80 shadow-sm hover:shadow-md transition";
@@ -1500,20 +1515,30 @@ function renderSchoolQuizzes() {
       <div class="space-y-2">
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
-          <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">${isMine ? 'Compartit per tu' : 'Banc de centre'}</span>
+          <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit per: ${authorDisplay}</span>
           ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
         </div>
         <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
         <p class="text-xs text-slate-400">Compartit el ${formatDateTime(q.created_at)}</p>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-        <button onclick="openLaunchModal('${q.id}', '${q.kind || 'quiz'}', '${safeTitle}')" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-2xl font-bold text-xs transition">
-          Obrir sala
-        </button>
-        <button onclick="duplicateQuiz('${q.id}')" class="bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 py-2.5 rounded-2xl font-extrabold text-xs transition">
-          Clonar al meu espai
-        </button>
+      <div class="space-y-2 pt-2 border-t border-slate-100">
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="openLaunchModal('${q.id}', '${q.kind || 'quiz'}', '${safeTitle}')" class="${isPoll ? 'bg-amber-500 hover:bg-amber-600' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-2.5 rounded-2xl font-bold text-xs transition">
+            ${isPoll ? 'Obrir enquesta' : 'Obrir sala'}
+          </button>
+          <button onclick="duplicateQuiz('${q.id}')" class="bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 py-2.5 rounded-2xl font-extrabold text-xs transition">
+            Clonar al meu espai
+          </button>
+        </div>
+        ${isMine ? `
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="editExistingQuiz('${q.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl font-bold text-xs transition">Editar original</button>
+            <button onclick="deleteQuiz('${q.id}', '${safeTitle}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white py-2 rounded-xl font-bold text-xs transition">Esborrar original</button>
+          </div>
+        ` : `
+          <p class="text-[11px] text-slate-400 text-center pt-0.5">Només lectura · clona'l per editar-lo</p>
+        `}
       </div>
     `;
     list.appendChild(card);
@@ -1547,11 +1572,16 @@ function confirmCreateRoom(type) {
 }
 
 async function editExistingQuiz(quizId) {
+  const { data: { user } } = await sb.auth.getUser();
   const [quizRes, qRes] = await Promise.all([
     sb.from('quizzes').select('*').eq('id', quizId).single(),
     sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
   ]);
   if (!quizRes.data) return;
+  if (!user || quizRes.data.teacher_id !== user.id) {
+    await domandeAlert("Només l'autor/a original pot editar aquesta activitat. Pots clonar-la al teu espai per modificar-la.", "Només lectura", "🔒");
+    return;
+  }
   openQuizEditor(quizRes.data.kind || 'quiz', quizRes.data, qRes.data || []);
 }
 
@@ -1572,7 +1602,8 @@ async function duplicateQuiz(quizId) {
       title: `${origQuiz.title} (còpia)`,
       kind: origQuiz.kind || 'quiz',
       tag: origQuiz.tag || '',
-      is_shared: false
+      is_shared: false,
+      author_email: user.email || ''
     })
     .select()
     .single();
@@ -1600,9 +1631,14 @@ async function duplicateQuiz(quizId) {
 }
 
 async function deleteQuiz(quizId, title) {
+  const { data: { user } } = await sb.auth.getUser();
+  const target = cachedTeacherQuizzes.find(q => q.id === quizId);
+  if (!user || !target) {
+    await domandeAlert("Només l'autor/a original pot eliminar aquesta activitat.", "Accés denegat", "🔒");
+    return;
+  }
   const ok = await domandeConfirm(`Segur que vols eliminar "${title}" i totes les seves preguntes?`, "Eliminar activitat");
   if (!ok) return;
-  const { data: { user } } = await sb.auth.getUser();
   await sb.from('game_sessions').delete().eq('quiz_id', quizId).eq('teacher_id', user.id);
   const { error } = await sb.from('quizzes').delete().eq('id', quizId).eq('teacher_id', user.id);
   if (error) {
@@ -1660,7 +1696,8 @@ async function importQuizJSON(event) {
         title: parsed.title,
         kind: parsed.kind === 'poll' ? 'poll' : 'quiz',
         tag: parsed.tag || '',
-        is_shared: false
+        is_shared: false,
+        author_email: user.email || ''
       })
       .select()
       .single();
@@ -2379,7 +2416,7 @@ async function saveQuiz() {
   if (editingQuizId) {
     const { error: updErr } = await sb
       .from('quizzes')
-      .update({ title, tag, is_shared: isShared })
+      .update({ title, tag, is_shared: isShared, author_email: authData.user.email || '' })
       .eq('id', editingQuizId)
       .eq('teacher_id', authData.user.id);
 
@@ -2431,7 +2468,14 @@ async function saveQuiz() {
 
   const { data: quiz, error: quizError } = await sb
     .from('quizzes')
-    .insert({ teacher_id: authData.user.id, title, kind: editorKind, tag, is_shared: isShared })
+    .insert({
+      teacher_id: authData.user.id,
+      title,
+      kind: editorKind,
+      tag,
+      is_shared: isShared,
+      author_email: authData.user.email || ''
+    })
     .select()
     .single();
 
