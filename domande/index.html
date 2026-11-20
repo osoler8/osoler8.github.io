@@ -152,7 +152,7 @@
           <div class="flex justify-between items-center">
             <div>
               <h3 class="text-xl font-extrabold text-slate-900">Resultats</h3>
-              <p class="text-xs text-slate-500">Historial de partides realitzades per avaluar l'alumnat</p>
+              <p class="text-xs text-slate-500">Historial privat de les teves partides realitzades</p>
             </div>
           </div>
           <div id="sessions-history-list" class="divide-y divide-slate-100">
@@ -343,7 +343,7 @@
 
     const AVATARS = [
       '🦊', '🐼', '🦁', '🐸', '🦄', '🚀', '🐙', '🐯', '🦉', '🐢', '🦖', '🐝',
-      '🐧', '🐨', '🦋', '🐬', '🦩', ' Hedge'.replace(' Hedge', '🦔'), '🐶', '🐱', '🐵', '🐺', '🐲', '🌟'
+      '🐧', '🐨', '🦋', '🐬', '🦩', '🦔', '🐶', '🐱', '🐵', '🐺', '🐲', '🌟'
     ];
 
     const SHAPE_SVGS = [
@@ -771,6 +771,7 @@
       const { data: quizzes, error } = await sb
         .from('quizzes')
         .select('*')
+        .eq('teacher_id', user.id)
         .order('created_at', { ascending: false });
 
       const list = document.getElementById('dash-tab-quizzes');
@@ -817,13 +818,17 @@
       const container = document.getElementById('sessions-history-list');
       container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial de partides...</p>';
 
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+
       const { data: sessions, error } = await sb
         .from('game_sessions')
         .select('id, pin, status, created_at, quiz_id, quizzes(title)')
+        .eq('teacher_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error || !sessions || sessions.length === 0) {
-        container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap partida enregistrada.</p>';
+        container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap partida enregistrada al teu compte.</p>';
         return;
       }
 
@@ -848,12 +853,26 @@
     }
 
     async function openSessionReport(sessionId, quizTitle, dateStr) {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return showView('view-login');
+
+      const { data: session, error: sErr } = await sb
+        .from('game_sessions')
+        .select('quiz_id, teacher_id')
+        .eq('id', sessionId)
+        .eq('teacher_id', user.id)
+        .single();
+
+      if (sErr || !session) {
+        alert("No tens permís per visualitzar aquest informe.");
+        return backToResults();
+      }
+
       showView('view-session-report');
       document.getElementById('report-date-badge').textContent = dateStr;
       document.getElementById('report-quiz-title').textContent = quizTitle;
       document.getElementById('pdf-subtitle-info').textContent = `${quizTitle} · ${dateStr}`;
 
-      const { data: session } = await sb.from('game_sessions').select('quiz_id').eq('id', sessionId).single();
       const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
       const { data: players } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
       const { data: answers } = await sb.from('answers').select('*').eq('session_id', sessionId);
