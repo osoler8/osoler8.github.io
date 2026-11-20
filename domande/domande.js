@@ -947,17 +947,23 @@ function switchDashTab(tab) {
   const rTab = document.getElementById('dash-tab-results');
   const qBtn = document.getElementById('tab-btn-quizzes');
   const rBtn = document.getElementById('tab-btn-results');
+  const qInd = document.getElementById('indicator-tab-quizzes');
+  const rInd = document.getElementById('indicator-tab-results');
 
   if (tab === 'quizzes') {
     qWrap.classList.remove('hidden');
     rTab.classList.add('hidden');
-    qBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl bg-indigo-50/70 ring-2 ring-indigo-600 transition";
-    rBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition";
+    qBtn.className = "relative bg-white p-4 sm:p-5 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    rBtn.className = "relative bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    if (qInd) qInd.className = "w-6 h-1 rounded-full bg-blue-600 mt-2.5";
+    if (rInd) rInd.className = "w-6 h-1 rounded-full bg-transparent mt-2.5";
   } else {
     qWrap.classList.add('hidden');
     rTab.classList.remove('hidden');
-    rBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl bg-sky-50/70 ring-2 ring-sky-500 transition";
-    qBtn.className = "group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition";
+    rBtn.className = "relative bg-white p-4 sm:p-5 rounded-3xl border-2 border-violet-600 shadow-md shadow-violet-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    qBtn.className = "relative bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    if (rInd) rInd.className = "w-6 h-1 rounded-full bg-violet-600 mt-2.5";
+    if (qInd) qInd.className = "w-6 h-1 rounded-full bg-transparent mt-2.5";
     loadSessionsHistory();
   }
 }
@@ -979,6 +985,20 @@ async function loadTeacherDashboard(user) {
   }
 
   cachedTeacherQuizzes = quizzes || [];
+  const qBadge = document.getElementById('badge-count-quizzes');
+  if (qBadge) qBadge.textContent = cachedTeacherQuizzes.length;
+
+  sb.from('game_sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('teacher_id', user.id)
+    .then(({ count }) => {
+      const rBadge = document.getElementById('badge-count-results');
+      if (rBadge && typeof count === 'number' && count > 0) {
+        rBadge.textContent = count;
+        rBadge.classList.remove('hidden');
+      }
+    });
+
   selectedTagFilter = 'all';
   renderTagFilters();
   renderFilteredQuizzes();
@@ -1206,6 +1226,16 @@ async function loadSessionsHistory() {
     .select('id, pin, status, created_at, quiz_id, quizzes(title, kind)')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
+
+  const rBadge = document.getElementById('badge-count-results');
+  if (rBadge) {
+    if (sessions && sessions.length > 0) {
+      rBadge.textContent = sessions.length;
+      rBadge.classList.remove('hidden');
+    } else {
+      rBadge.classList.add('hidden');
+    }
+  }
 
   if (error || !sessions || sessions.length === 0) {
     container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap sessió enregistrada al teu compte.</p>';
