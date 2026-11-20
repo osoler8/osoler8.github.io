@@ -33,6 +33,7 @@ let studentBestStreak = 0;
 let studentCorrectCount = 0;
 let studentWrongCount = 0;
 let studentLastRenderedIndex = -1;
+let studentAnsweredCurrentIndex = -1;
 let studentFinalShown = false;
 let studentPuzzleOrder = [];
 let currentReportData = null;
@@ -258,6 +259,7 @@ function resetToPinScreen() {
   studentCorrectCount = 0;
   studentWrongCount = 0;
   studentLastRenderedIndex = -1;
+  studentAnsweredCurrentIndex = -1;
   studentFinalShown = false;
   latestRanksMap = {};
   latestFinalStandings = [];
@@ -396,6 +398,7 @@ async function joinGame() {
   studentCorrectCount = 0;
   studentWrongCount = 0;
   studentLastRenderedIndex = -1;
+  studentAnsweredCurrentIndex = -1;
   studentFinalShown = false;
   latestRanksMap = {};
   latestFinalStandings = [];
@@ -533,6 +536,11 @@ function handleSessionStateChange(session) {
   } else if (session.status === 'question_results') {
     const q = sessionQuestions[session.current_question_index];
     if (q && q.type === 'slide') return;
+    if (studentAnsweredCurrentIndex === session.current_question_index) {
+      applyCachedStudentRank();
+      updateStudentLivePosition();
+      return;
+    }
     const isOpinion = sessionKind === 'poll' || (q && ['word_cloud', 'poll', 'nps_scale'].includes(q.type));
     const isFeedbackAlreadyVisible = !document.getElementById('student-feedback').classList.contains('hidden');
     if (!isFeedbackAlreadyVisible) {
@@ -681,6 +689,7 @@ function renderStudentQuestion(qIndex) {
   if (!q) return;
 
   questionStartTimeMs = Date.now();
+  studentAnsweredCurrentIndex = -1;
   showView('view-student-play');
   document.getElementById('student-feedback').classList.add('hidden');
   hideAllStudentInputs();
@@ -804,7 +813,11 @@ function registerStudentOutcome(isCorrect) {
 }
 
 async function submitPuzzleAnswer() {
-  const q = sessionQuestions[currentSession.current_question_index];
+  const qIndex = currentSession.current_question_index;
+  if (studentAnsweredCurrentIndex === qIndex) return;
+  studentAnsweredCurrentIndex = qIndex;
+
+  const q = sessionQuestions[qIndex];
   const isCorrect = studentPuzzleOrder.every((item, idx) => item.origIdx === idx);
   const userSequenceText = studentPuzzleOrder.map(i => i.text).join(' → ');
   const answerVal = { text: userSequenceText };
@@ -835,6 +848,10 @@ async function submitPuzzleAnswer() {
 }
 
 async function submitNpsAnswer(question, val) {
+  const qIndex = currentSession.current_question_index;
+  if (studentAnsweredCurrentIndex === qIndex) return;
+  studentAnsweredCurrentIndex = qIndex;
+
   const answerVal = { index: val, text: `${val} / 10` };
   showStudentWaitingFeedback(false, 0, true);
   notifyHostStudentAnswered(question.id, answerVal, false, 0);
@@ -859,6 +876,10 @@ function calculateGamifiedPoints(question, isCorrect) {
 }
 
 async function submitOptionAnswer(question, optionIndex) {
+  const qIndex = currentSession.current_question_index;
+  if (studentAnsweredCurrentIndex === qIndex) return;
+  studentAnsweredCurrentIndex = qIndex;
+
   const isPoll = sessionKind === 'poll' || question.type === 'poll';
   const isCorrect = isPoll ? false : (question.options[optionIndex]?.is_correct || false);
   const answerVal = { index: optionIndex, text: question.options[optionIndex]?.text || '' };
@@ -898,7 +919,11 @@ async function submitOptionAnswer(question, optionIndex) {
 async function submitTextAnswer() {
   const val = document.getElementById('student-text-answer').value.trim();
   if (!val) return;
-  const q = sessionQuestions[currentSession.current_question_index];
+  const qIndex = currentSession.current_question_index;
+  if (studentAnsweredCurrentIndex === qIndex) return;
+  studentAnsweredCurrentIndex = qIndex;
+
+  const q = sessionQuestions[qIndex];
   const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud';
   const answerVal = { text: val };
   
@@ -1374,6 +1399,8 @@ async function deleteSessionResult(sessionId, title) {
   cachedSessionsList = cachedSessionsList.filter(s => s.id !== sessionId);
   renderSessionsList(cachedSessionsList);
 
+  await sb.from('answers').delete().eq('session_id', sessionId);
+  await sb.from('players').delete().eq('session_id', sessionId);
   const { error } = await sb
     .from('game_sessions')
     .delete()
