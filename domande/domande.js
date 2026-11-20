@@ -33,12 +33,18 @@ let studentBestStreak = 0;
 let studentCorrectCount = 0;
 let studentWrongCount = 0;
 let studentLastRenderedIndex = -1;
+let studentFinalShown = false;
 let studentPuzzleOrder = [];
 let currentReportData = null;
 let cachedTeacherQuizzes = [];
+let cachedSessionsList = [];
 let selectedTagFilter = 'all';
 let hostPlayersList = [];
 let latestRanksMap = {};
+let latestFinalStandings = [];
+let hostAnsweredPlayerIds = new Set();
+let hostWordCounts = {};
+let hostResultsShown = false;
 
 let audioCtx = null;
 let musicInterval = null;
@@ -227,7 +233,8 @@ function showView(viewId) {
     stopMusicCompletely();
   }
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-  document.getElementById(viewId).classList.remove('hidden');
+  const target = document.getElementById(viewId);
+  if (target) target.classList.remove('hidden');
 }
 
 function stopStudentWatchdog() {
@@ -251,7 +258,9 @@ function resetToPinScreen() {
   studentCorrectCount = 0;
   studentWrongCount = 0;
   studentLastRenderedIndex = -1;
+  studentFinalShown = false;
   latestRanksMap = {};
+  latestFinalStandings = [];
   document.getElementById('input-pin').value = '';
   document.getElementById('join-error').classList.add('hidden');
   if (window.history && window.history.replaceState) {
@@ -261,6 +270,7 @@ function resetToPinScreen() {
 }
 
 function showStudentSessionClosed(reasonText) {
+  if (studentFinalShown) return;
   stopStudentWatchdog();
   setConnectionWarning(false);
   if (studentRoomChannel) {
@@ -310,6 +320,21 @@ async function closeHostRoomAndExit() {
   if (!confirm("Segur que vols tancar aquesta sala i finalitzar la sessió per a tot l'alumnat?")) return;
   await closeHostRoomSilently();
   returnToDashboard();
+}
+
+function notifyHostStudentAnswered(questionId, answerValue, isCorrect, pointsAwarded) {
+  if (!studentRoomChannel || !currentPlayer) return;
+  studentRoomChannel.send({
+    type: 'broadcast',
+    event: 'student_answer',
+    payload: {
+      player_id: currentPlayer.id,
+      question_id: questionId,
+      answer_value: answerValue,
+      is_correct: isCorrect,
+      points_awarded: pointsAwarded
+    }
+  });
 }
 
 async function joinGame() {
@@ -371,7 +396,9 @@ async function joinGame() {
   studentCorrectCount = 0;
   studentWrongCount = 0;
   studentLastRenderedIndex = -1;
+  studentFinalShown = false;
   latestRanksMap = {};
+  latestFinalStandings = [];
 
   document.getElementById('student-badge').textContent = selectedAvatar;
   document.getElementById('student-display-name').textContent = nickname;
@@ -381,11 +408,16 @@ async function joinGame() {
     sb.removeChannel(studentRoomChannel);
   }
 
-  studentRoomChannel = sb.channel('live-session-' + session.id)
+  studentRoomChannel = sb.channel('live-session-' + session.id, {
+    config: { broadcast: { self: false } }
+  })
     .on('broadcast', { event: 'state' }, ({ payload }) => {
       setConnectionWarning(false);
       if (payload.ranks) {
         latestRanksMap = payload.ranks;
+      }
+      if (payload.standings) {
+        latestFinalStandings = payload.standings;
       }
       handleSessionStateChange({
         ...currentSession,
@@ -401,7 +433,7 @@ async function joinGame() {
       showStudentSessionClosed("El/la mestre/a t'ha desconnectat de la sala.");
     })
     .subscribe((status) => {
-      if (!currentPlayer || !currentSession || currentSession.status === 'finished') return;
+      if (!currentPlayer || !currentSession || currentSession.status === 'finished' || studentFinalShown) return;
       if (status === 'SUBSCRIBED') {
         setConnectionWarning(false);
       } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
@@ -415,7 +447,7 @@ async function joinGame() {
 function startStudentWatchdog() {
   stopStudentWatchdog();
   studentWatchdogInterval = setInterval(async () => {
-    if (!currentPlayer || !currentSession || currentSession.status === 'finished') {
+    if (!currentPlayer || !currentSession || currentSession.status === 'finished' || studentFinalShown) {
       stopStudentWatchdog();
       return;
     }
@@ -480,6 +512,7 @@ async function updateStudentLivePosition() {
     .order('score', { ascending: false });
 
   const list = allPlayers || [];
+  if (list.length === 0) return;
   const idx = list.findIndex(p => p.id === currentPlayer.id);
   const rank = idx >= 0 ? idx + 1 : list.length;
   latestRanksMap[currentPlayer.id] = { rank, total: list.length };
@@ -524,6 +557,7 @@ function handleSessionStateChange(session) {
     document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
   } else if (session.status === 'finished') {
     stopStudentWatchdog();
+    setConnectionWarning(false);
     if (sessionKind === 'poll') {
       showStudentPollFinished();
     } else {
@@ -541,11 +575,13 @@ function hideAllStudentInputs() {
 }
 
 function showStudentPollFinished() {
+  if (studentFinalShown) return;
+  studentFinalShown = true;
   document.getElementById('student-end-banner').textContent = 'Enquesta finalitzada';
   document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-extrabold';
   document.getElementById('student-final-medal').textContent = '🙌';
   document.getElementById('student-final-rank').textContent = 'Participació registrada';
-  document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
+  document.getElementById('student-final-name').textContent = `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`;
   document.getElementById('student-final-score').classList.add('hidden');
   document.getElementById('student-chart-and-stats').classList.add('hidden');
   document.getElementById('student-final-leaderboard-box').classList.add('hidden');
@@ -553,23 +589,56 @@ function showStudentPollFinished() {
   showView('view-student-podium');
 }
 
-async function showStudentFinalRank() {
-  const { data: allPlayers } = await sb
-    .from('players')
-    .select('*')
-    .eq('session_id', currentSession.id)
-    .order('score', { ascending: false });
-
-  const list = allPlayers || [];
-  const myIndex = list.findIndex(p => p.id === currentPlayer.id);
-  const rank = myIndex >= 0 ? myIndex + 1 : list.length;
-
+function renderStudentFinalStandingsList(list) {
   const medals = ['🥇', '🥈', '🥉'];
+  const myIndex = list.findIndex(p => p.id === currentPlayer?.id);
+  const rank = myIndex >= 0 ? myIndex + 1 : (latestRanksMap[currentPlayer?.id]?.rank || 1);
+  const totalCount = list.length || (latestRanksMap[currentPlayer?.id]?.total || 1);
+
+  document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏆';
+  document.getElementById('student-final-rank').textContent = `Posició ${formatRankOrdinal(rank)} de ${totalCount}`;
+
+  if (rank === 1) {
+    document.getElementById('student-final-msg').textContent = "Enhorabona! Has acabat el qüestionari en primera posició.";
+  } else if (rank <= 3) {
+    document.getElementById('student-final-msg').textContent = "Molt bona feina! Has aconseguit pujar al podi de la classe.";
+  } else {
+    document.getElementById('student-final-msg').textContent = "Qüestionari completat! Revisa els teus encerts i continua practicant.";
+  }
+
+  const rankBox = document.getElementById('student-final-leaderboard-box');
+  const rankList = document.getElementById('student-final-ranking-list');
+  if (list.length === 0) {
+    rankBox.classList.add('hidden');
+    return;
+  }
+
+  rankBox.classList.remove('hidden');
+  rankList.innerHTML = '';
+
+  list.forEach((p, idx) => {
+    const isMe = p.id === currentPlayer?.id;
+    const posBadge = idx < 3 ? medals[idx] : `${idx + 1}.`;
+    rankList.innerHTML += `
+      <div class="flex justify-between items-center px-3.5 py-2.5 rounded-xl border ${isMe ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-300' : 'bg-white border-slate-100'}">
+        <div class="flex items-center gap-2 text-sm font-extrabold ${isMe ? 'text-indigo-900' : 'text-slate-800'}">
+          <span class="w-6 text-center">${posBadge}</span>
+          <span>${p.avatar}</span>
+          <span>${p.nickname} ${isMe ? '(tu)' : ''}</span>
+        </div>
+        <span class="font-black text-indigo-600 text-sm">${p.score} pts</span>
+      </div>
+    `;
+  });
+}
+
+async function showStudentFinalRank() {
+  if (studentFinalShown) return;
+  studentFinalShown = true;
+
   document.getElementById('student-end-banner').textContent = 'Qüestionari finalitzat';
   document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold';
-  document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏆';
-  document.getElementById('student-final-rank').textContent = `Posició ${formatRankOrdinal(rank)} de ${list.length}`;
-  document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
+  document.getElementById('student-final-name').textContent = `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`;
   document.getElementById('student-final-score').classList.remove('hidden');
   document.getElementById('student-final-score').textContent = `${studentScore} punts`;
 
@@ -588,35 +657,23 @@ async function showStudentFinalRank() {
     donut.style.background = `conic-gradient(#10b981 0% ${accuracyPct}%, #f43f5e ${accuracyPct}% 100%)`;
   }
 
-  if (rank === 1) {
-    document.getElementById('student-final-msg').textContent = "Enhorabona! Has acabat el qüestionari en primera posició.";
-  } else if (rank <= 3) {
-    document.getElementById('student-final-msg').textContent = "Molt bona feina! Has aconseguit pujar al podi de la classe.";
-  } else {
-    document.getElementById('student-final-msg').textContent = "Qüestionari completat! Revisa els teus encerts i continua practicant.";
-  }
-
-  const rankBox = document.getElementById('student-final-leaderboard-box');
-  const rankList = document.getElementById('student-final-ranking-list');
-  rankBox.classList.remove('hidden');
-  rankList.innerHTML = '';
-
-  list.forEach((p, idx) => {
-    const isMe = p.id === currentPlayer.id;
-    const posBadge = idx < 3 ? medals[idx] : `${idx + 1}.`;
-    rankList.innerHTML += `
-      <div class="flex justify-between items-center px-3.5 py-2.5 rounded-xl border ${isMe ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-300' : 'bg-white border-slate-100'}">
-        <div class="flex items-center gap-2 text-sm font-extrabold ${isMe ? 'text-indigo-900' : 'text-slate-800'}">
-          <span class="w-6 text-center">${posBadge}</span>
-          <span>${p.avatar}</span>
-          <span>${p.nickname} ${isMe ? '(tu)' : ''}</span>
-        </div>
-        <span class="font-black text-indigo-600 text-sm">${p.score} pts</span>
-      </div>
-    `;
-  });
-
+  const initialStandings = latestFinalStandings.length > 0
+    ? latestFinalStandings
+    : [{ id: currentPlayer?.id, nickname: currentPlayer?.nickname || '', avatar: currentPlayer?.avatar || selectedAvatar, score: studentScore }];
+  renderStudentFinalStandingsList(initialStandings);
   showView('view-student-podium');
+
+  if (currentSession) {
+    const { data: allPlayers } = await sb
+      .from('players')
+      .select('id, nickname, avatar, score')
+      .eq('session_id', currentSession.id)
+      .order('score', { ascending: false });
+
+    if (allPlayers && allPlayers.length > 0) {
+      renderStudentFinalStandingsList(allPlayers);
+    }
+  }
 }
 
 function renderStudentQuestion(qIndex) {
@@ -750,18 +807,20 @@ async function submitPuzzleAnswer() {
   const q = sessionQuestions[currentSession.current_question_index];
   const isCorrect = studentPuzzleOrder.every((item, idx) => item.origIdx === idx);
   const userSequenceText = studentPuzzleOrder.map(i => i.text).join(' → ');
+  const answerVal = { text: userSequenceText };
 
   registerStudentOutcome(isCorrect);
   const points = calculateGamifiedPoints(q, isCorrect);
   studentScore += points;
   document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   showStudentWaitingFeedback(isCorrect, points, false);
+  notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
 
   const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: q.id,
     player_id: currentPlayer.id,
-    answer_value: { text: userSequenceText },
+    answer_value: answerVal,
     is_correct: isCorrect,
     points_awarded: points
   });
@@ -776,12 +835,15 @@ async function submitPuzzleAnswer() {
 }
 
 async function submitNpsAnswer(question, val) {
+  const answerVal = { index: val, text: `${val} / 10` };
   showStudentWaitingFeedback(false, 0, true);
+  notifyHostStudentAnswered(question.id, answerVal, false, 0);
+
   const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: question.id,
     player_id: currentPlayer.id,
-    answer_value: { index: val, text: `${val} / 10` },
+    answer_value: answerVal,
     is_correct: false,
     points_awarded: 0
   });
@@ -799,6 +861,7 @@ function calculateGamifiedPoints(question, isCorrect) {
 async function submitOptionAnswer(question, optionIndex) {
   const isPoll = sessionKind === 'poll' || question.type === 'poll';
   const isCorrect = isPoll ? false : (question.options[optionIndex]?.is_correct || false);
+  const answerVal = { index: optionIndex, text: question.options[optionIndex]?.text || '' };
   
   if (!isPoll) {
     registerStudentOutcome(isCorrect);
@@ -810,12 +873,13 @@ async function submitOptionAnswer(question, optionIndex) {
     document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   }
   showStudentWaitingFeedback(isCorrect, points, isPoll);
+  notifyHostStudentAnswered(question.id, answerVal, isCorrect, points);
 
   const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: question.id,
     player_id: currentPlayer.id,
-    answer_value: { index: optionIndex, text: question.options[optionIndex]?.text || '' },
+    answer_value: answerVal,
     is_correct: isCorrect,
     points_awarded: points
   });
@@ -836,6 +900,7 @@ async function submitTextAnswer() {
   if (!val) return;
   const q = sessionQuestions[currentSession.current_question_index];
   const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud';
+  const answerVal = { text: val };
   
   let isCorrect = false;
   if (!isOpinion && q.type === 'type_answer') {
@@ -852,12 +917,13 @@ async function submitTextAnswer() {
     document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   }
   showStudentWaitingFeedback(isCorrect, points, isOpinion);
+  notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
 
   const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: q.id,
     player_id: currentPlayer.id,
-    answer_value: { text: val },
+    answer_value: answerVal,
     is_correct: isCorrect,
     points_awarded: points
   });
@@ -973,31 +1039,31 @@ async function loadTeacherDashboard(user) {
   showView('view-teacher-dash');
   switchDashTab('quizzes');
 
-  const { data: quizzes, error } = await sb
-    .from('quizzes')
-    .select('*')
-    .eq('teacher_id', user.id)
-    .order('created_at', { ascending: false });
+  const [quizzesRes, sessionsRes] = await Promise.all([
+    sb.from('quizzes').select('id, title, kind, tag, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
+    sb.from('game_sessions').select('id, pin, status, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
+  ]);
 
-  if (error) {
-    document.getElementById('dash-tab-quizzes').innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant activitats: ${error.message}</p>`;
+  if (quizzesRes.error) {
+    document.getElementById('dash-tab-quizzes').innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant activitats: ${quizzesRes.error.message}</p>`;
     return;
   }
 
-  cachedTeacherQuizzes = quizzes || [];
+  cachedTeacherQuizzes = quizzesRes.data || [];
+  cachedSessionsList = sessionsRes.data || [];
+
   const qBadge = document.getElementById('badge-count-quizzes');
   if (qBadge) qBadge.textContent = cachedTeacherQuizzes.length;
 
-  sb.from('game_sessions')
-    .select('id', { count: 'exact', head: true })
-    .eq('teacher_id', user.id)
-    .then(({ count }) => {
-      const rBadge = document.getElementById('badge-count-results');
-      if (rBadge && typeof count === 'number' && count > 0) {
-        rBadge.textContent = count;
-        rBadge.classList.remove('hidden');
-      }
-    });
+  const rBadge = document.getElementById('badge-count-results');
+  if (rBadge) {
+    if (cachedSessionsList.length > 0) {
+      rBadge.textContent = cachedSessionsList.length;
+      rBadge.classList.remove('hidden');
+    } else {
+      rBadge.classList.add('hidden');
+    }
+  }
 
   selectedTagFilter = 'all';
   renderTagFilters();
@@ -1083,17 +1149,22 @@ function renderFilteredQuizzes() {
 }
 
 async function editExistingQuiz(quizId) {
-  const { data: quiz } = await sb.from('quizzes').select('*').eq('id', quizId).single();
-  const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true });
-  if (!quiz) return;
-
-  openQuizEditor(quiz.kind || 'quiz', quiz, questions || []);
+  const [quizRes, qRes] = await Promise.all([
+    sb.from('quizzes').select('*').eq('id', quizId).single(),
+    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  ]);
+  if (!quizRes.data) return;
+  openQuizEditor(quizRes.data.kind || 'quiz', quizRes.data, qRes.data || []);
 }
 
 async function duplicateQuiz(quizId) {
   const { data: { user } } = await sb.auth.getUser();
-  const { data: origQuiz } = await sb.from('quizzes').select('*').eq('id', quizId).single();
-  const { data: origQuestions } = await sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true });
+  const [origQuizRes, origQRes] = await Promise.all([
+    sb.from('quizzes').select('*').eq('id', quizId).single(),
+    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  ]);
+  const origQuiz = origQuizRes.data;
+  const origQuestions = origQRes.data;
   if (!origQuiz || !user) return;
 
   const { data: newQuiz, error } = await sb
@@ -1134,8 +1205,11 @@ async function deleteQuiz(quizId, title) {
 }
 
 async function exportQuizJSON(quizId) {
-  const { data: quiz } = await sb.from('quizzes').select('title, kind, tag').eq('id', quizId).single();
-  const { data: questions } = await sb.from('questions').select('type, question_text, media_url, time_limit, points_multiplier, options').eq('quiz_id', quizId).order('order_index', { ascending: true });
+  const [quizRes, qRes] = await Promise.all([
+    sb.from('quizzes').select('title, kind, tag').eq('id', quizId).single(),
+    sb.from('questions').select('type, question_text, media_url, time_limit, points_multiplier, options').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  ]);
+  const quiz = quizRes.data;
   if (!quiz) return;
 
   const payload = {
@@ -1144,7 +1218,7 @@ async function exportQuizJSON(quizId) {
     title: quiz.title,
     kind: quiz.kind || 'quiz',
     tag: quiz.tag || '',
-    questions: questions || []
+    questions: qRes.data || []
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1214,22 +1288,11 @@ function formatDateTime(isoString) {
   return `${day}/${month}/${year} - ${hours}:${mins}`;
 }
 
-async function loadSessionsHistory() {
+function renderSessionsList(sessions) {
   const container = document.getElementById('sessions-history-list');
-  container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial...</p>';
-
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return;
-
-  const { data: sessions, error } = await sb
-    .from('game_sessions')
-    .select('id, pin, status, created_at, quiz_id, quizzes(title, kind)')
-    .eq('teacher_id', user.id)
-    .order('created_at', { ascending: false });
-
   const rBadge = document.getElementById('badge-count-results');
   if (rBadge) {
-    if (sessions && sessions.length > 0) {
+    if (sessions.length > 0) {
       rBadge.textContent = sessions.length;
       rBadge.classList.remove('hidden');
     } else {
@@ -1237,15 +1300,21 @@ async function loadSessionsHistory() {
     }
   }
 
-  if (error || !sessions || sessions.length === 0) {
+  if (sessions.length === 0) {
     container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Encara no hi ha cap sessió enregistrada al teu compte.</p>';
     return;
   }
 
+  const quizMap = {};
+  cachedTeacherQuizzes.forEach(q => {
+    quizMap[q.id] = q;
+  });
+
   container.innerHTML = '';
   sessions.forEach(s => {
-    const title = s.quizzes?.title || 'Activitat sense títol';
-    const isPoll = s.quizzes?.kind === 'poll';
+    const qInfo = quizMap[s.quiz_id] || {};
+    const title = qInfo.title || 'Activitat sense títol';
+    const isPoll = qInfo.kind === 'poll';
     const dateStr = formatDateTime(s.created_at);
     const safeTitle = title.replace(/'/g, "\\'");
     const row = document.createElement('div');
@@ -1272,12 +1341,38 @@ async function loadSessionsHistory() {
   });
 }
 
+async function loadSessionsHistory() {
+  const container = document.getElementById('sessions-history-list');
+  if (cachedSessionsList.length > 0) {
+    renderSessionsList(cachedSessionsList);
+  } else {
+    container.innerHTML = '<p class="text-sm text-slate-400 py-4">Carregant historial...</p>';
+  }
+
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  const { data: sessions, error } = await sb
+    .from('game_sessions')
+    .select('id, pin, status, created_at, quiz_id')
+    .eq('teacher_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (!error && sessions) {
+    cachedSessionsList = sessions;
+    renderSessionsList(cachedSessionsList);
+  }
+}
+
 async function deleteSessionResult(sessionId, title) {
   const confirmed = confirm(`Segur que vols esborrar els resultats de "${title}"? Aquesta acció eliminarà permanentment totes les respostes i puntuacions d'aquesta sessió.`);
   if (!confirmed) return;
 
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
+
+  cachedSessionsList = cachedSessionsList.filter(s => s.id !== sessionId);
+  renderSessionsList(cachedSessionsList);
 
   const { error } = await sb
     .from('game_sessions')
@@ -1287,30 +1382,33 @@ async function deleteSessionResult(sessionId, title) {
 
   if (error) {
     alert("No s'ha pogut esborrar el registre: " + error.message);
-    return;
+    loadSessionsHistory();
   }
-
-  loadSessionsHistory();
 }
 
 async function openSessionReport(sessionId, quizTitle, dateStr) {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return showView('view-login');
 
-  const { data: session, error: sErr } = await sb
-    .from('game_sessions')
-    .select('quiz_id, teacher_id, quizzes(title, kind)')
-    .eq('id', sessionId)
-    .eq('teacher_id', user.id)
-    .single();
+  let sessionMeta = cachedSessionsList.find(s => s.id === sessionId);
+  if (!sessionMeta) {
+    const { data: fetchedSession } = await sb
+      .from('game_sessions')
+      .select('id, quiz_id, teacher_id')
+      .eq('id', sessionId)
+      .eq('teacher_id', user.id)
+      .single();
+    sessionMeta = fetchedSession;
+  }
 
-  if (sErr || !session) {
+  if (!sessionMeta) {
     alert("No tens permís per visualitzar aquest informe.");
     return backToResults();
   }
 
-  const resolvedTitle = session.quizzes?.title || quizTitle;
-  const isPoll = session.quizzes?.kind === 'poll';
+  const cachedQuiz = cachedTeacherQuizzes.find(q => q.id === sessionMeta.quiz_id);
+  const resolvedTitle = cachedQuiz?.title || quizTitle;
+  const isPoll = cachedQuiz?.kind === 'poll';
 
   showView('view-session-report');
   document.getElementById('report-date-badge').textContent = dateStr;
@@ -1318,15 +1416,19 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   document.getElementById('pdf-header-title').textContent = isPoll ? "Domande · resultats de l'enquesta" : "Domande · informe d'avaluació";
   document.getElementById('pdf-subtitle-info').textContent = `${resolvedTitle} · ${dateStr}`;
   document.getElementById('pdf-type-tag').textContent = isPoll ? "Enquesta d'aula" : "Registre d'avaluació";
+  document.getElementById('report-questions-summary').innerHTML = '<p class="text-xs text-slate-400 col-span-full">Carregant dades...</p>';
+  document.getElementById('report-table-body').innerHTML = '';
 
-  const { data: questions } = await sb.from('questions').select('*').eq('quiz_id', session.quiz_id).order('order_index', { ascending: true });
-  const { data: players } = await sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false });
-  const { data: answers } = await sb.from('answers').select('*').eq('session_id', sessionId);
+  const [questionsRes, playersRes, answersRes] = await Promise.all([
+    sb.from('questions').select('*').eq('quiz_id', sessionMeta.quiz_id).order('order_index', { ascending: true }),
+    sb.from('players').select('*').eq('session_id', sessionId).order('score', { ascending: false }),
+    sb.from('answers').select('*').eq('session_id', sessionId)
+  ]);
 
-  const allItems = questions || [];
+  const allItems = questionsRes.data || [];
   const qs = allItems.filter(q => q.type !== 'slide');
-  const pls = players || [];
-  const ans = answers || [];
+  const pls = playersRes.data || [];
+  const ans = answersRes.data || [];
 
   currentReportData = { quizTitle: resolvedTitle, dateStr, isPoll, questions: qs, players: pls, answers: ans };
 
@@ -1863,6 +1965,70 @@ async function saveQuiz() {
   loadTeacherDashboard(authData.user);
 }
 
+function appendWordToHostCloud(rawWord) {
+  const wcWords = document.getElementById('host-wordcloud-words');
+  if (!wcWords || !rawWord) return;
+
+  const clean = rawWord.trim();
+  if (!clean) return;
+  const key = normalizeText(clean);
+  hostWordCounts[key] = (hostWordCounts[key] || 0) + 1;
+  const count = hostWordCounts[key];
+
+  const existingEl = wcWords.querySelector(`[data-word-key="${key}"]`);
+  const cloudColors = ['bg-indigo-600', 'bg-sky-600', 'bg-emerald-600', 'bg-amber-500', 'bg-rose-500', 'bg-violet-600'];
+  const sizeClasses = [
+    'text-xl sm:text-2xl px-5 py-2.5',
+    'text-2xl sm:text-3xl px-6 py-3',
+    'text-3xl sm:text-4xl px-7 py-3.5',
+    'text-4xl sm:text-5xl px-8 py-4'
+  ];
+  const sizeClass = sizeClasses[Math.min(count - 1, sizeClasses.length - 1)];
+
+  if (existingEl) {
+    existingEl.className = `${existingEl.dataset.colorClass} text-white ${sizeClass} rounded-2xl font-extrabold shadow-md transition-all duration-300`;
+    existingEl.textContent = count > 1 ? `${clean} (${count})` : clean;
+  } else {
+    const colorClass = cloudColors[Object.keys(hostWordCounts).length % cloudColors.length];
+    const span = document.createElement('span');
+    span.dataset.wordKey = key;
+    span.dataset.colorClass = colorClass;
+    span.className = `${colorClass} text-white ${sizeClass} rounded-2xl font-extrabold shadow-md transition-all duration-300`;
+    span.textContent = clean;
+    wcWords.appendChild(span);
+  }
+}
+
+function handleHostIncomingAnswer(q, playerId, answerValue) {
+  if (!currentSession || currentSession.status !== 'question_active' || hostResultsShown) return;
+  if (playerId && hostAnsweredPlayerIds.has(playerId)) return;
+  if (playerId) hostAnsweredPlayerIds.add(playerId);
+
+  const isPoll = sessionKind === 'poll' || q.type === 'poll';
+  const totalPlayers = hostPlayersList.length;
+  const answersCount = hostAnsweredPlayerIds.size;
+  const counterPrefix = isPoll ? 'Vots' : 'Respostes';
+
+  const countBadge = document.getElementById('host-answers-count');
+  if (countBadge) {
+    countBadge.textContent = `${counterPrefix}: ${answersCount} / ${totalPlayers}`;
+  }
+
+  const bigSaCounter = document.getElementById('host-sa-big-counter');
+  if (bigSaCounter) {
+    bigSaCounter.innerHTML = `${answersCount} <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span>`;
+  }
+
+  if (q.type === 'word_cloud' && answerValue?.text) {
+    appendWordToHostCloud(answerValue.text);
+  }
+
+  if (totalPlayers > 0 && answersCount >= totalPlayers) {
+    hostResultsShown = true;
+    setTimeout(() => showQuestionResults(), 350);
+  }
+}
+
 async function createRoom(quizId, kind = 'quiz') {
   const { data: { user } } = await sb.auth.getUser();
   const pin = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1870,25 +2036,19 @@ async function createRoom(quizId, kind = 'quiz') {
   const isPoll = kind === 'poll';
   hostPlayersList = [];
 
-  const { data: session, error } = await sb
-    .from('game_sessions')
-    .insert({ quiz_id: quizId, teacher_id: user.id, pin, status: 'waiting' })
-    .select()
-    .single();
+  const [sessionRes, qsRes] = await Promise.all([
+    sb.from('game_sessions').insert({ quiz_id: quizId, teacher_id: user.id, pin, status: 'waiting' }).select().single(),
+    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  ]);
 
-  if (error) {
-    alert("Error creant la sala: " + error.message);
+  if (sessionRes.error || !sessionRes.data) {
+    alert("Error creant la sala: " + (sessionRes.error?.message || ''));
     return;
   }
 
-  const { data: qs } = await sb
-    .from('questions')
-    .select('*')
-    .eq('quiz_id', quizId)
-    .order('order_index', { ascending: true });
-
+  const session = sessionRes.data;
   currentSession = session;
-  sessionQuestions = qs || [];
+  sessionQuestions = qsRes.data || [];
 
   const joinUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
   document.getElementById('host-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(joinUrl)}`;
@@ -1930,13 +2090,22 @@ async function createRoom(quizId, kind = 'quiz') {
   if (hostBroadcastChannel) {
     sb.removeChannel(hostBroadcastChannel);
   }
-  hostBroadcastChannel = sb.channel('live-session-' + session.id);
-  hostBroadcastChannel.subscribe();
+  hostBroadcastChannel = sb.channel('live-session-' + session.id, {
+    config: { broadcast: { self: false } }
+  })
+    .on('broadcast', { event: 'student_answer' }, ({ payload }) => {
+      const q = sessionQuestions[currentSession?.current_question_index];
+      if (!q || payload.question_id !== q.id) return;
+      handleHostIncomingAnswer(q, payload.player_id, payload.answer_value);
+    })
+    .subscribe();
 
   sb.channel('host-players-' + session.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
       const p = payload.new;
-      hostPlayersList.push(p);
+      if (!hostPlayersList.some(item => item.id === p.id)) {
+        hostPlayersList.push(p);
+      }
       renderHostPlayersLobby();
       if (!isPoll) refreshLiveLeaderboard();
     })
@@ -1951,7 +2120,7 @@ async function createRoom(quizId, kind = 'quiz') {
     .subscribe();
 }
 
-function broadcastRoomState(status, questionIndex, ranksMap = null) {
+function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null) {
   if (!hostBroadcastChannel) return;
   hostBroadcastChannel.send({
     type: 'broadcast',
@@ -1959,7 +2128,8 @@ function broadcastRoomState(status, questionIndex, ranksMap = null) {
     payload: {
       status,
       current_question_index: questionIndex,
-      ranks: ranksMap
+      ranks: ranksMap,
+      standings: standingsList
     }
   });
 }
@@ -1988,10 +2158,10 @@ async function kickPlayerFromLobby(playerId, nickname) {
 }
 
 async function refreshLiveLeaderboard() {
-  if (!currentSession || sessionKind === 'poll') return null;
+  if (!currentSession || sessionKind === 'poll') return { ranksMap: null, list: [] };
   const { data: players } = await sb
     .from('players')
-    .select('*')
+    .select('id, nickname, avatar, score')
     .eq('session_id', currentSession.id)
     .order('score', { ascending: false });
 
@@ -2002,7 +2172,7 @@ async function refreshLiveLeaderboard() {
   });
 
   const lb = document.getElementById('host-live-leaderboard');
-  if (list.length === 0) return ranksMap;
+  if (list.length === 0) return { ranksMap, list };
 
   lb.innerHTML = '';
   list.forEach((p, idx) => {
@@ -2018,11 +2188,18 @@ async function refreshLiveLeaderboard() {
     `;
     lb.appendChild(row);
   });
-  return ranksMap;
+  return { ranksMap, list };
 }
 
 async function startGame() {
   if (sessionQuestions.length === 0) return alert("Aquesta activitat no té cap pregunta.");
+  const { data: latestPlayers } = await sb
+    .from('players')
+    .select('*')
+    .eq('session_id', currentSession.id);
+  if (latestPlayers) {
+    hostPlayersList = latestPlayers;
+  }
   await launchQuestion(0);
 }
 
@@ -2032,8 +2209,13 @@ async function launchQuestion(index) {
     activeAnsChannel = null;
   }
 
+  hostAnsweredPlayerIds = new Set();
+  hostWordCounts = {};
+  hostResultsShown = false;
+
   if (index >= sessionQuestions.length) {
-    broadcastRoomState('finished', index);
+    const { ranksMap, list } = await refreshLiveLeaderboard();
+    broadcastRoomState('finished', index, ranksMap, list);
     await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
     currentSession.status = 'finished';
     if (sessionKind === 'poll') {
@@ -2042,7 +2224,7 @@ async function launchQuestion(index) {
       document.getElementById('host-partial-podium-screen').classList.add('hidden');
       document.getElementById('host-poll-finished-screen').classList.remove('hidden');
     } else {
-      await showHostPodium();
+      await showHostPodium(list);
     }
     return;
   }
@@ -2146,32 +2328,13 @@ async function launchQuestion(index) {
     });
   }
 
-  let answersCount = 0;
   const counterPrefix = isPoll ? 'Vots' : 'Respostes';
   document.getElementById('host-answers-count').textContent = `${counterPrefix}: 0 / ${totalPlayers}`;
 
   activeAnsChannel = sb.channel('answers-' + q.id + '-' + Date.now())
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers', filter: `question_id=eq.${q.id}` }, payload => {
       if (payload.new.session_id !== currentSession.id) return;
-      answersCount++;
-      document.getElementById('host-answers-count').textContent = `${counterPrefix}: ${answersCount} / ${totalPlayers}`;
-
-      const bigSaCounter = document.getElementById('host-sa-big-counter');
-      if (bigSaCounter) {
-        bigSaCounter.innerHTML = `${answersCount} <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span>`;
-      }
-
-      if (q.type === 'word_cloud') {
-        const word = document.createElement('span');
-        const cloudColors = ['bg-indigo-600', 'bg-sky-600', 'bg-emerald-600', 'bg-amber-500', 'bg-rose-500'];
-        word.className = `${cloudColors[answersCount % cloudColors.length]} text-white px-5 py-2.5 rounded-2xl font-extrabold text-xl sm:text-2xl shadow-md`;
-        word.textContent = payload.new.answer_value.text;
-        wcWords.appendChild(word);
-      }
-
-      if (totalPlayers > 0 && answersCount >= totalPlayers) {
-        setTimeout(() => showQuestionResults(), 400);
-      }
+      handleHostIncomingAnswer(q, payload.new.player_id, payload.new.answer_value);
     })
     .subscribe();
 
@@ -2183,7 +2346,10 @@ async function launchQuestion(index) {
     document.getElementById('host-timer').textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(hostTimerInterval);
-      showQuestionResults();
+      if (!hostResultsShown) {
+        hostResultsShown = true;
+        showQuestionResults();
+      }
     }
   }, 1000);
 
@@ -2195,6 +2361,7 @@ async function launchQuestion(index) {
 }
 
 async function showQuestionResults() {
+  hostResultsShown = true;
   clearInterval(hostTimerInterval);
   if (activeAnsChannel) {
     sb.removeChannel(activeAnsChannel);
@@ -2211,10 +2378,10 @@ async function showQuestionResults() {
 
   const q = sessionQuestions[currentSession.current_question_index];
   const isPoll = sessionKind === 'poll' || q.type === 'poll';
-  const ranksMap = !isPoll ? await refreshLiveLeaderboard() : null;
+  const { ranksMap, list } = !isPoll ? await refreshLiveLeaderboard() : { ranksMap: null, list: [] };
 
   currentSession.status = 'question_results';
-  broadcastRoomState('question_results', currentSession.current_question_index, ranksMap);
+  broadcastRoomState('question_results', currentSession.current_question_index, ranksMap, list);
   await sb.from('game_sessions').update({ status: 'question_results' }).eq('id', currentSession.id);
 
   const { data: qAnswers } = await sb
@@ -2227,12 +2394,21 @@ async function showQuestionResults() {
   const totalVotes = ansList.length;
   const saDisplay = document.getElementById('host-shortanswer-display');
 
-  if (q.type === 'type_answer') {
+  if (q.type === 'word_cloud') {
+    ansList.forEach(a => {
+      if (a.player_id && !hostAnsweredPlayerIds.has(a.player_id) && a.answer_value?.text) {
+        hostAnsweredPlayerIds.add(a.player_id);
+        appendWordToHostCloud(a.answer_value.text);
+      }
+    });
+  } else if (q.type === 'type_answer') {
     const acceptedText = (q.options || []).map(o => o.text).filter(Boolean).join(' · ');
     const correctNum = ansList.filter(a => a.is_correct).length;
+    const givenList = ansList.map(a => a.answer_value?.text).filter(Boolean);
     saDisplay.innerHTML = `
       <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Respostes acceptades (${correctNum} encerts)</span>
-      <p class="text-2xl md:text-3xl font-black text-slate-900">${acceptedText}</p>
+      <p class="text-2xl md:text-3xl font-black text-slate-900">${acceptedText || 'Sense resposta definida'}</p>
+      ${givenList.length > 0 ? `<p class="text-xs font-bold text-slate-500">Respostes rebudes: ${givenList.join(', ')}</p>` : ''}
     `;
   } else if (q.type === 'puzzle') {
     const correctOrderText = (q.options || []).map(o => o.text).join(' → ');
@@ -2313,19 +2489,22 @@ async function showPartialPodium() {
   });
 }
 
-async function showHostPodium() {
+async function showHostPodium(preloadedList = null) {
   setMusicMode('podium');
   document.getElementById('host-question-screen').classList.add('hidden');
   document.getElementById('host-partial-podium-screen').classList.add('hidden');
   document.getElementById('host-podium-screen').classList.remove('hidden');
 
-  const { data: players } = await sb
-    .from('players')
-    .select('*')
-    .eq('session_id', currentSession.id)
-    .order('score', { ascending: false });
+  let list = preloadedList;
+  if (!list || list.length === 0) {
+    const { data: players } = await sb
+      .from('players')
+      .select('*')
+      .eq('session_id', currentSession.id)
+      .order('score', { ascending: false });
+    list = players || [];
+  }
 
-  const list = players || [];
   const pillars = document.getElementById('host-podium-pillars');
   pillars.innerHTML = '';
 
