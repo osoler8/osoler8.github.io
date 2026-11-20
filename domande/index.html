@@ -606,7 +606,11 @@
         .single();
 
       if (pError) {
-        errEl.textContent = "Aquest nom ja el fa servir un altre company o companya.";
+        if (pError.code === '23505') {
+          errEl.textContent = "Aquest nom ja el fa servir un altre company o companya.";
+        } else {
+          errEl.textContent = `No s'ha pogut entrar a la sala: ${pError.message}`;
+        }
         errEl.classList.remove('hidden');
         return;
       }
@@ -2293,5 +2297,3 @@
   </script>
 </body>
 </html>
-
-```
