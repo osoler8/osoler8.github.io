@@ -896,6 +896,7 @@
         const title = s.quizzes?.title || 'Activitat sense títol';
         const isPoll = s.quizzes?.kind === 'poll';
         const dateStr = formatDateTime(s.created_at);
+        const safeTitle = title.replace(/'/g, "\\'");
         const row = document.createElement('div');
         row.className = "py-4 flex flex-wrap justify-between items-center gap-4 hover:bg-slate-50 px-3 rounded-2xl transition";
         row.innerHTML = `
@@ -907,12 +908,38 @@
             <h4 class="text-base font-extrabold text-slate-900 mt-0.5">${title}</h4>
             <p class="text-xs text-slate-400">Pin: ${s.pin}</p>
           </div>
-          <button onclick="openSessionReport('${s.id}', '${title.replace(/'/g, "\\'")}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
-            ${isPoll ? 'Veure resultats' : 'Veure avaluació i detall'}
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="openSessionReport('${s.id}', '${safeTitle}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
+              ${isPoll ? 'Veure resultats' : 'Veure avaluació i detall'}
+            </button>
+            <button onclick="deleteSessionResult('${s.id}', '${safeTitle}')" class="bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 px-3.5 py-2 rounded-xl font-bold text-xs transition">
+              Esborrar
+            </button>
+          </div>
         `;
         container.appendChild(row);
       });
+    }
+
+    async function deleteSessionResult(sessionId, title) {
+      const confirmed = confirm(`Segur que vols esborrar els resultats de "${title}"? Aquesta acció eliminarà permanentment totes les respostes i puntuacions d'aquesta sessió.`);
+      if (!confirmed) return;
+
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+
+      const { error } = await sb
+        .from('game_sessions')
+        .delete()
+        .eq('id', sessionId)
+        .eq('teacher_id', user.id);
+
+      if (error) {
+        alert("No s'ha pogut esborrar el registre: " + error.message);
+        return;
+      }
+
+      loadSessionsHistory();
     }
 
     async function openSessionReport(sessionId, quizTitle, dateStr) {
