@@ -72,6 +72,50 @@ let isMusicPlaying = false;
 let musicMode = 'lobby';
 let musicStep = 0;
 
+function domandeAlert(message, title = 'Avís', icon = '💬') {
+  return new Promise(resolve => {
+    const modal = document.getElementById('custom-dialog-modal');
+    document.getElementById('dialog-icon').textContent = icon;
+    document.getElementById('dialog-title').textContent = title;
+    document.getElementById('dialog-message').textContent = message;
+    const cancelBtn = document.getElementById('dialog-cancel-btn');
+    const confirmBtn = document.getElementById('dialog-confirm-btn');
+    cancelBtn.classList.add('hidden');
+    confirmBtn.textContent = "D'acord";
+    confirmBtn.className = "flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-indigo-200 transition";
+    modal.classList.remove('hidden');
+    confirmBtn.onclick = () => {
+      modal.classList.add('hidden');
+      resolve(true);
+    };
+  });
+}
+
+function domandeConfirm(message, title = 'Confirmació', danger = true) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('custom-dialog-modal');
+    document.getElementById('dialog-icon').textContent = danger ? '⚠️' : '❓';
+    document.getElementById('dialog-title').textContent = title;
+    document.getElementById('dialog-message').textContent = message;
+    const cancelBtn = document.getElementById('dialog-cancel-btn');
+    const confirmBtn = document.getElementById('dialog-confirm-btn');
+    cancelBtn.classList.remove('hidden');
+    confirmBtn.textContent = danger ? 'Sí, confirmar' : 'Acceptar';
+    confirmBtn.className = danger
+      ? "flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-rose-200 transition"
+      : "flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-indigo-200 transition";
+    modal.classList.remove('hidden');
+    cancelBtn.onclick = () => {
+      modal.classList.add('hidden');
+      resolve(false);
+    };
+    confirmBtn.onclick = () => {
+      modal.classList.add('hidden');
+      resolve(true);
+    };
+  });
+}
+
 function formatRankOrdinal(rank) {
   if (rank === 1) return '1r/a';
   if (rank === 2) return '2n/a';
@@ -341,7 +385,8 @@ async function closeHostRoomSilently() {
 }
 
 async function closeHostRoomAndExit() {
-  if (!confirm("Segur que vols tancar aquesta sala i finalitzar la sessió per a tot l'alumnat?")) return;
+  const ok = await domandeConfirm("Segur que vols tancar aquesta sala i finalitzar la sessió per a tot l'alumnat?", "Tancar sala");
+  if (!ok) return;
   await closeHostRoomSilently();
   returnToDashboard();
 }
@@ -368,7 +413,7 @@ async function startStudyMode(quizId) {
   ]);
 
   if (!quizRes.data || !qsRes.data || qsRes.data.length === 0) {
-    alert("Aquesta activitat no està disponible o no té preguntes.");
+    await domandeAlert("Aquesta activitat no està disponible o no té preguntes.", "Activitat no disponible", "📚");
     return resetToPinScreen();
   }
 
@@ -903,6 +948,8 @@ function renderStudentQuestion(qIndex) {
     stImg.classList.add('hidden');
   }
 
+  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
+
   if (q.type === 'slide') {
     document.getElementById('student-slide-box').classList.remove('hidden');
     document.getElementById('student-slide-body').textContent = q.options?.[0]?.text || 'Para atenció a la pissarra mentre el/la mestre/a explica aquest punt.';
@@ -917,7 +964,7 @@ function renderStudentQuestion(qIndex) {
     grid.classList.remove('hidden');
     const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
 
-    q.options.forEach((opt, idx) => {
+    validOptions.forEach((opt, idx) => {
       const btn = document.createElement('button');
       btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-5 sm:p-6 text-lg sm:text-xl md:text-2xl font-extrabold flex items-center gap-4 text-left transition`;
       btn.innerHTML = `<div class="w-11 h-11 rounded-2xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[idx % 4]}</div> <span>${opt.text}</span>`;
@@ -926,10 +973,17 @@ function renderStudentQuestion(qIndex) {
     });
   } else if (q.type === 'puzzle') {
     document.getElementById('student-puzzle-box').classList.remove('hidden');
-    studentPuzzleOrder = [...q.options.map((o, idx) => ({ text: o.text, origIdx: idx }))];
-    for (let i = studentPuzzleOrder.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [studentPuzzleOrder[i], studentPuzzleOrder[j]] = [studentPuzzleOrder[j], studentPuzzleOrder[i]];
+    studentPuzzleOrder = validOptions.map((o, idx) => ({ text: o.text.trim(), origIdx: idx }));
+    if (studentPuzzleOrder.length === 2) {
+      [studentPuzzleOrder[0], studentPuzzleOrder[1]] = [studentPuzzleOrder[1], studentPuzzleOrder[0]];
+    } else if (studentPuzzleOrder.length > 2) {
+      for (let i = studentPuzzleOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [studentPuzzleOrder[i], studentPuzzleOrder[j]] = [studentPuzzleOrder[j], studentPuzzleOrder[i]];
+      }
+      if (studentPuzzleOrder.every((item, idx) => item.origIdx === idx)) {
+        [studentPuzzleOrder[0], studentPuzzleOrder[1]] = [studentPuzzleOrder[1], studentPuzzleOrder[0]];
+      }
     }
     renderStudentPuzzleItems();
   } else if (q.type === 'nps_scale') {
@@ -994,7 +1048,7 @@ function registerStudentOutcome(isCorrect) {
 
 function getCorrectSolutionText(q) {
   if (!q) return '';
-  if (q.type === 'puzzle') return (q.options || []).map(o => o.text).join(' → ');
+  if (q.type === 'puzzle') return (q.options || []).filter(o => (o.text || '').trim()).map(o => o.text).join(' → ');
   return (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
 }
 
@@ -1069,9 +1123,10 @@ async function submitOptionAnswer(question, optionIndex) {
   if (studentAnsweredCurrentIndex === qIndex) return;
   studentAnsweredCurrentIndex = qIndex;
 
+  const validOptions = (question.options || []).filter(o => (o.text || '').trim() !== '');
   const isPoll = sessionKind === 'poll' || question.type === 'poll';
-  const isCorrect = isPoll ? false : (question.options[optionIndex]?.is_correct || false);
-  const answerVal = { index: optionIndex, text: question.options[optionIndex]?.text || '' };
+  const isCorrect = isPoll ? false : (validOptions[optionIndex]?.is_correct || false);
+  const answerVal = { index: optionIndex, text: validOptions[optionIndex]?.text || '' };
   
   if (!isPoll) {
     registerStudentOutcome(isCorrect);
@@ -1299,7 +1354,7 @@ async function loadTeacherDashboard(user) {
 
   const [myQuizzesRes, schoolQuizzesRes, sessionsRes] = await Promise.all([
     sb.from('quizzes').select('id, title, kind, tag, is_shared, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
-    sb.from('quizzes').select('id, title, kind, tag, is_shared, teacher_id, created_at').eq('is_shared', true).neq('teacher_id', user.id).order('created_at', { ascending: false }),
+    sb.from('quizzes').select('id, title, kind, tag, is_shared, teacher_id, created_at').eq('is_shared', true).order('created_at', { ascending: false }),
     sb.from('game_sessions').select('id, pin, status, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
   ]);
 
@@ -1429,12 +1484,15 @@ function renderSchoolQuizzes() {
   list.innerHTML = '';
 
   if (cachedSchoolQuizzes.length === 0) {
-    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no hi ha activitats compartides per altres mestres al banc de centre.</div>`;
+    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no hi ha activitats compartides al banc de centre.</div>`;
     return;
   }
 
+  const myIds = new Set(cachedTeacherQuizzes.map(item => item.id));
+
   cachedSchoolQuizzes.forEach(q => {
     const isPoll = q.kind === 'poll';
+    const isMine = myIds.has(q.id);
     const safeTitle = q.title.replace(/'/g, "\\'");
     const card = document.createElement('div');
     card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-teal-200/80 shadow-sm hover:shadow-md transition";
@@ -1442,7 +1500,7 @@ function renderSchoolQuizzes() {
       <div class="space-y-2">
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
-          <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Banc de centre</span>
+          <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">${isMine ? 'Compartit per tu' : 'Banc de centre'}</span>
           ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
         </div>
         <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
@@ -1519,7 +1577,10 @@ async function duplicateQuiz(quizId) {
     .select()
     .single();
 
-  if (error || !newQuiz) return alert("No s'ha pogut duplicar l'activitat.");
+  if (error || !newQuiz) {
+    await domandeAlert("No s'ha pogut duplicar l'activitat.", "Error", "⚠️");
+    return;
+  }
 
   if (origQuestions && origQuestions.length > 0) {
     const cloned = origQuestions.map((q, idx) => ({
@@ -1539,12 +1600,13 @@ async function duplicateQuiz(quizId) {
 }
 
 async function deleteQuiz(quizId, title) {
-  if (!confirm(`Segur que vols eliminar "${title}" i totes les seves preguntes?`)) return;
+  const ok = await domandeConfirm(`Segur que vols eliminar "${title}" i totes les seves preguntes?`, "Eliminar activitat");
+  if (!ok) return;
   const { data: { user } } = await sb.auth.getUser();
   await sb.from('game_sessions').delete().eq('quiz_id', quizId).eq('teacher_id', user.id);
   const { error } = await sb.from('quizzes').delete().eq('id', quizId).eq('teacher_id', user.id);
   if (error) {
-    alert("No s'ha pogut esborrar: " + error.message);
+    await domandeAlert("No s'ha pogut esborrar: " + error.message, "Error", "⚠️");
     return;
   }
   loadTeacherDashboard(user);
@@ -1584,7 +1646,8 @@ async function importQuizJSON(event) {
     const text = await file.text();
     const parsed = JSON.parse(text);
     if (!parsed.title || !Array.isArray(parsed.questions)) {
-      return alert("El fitxer json no té un format vàlid de domande.");
+      await domandeAlert("El fitxer json no té un format vàlid de domande.", "Fitxer no vàlid", "⚠️");
+      return;
     }
 
     const { data: { user } } = await sb.auth.getUser();
@@ -1602,7 +1665,10 @@ async function importQuizJSON(event) {
       .select()
       .single();
 
-    if (error || !newQuiz) return alert("Error creant l'activitat importada.");
+    if (error || !newQuiz) {
+      await domandeAlert("Error creant l'activitat importada.", "Error", "⚠️");
+      return;
+    }
 
     const qRows = parsed.questions.map((q, idx) => ({
       quiz_id: newQuiz.id,
@@ -1621,7 +1687,7 @@ async function importQuizJSON(event) {
 
     loadTeacherDashboard(user);
   } catch (e) {
-    alert("No s'ha pogut llegir el fitxer json.");
+    await domandeAlert("No s'ha pogut llegir el fitxer json.", "Error de lectura", "⚠️");
   }
 }
 
@@ -1711,7 +1777,7 @@ async function loadSessionsHistory() {
 }
 
 async function deleteSessionResult(sessionId, title) {
-  const confirmed = confirm(`Segur que vols esborrar els resultats de "${title}"? Aquesta acció eliminarà permanentment totes les respostes i puntuacions d'aquesta sessió.`);
+  const confirmed = await domandeConfirm(`Segur que vols esborrar els resultats de "${title}"? Aquesta acció eliminarà permanentment totes les respostes i puntuacions d'aquesta sessió.`, "Esborrar resultats");
   if (!confirmed) return;
 
   const { data: { user } } = await sb.auth.getUser();
@@ -1729,7 +1795,7 @@ async function deleteSessionResult(sessionId, title) {
     .eq('teacher_id', user.id);
 
   if (error) {
-    alert("No s'ha pogut esborrar el registre: " + error.message);
+    await domandeAlert("No s'ha pogut esborrar el registre: " + error.message, "Error", "⚠️");
     loadSessionsHistory();
   }
 }
@@ -1750,7 +1816,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   }
 
   if (!sessionMeta) {
-    alert("No tens permís per visualitzar aquest informe.");
+    await domandeAlert("No tens permís per visualitzar aquest informe.", "Accés denegat", "🔒");
     return backToResults();
   }
 
@@ -1855,7 +1921,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   } else {
     qs.forEach((q, idx) => {
       const correctOpts = q.type === 'puzzle'
-        ? (q.options || []).map(o => o.text).join(' → ')
+        ? (q.options || []).filter(o => (o.text || '').trim()).map(o => o.text).join(' → ')
         : (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
       const qAnsList = ans.filter(a => a.question_id === q.id);
       const qCorrectCount = qAnsList.filter(a => a.is_correct).length;
@@ -2123,12 +2189,16 @@ function extractBlockData(b) {
     const texts = b.querySelectorAll('.opt-text');
     const checks = b.querySelectorAll('.opt-correct');
     texts.forEach((t, idx) => {
-      options.push({ text: t.value.trim(), is_correct: isPoll ? false : (checks[idx]?.checked || false) });
+      if (t.value.trim()) {
+        options.push({ text: t.value.trim(), is_correct: isPoll ? false : (checks[idx]?.checked || false) });
+      }
     });
   } else if (rawType === 'puzzle') {
     const texts = b.querySelectorAll('.opt-text');
     texts.forEach(t => {
-      options.push({ text: t.value.trim(), is_correct: true });
+      if (t.value.trim()) {
+        options.push({ text: t.value.trim(), is_correct: true });
+      }
     });
   } else if (rawType === 'true_false') {
     if (isPoll) {
@@ -2195,7 +2265,7 @@ function addQuestionBlock(type, prefill = null) {
       return `
         <div class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200">
           <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shrink-0">${i + 1}</span>
-          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Posició correcta ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
+          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Posició ${i+1}${i >= 2 ? ' (opcional)' : ''}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
         </div>
       `;
     }).join('');
@@ -2326,9 +2396,6 @@ async function saveQuiz() {
       const b = blocks[i];
       const extracted = extractBlockData(b);
       const dbType = (isPoll && extracted.type === 'quiz') ? 'poll' : extracted.type;
-      const cleanOpts = extracted.type === 'quiz'
-        ? extracted.options.filter(o => o.text)
-        : extracted.options;
       const payload = {
         quiz_id: editingQuizId,
         order_index: i,
@@ -2337,7 +2404,7 @@ async function saveQuiz() {
         media_url: extracted.media_url,
         time_limit: extracted.time_limit,
         points_multiplier: extracted.points_multiplier,
-        options: cleanOpts
+        options: extracted.options
       };
 
       const existingId = b.dataset.existingId;
@@ -2381,9 +2448,6 @@ async function saveQuiz() {
   blocks.forEach((b, i) => {
     const extracted = extractBlockData(b);
     const dbType = (isPoll && extracted.type === 'quiz') ? 'poll' : extracted.type;
-    const cleanOpts = extracted.type === 'quiz'
-      ? extracted.options.filter(o => o.text)
-      : extracted.options;
 
     questionsToInsert.push({
       quiz_id: targetQuizId,
@@ -2393,7 +2457,7 @@ async function saveQuiz() {
       media_url: extracted.media_url,
       time_limit: extracted.time_limit,
       points_multiplier: extracted.points_multiplier,
-      options: cleanOpts
+      options: extracted.options
     });
   });
 
@@ -2511,7 +2575,7 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
   ]);
 
   if (sessionRes.error || !sessionRes.data) {
-    alert("Error creant la sala: " + (sessionRes.error?.message || ''));
+    await domandeAlert("Error creant la sala: " + (sessionRes.error?.message || ''), "Error", "⚠️");
     return;
   }
 
@@ -2635,7 +2699,8 @@ function renderHostPlayersLobby() {
 }
 
 async function kickPlayerFromLobby(playerId, nickname) {
-  if (!confirm(`Vols expulsar "${nickname}" de la sala?`)) return;
+  const ok = await domandeConfirm(`Vols expulsar "${nickname}" de la sala?`, "Expulsar participant");
+  if (!ok) return;
   await sb.from('players').delete().eq('id', playerId);
   hostPlayersList = hostPlayersList.filter(item => item.id !== playerId);
   renderHostPlayersLobby();
@@ -2691,7 +2756,10 @@ async function refreshLiveLeaderboard() {
 }
 
 async function startGame() {
-  if (sessionQuestions.length === 0) return alert("Aquesta activitat no té cap pregunta.");
+  if (sessionQuestions.length === 0) {
+    await domandeAlert("Aquesta activitat no té cap pregunta.", "Activitat buida", "📝");
+    return;
+  }
   document.getElementById('btn-lock-room').classList.add('hidden');
   const { data: latestPlayers } = await sb
     .from('players')
@@ -2789,6 +2857,7 @@ async function launchQuestion(index) {
   document.getElementById('btn-show-results').classList.remove('hidden');
 
   const totalPlayers = hostPlayersList.length;
+  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
 
   if (q.type === 'type_answer') {
     optDisplay.classList.add('hidden');
@@ -2815,7 +2884,7 @@ async function launchQuestion(index) {
     saDisplay.classList.add('hidden');
     optDisplay.classList.remove('hidden');
     const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
-    q.options.forEach((opt, i) => {
+    validOptions.forEach((opt, i) => {
       optDisplay.innerHTML += `
         <div id="host-opt-${i}" class="${colors[i%4]} p-5 rounded-2xl flex justify-between items-center gap-3 transition">
           <div class="flex items-center gap-3">
@@ -2893,6 +2962,7 @@ async function showQuestionResults() {
   const ansList = qAnswers || [];
   const totalVotes = ansList.length;
   const saDisplay = document.getElementById('host-shortanswer-display');
+  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
 
   if (q.type === 'word_cloud') {
     ansList.forEach(a => {
@@ -2902,7 +2972,7 @@ async function showQuestionResults() {
       }
     });
   } else if (q.type === 'type_answer') {
-    const acceptedText = (q.options || []).map(o => o.text).filter(Boolean).join(' · ');
+    const acceptedText = validOptions.map(o => o.text).join(' · ');
     const correctNum = ansList.filter(a => a.is_correct).length;
     const givenList = ansList.map(a => a.answer_value?.text).filter(Boolean);
     saDisplay.innerHTML = `
@@ -2911,7 +2981,7 @@ async function showQuestionResults() {
       ${givenList.length > 0 ? `<p class="text-xs font-bold text-slate-500">Respostes rebudes: ${givenList.join(', ')}</p>` : ''}
     `;
   } else if (q.type === 'puzzle') {
-    const correctOrderText = (q.options || []).map(o => o.text).join(' → ');
+    const correctOrderText = validOptions.map(o => o.text).join(' → ');
     const correctNum = ansList.filter(a => a.is_correct).length;
     saDisplay.innerHTML = `
       <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Ordre correcte (${correctNum} encerts)</span>
@@ -2926,14 +2996,14 @@ async function showQuestionResults() {
       <p class="text-xs font-bold text-slate-500">${values.length} vots registrats</p>
     `;
   } else if (q.type === 'quiz' || q.type === 'true_false' || q.type === 'poll') {
-    const counts = q.options.map((_, idx) => ansList.filter(a => a.answer_value?.index === idx).length);
+    const counts = validOptions.map((_, idx) => ansList.filter(a => a.answer_value?.index === idx).length);
     const maxCount = Math.max(1, ...counts);
     const barColors = ['bg-rose-500', 'bg-blue-500', 'bg-amber-500', 'bg-emerald-500'];
     const barsContainer = document.getElementById('host-bars-display');
     barsContainer.innerHTML = '';
     barsContainer.classList.remove('hidden');
 
-    q.options.forEach((opt, i) => {
+    validOptions.forEach((opt, i) => {
       const pct = totalVotes > 0 ? Math.round((counts[i] / totalVotes) * 100) : 0;
       const countEl = document.getElementById(`host-opt-count-${i}`);
       if (countEl) {
