@@ -23,6 +23,7 @@ let editorKind = 'quiz';
 let editingQuizId = null;
 let hostTimerInterval = null;
 let activeAnsChannel = null;
+let studentRoomChannel = null;
 let questionStartTimeMs = 0;
 let studentScore = 0;
 let studentStreak = 0;
@@ -49,6 +50,29 @@ function formatRankOrdinal(rank) {
   return `${rank}è/ena`;
 }
 
+function normalizeText(str) {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function evaluateShortAnswer(userText, question) {
+  const userNorm = normalizeText(userText);
+  if (!userNorm) return false;
+  const opts = question.options || [];
+  return opts.some(o => {
+    if (!o.is_correct) return false;
+    const mode = o.match_mode || 'exact';
+    const rawList = (o.text || '').split(',').map(s => normalizeText(s)).filter(Boolean);
+    if (mode === 'contains') {
+      return rawList.some(target => userNorm.includes(target));
+    }
+    return rawList.includes(userNorm);
+  });
+}
+
 function initAvatars() {
   const container = document.getElementById('avatar-selector');
   container.innerHTML = '';
@@ -71,6 +95,18 @@ function selectAvatar(btn, emoji) {
     b.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition';
   });
   btn.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition';
+}
+
+function openQrModal() {
+  const src = document.getElementById('host-qr-img').src;
+  const pin = document.getElementById('host-pin-display').textContent;
+  document.getElementById('modal-qr-img').src = src.replace('200x200', '400x400');
+  document.getElementById('modal-qr-pin').textContent = pin;
+  document.getElementById('qr-modal').classList.remove('hidden');
+}
+
+function closeQrModal() {
+  document.getElementById('qr-modal').classList.add('hidden');
 }
 
 function playSynthNote(freq, duration, type = 'triangle', gainVal = 0.08) {
@@ -161,12 +197,33 @@ function showView(viewId) {
   document.getElementById(viewId).classList.remove('hidden');
 }
 
+function resetToPinScreen() {
+  if (studentRoomChannel) {
+    sb.removeChannel(studentRoomChannel);
+    studentRoomChannel = null;
+  }
+  currentPlayer = null;
+  currentSession = null;
+  sessionQuestions = [];
+  studentScore = 0;
+  studentStreak = 0;
+  studentBestStreak = 0;
+  studentCorrectCount = 0;
+  studentWrongCount = 0;
+  document.getElementById('input-pin').value = '';
+  document.getElementById('join-error').classList.add('hidden');
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  showView('view-join');
+}
+
 async function handleLogoClick() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     loadTeacherDashboard(session.user);
   } else {
-    showView('view-join');
+    resetToPinScreen();
   }
 }
 
@@ -233,13 +290,17 @@ async function joinGame() {
   document.getElementById('student-display-name').textContent = nickname;
   showView('view-student-lobby');
 
-  sb.channel('room-' + session.id)
+  if (studentRoomChannel) {
+    sb.removeChannel(studentRoomChannel);
+  }
+
+  studentRoomChannel = sb.channel('room-' + session.id + '-' + player.id)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
       handleSessionStateChange(payload.new);
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'players', filter: `id=eq.${player.id}` }, () => {
       alert("Has estat desconnectat/da de la sala pel/per la mestre/a.");
-      window.location.href = window.location.pathname;
+      resetToPinScreen();
     })
     .subscribe();
 }
@@ -261,7 +322,7 @@ async function updateStudentLivePosition() {
   if (pill) pill.textContent = `Posició: ${formatRankOrdinal(rank)}`;
 
   const fbPos = document.getElementById('feedback-live-pos');
-  if (fbPos) {
+  if (fbPos && !fbPos.dataset.hideForOpinion) {
     fbPos.textContent = `Vas en la posició ${rankText}`;
     fbPos.classList.remove('hidden');
   }
@@ -274,9 +335,10 @@ async function handleSessionStateChange(session) {
   } else if (session.status === 'question_results') {
     const q = sessionQuestions[session.current_question_index];
     if (q && q.type === 'slide') return;
+    const isOpinion = sessionKind === 'poll' || (q && ['word_cloud', 'poll', 'nps_scale'].includes(q.type));
     const isFeedbackAlreadyVisible = !document.getElementById('student-feedback').classList.contains('hidden');
     if (!isFeedbackAlreadyVisible) {
-      if (sessionKind !== 'poll' && q && !['word_cloud', 'poll', 'nps_scale'].includes(q.type)) {
+      if (!isOpinion && q) {
         studentWrongCount++;
         studentStreak = 0;
       }
@@ -286,8 +348,13 @@ async function handleSessionStateChange(session) {
       document.getElementById('feedback-title').textContent = "Temps esgotat!";
       document.getElementById('feedback-points').classList.add('hidden');
       document.getElementById('feedback-streak-badge').classList.add('hidden');
+      const fbPos = document.getElementById('feedback-live-pos');
+      fbPos.dataset.hideForOpinion = isOpinion ? '1' : '';
+      if (isOpinion) fbPos.classList.add('hidden');
     }
-    await updateStudentLivePosition();
+    if (!isOpinion) {
+      await updateStudentLivePosition();
+    }
     document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
   } else if (session.status === 'finished') {
     if (sessionKind === 'poll') {
@@ -307,13 +374,15 @@ function hideAllStudentInputs() {
 }
 
 function showStudentPollFinished() {
-  document.getElementById('student-final-medal').textContent = '🗳️';
-  document.getElementById('student-final-rank').textContent = 'Enquesta completada';
+  document.getElementById('student-end-banner').textContent = 'Enquesta finalitzada';
+  document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-extrabold';
+  document.getElementById('student-final-medal').textContent = '🙌';
+  document.getElementById('student-final-rank').textContent = 'Participació registrada';
   document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
   document.getElementById('student-final-score').classList.add('hidden');
-  document.getElementById('student-final-stats-grid').classList.add('hidden');
+  document.getElementById('student-chart-and-stats').classList.add('hidden');
   document.getElementById('student-final-leaderboard-box').classList.add('hidden');
-  document.getElementById('student-final-msg').textContent = "Gràcies per participar i compartir la teva opinió!";
+  document.getElementById('student-final-msg').textContent = "Moltes gràcies per la teva participació! Les teves respostes ajuden a millorar l'aula.";
   showView('view-student-podium');
 }
 
@@ -329,23 +398,35 @@ async function showStudentFinalRank() {
   const rank = myIndex >= 0 ? myIndex + 1 : list.length;
 
   const medals = ['🥇', '🥈', '🥉'];
-  document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏅';
+  document.getElementById('student-end-banner').textContent = 'Qüestionari finalitzat';
+  document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold';
+  document.getElementById('student-final-medal').textContent = medals[rank - 1] || '🏆';
   document.getElementById('student-final-rank').textContent = `Posició ${formatRankOrdinal(rank)} de ${list.length}`;
   document.getElementById('student-final-name').textContent = `${currentPlayer.avatar} ${currentPlayer.nickname}`;
   document.getElementById('student-final-score').classList.remove('hidden');
   document.getElementById('student-final-score').textContent = `${studentScore} punts`;
 
-  document.getElementById('student-final-stats-grid').classList.remove('hidden');
+  document.getElementById('student-chart-and-stats').classList.remove('hidden');
   document.getElementById('student-stat-correct').textContent = studentCorrectCount;
   document.getElementById('student-stat-wrong').textContent = studentWrongCount;
   document.getElementById('student-stat-streak').textContent = studentBestStreak;
 
-  if (rank === 1) {
-    document.getElementById('student-final-msg').textContent = "Enhorabona! Has aconseguit la primera posició del rànquing.";
-  } else if (rank <= 3) {
-    document.getElementById('student-final-msg').textContent = "Molt bona feina! Has pujat al podi de la classe.";
+  const totalAnswered = studentCorrectCount + studentWrongCount;
+  const accuracyPct = totalAnswered > 0 ? Math.round((studentCorrectCount / totalAnswered) * 100) : 0;
+  document.getElementById('student-accuracy-pct').textContent = `${accuracyPct}%`;
+  const donut = document.getElementById('student-donut-chart');
+  if (totalAnswered === 0) {
+    donut.style.background = '#e2e8f0';
   } else {
-    document.getElementById('student-final-msg').textContent = "Bona partida! Continua practicant per pujar posicions.";
+    donut.style.background = `conic-gradient(#10b981 0% ${accuracyPct}%, #f43f5e ${accuracyPct}% 100%)`;
+  }
+
+  if (rank === 1) {
+    document.getElementById('student-final-msg').textContent = "Enhorabona! Has acabat el qüestionari en primera posició.";
+  } else if (rank <= 3) {
+    document.getElementById('student-final-msg').textContent = "Molt bona feina! Has aconseguit pujar al podi de la classe.";
+  } else {
+    document.getElementById('student-final-msg').textContent = "Qüestionari completat! Revisa els teus encerts i continua practicant.";
   }
 
   const rankBox = document.getElementById('student-final-leaderboard-box');
@@ -384,6 +465,16 @@ async function renderStudentQuestion(qIndex) {
   const scorePill = document.getElementById('student-score-pill');
   const rankPill = document.getElementById('student-rank-pill');
   const streakPill = document.getElementById('student-streak-pill');
+  const typeBadge = document.getElementById('student-type-badge');
+  const cloudHint = document.getElementById('student-cloud-hint');
+
+  if (q.type === 'word_cloud') {
+    typeBadge.classList.remove('hidden');
+    cloudHint.classList.remove('hidden');
+  } else {
+    typeBadge.classList.add('hidden');
+    cloudHint.classList.add('hidden');
+  }
 
   if (sessionKind === 'poll') {
     scorePill.textContent = 'Enquesta';
@@ -415,7 +506,7 @@ async function renderStudentQuestion(qIndex) {
 
     q.options.forEach((opt, idx) => {
       const btn = document.createElement('button');
-      btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-6 text-xl md:text-2xl font-extrabold flex items-center gap-4 text-left transition`;
+      btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-5 sm:p-6 text-lg sm:text-xl md:text-2xl font-extrabold flex items-center gap-4 text-left transition`;
       btn.innerHTML = `<div class="w-11 h-11 rounded-2xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[idx % 4]}</div> <span>${opt.text}</span>`;
       btn.onclick = () => submitOptionAnswer(q, idx);
       grid.appendChild(btn);
@@ -443,7 +534,9 @@ async function renderStudentQuestion(qIndex) {
     }
   } else {
     document.getElementById('student-text-input-box').classList.remove('hidden');
-    document.getElementById('student-text-answer').value = '';
+    const inp = document.getElementById('student-text-answer');
+    inp.value = '';
+    inp.placeholder = q.type === 'word_cloud' ? 'Escriu una paraula...' : 'Escriu aquí la teva resposta...';
   }
 }
 
@@ -564,14 +657,14 @@ async function submitTextAnswer() {
   const val = document.getElementById('student-text-answer').value.trim();
   if (!val) return;
   const q = sessionQuestions[currentSession.current_question_index];
-  const isPoll = sessionKind === 'poll' || q.type === 'word_cloud';
+  const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud';
   
   let isCorrect = false;
-  if (!isPoll && q.type === 'type_answer') {
-    isCorrect = q.options.some(o => o.text.toLowerCase() === val.toLowerCase() && o.is_correct);
+  if (!isOpinion && q.type === 'type_answer') {
+    isCorrect = evaluateShortAnswer(val, q);
   }
 
-  if (!isPoll) {
+  if (!isOpinion) {
     registerStudentOutcome(isCorrect);
   }
 
@@ -587,13 +680,13 @@ async function submitTextAnswer() {
     points_awarded: points
   });
 
-  if (!isPoll) {
+  if (!isOpinion) {
     await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
     document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
     await updateStudentLivePosition();
   }
 
-  showStudentWaitingFeedback(isCorrect, points, isPoll);
+  showStudentWaitingFeedback(isCorrect, points, isOpinion);
 }
 
 function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
@@ -602,15 +695,18 @@ function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
   const ptsEl = document.getElementById('feedback-points');
   const streakEl = document.getElementById('feedback-streak-badge');
   const streakPill = document.getElementById('student-streak-pill');
+  const fbPos = document.getElementById('feedback-live-pos');
   fb.classList.remove('hidden');
 
   if (isOpinion) {
     document.getElementById('feedback-icon').textContent = '🗳️';
-    document.getElementById('feedback-title').textContent = 'Vot registrat!';
+    document.getElementById('feedback-title').textContent = 'Resposta registrada!';
     ptsEl.classList.add('hidden');
     streakEl.classList.add('hidden');
-    document.getElementById('feedback-live-pos').classList.add('hidden');
+    fbPos.dataset.hideForOpinion = '1';
+    fbPos.classList.add('hidden');
   } else if (isCorrect) {
+    fbPos.dataset.hideForOpinion = '';
     document.getElementById('feedback-icon').textContent = studentStreak >= 3 ? '🔥' : '🎉';
     document.getElementById('feedback-title').textContent = studentStreak >= 2 ? `Encertat! Portes ${studentStreak} seguides` : 'Molt bé, encertat!';
     ptsEl.textContent = `+${points} punts`;
@@ -624,6 +720,7 @@ function showStudentWaitingFeedback(isCorrect, points, isOpinion) {
       streakEl.classList.add('hidden');
     }
   } else {
+    fbPos.dataset.hideForOpinion = '';
     document.getElementById('feedback-icon').textContent = '💡';
     document.getElementById('feedback-title').textContent = 'No passa res, seguim!';
     ptsEl.textContent = '+0 punts';
@@ -1350,9 +1447,21 @@ function addQuestionBlock(type, prefill = null) {
         </div>`;
   } else if (type === 'type_answer') {
     const ansVal = existingOpts[0]?.text || '';
-    optionsHTML = `<input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Escriu la resposta exacta correcta" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-800 outline-none">`;
+    const matchMode = existingOpts[0]?.match_mode || 'exact';
+    optionsHTML = `
+      <div class="col-span-full bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <span class="text-xs font-bold text-slate-600">Respostes acceptades (separa diferents opcions amb comes):</span>
+          <select class="opt-match-mode bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+            <option value="exact" ${matchMode === 'exact' ? 'selected' : ''}>Coincidència exacta (sense majúscules ni accents)</option>
+            <option value="contains" ${matchMode === 'contains' ? 'selected' : ''}>Conté alguna de les paraules clau</option>
+          </select>
+        </div>
+        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Ex: Barcelona, barna, BCN" class="opt-text w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
+      </div>
+    `;
   } else if (type === 'word_cloud') {
-    optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els/les alumnes enviaran paraules lliures que apareixeran a la pantalla.</p>`;
+    optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">☁️ Els/les alumnes enviaran paraules lliures que aniran formant un núvol visual a la pantalla.</p>`;
   } else if (type === 'nps_scale') {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els/les alumnes votaran un número del 0 al 10 i es calcularà la mitjana del grup.</p>`;
   } else if (type === 'slide') {
@@ -1502,7 +1611,11 @@ async function saveQuiz() {
           { text: 'Fals', is_correct: radios[1].checked }
         ];
       }
-    } else if (rawType === 'type_answer' || rawType === 'slide') {
+    } else if (rawType === 'type_answer') {
+      const val = b.querySelector('.opt-text')?.value.trim() || '';
+      const matchMode = b.querySelector('.opt-match-mode')?.value || 'exact';
+      options = [{ text: val, is_correct: true, match_mode: matchMode }];
+    } else if (rawType === 'slide') {
       const val = b.querySelector('.opt-text')?.value.trim() || '';
       options = [{ text: val, is_correct: true }];
     }
@@ -1707,6 +1820,7 @@ async function launchQuestion(index) {
   document.getElementById('btn-partial-podium').classList.add('hidden');
   document.getElementById('host-bars-display').classList.add('hidden');
   document.getElementById('host-slide-display').classList.add('hidden');
+  document.getElementById('host-shortanswer-display').classList.add('hidden');
 
   document.getElementById('host-q-text').textContent = q.question_text;
   const imgEl = document.getElementById('host-q-image');
@@ -1719,9 +1833,12 @@ async function launchQuestion(index) {
 
   const optDisplay = document.getElementById('host-options-display');
   const wcDisplay = document.getElementById('host-wordcloud-display');
+  const wcWords = document.getElementById('host-wordcloud-words');
+  const saDisplay = document.getElementById('host-shortanswer-display');
   const slideDisplay = document.getElementById('host-slide-display');
   optDisplay.innerHTML = '';
-  wcDisplay.innerHTML = '';
+  wcWords.innerHTML = '';
+  saDisplay.innerHTML = '';
 
   if (isSlide) {
     clearInterval(hostTimerInterval);
@@ -1742,16 +1859,31 @@ async function launchQuestion(index) {
   document.getElementById('host-answers-count').classList.remove('hidden');
   document.getElementById('btn-show-results').classList.remove('hidden');
 
-  if (q.type === 'word_cloud' || q.type === 'nps_scale' || q.type === 'puzzle') {
+  const totalPlayers = hostPlayersList.length;
+
+  if (q.type === 'type_answer') {
     optDisplay.classList.add('hidden');
+    wcDisplay.classList.add('hidden');
+    saDisplay.classList.remove('hidden');
+    saDisplay.innerHTML = `
+      <span class="px-3.5 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Resposta curta</span>
+      <div id="host-sa-big-counter" class="text-6xl md:text-7xl font-black text-indigo-600 leading-none">0 <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span></div>
+      <p class="text-sm font-bold text-slate-500">Alumnes que ja han enviat la seva resposta</p>
+    `;
+  } else if (q.type === 'word_cloud') {
+    optDisplay.classList.add('hidden');
+    saDisplay.classList.add('hidden');
     wcDisplay.classList.remove('hidden');
-    if (q.type === 'nps_scale') {
-      wcDisplay.innerHTML = '<p class="text-slate-500 font-bold">Esperant les puntuacions de 0 a 10 de la classe...</p>';
-    } else if (q.type === 'puzzle') {
-      wcDisplay.innerHTML = '<p class="text-slate-500 font-bold">Els/les alumnes estan ordenant les opcions als seus dispositius...</p>';
-    }
+  } else if (q.type === 'nps_scale' || q.type === 'puzzle') {
+    optDisplay.classList.add('hidden');
+    wcDisplay.classList.add('hidden');
+    saDisplay.classList.remove('hidden');
+    saDisplay.innerHTML = q.type === 'nps_scale'
+      ? `<span class="text-4xl">📊</span><p class="text-slate-600 font-bold">Esperant les valoracions de 0 a 10 de la classe...</p>`
+      : `<span class="text-4xl">🧩</span><p class="text-slate-600 font-bold">Els/les alumnes estan ordenant les opcions als seus dispositius...</p>`;
   } else {
     wcDisplay.classList.add('hidden');
+    saDisplay.classList.add('hidden');
     optDisplay.classList.remove('hidden');
     const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
     q.options.forEach((opt, i) => {
@@ -1768,7 +1900,6 @@ async function launchQuestion(index) {
   }
 
   let answersCount = 0;
-  const totalPlayers = hostPlayersList.length;
   const counterPrefix = isPoll ? 'Vots' : 'Respostes';
   document.getElementById('host-answers-count').textContent = `${counterPrefix}: 0 / ${totalPlayers}`;
 
@@ -1778,11 +1909,17 @@ async function launchQuestion(index) {
       answersCount++;
       document.getElementById('host-answers-count').textContent = `${counterPrefix}: ${answersCount} / ${totalPlayers}`;
 
+      const bigSaCounter = document.getElementById('host-sa-big-counter');
+      if (bigSaCounter) {
+        bigSaCounter.innerHTML = `${answersCount} <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span>`;
+      }
+
       if (q.type === 'word_cloud') {
         const word = document.createElement('span');
-        word.className = "bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-extrabold text-2xl shadow-md";
+        const cloudColors = ['bg-indigo-600', 'bg-sky-600', 'bg-emerald-600', 'bg-amber-500', 'bg-rose-500'];
+        word.className = `${cloudColors[answersCount % cloudColors.length]} text-white px-5 py-2.5 rounded-2xl font-extrabold text-xl sm:text-2xl shadow-md`;
         word.textContent = payload.new.answer_value.text;
-        wcDisplay.appendChild(word);
+        wcWords.appendChild(word);
       }
 
       if (totalPlayers > 0 && answersCount >= totalPlayers) {
@@ -1832,26 +1969,29 @@ async function showQuestionResults() {
   const totalVotes = ansList.length;
   if (!isPoll) await refreshLiveLeaderboard();
 
-  const wcDisplay = document.getElementById('host-wordcloud-display');
+  const saDisplay = document.getElementById('host-shortanswer-display');
 
-  if (q.type === 'puzzle') {
+  if (q.type === 'type_answer') {
+    const acceptedText = (q.options || []).map(o => o.text).filter(Boolean).join(' · ');
+    const correctNum = ansList.filter(a => a.is_correct).length;
+    saDisplay.innerHTML = `
+      <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Respostes acceptades (${correctNum} encerts)</span>
+      <p class="text-2xl md:text-3xl font-black text-slate-900">${acceptedText}</p>
+    `;
+  } else if (q.type === 'puzzle') {
     const correctOrderText = (q.options || []).map(o => o.text).join(' → ');
     const correctNum = ansList.filter(a => a.is_correct).length;
-    wcDisplay.innerHTML = `
-      <div class="space-y-3 text-center">
-        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Ordre correcte (${correctNum} encerts)</span>
-        <p class="text-xl md:text-2xl font-extrabold text-slate-900">${correctOrderText}</p>
-      </div>
+    saDisplay.innerHTML = `
+      <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Ordre correcte (${correctNum} encerts)</span>
+      <p class="text-xl md:text-2xl font-extrabold text-slate-900">${correctOrderText}</p>
     `;
   } else if (q.type === 'nps_scale') {
     const values = ansList.map(a => Number(a.answer_value?.index)).filter(n => !isNaN(n));
     const avg = values.length > 0 ? (values.reduce((acc, v) => acc + v, 0) / values.length).toFixed(1) : '0.0';
-    wcDisplay.innerHTML = `
-      <div class="space-y-2 text-center">
-        <span class="text-xs font-bold text-slate-500">Mitjana de valoració de l'aula</span>
-        <p class="text-5xl md:text-6xl font-black text-indigo-600">${avg} <span class="text-2xl text-slate-400">/ 10</span></p>
-        <p class="text-xs font-bold text-slate-500">${values.length} vots registrats</p>
-      </div>
+    saDisplay.innerHTML = `
+      <span class="text-xs font-bold text-slate-500">Mitjana de valoració de l'aula</span>
+      <p class="text-5xl md:text-6xl font-black text-indigo-600">${avg} <span class="text-2xl text-slate-400">/ 10</span></p>
+      <p class="text-xs font-bold text-slate-500">${values.length} vots registrats</p>
     `;
   } else if (q.type === 'quiz' || q.type === 'true_false' || q.type === 'poll') {
     const counts = q.options.map((_, idx) => ansList.filter(a => a.answer_value?.index === idx).length);
@@ -1942,12 +2082,12 @@ async function showHostPodium() {
     const p = list[playerIdx];
     if (!p) return;
     pillars.innerHTML += `
-      <div class="flex flex-col items-center w-28 md:w-36">
-        <div class="text-5xl mb-2">${p.avatar}</div>
-        <p class="font-extrabold text-slate-900 text-base md:text-lg truncate w-full">${p.nickname}</p>
+      <div class="flex flex-col items-center w-24 sm:w-36">
+        <div class="text-4xl sm:text-5xl mb-2">${p.avatar}</div>
+        <p class="font-extrabold text-slate-900 text-sm sm:text-lg truncate w-full">${p.nickname}</p>
         <p class="text-xs font-extrabold text-indigo-600 mb-3">${p.score} pts</p>
         <div class="w-full ${heights[colIdx]} ${bgColors[colIdx]} rounded-t-3xl flex flex-col items-center justify-start pt-4 shadow-inner">
-          <span class="text-xl md:text-2xl font-black">${labels[colIdx]}</span>
+          <span class="text-lg sm:text-2xl font-black">${labels[colIdx]}</span>
         </div>
       </div>
     `;
