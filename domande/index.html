@@ -16,17 +16,25 @@
     .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 0 #047857; }
     .btn-opt:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
     .bg-pattern {
-      background-color: #f8fafc;
+      background-color: #f4f6fb;
       background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
       background-size: 24px 24px;
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .app-icon-blue { background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%); box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35); }
+    .app-icon-teal { background: linear-gradient(145deg, #14b8a6 0%, #0f766e 100%); box-shadow: 0 8px 16px -4px rgba(15, 118, 110, 0.35); }
+    .app-icon-purple { background: linear-gradient(145deg, #8b5cf6 0%, #6d28d9 100%); box-shadow: 0 8px 16px -4px rgba(109, 40, 217, 0.35); }
+    .app-icon-emerald { background: linear-gradient(145deg, #10b981 0%, #047857 100%); box-shadow: 0 8px 16px -4px rgba(5, 150, 105, 0.35); }
+    .app-icon-amber { background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 8px 16px -4px rgba(217, 119, 6, 0.35); }
+    .app-icon-sky { background: linear-gradient(145deg, #0ea5e9 0%, #0369a1 100%); box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.35); }
+    .app-icon-rose { background: linear-gradient(145deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 8px 16px -4px rgba(225, 29, 72, 0.35); }
+    .pdf-keep-together { break-inside: avoid; page-break-inside: avoid; }
   </style>
 </head>
 <body class="bg-pattern text-slate-800 min-h-screen flex flex-col select-none">
 
-  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-40">
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-40">
     <div onclick="handleLogoClick()" class="flex items-center gap-3 cursor-pointer">
       <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-indigo-200">D</div>
       <span class="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">Domande</span>
@@ -75,9 +83,23 @@
       <p id="join-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-sm font-semibold hidden"></p>
     </section>
 
+    <section id="view-student-team-select" class="hidden w-full max-w-md bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
+      <div class="space-y-1.5">
+        <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Mode equips</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Tria el teu equip</h2>
+        <p class="text-sm text-slate-500">Selecciona l'equip que t'ha assignat el/la mestre/a</p>
+      </div>
+      <div id="student-teams-grid" class="grid grid-cols-1 gap-3">
+      </div>
+      <button type="button" onclick="showView('view-join')" class="text-xs font-bold text-slate-400 hover:text-slate-700">Tornar enrere</button>
+    </section>
+
     <section id="view-student-lobby" class="hidden w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
       <div id="student-badge" class="w-24 h-24 mx-auto bg-indigo-50 rounded-3xl flex items-center justify-center text-6xl shadow-inner">🦊</div>
-      <h2 class="text-3xl font-extrabold text-slate-900" id="student-display-name">Nom</h2>
+      <div class="space-y-1">
+        <h2 class="text-3xl font-extrabold text-slate-900" id="student-display-name">Nom</h2>
+        <span id="student-team-badge" class="hidden inline-block px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-extrabold">Equip</span>
+      </div>
       <div class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-bold">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
         <span>Connectat/da a la sala</span>
@@ -87,7 +109,10 @@
 
     <section id="view-student-play" class="hidden w-full max-w-3xl flex-1 flex flex-col justify-between space-y-4">
       <div class="bg-white p-3.5 sm:p-4 rounded-3xl shadow-md border border-slate-100 flex flex-wrap justify-between items-center gap-2">
-        <span id="student-q-counter" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Pregunta 1</span>
+        <div class="flex items-center gap-2">
+          <span id="student-q-counter" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Pregunta 1</span>
+          <span id="student-play-team-pill" class="hidden px-2.5 py-1 bg-slate-800 text-white rounded-full text-xs font-bold">Equip</span>
+        </div>
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <span id="student-streak-pill" class="hidden px-3 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-full text-xs font-extrabold">🔥 Ratxa x2</span>
           <span id="student-rank-pill" class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-extrabold">Posició: -</span>
@@ -95,12 +120,13 @@
         </div>
       </div>
 
-      <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-md border border-slate-100 text-center space-y-2">
+      <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-md border border-slate-100 text-center space-y-3">
         <div id="student-type-badge" class="hidden inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-700 rounded-full text-xs font-extrabold">
           <span>☁️</span>
           <span>Núvol de paraules</span>
         </div>
         <h2 id="student-q-text" class="text-xl md:text-2xl font-extrabold text-slate-900">Text de la pregunta</h2>
+        <img id="student-q-image" src="" class="hidden max-h-48 mx-auto rounded-2xl object-contain">
       </div>
 
       <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 flex-1 min-h-[260px]">
@@ -129,10 +155,11 @@
         <div id="student-nps-grid" class="grid grid-cols-6 sm:grid-cols-11 gap-2"></div>
       </div>
 
-      <div id="student-slide-box" class="hidden bg-indigo-50 border border-indigo-100 text-center p-8 sm:p-10 rounded-3xl space-y-3">
+      <div id="student-slide-box" class="hidden bg-indigo-50 border border-indigo-100 text-center p-8 sm:p-10 rounded-3xl space-y-4">
         <div class="text-5xl">📖</div>
         <h3 class="text-xl font-extrabold text-indigo-900">Diapositiva explicativa</h3>
-        <p class="text-sm text-indigo-700">Para atenció a la pissarra mentre el/la mestre/a explica aquest punt.</p>
+        <p id="student-slide-body" class="text-sm sm:text-base text-indigo-800 max-w-lg mx-auto">Para atenció a la pissarra mentre el/la mestre/a explica aquest punt.</p>
+        <button id="btn-study-next-slide" onclick="advanceStudyQuestion()" class="hidden px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-sm shadow-md transition">Continuar ➔</button>
       </div>
 
       <div id="student-feedback" class="hidden bg-white text-center p-8 rounded-3xl shadow-xl border border-slate-100 space-y-3">
@@ -142,9 +169,21 @@
           <span id="feedback-points" class="text-base font-extrabold text-indigo-600 bg-indigo-50 px-3.5 py-1 rounded-full hidden">+0 punts</span>
           <span id="feedback-streak-badge" class="text-base font-extrabold text-orange-600 bg-orange-50 px-3.5 py-1 rounded-full hidden">🔥 Ratxa x2</span>
         </div>
+        <p id="feedback-correct-reveal" class="hidden text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl max-w-md mx-auto"></p>
         <p id="feedback-live-pos" class="text-sm font-extrabold text-slate-700 hidden">Posició actual: 1r/a</p>
         <p id="feedback-sub" class="text-slate-500 text-sm">Esperant la resta de companys i companyes...</p>
+        <button id="btn-study-next" onclick="advanceStudyQuestion()" class="hidden mt-2 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-200 transition">Següent pregunta ➔</button>
       </div>
+    </section>
+
+    <section id="view-student-closed" class="hidden w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
+      <div class="w-20 h-20 mx-auto bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center text-5xl">🚪</div>
+      <div class="space-y-2">
+        <span class="inline-block px-3.5 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-extrabold">Sessió finalitzada</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Sessió tancada pel/per la mestre/a</h2>
+        <p id="student-closed-reason" class="text-slate-500 text-sm">La sala s'ha tancat abans d'acabar l'activitat. Torna a l'inici si voleu començar una partida nova.</p>
+      </div>
+      <button onclick="resetToPinScreen()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-200 transition">Tornar a l'inici</button>
     </section>
 
     <section id="view-student-podium" class="hidden w-full max-w-xl bg-white p-6 sm:p-9 rounded-3xl shadow-xl border border-slate-100 text-center space-y-6">
@@ -190,7 +229,10 @@
         <div id="student-final-ranking-list" class="space-y-1.5 max-h-60 overflow-y-auto"></div>
       </div>
 
-      <button onclick="resetToPinScreen()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-200 transition">Tornar a l'inici</button>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="btn-study-retry" onclick="retryStudyMode()" class="hidden flex-1 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-emerald-200 transition">Tornar a practicar</button>
+        <button onclick="resetToPinScreen()" class="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-200 transition">Tornar a l'inici</button>
+      </div>
     </section>
 
     <section id="view-login" class="hidden w-full max-w-md bg-white p-7 sm:p-8 rounded-3xl shadow-xl border border-slate-100 space-y-5">
@@ -208,65 +250,125 @@
     </section>
 
     <section id="view-teacher-dash" class="hidden w-full space-y-6">
-      <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Panell docent</h2>
-            <p class="text-xs sm:text-sm text-slate-500" id="teacher-email-display"></p>
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <p class="text-xs sm:text-sm font-bold text-slate-600" id="teacher-email-display"></p>
+        </div>
+        <span class="text-xs font-bold text-slate-400">Panell de control docent</span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="relative bg-white p-4 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <span id="badge-count-quizzes" class="absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
+          <div class="w-12 h-12 rounded-2xl app-icon-blue text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="3" width="16" height="18" rx="2.5"/>
+              <line x1="8" y1="8" x2="16" y2="8"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+              <line x1="8" y1="16" x2="12" y2="16"/>
+            </svg>
           </div>
-          <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">Connectat/da</span>
-        </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Les meves</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Activitats pròpies</span>
+          <span id="indicator-tab-quizzes" class="w-6 h-1 rounded-full bg-blue-600 mt-2"></span>
+        </button>
 
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
-          <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-indigo-50/70 ring-2 ring-indigo-600 transition">
-            <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800">Activitats</span>
-          </button>
+        <button onclick="switchDashTab('school')" id="tab-btn-school" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <span id="badge-count-school" class="hidden absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-teal-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
+          <div class="w-12 h-12 rounded-2xl app-icon-teal text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Banc de centre</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Compartit claustre</span>
+          <span id="indicator-tab-school" class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
 
-          <button onclick="switchDashTab('results')" id="tab-btn-results" class="group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition">
-            <div class="w-14 h-14 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-md shadow-sky-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-700">Resultats</span>
-          </button>
+        <button onclick="switchDashTab('results')" id="tab-btn-results" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <span id="badge-count-results" class="hidden absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-violet-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
+          <div class="w-12 h-12 rounded-2xl app-icon-purple text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Resultats</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Avaluació i pdf</span>
+          <span id="indicator-tab-results" class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
 
-          <button onclick="openQuizEditor('quiz')" class="group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-700">Qüestionari</span>
-          </button>
+        <button onclick="openQuizEditor('quiz')" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-emerald text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Nou qüestionari</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Joc amb punts</span>
+          <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
 
-          <button onclick="openQuizEditor('poll')" class="group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition">
-            <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-700">Enquesta</span>
-          </button>
+        <button onclick="openQuizEditor('poll')" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-amber text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Nova enquesta</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Votació d'aula</span>
+          <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
 
-          <label class="group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-slate-50 cursor-pointer transition">
-            <div class="w-14 h-14 rounded-2xl bg-violet-600 text-white flex items-center justify-center shadow-md shadow-violet-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-700">Importar</span>
-            <input type="file" accept=".json" onchange="importQuizJSON(event)" class="hidden">
-          </label>
+        <label class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center cursor-pointer transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-sky text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Importar</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Fitxer .json</span>
+          <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+          <input type="file" accept=".json" onchange="importQuizJSON(event)" class="hidden">
+        </label>
 
-          <button onclick="logoutTeacher()" class="group flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-rose-50/70 transition">
-            <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-md shadow-rose-200 group-active:scale-95 transition">
-              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-700">Sortir</span>
-          </button>
-        </div>
+        <button onclick="logoutTeacher()" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-rose text-white flex items-center justify-center mb-2.5">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Sortir</span>
+          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Tancar sessió</span>
+          <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
       </div>
 
       <div id="dash-quizzes-wrapper" class="space-y-4">
         <div id="dash-tags-filter" class="flex flex-wrap items-center gap-2">
         </div>
         <div id="dash-tab-quizzes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        </div>
+      </div>
+
+      <div id="dash-school-wrapper" class="hidden space-y-4">
+        <div class="bg-teal-50/80 border border-teal-200/80 p-4 rounded-2xl flex items-center gap-3 text-teal-900 text-xs sm:text-sm font-semibold">
+          <span class="text-xl">🏫</span>
+          <span>Aquí trobaràs els qüestionaris i enquestes que altres docents han compartit amb el centre. Pots obrir-los directament o clonar-los al teu espai per editar-los.</span>
+        </div>
+        <div id="dash-tab-school" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         </div>
       </div>
 
@@ -297,7 +399,7 @@
       </div>
 
       <div id="pdf-export-area" class="space-y-6 bg-white p-2 rounded-2xl">
-        <div class="flex items-center justify-between border-b-2 border-indigo-600 pb-4">
+        <div class="flex items-center justify-between border-b-2 border-indigo-600 pb-4 pdf-keep-together">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-lg">D</div>
             <div>
@@ -308,7 +410,7 @@
           <span id="pdf-type-tag" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Registre d'aula</span>
         </div>
 
-        <div id="report-stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div id="report-stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 pdf-keep-together">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
             <p class="text-xs text-slate-500 font-bold">Participants</p>
             <p id="rep-stat-players" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
@@ -332,18 +434,15 @@
           <div id="report-questions-summary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
 
-        <div id="report-visual-bars" class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3">
+        <div id="report-visual-bars" class="bg-slate-50 p-5 rounded-2xl border border-slate-200/70 space-y-3 pdf-keep-together">
           <p class="text-xs font-extrabold text-slate-600">Rendiment individual i percentatge d'encert</p>
           <div id="report-bars-list" class="space-y-2.5"></div>
         </div>
 
-        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead id="report-table-head" class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-            </thead>
-            <tbody id="report-table-body" class="divide-y divide-slate-100">
-            </tbody>
-          </table>
+        <div class="space-y-3">
+          <p class="text-xs font-extrabold text-slate-600 px-1">Detall individual de respostes per participant</p>
+          <div id="report-student-cards" class="space-y-3">
+          </div>
         </div>
       </div>
     </section>
@@ -367,6 +466,14 @@
           <input id="editor-tag" type="text" placeholder="Ex: medi 5è, tutoria..." class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none font-bold text-base text-slate-900">
         </div>
       </div>
+
+      <label class="flex items-center gap-3 bg-teal-50/70 border border-teal-200/80 p-3.5 rounded-2xl cursor-pointer">
+        <input id="editor-shared" type="checkbox" class="w-5 h-5 accent-teal-600 rounded cursor-pointer">
+        <div>
+          <span class="text-sm font-extrabold text-teal-900 block">Compartir amb el banc de centre</span>
+          <span class="text-xs text-teal-700">Si actives aquesta opció, tots els/les docents de l'escola podran veure i clonar aquesta activitat</span>
+        </div>
+      </label>
       
       <div id="editor-questions-container" class="space-y-5"></div>
 
@@ -382,17 +489,30 @@
     </section>
 
     <section id="view-teacher-host" class="hidden w-full space-y-6 text-center">
-      <div class="flex justify-end">
-        <button id="btn-music-toggle" onclick="toggleGameMusic()" class="inline-flex items-center gap-2 bg-white hover:bg-indigo-50 text-slate-800 border border-slate-200 px-4 py-2 rounded-2xl font-bold text-sm shadow-sm transition">
-          <span id="music-icon">🔇</span>
-          <span id="music-label">Activar música</span>
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <button onclick="closeHostRoomAndExit()" class="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 px-4 py-2 rounded-2xl font-bold text-sm transition">
+          <span>✕</span>
+          <span>Tancar sala</span>
         </button>
+        <div class="flex items-center gap-2">
+          <button id="btn-lock-room" onclick="toggleRoomLock()" class="inline-flex items-center gap-2 bg-white hover:bg-amber-50 text-slate-800 border border-slate-200 px-4 py-2 rounded-2xl font-bold text-sm shadow-sm transition">
+            <span id="lock-icon">🔓</span>
+            <span id="lock-label">Sala oberta</span>
+          </button>
+          <button id="btn-music-toggle" onclick="toggleGameMusic()" class="inline-flex items-center gap-2 bg-white hover:bg-indigo-50 text-slate-800 border border-slate-200 px-4 py-2 rounded-2xl font-bold text-sm shadow-sm transition">
+            <span id="music-icon">🔇</span>
+            <span id="music-label">Activar música</span>
+          </button>
+        </div>
       </div>
 
       <div id="host-lobby" class="bg-white p-6 sm:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
         <div class="flex flex-col md:flex-row items-center justify-center gap-8">
           <div class="space-y-2">
-            <span id="host-lobby-badge" class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
+            <div class="flex items-center justify-center gap-2">
+              <span id="host-lobby-badge" class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
+              <span id="host-mode-badge" class="hidden px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-extrabold">Mode equips</span>
+            </div>
             <p class="text-slate-500 font-semibold text-lg pt-2">Entra des del teu dispositiu amb el codi:</p>
             <div id="host-pin-display" class="text-5xl sm:text-7xl md:text-8xl font-black tracking-widest text-indigo-600 bg-slate-50 border-2 border-indigo-100 py-5 px-8 sm:px-10 rounded-3xl inline-block shadow-inner">
               000000
@@ -408,8 +528,8 @@
         </div>
         
         <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-2">
-          <p class="text-base font-bold text-slate-700">Alumnes a la sala (<span id="host-player-count" class="text-indigo-600">0</span>)</p>
-          <p class="text-xs text-slate-400 pb-2">Clica damunt d'un/a alumne/a si necessites expulsar-lo/la de la sala</p>
+          <p class="text-base font-bold text-slate-700">Participants a la sala (<span id="host-player-count" class="text-indigo-600">0</span>)</p>
+          <p class="text-xs text-slate-400 pb-2">Clica damunt d'un/a participant si necessites expulsar-lo/la de la sala</p>
           <div id="host-players-grid" class="flex flex-wrap justify-center gap-3 min-h-[90px]"></div>
         </div>
 
@@ -437,22 +557,22 @@
           <div id="host-visual-col" class="lg:col-span-2 space-y-6">
             <div id="host-bars-display" class="hidden h-52 flex items-end justify-center gap-4 px-4 pt-8 pb-3 bg-slate-50 rounded-3xl border border-slate-100"></div>
             <div id="host-options-display" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left text-lg font-bold text-white"></div>
-            <div id="host-shortanswer-display" class="hidden bg-slate-50 border border-slate-200/80 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 min-h-[220px]"></div>
-            <div id="host-wordcloud-display" class="hidden bg-slate-50 border border-slate-200/80 rounded-3xl p-6 min-h-[220px] space-y-4">
-              <div class="flex items-center justify-center gap-2 text-sky-600 font-extrabold text-sm">
+            <div id="host-shortanswer-display" class="hidden bg-slate-50 border border-slate-200/80 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 min-h-[260px]"></div>
+            <div id="host-wordcloud-display" class="hidden bg-slate-50 border border-slate-200/80 rounded-3xl p-6 sm:p-8 min-h-[340px] flex flex-col justify-between space-y-5">
+              <div class="flex items-center justify-center gap-2 text-sky-600 font-extrabold text-base">
                 <span class="text-2xl">☁️</span>
                 <span>Núvol de paraules en construcció</span>
               </div>
-              <div id="host-wordcloud-words" class="flex flex-wrap justify-center items-center gap-3 min-h-[120px]"></div>
+              <div id="host-wordcloud-words" class="flex-1 flex flex-wrap justify-center items-center content-center gap-3.5 min-h-[240px]"></div>
             </div>
           </div>
 
           <div id="host-leaderboard-col" class="bg-slate-50 p-5 rounded-3xl border border-slate-200/80 text-left space-y-3">
             <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-              <span class="font-extrabold text-slate-800 text-sm">Classificació en directe</span>
+              <span id="host-lb-title" class="font-extrabold text-slate-800 text-sm">Classificació en directe</span>
               <span class="text-xs font-bold text-indigo-600">Top punts</span>
             </div>
-            <div id="host-live-leaderboard" class="space-y-2 max-h-[320px] overflow-y-auto">
+            <div id="host-live-leaderboard" class="space-y-2 max-h-[340px] overflow-y-auto">
               <p class="text-xs text-slate-400 text-center py-4">Esperant punts...</p>
             </div>
           </div>
@@ -482,7 +602,7 @@
       <div id="host-podium-screen" class="hidden bg-white p-6 sm:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
         <div class="space-y-2">
           <span class="px-4 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-extrabold">Partida finalitzada</span>
-          <h2 class="text-3xl md:text-5xl font-black text-slate-900 pt-2">Podi de guanyadors/es</h2>
+          <h2 id="host-podium-heading" class="text-3xl md:text-5xl font-black text-slate-900 pt-2">Podi de guanyadors/es</h2>
         </div>
 
         <div id="host-podium-pillars" class="flex items-end justify-center gap-3 sm:gap-8 pt-8 min-h-[300px]">
@@ -515,6 +635,62 @@
 
   </main>
 
+  <div id="launch-mode-modal" onclick="closeLaunchModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Configura la sala</span>
+        <button type="button" onclick="closeLaunchModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
+      </div>
+      <h3 id="launch-modal-title" class="text-xl font-extrabold text-slate-900">Títol de l'activitat</h3>
+      <div class="grid grid-cols-1 gap-3 text-left">
+        <button type="button" onclick="confirmCreateRoom('individual')" class="p-4 rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50 flex items-center gap-4 transition">
+          <span class="text-3xl">👤</span>
+          <div>
+            <p class="font-extrabold text-slate-900 text-base">Mode individual</p>
+            <p class="text-xs text-slate-500">Cada alumne/a juga amb el seu propi dispositiu i puntuació</p>
+          </div>
+        </button>
+        <div class="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 space-y-3">
+          <div class="flex items-center gap-4">
+            <span class="text-3xl">👥</span>
+            <div>
+              <p class="font-extrabold text-slate-900 text-base">Mode equips cooperatius</p>
+              <p class="text-xs text-slate-500">Els punts de cada participant se sumen al seu equip</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="launch-teams-count" class="flex-1 bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none">
+              <option value="2">2 equips</option>
+              <option value="3">3 equips</option>
+              <option value="4" selected>4 equips</option>
+              <option value="5">5 equips</option>
+              <option value="6">6 equips</option>
+            </select>
+            <button type="button" onclick="confirmCreateRoom('teams')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition">Obrir per equips</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="study-link-modal" onclick="closeStudyModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <span class="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-extrabold">Repàs autònom</span>
+        <button type="button" onclick="closeStudyModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-xl font-extrabold text-slate-900">Enllaç per estudiar al seu ritme</h3>
+        <p class="text-xs text-slate-500">Comparteix aquest enllaç o qr perquè l'alumnat practiqui des de casa o a classe sense necessitat de pin</p>
+      </div>
+      <img id="study-qr-img" src="" alt="Qr repàs" class="w-44 h-44 mx-auto rounded-2xl border border-slate-200 p-2 bg-white">
+      <div class="flex gap-2">
+        <input id="study-share-url" type="text" readonly class="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 outline-none">
+        <button type="button" id="btn-copy-study" onclick="copyStudyUrl()" class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs transition">Copiar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="qr-modal" onclick="closeQrModal()" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div onclick="event.stopPropagation()" class="bg-white p-8 sm:p-10 rounded-3xl max-w-lg w-full text-center space-y-5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -526,6 +702,24 @@
         <p class="text-xs font-bold text-slate-400">O entra manualment amb el codi pin:</p>
         <p id="modal-qr-pin" class="text-4xl sm:text-5xl font-black tracking-widest text-indigo-600 mt-1">000000</p>
       </div>
+    </div>
+  </div>
+
+  <div id="connection-lost-overlay" class="hidden fixed inset-0 bg-rose-600 text-white z-50 flex flex-col items-center justify-center p-6 text-center space-y-5">
+    <div class="w-24 h-24 rounded-full bg-white/15 flex items-center justify-center animate-pulse">
+      <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
+    <div class="space-y-2 max-w-md">
+      <h2 class="text-3xl sm:text-4xl font-black">Problema de connexió</h2>
+      <p class="text-rose-100 text-base sm:text-lg font-medium">S'ha perdut la connexió amb la sala. Comprova la xarxa wifi del dispositiu, estem intentant reconnectar-te...</p>
     </div>
   </div>
 
