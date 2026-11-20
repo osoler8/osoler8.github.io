@@ -1,3 +1,10 @@
+L'error apareix perquè en la versió anterior l'alumne (que accedeix sense iniciar sessió, com a rol `anon`) intentava fer una consulta creuada (`select('*, quizzes(kind)')`), però la taula `quizzes` només té permisos de lectura per als docents autenticats (`authenticated`). Quan Supabase intenta unir una taula protegida per RLS per a un usuari anònim, la consulta falla i retorna el missatge de codi incorrecte.
+
+A més, per evitar que els alumnes tinguin problemes de permisos en validar la sala o en carregar una enquesta, la consulta de l'alumne només ha de llegir la taula `game_sessions` i deduir si és una enquesta a partir dels tipus de preguntes carregades.
+
+Aquí tens l'HTML complet i corregit, sense comentaris i amb només la primera paraula de cada frase en majúscula:
+
+```html
 <!DOCTYPE html>
 <html lang="ca">
 <head>
@@ -588,7 +595,7 @@
 
       const { data: session, error } = await sb
         .from('game_sessions')
-        .select('*, quizzes(kind)')
+        .select('*')
         .eq('pin', pin)
         .eq('status', 'waiting')
         .single();
@@ -611,18 +618,20 @@
         return;
       }
 
-      currentSession = session;
-      sessionKind = session.quizzes?.kind || 'quiz';
-      currentPlayer = player;
-      studentScore = 0;
-      studentStreak = 0;
-
       const { data: qs } = await sb
         .from('questions')
         .select('*')
         .eq('quiz_id', session.quiz_id)
         .order('order_index', { ascending: true });
+
+      currentSession = session;
       sessionQuestions = qs || [];
+      const interactiveQs = sessionQuestions.filter(q => q.type !== 'slide');
+      const isPollActivity = interactiveQs.length > 0 && interactiveQs.every(q => ['poll', 'nps_scale'].includes(q.type) || q.points_multiplier === 0);
+      sessionKind = isPollActivity ? 'poll' : 'quiz';
+      currentPlayer = player;
+      studentScore = 0;
+      studentStreak = 0;
 
       document.getElementById('student-badge').textContent = selectedAvatar;
       document.getElementById('student-display-name').textContent = nickname;
@@ -2156,7 +2165,7 @@
         const avg = values.length > 0 ? (values.reduce((acc, v) => acc + v, 0) / values.length).toFixed(1) : '0.0';
         wcDisplay.innerHTML = `
           <div class="space-y-2 text-center">
-            <span class="text-xs font-bold text-slate-500 uppercase">Mitjana de valoració de l'aula</span>
+            <span class="text-xs font-bold text-slate-500">Mitjana de valoració de l'aula</span>
             <p class="text-5xl md:text-6xl font-black text-indigo-600">${avg} <span class="text-2xl text-slate-400">/ 10</span></p>
             <p class="text-xs font-bold text-slate-500">${values.length} vots registrats</p>
           </div>
@@ -2291,3 +2300,5 @@
   </script>
 </body>
 </html>
+
+```
