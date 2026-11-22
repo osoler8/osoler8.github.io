@@ -122,7 +122,8 @@ let pendingLaunchQuizId = null;
 let pendingLaunchKind = 'quiz';
 let selectedLaunchMode = 'individual';
 let selectedTeamsCount = 4;
-let selectedCoopTarget = 10000;
+let selectedCoopDifficulty = 0.75;
+let computedCoopGoal = 5000;
 let activeEmojiTargetBtn = null;
 let isStudyMode = false;
 let studyIndex = 0;
@@ -1373,7 +1374,8 @@ function renderStudentQuestion(qIndex) {
   const shouldShuffleOpts = !isStudyMode && sessionKind === 'quiz' && Boolean(currentSession?.shuffle_options) && q.type === 'quiz';
   studentDisplayedOptions = shouldShuffleOpts ? shuffleArrayCopy(rawValidOptions) : rawValidOptions;
 
-  const isGradableChoice = sessionKind === 'quiz' && !isStudyMode && q.points_multiplier !== 0 && ['quiz', 'true_false', 'puzzle', 'type_answer', 'cloze'].includes(q.type);
+  const isCoopMode = (currentSession?.mode || '').startsWith('coop:');
+  const isGradableChoice = sessionKind === 'quiz' && !isStudyMode && (q.points_multiplier !== 0 || isCoopMode) && ['quiz', 'true_false', 'puzzle', 'type_answer', 'cloze'].includes(q.type);
   if (isGradableChoice && studentLifelinesEnabled && (!studentUsed5050 || !studentUsedDouble)) {
     const bar = document.getElementById('student-lifelines-bar');
     const b50 = document.getElementById('btn-lifeline-5050');
@@ -1511,11 +1513,15 @@ function getCorrectSolutionText(q) {
 }
 
 function calculateGamifiedPoints(question, isCorrect) {
-  if (sessionKind === 'poll' || question.points_multiplier === 0) return 0;
+  if (sessionKind === 'poll') return 0;
+  const isCoopMode = (currentSession?.mode || '').startsWith('coop:');
+  const effectiveMultiplier = (isCoopMode && question.points_multiplier === 0) ? 1 : question.points_multiplier;
+  if (effectiveMultiplier === 0) return 0;
+
   const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
   const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
   const streakBonus = isCorrect ? studentStreak * 100 : 0;
-  let base = Math.round((1000 * ratio + streakBonus) * question.points_multiplier);
+  let base = Math.round((1000 * ratio + streakBonus) * effectiveMultiplier);
 
   if (studentActive5050) {
     base = Math.round(base * 0.5);
@@ -2011,16 +2017,36 @@ function selectTeamsCount(count) {
   });
 }
 
-function selectCoopTarget(target) {
-  selectedCoopTarget = target;
+function selectCoopDifficulty(ratio) {
+  selectedCoopDifficulty = ratio;
   document.querySelectorAll('.coop-target-btn').forEach(btn => {
-    const val = parseInt(btn.dataset.target || '0');
-    if (val === target) {
-      btn.className = "coop-target-btn py-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-sm transition";
+    const val = parseFloat(btn.dataset.diff || '0');
+    if (Math.abs(val - ratio) < 0.01) {
+      btn.className = "coop-target-btn py-2.5 px-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-sm transition";
     } else {
-      btn.className = "coop-target-btn py-2 rounded-xl bg-white border border-slate-200 hover:border-rose-300 font-extrabold text-xs text-slate-700 transition";
+      btn.className = "coop-target-btn py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-rose-300 font-extrabold text-xs text-slate-700 transition";
     }
   });
+}
+
+function calculateDynamicCoopGoal(questionsList, playersCount) {
+  const gradableTypes = ['quiz', 'true_false', 'puzzle', 'type_answer', 'cloze'];
+  const playableQuestions = (questionsList || []).filter(q => gradableTypes.includes(q.type));
+  let basePointsPerPlayer = 0;
+
+  playableQuestions.forEach(q => {
+    const mult = (typeof q.points_multiplier === 'number' && q.points_multiplier > 0) ? q.points_multiplier : 1;
+    basePointsPerPlayer += 1000 * mult;
+  });
+
+  if (basePointsPerPlayer <= 0) {
+    basePointsPerPlayer = 1000;
+  }
+
+  const activePlayers = Math.max(1, playersCount || 1);
+  const ratio = parseFloat((sessionMode.split(':')[1]) || '0.75');
+  const rawGoal = Math.round((basePointsPerPlayer * activePlayers * ratio) / 100) * 100;
+  return Math.max(500, rawGoal);
 }
 
 function openLaunchModal(quizId, kind, title) {
@@ -2036,7 +2062,7 @@ function openLaunchModal(quizId, kind, title) {
   document.getElementById('launch-enable-lifelines').checked = true;
   selectLaunchMode('individual');
   selectTeamsCount(4);
-  selectCoopTarget(10000);
+  selectCoopDifficulty(0.75);
   document.getElementById('launch-mode-modal').classList.remove('hidden');
 }
 
@@ -2053,7 +2079,7 @@ function confirmCreateRoom() {
   if (selectedLaunchMode === 'teams') {
     createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${selectedTeamsCount}`, shuffleQ, shuffleO, lifelinesOn);
   } else if (selectedLaunchMode === 'coop') {
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, `coop:${selectedCoopTarget}`, shuffleQ, shuffleO, lifelinesOn);
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, `coop:${selectedCoopDifficulty}`, shuffleQ, shuffleO, lifelinesOn);
   } else {
     createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual', shuffleQ, shuffleO, lifelinesOn);
   }
@@ -3254,7 +3280,8 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
     modeBadge.textContent = `Mode equips (${mode.split(':')[1]})`;
     modeBadge.classList.remove('hidden');
   } else if (isCoop) {
-    modeBadge.textContent = `Repte cooperatiu (${Number(mode.split(':')[1]).toLocaleString('ca-ES')} pts)`;
+    const pctLabel = Math.round(parseFloat(mode.split(':')[1] || '0.75') * 100);
+    modeBadge.textContent = `Repte cooperatiu (dificultat ${pctLabel}%)`;
     modeBadge.classList.remove('hidden');
   } else {
     modeBadge.classList.add('hidden');
@@ -3415,7 +3442,7 @@ function updateCoopBossProgress(totalClassPoints) {
     return;
   }
   bossBox.classList.remove('hidden');
-  const target = parseInt(sessionMode.split(':')[1] || '10000');
+  const target = computedCoopGoal;
   const remaining = Math.max(0, target - totalClassPoints);
   const hpPct = Math.max(0, Math.min(100, Math.round((remaining / target) * 100)));
 
@@ -3482,6 +3509,9 @@ async function startGame() {
     .eq('session_id', currentSession.id);
   if (latestPlayers) {
     hostPlayersList = latestPlayers;
+  }
+  if (sessionMode.startsWith('coop:')) {
+    computedCoopGoal = calculateDynamicCoopGoal(sessionQuestions, hostPlayersList.length);
   }
   updateCoopBossProgress(0);
   await launchQuestion(0);
@@ -3830,7 +3860,7 @@ async function showHostPodium(preloadedList = null) {
 
   const coopBanner = document.getElementById('host-coop-outcome-banner');
   if (isCoop) {
-    const target = parseInt(sessionMode.split(':')[1] || '10000');
+    const target = computedCoopGoal;
     const totalPts = list.reduce((sum, p) => sum + (p.score || 0), 0);
     if (totalPts >= target) {
       coopBanner.textContent = `🎉 Repte superat! Heu aconseguit ${totalPts.toLocaleString('ca-ES')} punts de ${target.toLocaleString('ca-ES')} necessaris.`;
