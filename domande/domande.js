@@ -95,6 +95,12 @@ let studentAnsweredCurrentIndex = -1;
 let studentFinalShown = false;
 let studentPuzzleOrder = [];
 let studentDisplayedOptions = [];
+let studentLifelinesEnabled = true;
+let studentUsed5050 = false;
+let studentUsedDouble = false;
+let studentActive5050 = false;
+let studentActiveDouble = false;
+let studentBrainstormSelected = new Set();
 let currentReportData = null;
 let cachedTeacherQuizzes = [];
 let cachedSchoolQuizzes = [];
@@ -107,12 +113,16 @@ let latestFinalStandings = [];
 let hostAnsweredPlayerIds = new Set();
 let hostWordCounts = {};
 let hostResultsShown = false;
+let hostBrainstormIdeas = [];
+let hostBrainstormPhase = 'collecting';
+let hostBrainstormVotedPlayers = new Set();
 let pendingJoinSession = null;
 let pendingJoinNickname = '';
 let pendingLaunchQuizId = null;
 let pendingLaunchKind = 'quiz';
 let selectedLaunchMode = 'individual';
 let selectedTeamsCount = 4;
+let selectedCoopTarget = 10000;
 let activeEmojiTargetBtn = null;
 let isStudyMode = false;
 let studyIndex = 0;
@@ -153,6 +163,14 @@ function renderVisualBadgeHTML(visualStr, sizeClass = 'text-2xl') {
     return `<img src="${v.replace(/"/g, '&quot;')}" alt="" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover bg-white/90 shrink-0 shadow-sm">`;
   }
   return `<span class="${sizeClass} leading-none shrink-0">${v}</span>`;
+}
+
+function formatClozeDisplayHTML(sentenceText, revealAnswer = null) {
+  const safe = (sentenceText || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const replacement = revealAnswer
+    ? `<span class="inline-block px-3 py-0.5 mx-1 bg-emerald-600 text-white rounded-xl font-black">${revealAnswer}</span>`
+    : `<span class="inline-block min-w-[90px] px-3 py-0.5 mx-1 border-b-4 border-indigo-600 bg-white text-indigo-600 rounded-lg font-black">?</span>`;
+  return safe.replace(/\[\.\.\.\]/g, replacement);
 }
 
 function openEmojiPickerForOption(btn) {
@@ -528,6 +546,10 @@ function resetToPinScreen() {
   studentLastRenderedIndex = -1;
   studentAnsweredCurrentIndex = -1;
   studentFinalShown = false;
+  studentUsed5050 = false;
+  studentUsedDouble = false;
+  studentActive5050 = false;
+  studentActiveDouble = false;
   latestRanksMap = {};
   latestFinalStandings = [];
   document.getElementById('input-pin').value = '';
@@ -627,6 +649,7 @@ async function prepareStudyEntry(quizId) {
   studyQuizMeta = quizRes.data;
   sessionQuestions = qsRes.data;
   sessionKind = 'quiz';
+  studentLifelinesEnabled = false;
 
   document.getElementById('study-entry-title').textContent = studyQuizMeta.title;
   document.getElementById('input-study-nickname').value = '';
@@ -841,6 +864,11 @@ async function finalizeJoinGame(session, nickname, teamName) {
   studentLastRenderedIndex = -1;
   studentAnsweredCurrentIndex = -1;
   studentFinalShown = false;
+  studentUsed5050 = false;
+  studentUsedDouble = false;
+  studentActive5050 = false;
+  studentActiveDouble = false;
+  studentLifelinesEnabled = true;
   latestRanksMap = {};
   latestFinalStandings = [];
 
@@ -864,6 +892,9 @@ async function finalizeJoinGame(session, nickname, teamName) {
   })
     .on('broadcast', { event: 'state' }, ({ payload }) => {
       setConnectionWarning(false);
+      if (typeof payload.lifelines_enabled === 'boolean') {
+        studentLifelinesEnabled = payload.lifelines_enabled;
+      }
       if (payload.questions_order && Array.isArray(payload.questions_order)) {
         sessionQuestions = payload.questions_order;
       }
@@ -872,6 +903,10 @@ async function finalizeJoinGame(session, nickname, teamName) {
       }
       if (payload.standings) {
         latestFinalStandings = payload.standings;
+      }
+      if (payload.status === 'brainstorm_voting') {
+        renderStudentBrainstormVoting(payload.ideas || []);
+        return;
       }
       handleSessionStateChange({
         ...currentSession,
@@ -992,7 +1027,7 @@ function handleSessionStateChange(session) {
       updateStudentLivePosition();
       return;
     }
-    const isOpinion = sessionKind === 'poll' || (q && ['word_cloud', 'poll', 'nps_scale'].includes(q.type));
+    const isOpinion = sessionKind === 'poll' || (q && ['word_cloud', 'brainstorm', 'poll', 'nps_scale'].includes(q.type));
     const isFeedbackAlreadyVisible = !document.getElementById('student-feedback').classList.contains('hidden');
     if (!isFeedbackAlreadyVisible) {
       if (!isOpinion && q) {
@@ -1028,9 +1063,108 @@ function handleSessionStateChange(session) {
 function hideAllStudentInputs() {
   document.getElementById('student-options-grid').classList.add('hidden');
   document.getElementById('student-text-input-box').classList.add('hidden');
+  document.getElementById('student-brainstorm-vote-box').classList.add('hidden');
   document.getElementById('student-puzzle-box').classList.add('hidden');
   document.getElementById('student-nps-box').classList.add('hidden');
   document.getElementById('student-slide-box').classList.add('hidden');
+  document.getElementById('student-lifelines-bar').classList.add('hidden');
+}
+
+function activate5050() {
+  if (studentUsed5050) return;
+  const wrongIndices = [];
+  studentDisplayedOptions.forEach((opt, idx) => {
+    if (!opt.is_correct) wrongIndices.push(idx);
+  });
+  if (wrongIndices.length < 2) return;
+
+  studentUsed5050 = true;
+  studentActive5050 = true;
+  const toHide = shuffleArrayCopy(wrongIndices).slice(0, 2);
+  const gridBtns = document.getElementById('student-options-grid').children;
+  toHide.forEach(idx => {
+    if (gridBtns[idx]) {
+      gridBtns[idx].disabled = true;
+      gridBtns[idx].classList.add('opacity-20', 'pointer-events-none');
+    }
+  });
+
+  const btn = document.getElementById('btn-lifeline-5050');
+  btn.disabled = true;
+  btn.textContent = '✂️ 50:50 actiu';
+  btn.className = 'px-3.5 py-1.5 rounded-xl bg-sky-600 text-white font-extrabold text-xs';
+}
+
+function activateDoubleOrNothing() {
+  if (studentUsedDouble) return;
+  studentUsedDouble = true;
+  studentActiveDouble = true;
+  const btn = document.getElementById('btn-lifeline-double');
+  btn.disabled = true;
+  btn.textContent = '⚡ Doble o res actiu!';
+  btn.className = 'px-3.5 py-1.5 rounded-xl bg-amber-500 text-white font-extrabold text-xs animate-pulse';
+}
+
+function renderStudentBrainstormVoting(ideasList) {
+  hideAllStudentInputs();
+  document.getElementById('student-feedback').classList.add('hidden');
+  studentBrainstormSelected = new Set();
+
+  const box = document.getElementById('student-brainstorm-vote-box');
+  const grid = document.getElementById('student-brainstorm-cards');
+  const leftEl = document.getElementById('brainstorm-votes-left');
+  leftEl.textContent = '3';
+  grid.innerHTML = '';
+
+  if (!ideasList || ideasList.length === 0) {
+    document.getElementById('student-feedback').classList.remove('hidden');
+    document.getElementById('feedback-icon').textContent = '💡';
+    document.getElementById('feedback-title').textContent = 'Cap idea per votar';
+    document.getElementById('feedback-sub').textContent = 'Mira la pissarra.';
+    return;
+  }
+
+  ideasList.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = item.text;
+    btn.className = 'p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:border-violet-400 font-extrabold text-sm text-slate-800 text-left transition';
+    btn.onclick = () => {
+      if (studentBrainstormSelected.has(item.key)) {
+        studentBrainstormSelected.delete(item.key);
+        btn.className = 'p-3.5 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:border-violet-400 font-extrabold text-sm text-slate-800 text-left transition';
+      } else {
+        if (studentBrainstormSelected.size >= 3) return;
+        studentBrainstormSelected.add(item.key);
+        btn.className = 'p-3.5 rounded-2xl border-2 border-violet-600 bg-violet-50 font-extrabold text-sm text-violet-900 text-left shadow-sm transition';
+      }
+      leftEl.textContent = String(3 - studentBrainstormSelected.size);
+    };
+    grid.appendChild(btn);
+  });
+
+  box.classList.remove('hidden');
+}
+
+function submitBrainstormVotes() {
+  const chosenKeys = [...studentBrainstormSelected];
+  hideAllStudentInputs();
+  const fb = document.getElementById('student-feedback');
+  fb.classList.remove('hidden');
+  document.getElementById('feedback-icon').textContent = '🗳️';
+  document.getElementById('feedback-title').textContent = 'Vots enviats!';
+  document.getElementById('feedback-points').classList.add('hidden');
+  document.getElementById('feedback-streak-badge').classList.add('hidden');
+  document.getElementById('feedback-live-pos').classList.add('hidden');
+  document.getElementById('feedback-sub').textContent = 'Mira la pissarra per veure les idees guanyadores.';
+
+  if (studentRoomChannel && currentPlayer) {
+    studentRoomChannel.send({
+      type: 'broadcast',
+      event: 'brainstorm_vote',
+      payload: { player_id: currentPlayer.id, keys: chosenKeys }
+    });
+  }
 }
 
 function showStudentPollFinished() {
@@ -1152,6 +1286,8 @@ function renderStudentQuestion(qIndex) {
 
   questionStartTimeMs = Date.now();
   studentAnsweredCurrentIndex = -1;
+  studentActive5050 = false;
+  studentActiveDouble = false;
   showView('view-student-play');
   document.getElementById('student-feedback').classList.add('hidden');
   hideAllStudentInputs();
@@ -1162,7 +1298,9 @@ function renderStudentQuestion(qIndex) {
   const streakPill = document.getElementById('student-streak-pill');
   const teamPill = document.getElementById('student-play-team-pill');
   const typeBadge = document.getElementById('student-type-badge');
+  const speedBadge = document.getElementById('student-speed-badge');
   const cloudHint = document.getElementById('student-cloud-hint');
+  const clozeBox = document.getElementById('student-cloze-sentence');
 
   if (currentPlayer?.team_name && !isStudyMode) {
     teamPill.textContent = currentPlayer.team_name;
@@ -1171,12 +1309,21 @@ function renderStudentQuestion(qIndex) {
     teamPill.classList.add('hidden');
   }
 
-  if (q.type === 'word_cloud') {
+  if (q.type === 'word_cloud' || q.type === 'brainstorm') {
+    typeBadge.innerHTML = q.type === 'brainstorm'
+      ? `<span>💡</span><span>Pluja d'idees</span>`
+      : `<span>☁️</span><span>Núvol de paraules</span>`;
     typeBadge.classList.remove('hidden');
     cloudHint.classList.remove('hidden');
   } else {
     typeBadge.classList.add('hidden');
     cloudHint.classList.add('hidden');
+  }
+
+  if (q.time_limit <= 7 && q.type !== 'slide') {
+    speedBadge.classList.remove('hidden');
+  } else {
+    speedBadge.classList.add('hidden');
   }
 
   if (sessionKind === 'poll') {
@@ -1211,12 +1358,46 @@ function renderStudentQuestion(qIndex) {
     stImg.classList.add('hidden');
   }
 
+  if (q.type === 'cloze') {
+    const template = q.options?.[0]?.sentence || '';
+    clozeBox.innerHTML = formatClozeDisplayHTML(template);
+    clozeBox.classList.remove('hidden');
+  } else {
+    clozeBox.classList.add('hidden');
+  }
+
   const rawValidOptions = (q.options || [])
     .map((o, origIdx) => ({ ...o, origIdx }))
     .filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
 
   const shouldShuffleOpts = !isStudyMode && sessionKind === 'quiz' && Boolean(currentSession?.shuffle_options) && q.type === 'quiz';
   studentDisplayedOptions = shouldShuffleOpts ? shuffleArrayCopy(rawValidOptions) : rawValidOptions;
+
+  const isGradableChoice = sessionKind === 'quiz' && !isStudyMode && q.points_multiplier !== 0 && ['quiz', 'true_false', 'puzzle', 'type_answer', 'cloze'].includes(q.type);
+  if (isGradableChoice && studentLifelinesEnabled && (!studentUsed5050 || !studentUsedDouble)) {
+    const bar = document.getElementById('student-lifelines-bar');
+    const b50 = document.getElementById('btn-lifeline-5050');
+    const bDbl = document.getElementById('btn-lifeline-double');
+    bar.classList.remove('hidden');
+
+    if (!studentUsed5050 && q.type === 'quiz' && rawValidOptions.length >= 3) {
+      b50.classList.remove('hidden');
+      b50.disabled = false;
+      b50.textContent = '✂️ 50:50';
+      b50.className = 'px-3.5 py-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-extrabold text-xs transition';
+    } else {
+      b50.classList.add('hidden');
+    }
+
+    if (!studentUsedDouble) {
+      bDbl.classList.remove('hidden');
+      bDbl.disabled = false;
+      bDbl.textContent = '⚡ Doble o res';
+      bDbl.className = 'px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-extrabold text-xs transition';
+    } else {
+      bDbl.classList.add('hidden');
+    }
+  }
 
   if (q.type === 'slide') {
     document.getElementById('student-slide-box').classList.remove('hidden');
@@ -1274,7 +1455,13 @@ function renderStudentQuestion(qIndex) {
     document.getElementById('student-text-input-box').classList.remove('hidden');
     const inp = document.getElementById('student-text-answer');
     inp.value = '';
-    inp.placeholder = q.type === 'word_cloud' ? 'Escriu una paraula...' : 'Escriu aquí la teva resposta...';
+    if (q.type === 'word_cloud' || q.type === 'brainstorm') {
+      inp.placeholder = 'Escriu la teva idea o paraula...';
+    } else if (q.type === 'cloze') {
+      inp.placeholder = 'Escriu la paraula que falta al buit...';
+    } else {
+      inp.placeholder = 'Escriu aquí la teva resposta...';
+    }
   }
 }
 
@@ -1323,6 +1510,22 @@ function getCorrectSolutionText(q) {
   return (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
 }
 
+function calculateGamifiedPoints(question, isCorrect) {
+  if (sessionKind === 'poll' || question.points_multiplier === 0) return 0;
+  const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
+  const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
+  const streakBonus = isCorrect ? studentStreak * 100 : 0;
+  let base = Math.round((1000 * ratio + streakBonus) * question.points_multiplier);
+
+  if (studentActive5050) {
+    base = Math.round(base * 0.5);
+  }
+  if (studentActiveDouble) {
+    return isCorrect ? base * 2 : -base;
+  }
+  return isCorrect ? base : 0;
+}
+
 async function persistStudentAnswerAndScore(questionId, answerVal, isCorrect, points) {
   if (!currentSession || !currentPlayer) return;
   const { error } = await sb.from('answers').insert({
@@ -1357,7 +1560,7 @@ async function submitPuzzleAnswer() {
 
   registerStudentOutcome(isCorrect);
   const points = calculateGamifiedPoints(q, isCorrect);
-  studentScore += points;
+  studentScore = Math.max(0, studentScore + points);
   document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   showStudentWaitingFeedback(isCorrect, points, false, q);
 
@@ -1374,14 +1577,6 @@ async function submitNpsAnswer(question, val) {
   showStudentWaitingFeedback(false, 0, true, question);
   if (!isStudyMode) notifyHostStudentAnswered(question.id, answerVal, false, 0);
   await persistStudentAnswerAndScore(question.id, answerVal, false, 0);
-}
-
-function calculateGamifiedPoints(question, isCorrect) {
-  if (sessionKind === 'poll' || !isCorrect || question.points_multiplier === 0) return 0;
-  const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
-  const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
-  const streakBonus = studentStreak * 100;
-  return Math.round((1000 * ratio + streakBonus) * question.points_multiplier);
 }
 
 async function submitOptionAnswer(question, displayIndex) {
@@ -1401,7 +1596,7 @@ async function submitOptionAnswer(question, displayIndex) {
   }
 
   const points = calculateGamifiedPoints(question, isCorrect);
-  studentScore += points;
+  studentScore = Math.max(0, studentScore + points);
   if (!isPoll) {
     document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   }
@@ -1419,11 +1614,11 @@ async function submitTextAnswer() {
   studentAnsweredCurrentIndex = qIndex;
 
   const q = sessionQuestions[qIndex];
-  const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud';
+  const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud' || q.type === 'brainstorm';
   const answerVal = { text: val };
   
   let isCorrect = false;
-  if (!isOpinion && q.type === 'type_answer') {
+  if (!isOpinion && (q.type === 'type_answer' || q.type === 'cloze')) {
     isCorrect = evaluateShortAnswer(val, q);
   }
 
@@ -1432,7 +1627,7 @@ async function submitTextAnswer() {
   }
 
   const points = calculateGamifiedPoints(q, isCorrect);
-  studentScore += points;
+  studentScore = Math.max(0, studentScore + points);
   if (!isOpinion) {
     document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   }
@@ -1478,6 +1673,7 @@ function showStudentWaitingFeedback(isCorrect, points, isOpinion, questionObj = 
     document.getElementById('feedback-icon').textContent = studentStreak >= 3 ? '🔥' : '🎉';
     document.getElementById('feedback-title').textContent = studentStreak >= 2 ? `Encertat! Portes ${studentStreak} seguides` : 'Molt bé, encertat!';
     ptsEl.textContent = `+${points} punts`;
+    ptsEl.className = 'text-base font-extrabold text-indigo-600 bg-indigo-50 px-3.5 py-1 rounded-full';
     ptsEl.classList.remove('hidden');
     if (studentStreak >= 2) {
       streakEl.textContent = `🔥 Ratxa x${studentStreak}`;
@@ -1489,9 +1685,12 @@ function showStudentWaitingFeedback(isCorrect, points, isOpinion, questionObj = 
     }
   } else {
     fbPos.dataset.hideForOpinion = '';
-    document.getElementById('feedback-icon').textContent = '💡';
-    document.getElementById('feedback-title').textContent = 'No passa res, seguim!';
-    ptsEl.textContent = '+0 punts';
+    document.getElementById('feedback-icon').textContent = points < 0 ? '💥' : '💡';
+    document.getElementById('feedback-title').textContent = points < 0 ? 'Doble o res fallat!' : 'No passa res, seguim!';
+    ptsEl.textContent = points < 0 ? `${points} punts` : '+0 punts';
+    ptsEl.className = points < 0
+      ? 'text-base font-extrabold text-rose-600 bg-rose-50 px-3.5 py-1 rounded-full'
+      : 'text-base font-extrabold text-indigo-600 bg-indigo-50 px-3.5 py-1 rounded-full';
     ptsEl.classList.remove('hidden');
     streakEl.classList.add('hidden');
     streakPill.classList.add('hidden');
@@ -1775,16 +1974,24 @@ function selectLaunchMode(mode) {
   selectedLaunchMode = mode;
   const indCard = document.getElementById('card-mode-individual');
   const teamCard = document.getElementById('card-mode-teams');
+  const coopCard = document.getElementById('card-mode-coop');
   const teamPanel = document.getElementById('launch-teams-panel');
+  const coopPanel = document.getElementById('launch-coop-panel');
+
+  indCard.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 text-left space-y-1.5 transition";
+  teamCard.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 text-left space-y-1.5 transition";
+  coopCard.className = "p-3.5 rounded-2xl border-2 border-slate-200 bg-white hover:border-rose-300 text-left space-y-1.5 transition";
+  teamPanel.classList.add('hidden');
+  coopPanel.classList.add('hidden');
 
   if (mode === 'teams') {
-    indCard.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 text-left space-y-2 transition";
-    teamCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 text-left space-y-2 transition";
+    teamCard.className = "p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 text-left space-y-1.5 transition";
     teamPanel.classList.remove('hidden');
+  } else if (mode === 'coop') {
+    coopCard.className = "p-3.5 rounded-2xl border-2 border-rose-600 bg-rose-50/60 text-left space-y-1.5 transition";
+    coopPanel.classList.remove('hidden');
   } else {
-    indCard.className = "p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 text-left space-y-2 transition";
-    teamCard.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 text-left space-y-2 transition";
-    teamPanel.classList.add('hidden');
+    indCard.className = "p-3.5 rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 text-left space-y-1.5 transition";
   }
 }
 
@@ -1804,9 +2011,21 @@ function selectTeamsCount(count) {
   });
 }
 
+function selectCoopTarget(target) {
+  selectedCoopTarget = target;
+  document.querySelectorAll('.coop-target-btn').forEach(btn => {
+    const val = parseInt(btn.dataset.target || '0');
+    if (val === target) {
+      btn.className = "coop-target-btn py-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-sm transition";
+    } else {
+      btn.className = "coop-target-btn py-2 rounded-xl bg-white border border-slate-200 hover:border-rose-300 font-extrabold text-xs text-slate-700 transition";
+    }
+  });
+}
+
 function openLaunchModal(quizId, kind, title) {
   if (kind === 'poll') {
-    createRoom(quizId, 'poll', 'individual', false, false);
+    createRoom(quizId, 'poll', 'individual', false, false, false);
     return;
   }
   pendingLaunchQuizId = quizId;
@@ -1814,8 +2033,10 @@ function openLaunchModal(quizId, kind, title) {
   document.getElementById('launch-modal-title').textContent = title;
   document.getElementById('launch-shuffle-questions').checked = false;
   document.getElementById('launch-shuffle-options').checked = false;
+  document.getElementById('launch-enable-lifelines').checked = true;
   selectLaunchMode('individual');
   selectTeamsCount(4);
+  selectCoopTarget(10000);
   document.getElementById('launch-mode-modal').classList.remove('hidden');
 }
 
@@ -1826,12 +2047,15 @@ function closeLaunchModal() {
 function confirmCreateRoom() {
   const shuffleQ = document.getElementById('launch-shuffle-questions').checked;
   const shuffleO = document.getElementById('launch-shuffle-options').checked;
+  const lifelinesOn = document.getElementById('launch-enable-lifelines').checked;
   closeLaunchModal();
   if (!pendingLaunchQuizId) return;
   if (selectedLaunchMode === 'teams') {
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${selectedTeamsCount}`, shuffleQ, shuffleO);
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${selectedTeamsCount}`, shuffleQ, shuffleO, lifelinesOn);
+  } else if (selectedLaunchMode === 'coop') {
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, `coop:${selectedCoopTarget}`, shuffleQ, shuffleO, lifelinesOn);
   } else {
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual', shuffleQ, shuffleO);
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual', shuffleQ, shuffleO, lifelinesOn);
   }
 }
 
@@ -2178,7 +2402,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
 
     const gradableAns = ans.filter(a => {
       const q = qs.find(item => item.id === a.question_id);
-      return q && !['word_cloud', 'poll', 'nps_scale'].includes(q.type);
+      return q && !['word_cloud', 'brainstorm', 'poll', 'nps_scale'].includes(q.type);
     });
     const correctCount = gradableAns.filter(a => a.is_correct).length;
     const accuracy = gradableAns.length > 0 ? Math.round((correctCount / gradableAns.length) * 100) : 0;
@@ -2197,9 +2421,9 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
       const totalVotes = qAnsList.length;
       let breakdownHTML = '';
 
-      if (q.type === 'word_cloud') {
+      if (q.type === 'word_cloud' || q.type === 'brainstorm') {
         const words = qAnsList.map(a => `<span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold">${a.answer_value?.text || ''}</span>`).join(' ');
-        breakdownHTML = `<div class="flex flex-wrap gap-1.5 pt-1">${words || '<span class="text-xs text-slate-400">Sense paraules enviades</span>'}</div>`;
+        breakdownHTML = `<div class="flex flex-wrap gap-1.5 pt-1">${words || '<span class="text-xs text-slate-400">Sense idees enviades</span>'}</div>`;
       } else if (q.type === 'nps_scale') {
         const values = qAnsList.map(a => Number(a.answer_value?.index)).filter(n => !isNaN(n));
         const avg = values.length > 0 ? (values.reduce((acc, v) => acc + v, 0) / values.length).toFixed(1) : '0';
@@ -2241,7 +2465,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
       const qAnsList = ans.filter(a => a.question_id === q.id);
       const qCorrectCount = qAnsList.filter(a => a.is_correct).length;
       const qPct = qAnsList.length > 0 ? Math.round((qCorrectCount / qAnsList.length) * 100) : 0;
-      const isGradable = !['word_cloud', 'poll', 'nps_scale'].includes(q.type);
+      const isGradable = !['word_cloud', 'brainstorm', 'poll', 'nps_scale'].includes(q.type);
       const needsReview = isGradable && qAnsList.length > 0 && qPct < 50;
 
       qSummaryContainer.innerHTML += `
@@ -2307,7 +2531,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
       let statusBadge = `<span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-xs font-semibold">Sense resposta</span>`;
       if (a) {
         const respText = a.answer_value?.text || (q.options[a.answer_value?.index]?.text) || 'Respost';
-        if (isPoll || ['word_cloud', 'poll', 'nps_scale'].includes(q.type)) {
+        if (isPoll || ['word_cloud', 'brainstorm', 'poll', 'nps_scale'].includes(q.type)) {
           const cIdx = typeof a.answer_value?.index === 'number' ? a.answer_value.index % 4 : 1;
           statusBadge = `<span class="inline-block px-2 py-0.5 rounded-md border ${badgeColors[cIdx]} text-xs font-bold break-words">${respText}</span>`;
         } else if (a.is_correct) {
@@ -2419,6 +2643,7 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
       <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Sí o no</button>
       <button type="button" onclick="addQuestionBlock('nps_scale')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Escala 0 a 10</button>
       <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+      <button type="button" onclick="addQuestionBlock('brainstorm')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Pluja d'idees i vots</button>
       <button type="button" onclick="addQuestionBlock('slide')" class="bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Diapositiva</button>
     `;
   } else {
@@ -2427,7 +2652,9 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
       <button type="button" onclick="addQuestionBlock('true_false')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Vertader o fals</button>
       <button type="button" onclick="addQuestionBlock('puzzle')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Ordenar (puzzle)</button>
       <button type="button" onclick="addQuestionBlock('type_answer')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Resposta curta</button>
+      <button type="button" onclick="addQuestionBlock('cloze')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Omplir buits</button>
       <button type="button" onclick="addQuestionBlock('word_cloud')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Núvol de paraules</button>
+      <button type="button" onclick="addQuestionBlock('brainstorm')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Pluja d'idees i vots</button>
       <button type="button" onclick="addQuestionBlock('slide')" class="bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition">+ Diapositiva</button>
     `;
   }
@@ -2452,7 +2679,9 @@ function updateEditorBlockNumbers() {
     true_false: isPoll ? 'sí o no' : 'vertader o fals',
     puzzle: 'ordenar peces',
     type_answer: 'resposta curta',
+    cloze: 'omplir buits',
     word_cloud: 'núvol de paraules',
+    brainstorm: "pluja d'idees i votació",
     nps_scale: 'escala de 0 a 10',
     slide: 'diapositiva explicativa'
   };
@@ -2536,6 +2765,10 @@ function extractBlockData(b) {
     const val = b.querySelector('.opt-text')?.value.trim() || '';
     const matchMode = b.querySelector('.opt-match-mode')?.value || 'exact';
     options = [{ text: val, is_correct: true, match_mode: matchMode }];
+  } else if (rawType === 'cloze') {
+    const sentenceVal = b.querySelector('.opt-cloze-sentence')?.value.trim() || '';
+    const ansVal = b.querySelector('.opt-text')?.value.trim() || '';
+    options = [{ sentence: sentenceVal, text: ansVal, is_correct: true, match_mode: 'exact' }];
   } else if (rawType === 'slide') {
     const val = b.querySelector('.opt-text')?.value.trim() || '';
     options = [{ text: val, is_correct: true }];
@@ -2558,7 +2791,9 @@ function addQuestionBlock(type, prefill = null) {
     true_false: isPoll ? 'sí o no' : 'vertader o fals',
     puzzle: 'ordenar peces',
     type_answer: 'resposta curta',
+    cloze: 'omplir buits',
     word_cloud: 'núvol de paraules',
+    brainstorm: "pluja d'idees i votació",
     nps_scale: 'escala de 0 a 10',
     slide: 'diapositiva explicativa'
   };
@@ -2619,8 +2854,20 @@ function addQuestionBlock(type, prefill = null) {
         <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Ex: Barcelona, barna, BCN" class="opt-text w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
       </div>
     `;
+  } else if (type === 'cloze') {
+    const sentenceVal = existingOpts[0]?.sentence || '';
+    const ansVal = existingOpts[0]?.text || '';
+    optionsHTML = `
+      <div class="col-span-full bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+        <span class="text-xs font-bold text-slate-600 block">Escriu la frase posant <code class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded">[...]</code> on va el buit:</span>
+        <input type="text" value="${sentenceVal.replace(/"/g, '&quot;')}" placeholder="Ex: La capital de França és [...] i hi passa el riu Sena." class="opt-cloze-sentence w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
+        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Paraula correcta del buit (separa sinònims amb comes, ex: París, Paris)" class="opt-text w-full p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200 text-sm font-bold text-slate-900 outline-none">
+      </div>
+    `;
   } else if (type === 'word_cloud') {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">☁️ Els/les alumnes enviaran paraules lliures que aniran formant un núvol visual a la pantalla.</p>`;
+  } else if (type === 'brainstorm') {
+    optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">💡 Fase 1: els/les alumnes proposen idees. Fase 2: s'obre una votació de 20 segons on cadascú vota les 3 millors propostes.</p>`;
   } else if (type === 'nps_scale') {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els/les alumnes votaran un número del 0 al 10 i es calcularà la mitjana del grup.</p>`;
   } else if (type === 'slide') {
@@ -2643,6 +2890,8 @@ function addQuestionBlock(type, prefill = null) {
       <div class="flex flex-wrap items-center gap-1.5">
         ${type === 'slide' ? '' : `
           <select class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+            <option value="5" ${timeVal === 5 ? 'selected' : ''}>⚡ 5 segons (llampec)</option>
+            <option value="7" ${timeVal === 7 ? 'selected' : ''}>⚡ 7 segons (llampec)</option>
             <option value="10" ${timeVal === 10 ? 'selected' : ''}>10 segons</option>
             <option value="20" ${timeVal === 20 ? 'selected' : ''}>20 segons</option>
             <option value="30" ${timeVal === 30 ? 'selected' : ''}>30 segons</option>
@@ -2819,6 +3068,10 @@ function appendWordToHostCloud(rawWord) {
   hostWordCounts[key] = (hostWordCounts[key] || 0) + 1;
   const count = hostWordCounts[key];
 
+  if (!hostBrainstormIdeas.some(item => item.key === key)) {
+    hostBrainstormIdeas.push({ key, text: clean, votes: 0 });
+  }
+
   const existingEl = wcWords.querySelector(`[data-word-key="${key}"]`);
   const cloudColors = ['bg-indigo-600', 'bg-sky-600', 'bg-emerald-600', 'bg-amber-500', 'bg-rose-500', 'bg-violet-600'];
   const sizeClasses = [
@@ -2843,8 +3096,56 @@ function appendWordToHostCloud(rawWord) {
   }
 }
 
+function renderHostBrainstormRankedResults() {
+  const wcWords = document.getElementById('host-wordcloud-words');
+  if (!wcWords) return;
+  wcWords.innerHTML = '';
+
+  const sorted = [...hostBrainstormIdeas].sort((a, b) => b.votes - a.votes);
+  const medals = ['🥇', '🥈', '🥉'];
+
+  sorted.forEach((item, idx) => {
+    const pill = document.createElement('div');
+    pill.className = idx === 0
+      ? 'bg-amber-400 text-slate-900 px-6 py-3.5 rounded-2xl font-black text-xl sm:text-2xl shadow-lg flex items-center gap-3'
+      : 'bg-white border-2 border-indigo-200 text-slate-900 px-5 py-3 rounded-2xl font-extrabold text-base sm:text-lg shadow-sm flex items-center gap-2.5';
+    const prefix = idx < 3 ? medals[idx] : `${idx + 1}.`;
+    pill.innerHTML = `<span>${prefix}</span> <span>${item.text}</span> <span class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-xs font-black">${item.votes} vots</span>`;
+    wcWords.appendChild(pill);
+  });
+}
+
+function startBrainstormVotingPhase() {
+  if (hostBrainstormPhase === 'voting') return;
+  hostBrainstormPhase = 'voting';
+  hostBrainstormVotedPlayers = new Set();
+
+  document.getElementById('btn-start-brainstorm-vote').classList.add('hidden');
+  document.getElementById('host-cloud-icon').textContent = '🗳️';
+  document.getElementById('host-cloud-title').textContent = "Fase 2 · l'alumnat està votant les 3 millors idees";
+  document.getElementById('host-answers-count').textContent = `Votacions: 0 / ${hostPlayersList.length}`;
+
+  broadcastRoomState('brainstorm_voting', currentSession.current_question_index, null, null, null, hostBrainstormIdeas);
+
+  let voteTime = 20;
+  document.getElementById('host-timer').textContent = voteTime;
+  clearInterval(hostTimerInterval);
+  hostTimerInterval = setInterval(() => {
+    voteTime--;
+    document.getElementById('host-timer').textContent = voteTime;
+    if (voteTime <= 0) {
+      clearInterval(hostTimerInterval);
+      if (!hostResultsShown) {
+        hostResultsShown = true;
+        showQuestionResults();
+      }
+    }
+  }, 1000);
+}
+
 function handleHostIncomingAnswer(q, playerId, answerValue) {
   if (!currentSession || currentSession.status !== 'question_active' || hostResultsShown) return;
+  if (q.type === 'brainstorm' && hostBrainstormPhase === 'voting') return;
   if (playerId && hostAnsweredPlayerIds.has(playerId)) return;
   if (playerId) hostAnsweredPlayerIds.add(playerId);
 
@@ -2863,11 +3164,15 @@ function handleHostIncomingAnswer(q, playerId, answerValue) {
     bigSaCounter.innerHTML = `${answersCount} <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span>`;
   }
 
-  if (q.type === 'word_cloud' && answerValue?.text) {
+  if ((q.type === 'word_cloud' || q.type === 'brainstorm') && answerValue?.text) {
     appendWordToHostCloud(answerValue.text);
   }
 
   if (totalPlayers > 0 && answersCount >= totalPlayers) {
+    if (q.type === 'brainstorm' && hostBrainstormPhase === 'collecting') {
+      setTimeout(() => startBrainstormVotingPhase(), 400);
+      return;
+    }
     hostResultsShown = true;
     setTimeout(() => showQuestionResults(), 350);
   }
@@ -2893,14 +3198,16 @@ async function toggleRoomLock() {
   await sb.from('game_sessions').update({ is_locked: hostRoomLocked }).eq('id', currentSession.id);
 }
 
-async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQuestions = false, shuffleOptions = false) {
+async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQuestions = false, shuffleOptions = false, lifelinesEnabled = true) {
   const { data: { user } } = await sb.auth.getUser();
   const pin = Math.floor(100000 + Math.random() * 900000).toString();
   sessionKind = kind;
   sessionMode = mode;
   hostRoomLocked = false;
+  studentLifelinesEnabled = lifelinesEnabled;
   const isPoll = kind === 'poll';
   const isTeams = mode.startsWith('teams:');
+  const isCoop = mode.startsWith('coop:');
   hostPlayersList = [];
 
   const [sessionRes, qsRes] = await Promise.all([
@@ -2946,6 +3253,9 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   if (isTeams) {
     modeBadge.textContent = `Mode equips (${mode.split(':')[1]})`;
     modeBadge.classList.remove('hidden');
+  } else if (isCoop) {
+    modeBadge.textContent = `Repte cooperatiu (${Number(mode.split(':')[1]).toLocaleString('ca-ES')} pts)`;
+    modeBadge.classList.remove('hidden');
   } else {
     modeBadge.classList.add('hidden');
   }
@@ -2974,7 +3284,9 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   } else {
     lbCol.classList.remove('hidden');
     visCol.className = 'lg:col-span-2 space-y-6';
-    document.getElementById('host-lb-title').textContent = isTeams ? 'Classificació d\'equips' : 'Classificació en directe';
+    document.getElementById('host-lb-title').textContent = isTeams
+      ? "Classificació d'equips"
+      : (isCoop ? 'Aportacions al repte' : 'Classificació en directe');
   }
 
   document.getElementById('host-pin-display').textContent = pin;
@@ -3000,6 +3312,26 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
       if (!q || payload.question_id !== q.id) return;
       handleHostIncomingAnswer(q, payload.player_id, payload.answer_value);
     })
+    .on('broadcast', { event: 'brainstorm_vote' }, ({ payload }) => {
+      if (hostBrainstormPhase !== 'voting' || hostResultsShown) return;
+      if (payload.player_id && hostBrainstormVotedPlayers.has(payload.player_id)) return;
+      if (payload.player_id) hostBrainstormVotedPlayers.add(payload.player_id);
+
+      (payload.keys || []).forEach(k => {
+        const found = hostBrainstormIdeas.find(item => item.key === k);
+        if (found) found.votes += 1;
+      });
+
+      const vCount = hostBrainstormVotedPlayers.size;
+      const totalP = hostPlayersList.length;
+      document.getElementById('host-answers-count').textContent = `Votacions: ${vCount} / ${totalP}`;
+      renderHostBrainstormRankedResults();
+
+      if (totalP > 0 && vCount >= totalP) {
+        hostResultsShown = true;
+        setTimeout(() => showQuestionResults(), 350);
+      }
+    })
     .subscribe();
 
   sb.channel('host-players-' + session.id)
@@ -3022,7 +3354,7 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
     .subscribe();
 }
 
-function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null, questionsOrder = null) {
+function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null, questionsOrder = null, ideasList = null) {
   if (!hostBroadcastChannel) return;
   hostBroadcastChannel.send({
     type: 'broadcast',
@@ -3032,7 +3364,9 @@ function broadcastRoomState(status, questionIndex, ranksMap = null, standingsLis
       current_question_index: questionIndex,
       ranks: ranksMap,
       standings: standingsList,
-      questions_order: questionsOrder
+      questions_order: questionsOrder,
+      lifelines_enabled: studentLifelinesEnabled,
+      ideas: ideasList
     }
   });
 }
@@ -3074,6 +3408,29 @@ function computeTeamStandings(playersList) {
   return Object.values(teamScores).sort((a, b) => b.score - a.score);
 }
 
+function updateCoopBossProgress(totalClassPoints) {
+  const bossBox = document.getElementById('host-coop-boss-bar');
+  if (!sessionMode.startsWith('coop:')) {
+    bossBox.classList.add('hidden');
+    return;
+  }
+  bossBox.classList.remove('hidden');
+  const target = parseInt(sessionMode.split(':')[1] || '10000');
+  const remaining = Math.max(0, target - totalClassPoints);
+  const hpPct = Math.max(0, Math.min(100, Math.round((remaining / target) * 100)));
+
+  document.getElementById('boss-hp-fill').style.width = `${hpPct}%`;
+  document.getElementById('boss-hp-text').textContent = `${totalClassPoints.toLocaleString('ca-ES')} / ${target.toLocaleString('ca-ES')} punts`;
+
+  if (remaining <= 0) {
+    document.getElementById('boss-avatar').textContent = '🎉';
+    document.getElementById('boss-status-label').textContent = 'Repte aconseguit! Heu derrotat el monstre entre tota la classe!';
+  } else {
+    document.getElementById('boss-avatar').textContent = '👾';
+    document.getElementById('boss-status-label').textContent = `Repte cooperatiu · energia restant del monstre: ${hpPct}%`;
+  }
+}
+
 async function refreshLiveLeaderboard() {
   if (!currentSession || sessionKind === 'poll') return { ranksMap: null, list: [] };
   const { data: players } = await sb
@@ -3088,6 +3445,9 @@ async function refreshLiveLeaderboard() {
   list.forEach((p, idx) => {
     ranksMap[p.id] = { rank: idx + 1, total: list.length };
   });
+
+  const totalClassPoints = list.reduce((sum, p) => sum + (p.score || 0), 0);
+  updateCoopBossProgress(totalClassPoints);
 
   const displayList = isTeams ? computeTeamStandings(list) : list;
   const lb = document.getElementById('host-live-leaderboard');
@@ -3123,6 +3483,7 @@ async function startGame() {
   if (latestPlayers) {
     hostPlayersList = latestPlayers;
   }
+  updateCoopBossProgress(0);
   await launchQuestion(0);
 }
 
@@ -3134,6 +3495,9 @@ async function launchQuestion(index) {
 
   hostAnsweredPlayerIds = new Set();
   hostWordCounts = {};
+  hostBrainstormIdeas = [];
+  hostBrainstormPhase = 'collecting';
+  hostBrainstormVotedPlayers = new Set();
   hostResultsShown = false;
 
   if (index >= sessionQuestions.length) {
@@ -3165,9 +3529,11 @@ async function launchQuestion(index) {
   document.getElementById('host-question-screen').classList.remove('hidden');
   document.getElementById('btn-next-question').classList.add('hidden');
   document.getElementById('btn-partial-podium').classList.add('hidden');
+  document.getElementById('btn-start-brainstorm-vote').classList.add('hidden');
   document.getElementById('host-bars-display').classList.add('hidden');
   document.getElementById('host-slide-display').classList.add('hidden');
   document.getElementById('host-shortanswer-display').classList.add('hidden');
+  document.getElementById('host-cloze-display').classList.add('hidden');
 
   document.getElementById('host-q-text').textContent = q.question_text;
   const imgEl = document.getElementById('host-q-image');
@@ -3176,6 +3542,19 @@ async function launchQuestion(index) {
     imgEl.classList.remove('hidden');
   } else {
     imgEl.classList.add('hidden');
+  }
+
+  const speedPill = document.getElementById('host-speed-pill');
+  if (q.time_limit <= 7 && !isSlide) {
+    speedPill.classList.remove('hidden');
+  } else {
+    speedPill.classList.add('hidden');
+  }
+
+  if (q.type === 'cloze') {
+    const clozeEl = document.getElementById('host-cloze-display');
+    clozeEl.innerHTML = formatClozeDisplayHTML(q.options?.[0]?.sentence || '');
+    clozeEl.classList.remove('hidden');
   }
 
   const optDisplay = document.getElementById('host-options-display');
@@ -3214,19 +3593,26 @@ async function launchQuestion(index) {
   const totalPlayers = hostPlayersList.length;
   const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
 
-  if (q.type === 'type_answer') {
+  if (q.type === 'type_answer' || q.type === 'cloze') {
     optDisplay.classList.add('hidden');
     wcDisplay.classList.add('hidden');
     saDisplay.classList.remove('hidden');
     saDisplay.innerHTML = `
-      <span class="px-3.5 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Resposta curta</span>
+      <span class="px-3.5 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">${q.type === 'cloze' ? 'Omplir buits' : 'Resposta curta'}</span>
       <div id="host-sa-big-counter" class="text-6xl md:text-7xl font-black text-indigo-600 leading-none">0 <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span></div>
       <p class="text-sm font-bold text-slate-500">Participants que ja han enviat la seva resposta</p>
     `;
-  } else if (q.type === 'word_cloud') {
+  } else if (q.type === 'word_cloud' || q.type === 'brainstorm') {
     optDisplay.classList.add('hidden');
     saDisplay.classList.add('hidden');
     wcDisplay.classList.remove('hidden');
+    document.getElementById('host-cloud-icon').textContent = q.type === 'brainstorm' ? '💡' : '☁️';
+    document.getElementById('host-cloud-title').textContent = q.type === 'brainstorm'
+      ? "Fase 1 · recollint idees de la classe"
+      : "Núvol de paraules en construcció";
+    if (q.type === 'brainstorm') {
+      document.getElementById('btn-start-brainstorm-vote').classList.remove('hidden');
+    }
   } else if (q.type === 'nps_scale' || q.type === 'puzzle') {
     optDisplay.classList.add('hidden');
     wcDisplay.classList.add('hidden');
@@ -3272,6 +3658,10 @@ async function launchQuestion(index) {
     document.getElementById('host-timer').textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(hostTimerInterval);
+      if (q.type === 'brainstorm' && hostBrainstormPhase === 'collecting') {
+        startBrainstormVotingPhase();
+        return;
+      }
       if (!hostResultsShown) {
         hostResultsShown = true;
         showQuestionResults();
@@ -3295,6 +3685,7 @@ async function showQuestionResults() {
   }
 
   setMusicMode('lobby');
+  document.getElementById('btn-start-brainstorm-vote').classList.add('hidden');
   document.getElementById('btn-next-question').classList.remove('hidden');
 
   const isLast = currentSession.current_question_index >= sessionQuestions.length - 1;
@@ -3328,10 +3719,17 @@ async function showQuestionResults() {
         appendWordToHostCloud(a.answer_value.text);
       }
     });
-  } else if (q.type === 'type_answer') {
+  } else if (q.type === 'brainstorm') {
+    document.getElementById('host-cloud-icon').textContent = '🏆';
+    document.getElementById('host-cloud-title').textContent = "Idees més votades per la classe";
+    renderHostBrainstormRankedResults();
+  } else if (q.type === 'type_answer' || q.type === 'cloze') {
     const acceptedText = validOptions.map(o => o.text).join(' · ');
     const correctNum = ansList.filter(a => a.is_correct).length;
     const givenList = ansList.map(a => a.answer_value?.text).filter(Boolean);
+    if (q.type === 'cloze') {
+      document.getElementById('host-cloze-display').innerHTML = formatClozeDisplayHTML(q.options?.[0]?.sentence || '', acceptedText);
+    }
     saDisplay.innerHTML = `
       <span class="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-extrabold">Respostes acceptades (${correctNum} encerts)</span>
       <p class="text-2xl md:text-3xl font-black text-slate-900">${acceptedText || 'Sense resposta definida'}</p>
@@ -3419,12 +3817,31 @@ async function showHostPodium(preloadedList = null) {
   document.getElementById('host-podium-screen').classList.remove('hidden');
 
   const isTeams = sessionMode.startsWith('teams:');
-  document.getElementById('host-podium-heading').textContent = isTeams ? 'Podi d\'equips guanyadors' : 'Podi de guanyadors/es';
+  const isCoop = sessionMode.startsWith('coop:');
+  document.getElementById('host-podium-heading').textContent = isTeams
+    ? "Podi d'equips guanyadors"
+    : (isCoop ? 'Resultat del repte cooperatiu' : 'Podi de guanyadors/es');
 
   let list = preloadedList;
   if (!list || list.length === 0) {
     const res = await refreshLiveLeaderboard();
     list = res.list || [];
+  }
+
+  const coopBanner = document.getElementById('host-coop-outcome-banner');
+  if (isCoop) {
+    const target = parseInt(sessionMode.split(':')[1] || '10000');
+    const totalPts = list.reduce((sum, p) => sum + (p.score || 0), 0);
+    if (totalPts >= target) {
+      coopBanner.textContent = `🎉 Repte superat! Heu aconseguit ${totalPts.toLocaleString('ca-ES')} punts de ${target.toLocaleString('ca-ES')} necessaris.`;
+      coopBanner.className = 'text-base sm:text-lg font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-5 py-3 rounded-2xl max-w-xl mx-auto';
+    } else {
+      coopBanner.textContent = `👾 Heu sumat ${totalPts.toLocaleString('ca-ES')} punts de ${target.toLocaleString('ca-ES')}. A la propera ho aconseguireu!`;
+      coopBanner.className = 'text-base sm:text-lg font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-5 py-3 rounded-2xl max-w-xl mx-auto';
+    }
+    coopBanner.classList.remove('hidden');
+  } else {
+    coopBanner.classList.add('hidden');
   }
 
   const pillars = document.getElementById('host-podium-pillars');
