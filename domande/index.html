@@ -63,7 +63,7 @@
       </div>
       
       <div class="space-y-3">
-        <input id="input-pin" type="text" maxlength="6" inputmode="numeric" placeholder="Codi pin (6 xifres)" 
+        <input id="input-pin" type="text" maxlength="6" inputmode="numeric" placeholder="Codi PIN (6 xifres)" 
                class="w-full text-center text-2xl font-extrabold tracking-widest py-3.5 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
         <input id="input-nickname" type="text" maxlength="15" placeholder="El teu nom" 
                class="w-full text-center text-lg font-bold py-3 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-indigo-500 focus:bg-white outline-none transition">
@@ -677,52 +677,87 @@
   </main>
 
   <div id="launch-mode-modal" onclick="closeLaunchModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-7 rounded-3xl max-w-md w-full space-y-5 shadow-2xl">
       <div class="flex justify-between items-center">
         <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Configura la sala</span>
-        <button type="button" onclick="closeLaunchModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
-      </div>
-      <h3 id="launch-modal-title" class="text-xl font-extrabold text-slate-900">Títol de l'activitat</h3>
-
-      <div class="bg-violet-50/70 border border-violet-200/80 p-3.5 rounded-2xl text-left space-y-2.5">
-        <p class="text-xs font-extrabold text-violet-900">Opcions d'aleatorització</p>
-        <label class="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-          <span>Barrejar l'ordre de les preguntes</span>
-          <input id="launch-shuffle-questions" type="checkbox" class="w-4 h-4 accent-violet-600 rounded cursor-pointer">
-        </label>
-        <label class="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-          <span>Barrejar les respostes a cada dispositiu</span>
-          <input id="launch-shuffle-options" type="checkbox" class="w-4 h-4 accent-violet-600 rounded cursor-pointer">
-        </label>
+        <button type="button" onclick="closeLaunchModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black transition">✕</button>
       </div>
 
-      <div class="grid grid-cols-1 gap-3 text-left">
-        <button type="button" onclick="confirmCreateRoom('individual')" class="p-4 rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50 flex items-center gap-4 transition">
-          <span class="text-3xl">👤</span>
+      <h3 id="launch-modal-title" class="text-xl sm:text-2xl font-extrabold text-slate-900 text-center">Títol de l'activitat</h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button type="button" id="card-mode-individual" onclick="selectLaunchMode('individual')" class="p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 text-left space-y-2 transition">
+          <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-2xl shadow-sm">👤</div>
           <div>
-            <p class="font-extrabold text-slate-900 text-base">Mode individual</p>
-            <p class="text-xs text-slate-500">Cada alumne/a juga amb el seu propi dispositiu i puntuació</p>
+            <p class="font-extrabold text-slate-900 text-sm">Individual</p>
+            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">Cada alumne/a amb el seu dispositiu</p>
           </div>
         </button>
-        <div class="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 space-y-3">
-          <div class="flex items-center gap-4">
-            <span class="text-3xl">👥</span>
-            <div>
-              <p class="font-extrabold text-slate-900 text-base">Mode equips cooperatius</p>
-              <p class="text-xs text-slate-500">Els punts de cada participant se sumen al seu equip</p>
-            </div>
+
+        <button type="button" id="card-mode-teams" onclick="selectLaunchMode('teams')" class="p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 text-left space-y-2 transition">
+          <div class="w-11 h-11 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-2xl shadow-sm">👥</div>
+          <div>
+            <p class="font-extrabold text-slate-900 text-sm">Per equips</p>
+            <p class="text-[11px] text-slate-500 leading-tight mt-0.5">Punts compartits en grup</p>
           </div>
-          <div class="flex items-center gap-2">
-            <select id="launch-teams-count" class="flex-1 bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none">
-              <option value="2">2 equips</option>
-              <option value="3">3 equips</option>
-              <option value="4" selected>4 equips</option>
-              <option value="5">5 equips</option>
-              <option value="6">6 equips</option>
-            </select>
-            <button type="button" onclick="confirmCreateRoom('teams')" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs transition">Obrir per equips</button>
-          </div>
+        </button>
+      </div>
+
+      <div id="launch-teams-panel" class="hidden bg-emerald-50/70 border border-emerald-200/80 p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-extrabold text-emerald-900">Nombre d'equips</span>
+          <span id="launch-teams-icons-preview" class="text-base tracking-wider">🔥 🌊 ⚡ 🌿</span>
         </div>
+        <div class="grid grid-cols-5 gap-2" id="launch-teams-pills">
+          <button type="button" onclick="selectTeamsCount(2)" data-count="2" class="team-count-btn py-2.5 rounded-xl bg-white border border-slate-200 font-extrabold text-sm text-slate-700 transition">2</button>
+          <button type="button" onclick="selectTeamsCount(3)" data-count="3" class="team-count-btn py-2.5 rounded-xl bg-white border border-slate-200 font-extrabold text-sm text-slate-700 transition">3</button>
+          <button type="button" onclick="selectTeamsCount(4)" data-count="4" class="team-count-btn py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-sm shadow-sm transition">4</button>
+          <button type="button" onclick="selectTeamsCount(5)" data-count="5" class="team-count-btn py-2.5 rounded-xl bg-white border border-slate-200 font-extrabold text-sm text-slate-700 transition">5</button>
+          <button type="button" onclick="selectTeamsCount(6)" data-count="6" class="team-count-btn py-2.5 rounded-xl bg-white border border-slate-200 font-extrabold text-sm text-slate-700 transition">6</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200/80 p-3.5 rounded-2xl space-y-3">
+        <label class="flex items-center justify-between gap-3 cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center text-base">🔀</span>
+            <span class="text-xs font-bold text-slate-700">Barrejar l'ordre de les preguntes</span>
+          </div>
+          <div class="relative inline-flex items-center">
+            <input id="launch-shuffle-questions" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-violet-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+          </div>
+        </label>
+
+        <label class="flex items-center justify-between gap-3 cursor-pointer">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-base">🎲</span>
+            <span class="text-xs font-bold text-slate-700">Barrejar les respostes a cada dispositiu</span>
+          </div>
+          <div class="relative inline-flex items-center">
+            <input id="launch-shuffle-options" type="checkbox" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-sky-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+          </div>
+        </label>
+      </div>
+
+      <button type="button" onclick="confirmCreateRoom()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-200 transition">
+        Obrir sala de joc
+      </button>
+    </div>
+  </div>
+
+  <div id="emoji-picker-modal" onclick="closeEmojiPickerModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Tria una icona visual</span>
+        <button type="button" onclick="closeEmojiPickerModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black transition">✕</button>
+      </div>
+      <div class="flex gap-2">
+        <input id="emoji-search-input" type="text" oninput="filterEmojiPicker()" placeholder="Cerca per nom (ex: poma, gos, sol, cotxe, llibre...)" class="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none text-sm font-semibold text-slate-800">
+        <button type="button" onclick="clearPickedEmoji()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-extrabold transition">Sense icona</button>
+      </div>
+      <div id="emoji-picker-grid" class="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-72 overflow-y-auto p-1">
       </div>
     </div>
   </div>
@@ -772,7 +807,7 @@
       </div>
       <img id="modal-qr-img" src="" alt="Codi qr ampliat" class="w-72 h-72 sm:w-80 sm:h-80 mx-auto rounded-2xl border-2 border-slate-100 p-2 bg-white object-contain">
       <div>
-        <p class="text-xs font-bold text-slate-400">O entra manualment amb el codi pin:</p>
+        <p class="text-xs font-bold text-slate-400">O entra manualment amb el codi PIN:</p>
         <p id="modal-qr-pin" class="text-4xl sm:text-5xl font-black tracking-widest text-indigo-600 mt-1">000000</p>
       </div>
     </div>
