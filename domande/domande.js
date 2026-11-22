@@ -47,6 +47,7 @@ let studentLastRenderedIndex = -1;
 let studentAnsweredCurrentIndex = -1;
 let studentFinalShown = false;
 let studentPuzzleOrder = [];
+let studentDisplayedOptions = [];
 let currentReportData = null;
 let cachedTeacherQuizzes = [];
 let cachedSchoolQuizzes = [];
@@ -66,6 +67,8 @@ let pendingLaunchKind = 'quiz';
 let isStudyMode = false;
 let studyIndex = 0;
 let studyQuizMeta = null;
+let studySessionRecord = null;
+let studyPlayerRecord = null;
 
 let audioCtx = null;
 let musicInterval = null;
@@ -77,6 +80,29 @@ function formatAuthorLabel(emailStr) {
   if (!emailStr) return 'Docent del centre';
   const namePart = emailStr.split('@')[0] || emailStr;
   return namePart.replace(/[._-]/g, ' ');
+}
+
+function shuffleArrayCopy(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function isImageUrl(val) {
+  const s = (val || '').trim();
+  return /^https?:\/\/.+/i.test(s);
+}
+
+function renderVisualBadgeHTML(visualStr, sizeClass = 'text-2xl') {
+  const v = (visualStr || '').trim();
+  if (!v) return '';
+  if (isImageUrl(v)) {
+    return `<img src="${v.replace(/"/g, '&quot;')}" alt="" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover bg-white/90 shrink-0 shadow-sm">`;
+  }
+  return `<span class="${sizeClass} leading-none shrink-0">${v}</span>`;
 }
 
 function domandeAlert(message, title = 'Avís', icon = '💬') {
@@ -173,33 +199,37 @@ window.addEventListener('online', () => {
 });
 
 window.addEventListener('beforeunload', () => {
-  if (currentSession && currentSession.status !== 'finished' && hostBroadcastChannel) {
+  if (!isStudyMode && currentSession && currentSession.status !== 'finished' && hostBroadcastChannel) {
     broadcastRoomState('closed_by_teacher', currentSession.current_question_index || 0);
   }
 });
 
 function initAvatars() {
-  const container = document.getElementById('avatar-selector');
-  container.innerHTML = '';
-  AVATARS.forEach((emoji, idx) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = emoji;
-    btn.className = idx === 0
-      ? 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition'
-      : 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition';
-    btn.onclick = () => selectAvatar(btn, emoji);
-    container.appendChild(btn);
+  const containers = [
+    { el: document.getElementById('avatar-selector'), preview: document.getElementById('selected-avatar-preview'), cls: 'avatar-btn' },
+    { el: document.getElementById('study-avatar-selector'), preview: document.getElementById('study-avatar-preview'), cls: 'study-avatar-btn' }
+  ];
+  containers.forEach(group => {
+    if (!group.el) return;
+    group.el.innerHTML = '';
+    AVATARS.forEach((emoji, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = emoji;
+      btn.className = idx === 0
+        ? `${group.cls} w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition`
+        : `${group.cls} w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition`;
+      btn.onclick = () => {
+        selectedAvatar = emoji;
+        if (group.preview) group.preview.textContent = emoji;
+        document.querySelectorAll(`.${group.cls}`).forEach(b => {
+          b.className = `${group.cls} w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition`;
+        });
+        btn.className = `${group.cls} w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition`;
+      };
+      group.el.appendChild(btn);
+    });
   });
-}
-
-function selectAvatar(btn, emoji) {
-  selectedAvatar = emoji;
-  document.getElementById('selected-avatar-preview').textContent = emoji;
-  document.querySelectorAll('.avatar-btn').forEach(b => {
-    b.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl transition';
-  });
-  btn.className = 'avatar-btn w-11 h-11 shrink-0 rounded-xl bg-indigo-600 text-white shadow-md flex items-center justify-center text-2xl transition';
 }
 
 function openQrModal() {
@@ -217,6 +247,53 @@ function openQrModal() {
 function closeQrModal() {
   const modal = document.getElementById('qr-modal');
   if (modal) modal.classList.add('hidden');
+}
+
+function openPasswordModal() {
+  document.getElementById('new-password-input').value = '';
+  document.getElementById('confirm-password-input').value = '';
+  document.getElementById('password-modal-error').classList.add('hidden');
+  document.getElementById('password-modal').classList.remove('hidden');
+}
+
+function closePasswordModal() {
+  document.getElementById('password-modal').classList.add('hidden');
+}
+
+async function updateTeacherPassword() {
+  const p1 = document.getElementById('new-password-input').value;
+  const p2 = document.getElementById('confirm-password-input').value;
+  const errEl = document.getElementById('password-modal-error');
+  const btn = document.getElementById('btn-update-password');
+  errEl.classList.add('hidden');
+
+  if (!p1 || p1.length < 6) {
+    errEl.textContent = "La nova contrasenya ha de tenir com a mínim 6 caràcters.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+  if (p1 !== p2) {
+    errEl.textContent = "Les dues contrasenyes no coincideixen.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Actualitzant...";
+
+  const { error } = await sb.auth.updateUser({ password: p1 });
+
+  btn.disabled = false;
+  btn.textContent = "Guardar nova contrasenya";
+
+  if (error) {
+    errEl.textContent = `No s'ha pogut actualitzar: ${error.message}`;
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  closePasswordModal();
+  await domandeAlert("La teva contrasenya s'ha actualitzat correctament al sistema.", "Contrasenya actualitzada", "🔐");
 }
 
 function playSynthNote(freq, duration, type = 'triangle', gainVal = 0.08) {
@@ -323,6 +400,8 @@ function resetToPinScreen() {
   isStudyMode = false;
   studyIndex = 0;
   studyQuizMeta = null;
+  studySessionRecord = null;
+  studyPlayerRecord = null;
   currentPlayer = null;
   currentSession = null;
   sessionQuestions = [];
@@ -413,7 +492,7 @@ function notifyHostStudentAnswered(questionId, answerValue, isCorrect, pointsAwa
   });
 }
 
-async function startStudyMode(quizId) {
+async function prepareStudyEntry(quizId) {
   const [quizRes, qsRes] = await Promise.all([
     sb.from('quizzes').select('*').eq('id', quizId).single(),
     sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
@@ -433,6 +512,76 @@ async function startStudyMode(quizId) {
   studyQuizMeta = quizRes.data;
   sessionQuestions = qsRes.data;
   sessionKind = 'quiz';
+
+  document.getElementById('study-entry-title').textContent = studyQuizMeta.title;
+  document.getElementById('input-study-nickname').value = '';
+  document.getElementById('study-entry-error').classList.add('hidden');
+  showView('view-study-entry');
+}
+
+async function beginRegisteredStudy() {
+  const nickname = document.getElementById('input-study-nickname').value.trim();
+  const errEl = document.getElementById('study-entry-error');
+  const btn = document.getElementById('btn-begin-study');
+  errEl.classList.add('hidden');
+
+  if (!nickname) {
+    errEl.textContent = "Escriu el teu nom abans de començar el repàs.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Preparant...";
+
+  const studyPin = `R${Math.floor(10000 + Math.random() * 90000)}`;
+  const { data: sessionData, error: sErr } = await sb
+    .from('game_sessions')
+    .insert({
+      quiz_id: studyQuizMeta.id,
+      teacher_id: studyQuizMeta.teacher_id,
+      pin: studyPin,
+      status: 'question_active',
+      mode: 'study',
+      is_study: true,
+      is_locked: true
+    })
+    .select()
+    .single();
+
+  if (sErr || !sessionData) {
+    btn.disabled = false;
+    btn.textContent = "Començar repàs";
+    errEl.textContent = `No s'ha pogut iniciar el registre: ${sErr?.message || 'error de connexió'}`;
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const { data: playerData, error: pErr } = await sb
+    .from('players')
+    .insert({
+      session_id: sessionData.id,
+      nickname,
+      avatar: selectedAvatar,
+      score: 0
+    })
+    .select()
+    .single();
+
+  btn.disabled = false;
+  btn.textContent = "Començar repàs";
+
+  if (pErr || !playerData) {
+    errEl.textContent = `No s'ha pogut registrar l'alumne/a: ${pErr?.message || ''}`;
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  studySessionRecord = sessionData;
+  studyPlayerRecord = playerData;
+  currentSession = sessionData;
+  currentPlayer = playerData;
+
   studyIndex = 0;
   studentScore = 0;
   studentStreak = 0;
@@ -440,15 +589,17 @@ async function startStudyMode(quizId) {
   studentCorrectCount = 0;
   studentWrongCount = 0;
   studentFinalShown = false;
-  currentPlayer = { id: 'study', nickname: 'Repàs autònom', avatar: '📚' };
-  currentSession = { id: 'study', current_question_index: 0, status: 'question_active' };
+  currentSession.current_question_index = 0;
 
   renderStudentQuestion(0);
 }
 
-function advanceStudyQuestion() {
+async function advanceStudyQuestion() {
   studyIndex++;
   if (studyIndex >= sessionQuestions.length) {
+    if (studySessionRecord) {
+      await sb.from('game_sessions').update({ status: 'finished' }).eq('id', studySessionRecord.id);
+    }
     showStudentFinalRank();
     return;
   }
@@ -458,15 +609,7 @@ function advanceStudyQuestion() {
 
 function retryStudyMode() {
   if (!studyQuizMeta) return resetToPinScreen();
-  studyIndex = 0;
-  studentScore = 0;
-  studentStreak = 0;
-  studentBestStreak = 0;
-  studentCorrectCount = 0;
-  studentWrongCount = 0;
-  studentFinalShown = false;
-  currentSession.current_question_index = 0;
-  renderStudentQuestion(0);
+  prepareStudyEntry(studyQuizMeta.id);
 }
 
 function openStudyModal(quizId) {
@@ -606,6 +749,9 @@ async function finalizeJoinGame(session, nickname, teamName) {
   })
     .on('broadcast', { event: 'state' }, ({ payload }) => {
       setConnectionWarning(false);
+      if (payload.questions_order && Array.isArray(payload.questions_order)) {
+        sessionQuestions = payload.questions_order;
+      }
       if (payload.ranks) {
         latestRanksMap = payload.ranks;
       }
@@ -800,7 +946,7 @@ function renderStudentFinalStandingsList(list) {
     : `Posició ${formatRankOrdinal(rank)} de ${totalCount}`;
 
   if (isStudyMode) {
-    document.getElementById('student-final-msg').textContent = "Has completat totes les preguntes de repàs. Pots tornar a practicar per millorar el percentatge!";
+    document.getElementById('student-final-msg').textContent = "Has completat totes les preguntes de repàs i la teva puntuació ha quedat enregistrada!";
   } else if (rank === 1) {
     document.getElementById('student-final-msg').textContent = "Enhorabona! Has acabat el qüestionari en primera posició.";
   } else if (rank <= 3) {
@@ -842,7 +988,7 @@ async function showStudentFinalRank() {
   document.getElementById('student-end-banner').textContent = isStudyMode ? 'Repàs finalitzat' : 'Qüestionari finalitzat';
   document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold';
   document.getElementById('student-final-name').textContent = isStudyMode
-    ? (studyQuizMeta?.title || 'Repàs autònom')
+    ? `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`
     : `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`;
   document.getElementById('student-final-score').classList.remove('hidden');
   document.getElementById('student-final-score').textContent = `${studentScore} punts`;
@@ -952,7 +1098,12 @@ function renderStudentQuestion(qIndex) {
     stImg.classList.add('hidden');
   }
 
-  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
+  const rawValidOptions = (q.options || [])
+    .map((o, origIdx) => ({ ...o, origIdx }))
+    .filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
+
+  const shouldShuffleOpts = !isStudyMode && sessionKind === 'quiz' && Boolean(currentSession?.shuffle_options) && q.type === 'quiz';
+  studentDisplayedOptions = shouldShuffleOpts ? shuffleArrayCopy(rawValidOptions) : rawValidOptions;
 
   if (q.type === 'slide') {
     document.getElementById('student-slide-box').classList.remove('hidden');
@@ -968,23 +1119,26 @@ function renderStudentQuestion(qIndex) {
     grid.classList.remove('hidden');
     const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
 
-    validOptions.forEach((opt, idx) => {
+    studentDisplayedOptions.forEach((opt, displayIdx) => {
       const btn = document.createElement('button');
-      btn.className = `btn-opt ${colors[idx % 4]} text-white rounded-3xl p-5 sm:p-6 text-lg sm:text-xl md:text-2xl font-extrabold flex items-center gap-4 text-left transition`;
-      btn.innerHTML = `<div class="w-11 h-11 rounded-2xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[idx % 4]}</div> <span>${opt.text}</span>`;
-      btn.onclick = () => submitOptionAnswer(q, idx);
+      const colorIdx = opt.origIdx % 4;
+      btn.className = `btn-opt ${colors[colorIdx]} text-white rounded-3xl p-5 sm:p-6 text-lg sm:text-xl md:text-2xl font-extrabold flex items-center gap-3.5 text-left transition`;
+      const visualHTML = renderVisualBadgeHTML(opt.visual, 'text-3xl sm:text-4xl');
+      btn.innerHTML = `
+        <div class="w-10 h-10 rounded-2xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[colorIdx]}</div>
+        ${visualHTML}
+        <span class="leading-snug">${opt.text}</span>
+      `;
+      btn.onclick = () => submitOptionAnswer(q, displayIdx);
       grid.appendChild(btn);
     });
   } else if (q.type === 'puzzle') {
     document.getElementById('student-puzzle-box').classList.remove('hidden');
-    studentPuzzleOrder = validOptions.map((o, idx) => ({ text: o.text.trim(), origIdx: idx }));
+    studentPuzzleOrder = rawValidOptions.map((o, idx) => ({ text: o.text.trim(), origIdx: idx }));
     if (studentPuzzleOrder.length === 2) {
       [studentPuzzleOrder[0], studentPuzzleOrder[1]] = [studentPuzzleOrder[1], studentPuzzleOrder[0]];
     } else if (studentPuzzleOrder.length > 2) {
-      for (let i = studentPuzzleOrder.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [studentPuzzleOrder[i], studentPuzzleOrder[j]] = [studentPuzzleOrder[j], studentPuzzleOrder[i]];
-      }
+      studentPuzzleOrder = shuffleArrayCopy(studentPuzzleOrder);
       if (studentPuzzleOrder.every((item, idx) => item.origIdx === idx)) {
         [studentPuzzleOrder[0], studentPuzzleOrder[1]] = [studentPuzzleOrder[1], studentPuzzleOrder[0]];
       }
@@ -1056,6 +1210,28 @@ function getCorrectSolutionText(q) {
   return (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
 }
 
+async function persistStudentAnswerAndScore(questionId, answerVal, isCorrect, points) {
+  if (!currentSession || !currentPlayer) return;
+  const { error } = await sb.from('answers').insert({
+    session_id: currentSession.id,
+    question_id: questionId,
+    player_id: currentPlayer.id,
+    answer_value: answerVal,
+    is_correct: isCorrect,
+    points_awarded: points
+  });
+
+  if (error) {
+    if (!isStudyMode) setConnectionWarning(true);
+    return;
+  }
+
+  if (sessionKind !== 'poll') {
+    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
+    if (!isStudyMode) updateStudentLivePosition();
+  }
+}
+
 async function submitPuzzleAnswer() {
   const qIndex = currentSession.current_question_index;
   if (studentAnsweredCurrentIndex === qIndex) return;
@@ -1072,25 +1248,8 @@ async function submitPuzzleAnswer() {
   document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
   showStudentWaitingFeedback(isCorrect, points, false, q);
 
-  if (isStudyMode) return;
-  notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
-
-  const { error } = await sb.from('answers').insert({
-    session_id: currentSession.id,
-    question_id: q.id,
-    player_id: currentPlayer.id,
-    answer_value: answerVal,
-    is_correct: isCorrect,
-    points_awarded: points
-  });
-
-  if (error) {
-    setConnectionWarning(true);
-    return;
-  }
-
-  await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-  updateStudentLivePosition();
+  if (!isStudyMode) notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
+  await persistStudentAnswerAndScore(q.id, answerVal, isCorrect, points);
 }
 
 async function submitNpsAnswer(question, val) {
@@ -1100,18 +1259,8 @@ async function submitNpsAnswer(question, val) {
 
   const answerVal = { index: val, text: `${val} / 10` };
   showStudentWaitingFeedback(false, 0, true, question);
-  if (isStudyMode) return;
-  notifyHostStudentAnswered(question.id, answerVal, false, 0);
-
-  const { error } = await sb.from('answers').insert({
-    session_id: currentSession.id,
-    question_id: question.id,
-    player_id: currentPlayer.id,
-    answer_value: answerVal,
-    is_correct: false,
-    points_awarded: 0
-  });
-  if (error) setConnectionWarning(true);
+  if (!isStudyMode) notifyHostStudentAnswered(question.id, answerVal, false, 0);
+  await persistStudentAnswerAndScore(question.id, answerVal, false, 0);
 }
 
 function calculateGamifiedPoints(question, isCorrect) {
@@ -1122,15 +1271,17 @@ function calculateGamifiedPoints(question, isCorrect) {
   return Math.round((1000 * ratio + streakBonus) * question.points_multiplier);
 }
 
-async function submitOptionAnswer(question, optionIndex) {
+async function submitOptionAnswer(question, displayIndex) {
   const qIndex = currentSession.current_question_index;
   if (studentAnsweredCurrentIndex === qIndex) return;
   studentAnsweredCurrentIndex = qIndex;
 
-  const validOptions = (question.options || []).filter(o => (o.text || '').trim() !== '');
+  const chosen = studentDisplayedOptions[displayIndex];
+  if (!chosen) return;
+
   const isPoll = sessionKind === 'poll' || question.type === 'poll';
-  const isCorrect = isPoll ? false : (validOptions[optionIndex]?.is_correct || false);
-  const answerVal = { index: optionIndex, text: validOptions[optionIndex]?.text || '' };
+  const isCorrect = isPoll ? false : Boolean(chosen.is_correct);
+  const answerVal = { index: chosen.origIdx, text: chosen.text || chosen.visual || '' };
   
   if (!isPoll) {
     registerStudentOutcome(isCorrect);
@@ -1143,27 +1294,8 @@ async function submitOptionAnswer(question, optionIndex) {
   }
   showStudentWaitingFeedback(isCorrect, points, isPoll, question);
 
-  if (isStudyMode) return;
-  notifyHostStudentAnswered(question.id, answerVal, isCorrect, points);
-
-  const { error } = await sb.from('answers').insert({
-    session_id: currentSession.id,
-    question_id: question.id,
-    player_id: currentPlayer.id,
-    answer_value: answerVal,
-    is_correct: isCorrect,
-    points_awarded: points
-  });
-
-  if (error) {
-    setConnectionWarning(true);
-    return;
-  }
-
-  if (!isPoll) {
-    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-    updateStudentLivePosition();
-  }
+  if (!isStudyMode) notifyHostStudentAnswered(question.id, answerVal, isCorrect, points);
+  await persistStudentAnswerAndScore(question.id, answerVal, isCorrect, points);
 }
 
 async function submitTextAnswer() {
@@ -1193,27 +1325,8 @@ async function submitTextAnswer() {
   }
   showStudentWaitingFeedback(isCorrect, points, isOpinion, q);
 
-  if (isStudyMode) return;
-  notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
-
-  const { error } = await sb.from('answers').insert({
-    session_id: currentSession.id,
-    question_id: q.id,
-    player_id: currentPlayer.id,
-    answer_value: answerVal,
-    is_correct: isCorrect,
-    points_awarded: points
-  });
-
-  if (error) {
-    setConnectionWarning(true);
-    return;
-  }
-
-  if (!isOpinion) {
-    await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-    updateStudentLivePosition();
-  }
+  if (!isStudyMode) notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
+  await persistStudentAnswerAndScore(q.id, answerVal, isCorrect, points);
 }
 
 function showStudentWaitingFeedback(isCorrect, points, isOpinion, questionObj = null) {
@@ -1323,7 +1436,7 @@ function switchDashTab(tab) {
   const sInd = document.getElementById('indicator-tab-school');
   const rInd = document.getElementById('indicator-tab-results');
 
-  const inactiveClass = "relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5";
+  const inactiveClass = "relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5";
   qBtn.className = inactiveClass;
   sBtn.className = inactiveClass;
   rBtn.className = inactiveClass;
@@ -1337,16 +1450,16 @@ function switchDashTab(tab) {
 
   if (tab === 'quizzes') {
     qWrap.classList.remove('hidden');
-    qBtn.className = "relative bg-white p-4 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    qBtn.className = "relative bg-white p-3.5 sm:p-4 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
     if (qInd) qInd.className = "w-6 h-1 rounded-full bg-blue-600 mt-2";
   } else if (tab === 'school') {
     sWrap.classList.remove('hidden');
-    sBtn.className = "relative bg-white p-4 rounded-3xl border-2 border-teal-600 shadow-md shadow-teal-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    sBtn.className = "relative bg-white p-3.5 sm:p-4 rounded-3xl border-2 border-teal-600 shadow-md shadow-teal-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
     if (sInd) sInd.className = "w-6 h-1 rounded-full bg-teal-600 mt-2";
     renderSchoolQuizzes();
   } else {
     rTab.classList.remove('hidden');
-    rBtn.className = "relative bg-white p-4 rounded-3xl border-2 border-violet-600 shadow-md shadow-violet-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
+    rBtn.className = "relative bg-white p-3.5 sm:p-4 rounded-3xl border-2 border-violet-600 shadow-md shadow-violet-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5";
     if (rInd) rInd.className = "w-6 h-1 rounded-full bg-violet-600 mt-2";
     loadSessionsHistory();
   }
@@ -1361,7 +1474,7 @@ async function loadTeacherDashboard(user) {
   const [myQuizzesRes, schoolQuizzesRes, sessionsRes] = await Promise.all([
     sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
     sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('is_shared', true).order('created_at', { ascending: false }),
-    sb.from('game_sessions').select('id, pin, status, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
+    sb.from('game_sessions').select('id, pin, status, mode, is_study, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
   ]);
 
   if (myQuizzesRes.error) {
@@ -1547,12 +1660,14 @@ function renderSchoolQuizzes() {
 
 function openLaunchModal(quizId, kind, title) {
   if (kind === 'poll') {
-    createRoom(quizId, 'poll', 'individual');
+    createRoom(quizId, 'poll', 'individual', false, false);
     return;
   }
   pendingLaunchQuizId = quizId;
   pendingLaunchKind = kind;
   document.getElementById('launch-modal-title').textContent = title;
+  document.getElementById('launch-shuffle-questions').checked = false;
+  document.getElementById('launch-shuffle-options').checked = false;
   document.getElementById('launch-mode-modal').classList.remove('hidden');
 }
 
@@ -1561,13 +1676,15 @@ function closeLaunchModal() {
 }
 
 function confirmCreateRoom(type) {
+  const shuffleQ = document.getElementById('launch-shuffle-questions').checked;
+  const shuffleO = document.getElementById('launch-shuffle-options').checked;
   closeLaunchModal();
   if (!pendingLaunchQuizId) return;
   if (type === 'teams') {
     const count = document.getElementById('launch-teams-count').value || '4';
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${count}`);
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${count}`, shuffleQ, shuffleO);
   } else {
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual');
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual', shuffleQ, shuffleO);
   }
 }
 
@@ -1764,18 +1881,27 @@ function renderSessionsList(sessions) {
     const qInfo = quizMap[s.quiz_id] || {};
     const title = qInfo.title || 'Activitat';
     const isPoll = qInfo.kind === 'poll';
+    const isStudy = Boolean(s.is_study) || s.mode === 'study';
     const dateStr = formatDateTime(s.created_at);
     const safeTitle = title.replace(/'/g, "\\'");
     const row = document.createElement('div');
     row.className = "py-4 flex flex-wrap justify-between items-center gap-4 hover:bg-slate-50 px-3 rounded-2xl transition";
+
+    let typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-600">Qüestionari</span>`;
+    if (isStudy) {
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700">Repàs autònom</span>`;
+    } else if (isPoll) {
+      typeBadge = `<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-700">Enquesta</span>`;
+    }
+
     row.innerHTML = `
       <div>
         <div class="flex items-center gap-2">
           <p class="text-xs font-extrabold text-indigo-600">${dateStr}</p>
-          <span class="px-2 py-0.5 rounded-md text-xs font-bold ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'}">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
+          ${typeBadge}
         </div>
         <h4 class="text-base font-extrabold text-slate-900 mt-0.5">${title}</h4>
-        <p class="text-xs text-slate-400">Pin: ${s.pin}</p>
+        <p class="text-xs text-slate-400">${isStudy ? 'Sessió individual des de casa/aula' : `Pin: ${s.pin}`}</p>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="openSessionReport('${s.id}', '${safeTitle}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
@@ -1803,7 +1929,7 @@ async function loadSessionsHistory() {
 
   const { data: sessions, error } = await sb
     .from('game_sessions')
-    .select('id, pin, status, created_at, quiz_id')
+    .select('id, pin, status, mode, is_study, created_at, quiz_id')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -1845,7 +1971,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   if (!sessionMeta) {
     const { data: fetchedSession } = await sb
       .from('game_sessions')
-      .select('id, quiz_id, teacher_id')
+      .select('id, quiz_id, teacher_id, is_study, mode')
       .eq('id', sessionId)
       .eq('teacher_id', user.id)
       .single();
@@ -1860,13 +1986,18 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   const cachedQuiz = cachedTeacherQuizzes.find(q => q.id === sessionMeta.quiz_id) || cachedSchoolQuizzes.find(q => q.id === sessionMeta.quiz_id);
   const resolvedTitle = cachedQuiz?.title || quizTitle;
   const isPoll = cachedQuiz?.kind === 'poll';
+  const isStudy = Boolean(sessionMeta.is_study) || sessionMeta.mode === 'study';
 
   showView('view-session-report');
   document.getElementById('report-date-badge').textContent = dateStr;
   document.getElementById('report-quiz-title').textContent = resolvedTitle;
-  document.getElementById('pdf-header-title').textContent = isPoll ? "Domande · resultats de l'enquesta" : "Domande · informe d'avaluació";
+  document.getElementById('pdf-header-title').textContent = isPoll
+    ? "Domande · resultats de l'enquesta"
+    : (isStudy ? "Domande · informe de repàs autònom" : "Domande · informe d'avaluació");
   document.getElementById('pdf-subtitle-info').textContent = `${resolvedTitle} · ${dateStr}`;
-  document.getElementById('pdf-type-tag').textContent = isPoll ? "Enquesta d'aula" : "Registre d'avaluació";
+  document.getElementById('pdf-type-tag').textContent = isPoll
+    ? "Enquesta d'aula"
+    : (isStudy ? "Repàs autònom" : "Registre d'avaluació");
   document.getElementById('report-questions-summary').innerHTML = '<p class="text-xs text-slate-400 col-span-full">Carregant dades...</p>';
   document.getElementById('report-student-cards').innerHTML = '';
 
@@ -2224,10 +2355,17 @@ function extractBlockData(b) {
 
   if (rawType === 'quiz') {
     const texts = b.querySelectorAll('.opt-text');
+    const visuals = b.querySelectorAll('.opt-visual');
     const checks = b.querySelectorAll('.opt-correct');
     texts.forEach((t, idx) => {
-      if (t.value.trim()) {
-        options.push({ text: t.value.trim(), is_correct: isPoll ? false : (checks[idx]?.checked || false) });
+      const txt = t.value.trim();
+      const vis = visuals[idx]?.value.trim() || '';
+      if (txt || vis) {
+        options.push({
+          text: txt,
+          visual: vis,
+          is_correct: isPoll ? false : (checks[idx]?.checked || false)
+        });
       }
     });
   } else if (rawType === 'puzzle') {
@@ -2285,14 +2423,18 @@ function addQuestionBlock(type, prefill = null) {
   if (type === 'quiz') {
     optionsHTML = [0,1,2,3].map(i => {
       const optVal = existingOpts[i]?.text || '';
+      const optVis = existingOpts[i]?.visual || '';
       const optChk = existingOpts[i]?.is_correct ? 'checked' : '';
       return `
-        <div class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200">
-          ${isPoll
-            ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
-            : `<input type="checkbox" ${optChk} class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">`
-          }
-          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
+        <div class="bg-white p-2.5 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex items-center gap-2">
+            ${isPoll
+              ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
+              : `<input type="checkbox" ${optChk} class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">`
+            }
+            <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
+          </div>
+          <input type="text" value="${optVis.replace(/"/g, '&quot;')}" placeholder="Emoji gran o url d'imatge opcional (ex: 🍎 o https://...)" class="opt-visual w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 outline-none">
         </div>
       `;
     }).join('');
@@ -2371,7 +2513,7 @@ function addQuestionBlock(type, prefill = null) {
       </div>
     </div>
     <input type="text" value="${titleVal}" placeholder="${type === 'slide' ? 'Títol de la diapositiva...' : 'Escriu l\'enunciat de la pregunta...'}" class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
-    <input type="url" value="${mediaVal}" placeholder="Enllaç d'imatge opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
+    <input type="url" value="${mediaVal}" placeholder="Enllaç d'imatge principal opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${optionsHTML}</div>
   `;
   container.appendChild(div);
@@ -2603,7 +2745,7 @@ async function toggleRoomLock() {
   await sb.from('game_sessions').update({ is_locked: hostRoomLocked }).eq('id', currentSession.id);
 }
 
-async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
+async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQuestions = false, shuffleOptions = false) {
   const { data: { user } } = await sb.auth.getUser();
   const pin = Math.floor(100000 + Math.random() * 900000).toString();
   sessionKind = kind;
@@ -2614,7 +2756,16 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
   hostPlayersList = [];
 
   const [sessionRes, qsRes] = await Promise.all([
-    sb.from('game_sessions').insert({ quiz_id: quizId, teacher_id: user.id, pin, status: 'waiting', mode, is_locked: false }).select().single(),
+    sb.from('game_sessions').insert({
+      quiz_id: quizId,
+      teacher_id: user.id,
+      pin,
+      status: 'waiting',
+      mode,
+      is_locked: false,
+      shuffle_questions: isPoll ? false : shuffleQuestions,
+      shuffle_options: isPoll ? false : shuffleOptions
+    }).select().single(),
     sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
   ]);
 
@@ -2625,7 +2776,8 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
 
   const session = sessionRes.data;
   currentSession = session;
-  sessionQuestions = qsRes.data || [];
+  const rawQuestions = qsRes.data || [];
+  sessionQuestions = (!isPoll && shuffleQuestions) ? shuffleArrayCopy(rawQuestions) : rawQuestions;
 
   const joinUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
   document.getElementById('host-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(joinUrl)}`;
@@ -2648,6 +2800,16 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
     modeBadge.classList.remove('hidden');
   } else {
     modeBadge.classList.add('hidden');
+  }
+
+  const shuffleBadge = document.getElementById('host-shuffle-badge');
+  if (!isPoll && (shuffleQuestions || shuffleOptions)) {
+    shuffleBadge.textContent = shuffleQuestions && shuffleOptions
+      ? 'Preguntes i opcions barrejades'
+      : (shuffleQuestions ? 'Preguntes barrejades' : 'Opcions barrejades');
+    shuffleBadge.classList.remove('hidden');
+  } else {
+    shuffleBadge.classList.add('hidden');
   }
 
   const startBtn = document.getElementById('btn-host-start');
@@ -2712,7 +2874,7 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual') {
     .subscribe();
 }
 
-function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null) {
+function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null, questionsOrder = null) {
   if (!hostBroadcastChannel) return;
   hostBroadcastChannel.send({
     type: 'broadcast',
@@ -2721,7 +2883,8 @@ function broadcastRoomState(status, questionIndex, ranksMap = null, standingsLis
       status,
       current_question_index: questionIndex,
       ranks: ranksMap,
-      standings: standingsList
+      standings: standingsList,
+      questions_order: questionsOrder
     }
   });
 }
@@ -2847,7 +3010,7 @@ async function launchQuestion(index) {
   currentSession.current_question_index = index;
   currentSession.status = 'question_active';
 
-  broadcastRoomState('question_active', index);
+  broadcastRoomState('question_active', index, null, null, index === 0 ? sessionQuestions : null);
 
   document.getElementById('host-lobby').classList.add('hidden');
   document.getElementById('host-partial-podium-screen').classList.add('hidden');
@@ -2901,7 +3064,7 @@ async function launchQuestion(index) {
   document.getElementById('btn-show-results').classList.remove('hidden');
 
   const totalPlayers = hostPlayersList.length;
-  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
+  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
 
   if (q.type === 'type_answer') {
     optDisplay.classList.add('hidden');
@@ -2929,10 +3092,12 @@ async function launchQuestion(index) {
     optDisplay.classList.remove('hidden');
     const colors = ['btn-red', 'btn-blue', 'btn-yellow', 'btn-green'];
     validOptions.forEach((opt, i) => {
+      const visualHTML = renderVisualBadgeHTML(opt.visual, 'text-3xl');
       optDisplay.innerHTML += `
         <div id="host-opt-${i}" class="${colors[i%4]} p-5 rounded-2xl flex justify-between items-center gap-3 transition">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-black/15 flex items-center justify-center shrink-0">${SHAPE_SVGS[i%4]}</div>
+            ${visualHTML}
             <span>${opt.text}</span>
           </div>
           <span id="host-opt-count-${i}" class="bg-black/20 px-3.5 py-1 rounded-xl text-base">0</span>
@@ -3006,7 +3171,7 @@ async function showQuestionResults() {
   const ansList = qAnswers || [];
   const totalVotes = ansList.length;
   const saDisplay = document.getElementById('host-shortanswer-display');
-  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '');
+  const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
 
   if (q.type === 'word_cloud') {
     ansList.forEach(a => {
@@ -3158,7 +3323,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const studyId = params.get('study');
   if (studyId) {
-    startStudyMode(studyId);
+    prepareStudyEntry(studyId);
     return;
   }
 
