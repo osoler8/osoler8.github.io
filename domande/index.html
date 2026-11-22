@@ -774,14 +774,13 @@
 
       <div id="launch-coop-panel" class="hidden bg-rose-50/70 border border-rose-200/80 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-center">
-          <span class="text-xs font-extrabold text-rose-900">Objectiu de punts de la classe</span>
+          <span class="text-xs font-extrabold text-rose-900">Nivell del monstre (calculat segons els alumnes i preguntes)</span>
           <span class="text-lg">👾</span>
         </div>
-        <div class="grid grid-cols-4 gap-2">
-          <button type="button" onclick="selectCoopTarget(5000)" data-target="5000" class="coop-target-btn py-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs text-slate-700 transition">5.000</button>
-          <button type="button" onclick="selectCoopTarget(10000)" data-target="10000" class="coop-target-btn py-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-sm transition">10.000</button>
-          <button type="button" onclick="selectCoopTarget(15000)" data-target="15000" class="coop-target-btn py-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs text-slate-700 transition">15.000</button>
-          <button type="button" onclick="selectCoopTarget(25000)" data-target="25000" class="coop-target-btn py-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs text-slate-700 transition">25.000</button>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="selectCoopDifficulty(0.6)" data-diff="0.6" class="coop-target-btn py-2.5 px-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs text-slate-700 transition">Fàcil (60%)</button>
+          <button type="button" onclick="selectCoopDifficulty(0.75)" data-diff="0.75" class="coop-target-btn py-2.5 px-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-sm transition">Normal (75%)</button>
+          <button type="button" onclick="selectCoopDifficulty(0.9)" data-diff="0.9" class="coop-target-btn py-2.5 px-2 rounded-xl bg-white border border-slate-200 font-extrabold text-xs text-slate-700 transition">Difícil (90%)</button>
         </div>
       </div>
 
