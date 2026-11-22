@@ -7,6 +7,53 @@ const AVATARS = [
   '🐧', '🐨', '🦋', '🐬', '🦩', '🦔', '🐶', '🐱', '🐵', '🐺', '🐲', '🌟'
 ];
 
+const EMOJI_CATALOG = [
+  { e: '🐶', k: 'gos ca animal mascota' }, { e: '🐱', k: 'gat animal mascota' }, { e: '🐭', k: 'ratoli animal' },
+  { e: '🐹', k: 'hamster animal' }, { e: '🐰', k: 'conill animal' }, { e: '🦊', k: 'guineu animal' },
+  { e: '🐻', k: 'os animal' }, { e: '🐼', k: 'panda os animal' }, { e: '🐨', k: 'coala animal' },
+  { e: '🐯', k: 'tigre animal' }, { e: '🦁', k: 'lleo animal' }, { e: '🐮', k: 'vaca animal granja' },
+  { e: '🐷', k: 'porc animal granja' }, { e: '🐸', k: 'granota animal' }, { e: '🐵', k: 'mico animal' },
+  { e: '🐔', k: 'gallina pollastre animal granja' }, { e: '🐧', k: 'pingui ocell animal' }, { e: '🐦', k: 'ocell animal' },
+  { e: '🦉', k: 'mussol ocell animal' }, { e: '🦆', k: 'anec ocell animal' }, { e: '🦅', k: 'aliga ocell animal' },
+  { e: '🐺', k: 'llop animal' }, { e: '🐴', k: 'cavall animal granja' }, { e: '🦄', k: 'unicorn fantasia' },
+  { e: '🐝', k: 'abella insecte animal' }, { e: '🦋', k: 'papallona insecte animal' }, { e: '🐌', k: 'cargol animal' },
+  { e: '🐞', k: 'marieta insecte animal' }, { e: '🐢', k: 'tortuga reptil animal' }, { e: '🐍', k: 'serp reptil animal' },
+  { e: '🦖', k: 'dinosaure t-rex prehistoria' }, { e: '🦕', k: 'dinosaure diplodocus prehistoria' }, { e: '🐙', k: 'pop mar peix' },
+  { e: '🐬', k: 'dofi mar animal' }, { e: '🐳', k: 'balena mar animal' }, { e: '🦈', k: 'tauro mar peix' },
+  { e: '🐠', k: 'peix mar animal' }, { e: '🦀', k: 'cranc mar animal' }, { e: '🐘', k: 'elefant animal' },
+  { e: '🦒', k: 'girafa animal' }, { e: '🦓', k: 'zebra animal' }, { e: '🐊', k: 'cocodril animal' },
+  { e: '🍎', k: 'poma fruita vermella menjar' }, { e: '🍏', k: 'poma verda fruita menjar' }, { e: '🍐', k: 'pera fruita menjar' },
+  { e: '🍊', k: 'taronja mandarina fruita menjar' }, { e: '🍋', k: 'llimona fruita groga menjar' }, { e: '🍌', k: 'platan banana fruita menjar' },
+  { e: '🍉', k: 'sindria fruita estiu menjar' }, { e: '🍇', k: 'raim fruita menjar' }, { e: '🍓', k: 'maduixa fruita menjar' },
+  { e: '🍒', k: 'cireres fruita menjar' }, { e: '🍍', k: 'pinya fruita menjar' }, { e: '🥝', k: 'kiwi fruita menjar' },
+  { e: '🍅', k: 'tomaquet verdura hortalissa' }, { e: '🥕', k: 'pastanaga verdura hortalissa' }, { e: '🌽', k: 'blat de moro panotxa verdura' },
+  { e: '🥦', k: 'broquil verdura' }, { e: '🍞', k: 'pa fleca menjar' }, { e: '🧀', k: 'formatge lacti menjar' },
+  { e: '🥚', k: 'ou menjar' }, { e: '🍕', k: 'pizza menjar' }, { e: '🍔', k: 'hamburguesa menjar' },
+  { e: '🍦', k: 'gelat postres estiu' }, { e: '🎂', k: 'pastis aniversari festa' }, { e: '🍫', k: 'xocolata dolc' },
+  { e: '💧', k: 'aigua gota liquid' }, { e: '🥛', k: 'llet got beguda' }, { e: '☀️', k: 'sol temps estiu astro' },
+  { e: '🌙', k: 'lluna nit cel astro' }, { e: '⭐', k: 'estrella cel nit' }, { e: '🌍', k: 'terra planeta mon geografia' },
+  { e: '🌈', k: 'arc de sant marti colors pluja' }, { e: '☁️', k: 'nuvol temps cel' }, { e: '🌧️', k: 'pluja nuvol temps' },
+  { e: '⛈️', k: 'tempesta llamp tro temps' }, { e: '❄️', k: 'neu fred hivern' }, { e: '🔥', k: 'foc calor flama' },
+  { e: '🌲', k: 'arbre pi bosc natura' }, { e: '🌳', k: 'arbre bosc natura' }, { e: '🌻', k: 'gira-sol flor planta' },
+  { e: '🌹', k: 'rosa flor sant jordi' }, { e: '🌵', k: 'cactus desert planta' }, { e: '🍄', k: 'bolet tardor bosc' },
+  { e: '⚽', k: 'pilota futbol esport' }, { e: '🏀', k: 'basquet pilota esport' }, { e: '🎾', k: 'tennis pilota esport' },
+  { e: '🏊', k: 'nedar piscina esport aigua' }, { e: '🚴', k: 'bicicleta ciclisme esport' }, { e: '🎨', k: 'pintura art paleta colors' },
+  { e: '🎵', k: 'musica nota canco' }, { e: '🎸', k: 'guitarra instrument musica' }, { e: '🎹', k: 'piano teclat instrument musica' },
+  { e: '📚', k: 'llibres lectura escola biblioteca' }, { e: '✏️', k: 'llapis escriure escola' }, { e: '✂️', k: 'tisores retallar escola' },
+  { e: '📏', k: 'regle mesurar matematiques' }, { e: '🔬', k: 'microscopi ciencia laboratori' }, { e: '🔭', k: 'telescopi astronomia espai' },
+  { e: '🧪', k: 'tub assaig quimica experiment' }, { e: '🧮', k: 'abac calcular matematiques numeros' }, { e: '💻', k: 'ordinador portatil informatica' },
+  { e: '📱', k: 'mobil telefon tauleta' }, { e: '🚗', k: 'cotxe vehicle transport' }, { e: '🚌', k: 'autobus transport' },
+  { e: '🚲', k: 'bicicleta transport' }, { e: '🚂', k: 'tren locomotora transport' }, { e: '✈️', k: 'avio volar transport' },
+  { e: '🚀', k: 'coet espai astronauta' }, { e: '⛵', k: 'vaixell vela mar transport' }, { e: '🏠', k: 'casa llar edifici' },
+  { e: '🏫', k: 'escola col·legi edifici' }, { e: '🏥', k: 'hospital metge salut' }, { e: '🏰', k: 'castell historia edat mitjana' },
+  { e: '⏰', k: 'rellotge temps hora' }, { e: '💡', k: 'bombeta idea llum electricitat' }, { e: '🔑', k: 'clau obrir pany' },
+  { e: '❤️', k: 'cor vermell amor estima' }, { e: '💙', k: 'cor blau' }, { e: '💚', k: 'cor verd' },
+  { e: '💛', k: 'cor groc' }, { e: '😊', k: 'cara contenta alegre emocio' }, { e: '😢', k: 'cara trista plorar emocio' },
+  { e: '😡', k: 'cara enfadada rabia emocio' }, { e: '😱', k: 'cara por ensurt emocio' }, { e: '😴', k: 'dormir son cansat' },
+  { e: '👍', k: 'polze amunt be acord' }, { e: '👎', k: 'polze avall malament' }, { e: '👏', k: 'aplaudir mans' },
+  { e: '🏆', k: 'trofeu copa guanyador premi' }, { e: '🥇', k: 'medalla or primer' }, { e: '🎯', k: 'diana objectiu encert' }
+];
+
 const TEAM_PRESETS = [
   { name: 'Equip Vermell', color: 'btn-red text-white', icon: '🔥' },
   { name: 'Equip Blau', color: 'btn-blue text-white', icon: '🌊' },
@@ -64,6 +111,9 @@ let pendingJoinSession = null;
 let pendingJoinNickname = '';
 let pendingLaunchQuizId = null;
 let pendingLaunchKind = 'quiz';
+let selectedLaunchMode = 'individual';
+let selectedTeamsCount = 4;
+let activeEmojiTargetBtn = null;
 let isStudyMode = false;
 let studyIndex = 0;
 let studyQuizMeta = null;
@@ -103,6 +153,69 @@ function renderVisualBadgeHTML(visualStr, sizeClass = 'text-2xl') {
     return `<img src="${v.replace(/"/g, '&quot;')}" alt="" class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover bg-white/90 shrink-0 shadow-sm">`;
   }
   return `<span class="${sizeClass} leading-none shrink-0">${v}</span>`;
+}
+
+function openEmojiPickerForOption(btn) {
+  activeEmojiTargetBtn = btn;
+  const searchInp = document.getElementById('emoji-search-input');
+  if (searchInp) searchInp.value = '';
+  renderEmojiGrid('');
+  document.getElementById('emoji-picker-modal').classList.remove('hidden');
+}
+
+function closeEmojiPickerModal() {
+  document.getElementById('emoji-picker-modal').classList.add('hidden');
+  activeEmojiTargetBtn = null;
+}
+
+function filterEmojiPicker() {
+  const term = document.getElementById('emoji-search-input').value;
+  renderEmojiGrid(term);
+}
+
+function renderEmojiGrid(filterTerm) {
+  const grid = document.getElementById('emoji-picker-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const norm = normalizeText(filterTerm);
+  const filtered = norm
+    ? EMOJI_CATALOG.filter(item => normalizeText(item.k).includes(norm) || item.e.includes(norm))
+    : EMOJI_CATALOG;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<p class="col-span-full text-xs text-slate-400 text-center py-6">Cap icona trobada amb aquest nom.</p>`;
+    return;
+  }
+
+  filtered.forEach(item => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = item.e;
+    btn.title = item.k.split(' ')[0];
+    btn.className = 'h-12 rounded-2xl bg-slate-50 hover:bg-indigo-100 border border-slate-200/70 flex items-center justify-center text-2xl sm:text-3xl transition active:scale-90';
+    btn.onclick = () => {
+      if (activeEmojiTargetBtn) {
+        const container = activeEmojiTargetBtn.closest('.opt-card-box');
+        const hiddenInput = container.querySelector('.opt-visual');
+        const previewSpan = container.querySelector('.opt-visual-preview');
+        if (hiddenInput) hiddenInput.value = item.e;
+        if (previewSpan) previewSpan.textContent = item.e;
+      }
+      closeEmojiPickerModal();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function clearPickedEmoji() {
+  if (activeEmojiTargetBtn) {
+    const container = activeEmojiTargetBtn.closest('.opt-card-box');
+    const hiddenInput = container.querySelector('.opt-visual');
+    const previewSpan = container.querySelector('.opt-visual-preview');
+    if (hiddenInput) hiddenInput.value = '';
+    if (previewSpan) previewSpan.textContent = '➕';
+  }
+  closeEmojiPickerModal();
 }
 
 function domandeAlert(message, title = 'Avís', icon = '💬') {
@@ -205,11 +318,13 @@ window.addEventListener('beforeunload', () => {
 });
 
 function initAvatars() {
-  const containers = [
-    { el: document.getElementById('avatar-selector'), preview: document.getElementById('selected-avatar-preview'), cls: 'avatar-btn' },
-    { el: document.getElementById('study-avatar-selector'), preview: document.getElementById('study-avatar-preview'), cls: 'study-avatar-btn' }
+  const container = document.getElementById('avatar-selector');
+  const studyContainer = document.getElementById('study-avatar-selector');
+  const groups = [
+    { el: container, preview: document.getElementById('selected-avatar-preview'), cls: 'avatar-btn' },
+    { el: studyContainer, preview: document.getElementById('study-avatar-preview'), cls: 'study-avatar-btn' }
   ];
-  containers.forEach(group => {
+  groups.forEach(group => {
     if (!group.el) return;
     group.el.innerHTML = '';
     AVATARS.forEach((emoji, idx) => {
@@ -638,7 +753,7 @@ async function joinGame() {
   errEl.classList.add('hidden');
 
   if (!pin || !nickname) {
-    errEl.textContent = "Introdueix el codi pin i el teu nom.";
+    errEl.textContent = "Introdueix el codi PIN i el teu nom.";
     errEl.classList.remove('hidden');
     return;
   }
@@ -987,9 +1102,7 @@ async function showStudentFinalRank() {
 
   document.getElementById('student-end-banner').textContent = isStudyMode ? 'Repàs finalitzat' : 'Qüestionari finalitzat';
   document.getElementById('student-end-banner').className = 'inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold';
-  document.getElementById('student-final-name').textContent = isStudyMode
-    ? `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`
-    : `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`;
+  document.getElementById('student-final-name').textContent = `${currentPlayer?.avatar || selectedAvatar} ${currentPlayer?.nickname || ''}`;
   document.getElementById('student-final-score').classList.remove('hidden');
   document.getElementById('student-final-score').textContent = `${studentScore} punts`;
 
@@ -1658,6 +1771,39 @@ function renderSchoolQuizzes() {
   });
 }
 
+function selectLaunchMode(mode) {
+  selectedLaunchMode = mode;
+  const indCard = document.getElementById('card-mode-individual');
+  const teamCard = document.getElementById('card-mode-teams');
+  const teamPanel = document.getElementById('launch-teams-panel');
+
+  if (mode === 'teams') {
+    indCard.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 text-left space-y-2 transition";
+    teamCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 text-left space-y-2 transition";
+    teamPanel.classList.remove('hidden');
+  } else {
+    indCard.className = "p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 text-left space-y-2 transition";
+    teamCard.className = "p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 text-left space-y-2 transition";
+    teamPanel.classList.add('hidden');
+  }
+}
+
+function selectTeamsCount(count) {
+  selectedTeamsCount = count;
+  const preview = document.getElementById('launch-teams-icons-preview');
+  if (preview) {
+    preview.textContent = TEAM_PRESETS.slice(0, count).map(t => t.icon).join(' ');
+  }
+  document.querySelectorAll('.team-count-btn').forEach(btn => {
+    const val = parseInt(btn.dataset.count || '0');
+    if (val === count) {
+      btn.className = "team-count-btn py-2.5 rounded-xl bg-emerald-600 text-white font-extrabold text-sm shadow-sm transition";
+    } else {
+      btn.className = "team-count-btn py-2.5 rounded-xl bg-white border border-slate-200 hover:border-emerald-300 font-extrabold text-sm text-slate-700 transition";
+    }
+  });
+}
+
 function openLaunchModal(quizId, kind, title) {
   if (kind === 'poll') {
     createRoom(quizId, 'poll', 'individual', false, false);
@@ -1668,6 +1814,8 @@ function openLaunchModal(quizId, kind, title) {
   document.getElementById('launch-modal-title').textContent = title;
   document.getElementById('launch-shuffle-questions').checked = false;
   document.getElementById('launch-shuffle-options').checked = false;
+  selectLaunchMode('individual');
+  selectTeamsCount(4);
   document.getElementById('launch-mode-modal').classList.remove('hidden');
 }
 
@@ -1675,14 +1823,13 @@ function closeLaunchModal() {
   document.getElementById('launch-mode-modal').classList.add('hidden');
 }
 
-function confirmCreateRoom(type) {
+function confirmCreateRoom() {
   const shuffleQ = document.getElementById('launch-shuffle-questions').checked;
   const shuffleO = document.getElementById('launch-shuffle-options').checked;
   closeLaunchModal();
   if (!pendingLaunchQuizId) return;
-  if (type === 'teams') {
-    const count = document.getElementById('launch-teams-count').value || '4';
-    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${count}`, shuffleQ, shuffleO);
+  if (selectedLaunchMode === 'teams') {
+    createRoom(pendingLaunchQuizId, pendingLaunchKind, `teams:${selectedTeamsCount}`, shuffleQ, shuffleO);
   } else {
     createRoom(pendingLaunchQuizId, pendingLaunchKind, 'individual', shuffleQ, shuffleO);
   }
@@ -1901,7 +2048,7 @@ function renderSessionsList(sessions) {
           ${typeBadge}
         </div>
         <h4 class="text-base font-extrabold text-slate-900 mt-0.5">${title}</h4>
-        <p class="text-xs text-slate-400">${isStudy ? 'Sessió individual des de casa/aula' : `Pin: ${s.pin}`}</p>
+        <p class="text-xs text-slate-400">${isStudy ? 'Sessió individual des de casa/aula' : `PIN: ${s.pin}`}</p>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="openSessionReport('${s.id}', '${safeTitle}', '${dateStr}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-xs transition">
@@ -2426,15 +2573,16 @@ function addQuestionBlock(type, prefill = null) {
       const optVis = existingOpts[i]?.visual || '';
       const optChk = existingOpts[i]?.is_correct ? 'checked' : '';
       return `
-        <div class="bg-white p-2.5 rounded-xl border border-slate-200 space-y-2">
-          <div class="flex items-center gap-2">
-            ${isPoll
-              ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
-              : `<input type="checkbox" ${optChk} class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer" title="Marca si és correcta">`
-            }
-            <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
-          </div>
-          <input type="text" value="${optVis.replace(/"/g, '&quot;')}" placeholder="Emoji gran o url d'imatge opcional (ex: 🍎 o https://...)" class="opt-visual w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 outline-none">
+        <div class="opt-card-box flex items-center gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+          ${isPoll
+            ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
+            : `<input type="checkbox" ${optChk} class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer shrink-0" title="Marca si és correcta">`
+          }
+          <button type="button" onclick="openEmojiPickerForOption(this)" title="Tria una icona visual" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 border border-slate-200 flex items-center justify-center text-xl shrink-0 transition">
+            <span class="opt-visual-preview">${optVis || '➕'}</span>
+          </button>
+          <input type="hidden" value="${optVis.replace(/"/g, '&quot;')}" class="opt-visual">
+          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
         </div>
       `;
     }).join('');
