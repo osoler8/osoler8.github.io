@@ -28,6 +28,7 @@
     .app-icon-emerald { background: linear-gradient(145deg, #10b981 0%, #047857 100%); box-shadow: 0 8px 16px -4px rgba(5, 150, 105, 0.35); }
     .app-icon-amber { background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 8px 16px -4px rgba(217, 119, 6, 0.35); }
     .app-icon-sky { background: linear-gradient(145deg, #0ea5e9 0%, #0369a1 100%); box-shadow: 0 8px 16px -4px rgba(2, 132, 199, 0.35); }
+    .app-icon-slate { background: linear-gradient(145deg, #475569 0%, #1e293b 100%); box-shadow: 0 8px 16px -4px rgba(30, 41, 59, 0.35); }
     .app-icon-rose { background: linear-gradient(145deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 8px 16px -4px rgba(225, 29, 72, 0.35); }
     .pdf-keep-together { break-inside: avoid; page-break-inside: avoid; }
   </style>
@@ -81,6 +82,33 @@
         Som-hi!
       </button>
       <p id="join-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-sm font-semibold hidden"></p>
+    </section>
+
+    <section id="view-study-entry" class="hidden w-full max-w-md bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
+      <div class="space-y-1.5">
+        <span class="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-extrabold">Repàs autònom</span>
+        <h2 id="study-entry-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900">Qüestionari de repàs</h2>
+        <p class="text-sm text-slate-500">Escriu el teu nom i tria un personatge perquè el/la mestre/a pugui registrar el teu progrés</p>
+      </div>
+
+      <div class="space-y-3">
+        <input id="input-study-nickname" type="text" maxlength="20" placeholder="El teu nom i cognom"
+               class="w-full text-center text-lg font-bold py-3.5 rounded-2xl bg-slate-50 text-slate-900 border-2 border-slate-200 focus:border-emerald-500 focus:bg-white outline-none transition">
+      </div>
+
+      <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <p class="text-xs text-slate-500 font-bold">Tria el teu avatar</p>
+          <span id="study-avatar-preview" class="text-lg bg-emerald-100 px-2.5 py-0.5 rounded-lg">🦊</span>
+        </div>
+        <div id="study-avatar-selector" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
+        </div>
+      </div>
+
+      <button id="btn-begin-study" onclick="beginRegisteredStudy()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-emerald-200 transition">
+        Començar repàs
+      </button>
+      <p id="study-entry-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-sm font-semibold hidden"></p>
     </section>
 
     <section id="view-student-team-select" class="hidden w-full max-w-md bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 text-center space-y-5">
@@ -258,10 +286,10 @@
         <span class="text-xs font-bold text-slate-400">Panell de control docent</span>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="relative bg-white p-4 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5">
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3">
+        <button onclick="switchDashTab('quizzes')" id="tab-btn-quizzes" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border-2 border-blue-600 shadow-md shadow-blue-100/60 flex flex-col items-center text-center transition hover:-translate-y-0.5">
           <span id="badge-count-quizzes" class="absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
-          <div class="w-12 h-12 rounded-2xl app-icon-blue text-white flex items-center justify-center mb-2.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-blue text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="4" y="3" width="16" height="18" rx="2.5"/>
               <line x1="8" y1="8" x2="16" y2="8"/>
@@ -270,13 +298,13 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Les meves</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Activitats pròpies</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Activitats pròpies</span>
           <span id="indicator-tab-quizzes" class="w-6 h-1 rounded-full bg-blue-600 mt-2"></span>
         </button>
 
-        <button onclick="switchDashTab('school')" id="tab-btn-school" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+        <button onclick="switchDashTab('school')" id="tab-btn-school" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
           <span id="badge-count-school" class="hidden absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-teal-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
-          <div class="w-12 h-12 rounded-2xl app-icon-teal text-white flex items-center justify-center mb-2.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-teal text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -285,13 +313,13 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Banc de centre</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Compartit claustre</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Compartit claustre</span>
           <span id="indicator-tab-school" class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
 
-        <button onclick="switchDashTab('results')" id="tab-btn-results" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+        <button onclick="switchDashTab('results')" id="tab-btn-results" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
           <span id="badge-count-results" class="hidden absolute top-2.5 right-2.5 min-w-[22px] h-5 px-1.5 rounded-full bg-violet-600 text-white text-[11px] font-extrabold flex items-center justify-center shadow-sm">0</span>
-          <div class="w-12 h-12 rounded-2xl app-icon-purple text-white flex items-center justify-center mb-2.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-purple text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="20" x2="18" y2="10"/>
               <line x1="12" y1="20" x2="12" y2="4"/>
@@ -299,12 +327,12 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Resultats</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Avaluació i pdf</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Avaluació i repàs</span>
           <span id="indicator-tab-results" class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
 
-        <button onclick="openQuizEditor('quiz')" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
-          <div class="w-12 h-12 rounded-2xl app-icon-emerald text-white flex items-center justify-center mb-2.5">
+        <button onclick="openQuizEditor('quiz')" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-emerald text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="9"/>
               <line x1="12" y1="8" x2="12" y2="16"/>
@@ -312,24 +340,24 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Nou qüestionari</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Joc amb punts</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Joc amb punts</span>
           <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
 
-        <button onclick="openQuizEditor('poll')" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
-          <div class="w-12 h-12 rounded-2xl app-icon-amber text-white flex items-center justify-center mb-2.5">
+        <button onclick="openQuizEditor('poll')" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-amber text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
               <path d="M22 12A10 10 0 0 0 12 2v10z"/>
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Nova enquesta</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Votació d'aula</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Votació d'aula</span>
           <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
 
-        <label class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center cursor-pointer transition hover:-translate-y-0.5">
-          <div class="w-12 h-12 rounded-2xl app-icon-sky text-white flex items-center justify-center mb-2.5">
+        <label class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center cursor-pointer transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-sky text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
@@ -337,13 +365,25 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Importar</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Fitxer .json</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Fitxer .json</span>
           <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
           <input type="file" accept=".json" onchange="importQuizJSON(event)" class="hidden">
         </label>
 
-        <button onclick="logoutTeacher()" class="relative bg-white p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
-          <div class="w-12 h-12 rounded-2xl app-icon-rose text-white flex items-center justify-center mb-2.5">
+        <button onclick="openPasswordModal()" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-slate text-white flex items-center justify-center mb-2">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Contrasenya</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Canviar clau</span>
+          <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
+        </button>
+
+        <button onclick="logoutTeacher()" class="relative bg-white p-3.5 sm:p-4 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md flex flex-col items-center text-center transition hover:-translate-y-0.5">
+          <div class="w-12 h-12 rounded-2xl app-icon-rose text-white flex items-center justify-center mb-2">
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
@@ -351,7 +391,7 @@
             </svg>
           </div>
           <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Sortir</span>
-          <span class="text-[11px] font-medium text-slate-400 mt-0.5">Tancar sessió</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Tancar sessió</span>
           <span class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
       </div>
@@ -377,7 +417,7 @@
           <div class="flex justify-between items-center">
             <div>
               <h3 class="text-xl font-extrabold text-slate-900">Resultats</h3>
-              <p class="text-xs text-slate-500">Historial privat dels teus qüestionaris i enquestes</p>
+              <p class="text-xs text-slate-500">Historial privat dels teus qüestionaris, enquestes i repassos autònoms</p>
             </div>
           </div>
           <div id="sessions-history-list" class="divide-y divide-slate-100">
@@ -509,9 +549,10 @@
       <div id="host-lobby" class="bg-white p-6 sm:p-12 rounded-3xl shadow-xl border border-slate-100 space-y-8">
         <div class="flex flex-col md:flex-row items-center justify-center gap-8">
           <div class="space-y-2">
-            <div class="flex items-center justify-center gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-2">
               <span id="host-lobby-badge" class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold">Sala oberta</span>
               <span id="host-mode-badge" class="hidden px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-extrabold">Mode equips</span>
+              <span id="host-shuffle-badge" class="hidden px-3 py-1.5 bg-violet-50 text-violet-700 rounded-full text-xs font-extrabold">Ordre aleatori</span>
             </div>
             <p class="text-slate-500 font-semibold text-lg pt-2">Entra des del teu dispositiu amb el codi:</p>
             <div id="host-pin-display" class="text-5xl sm:text-7xl md:text-8xl font-black tracking-widest text-indigo-600 bg-slate-50 border-2 border-indigo-100 py-5 px-8 sm:px-10 rounded-3xl inline-block shadow-inner">
@@ -642,6 +683,19 @@
         <button type="button" onclick="closeLaunchModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
       </div>
       <h3 id="launch-modal-title" class="text-xl font-extrabold text-slate-900">Títol de l'activitat</h3>
+
+      <div class="bg-violet-50/70 border border-violet-200/80 p-3.5 rounded-2xl text-left space-y-2.5">
+        <p class="text-xs font-extrabold text-violet-900">Opcions d'aleatorització</p>
+        <label class="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+          <span>Barrejar l'ordre de les preguntes</span>
+          <input id="launch-shuffle-questions" type="checkbox" class="w-4 h-4 accent-violet-600 rounded cursor-pointer">
+        </label>
+        <label class="flex items-center justify-between gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+          <span>Barrejar les respostes a cada dispositiu</span>
+          <input id="launch-shuffle-options" type="checkbox" class="w-4 h-4 accent-violet-600 rounded cursor-pointer">
+        </label>
+      </div>
+
       <div class="grid grid-cols-1 gap-3 text-left">
         <button type="button" onclick="confirmCreateRoom('individual')" class="p-4 rounded-2xl border-2 border-indigo-200 hover:border-indigo-600 bg-indigo-50/40 hover:bg-indigo-50 flex items-center gap-4 transition">
           <span class="text-3xl">👤</span>
@@ -673,6 +727,25 @@
     </div>
   </div>
 
+  <div id="password-modal" onclick="closePasswordModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-extrabold">Seguretat del compte</span>
+        <button type="button" onclick="closePasswordModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-xl font-extrabold text-slate-900">Canvia la teva contrasenya</h3>
+        <p class="text-xs text-slate-500">Defineix una nova contrasenya personal d'accés al panell docent (mínim 6 caràcters)</p>
+      </div>
+      <div class="space-y-3 text-left">
+        <input id="new-password-input" type="password" placeholder="Nova contrasenya" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none font-semibold">
+        <input id="confirm-password-input" type="password" placeholder="Repeteix la nova contrasenya" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none font-semibold">
+      </div>
+      <p id="password-modal-error" class="text-rose-600 bg-rose-50 py-2 px-3 rounded-xl text-xs font-semibold hidden"></p>
+      <button type="button" id="btn-update-password" onclick="updateTeacherPassword()" class="w-full py-3.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl font-extrabold text-sm shadow-md transition">Guardar nova contrasenya</button>
+    </div>
+  </div>
+
   <div id="study-link-modal" onclick="closeStudyModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full text-center space-y-5 shadow-2xl">
       <div class="flex justify-between items-center">
@@ -681,7 +754,7 @@
       </div>
       <div class="space-y-1">
         <h3 class="text-xl font-extrabold text-slate-900">Enllaç per estudiar al seu ritme</h3>
-        <p class="text-xs text-slate-500">Comparteix aquest enllaç o qr perquè l'alumnat practiqui des de casa o a classe sense necessitat de pin</p>
+        <p class="text-xs text-slate-500">L'alumne/a escriurà el seu nom i els seus resultats quedaran guardats al teu apartat de resultats</p>
       </div>
       <img id="study-qr-img" src="" alt="Qr repàs" class="w-44 h-44 mx-auto rounded-2xl border border-slate-200 p-2 bg-white">
       <div class="flex gap-2">
