@@ -88,6 +88,7 @@ let previewQuestionsList = [];
 let previewCurrentIdx = 0;
 let previewQuizTitle = '';
 let hostTimerInterval = null;
+let hostSyncInterval = null;
 let activeAnsChannel = null;
 let hostBroadcastChannel = null;
 let hostPlayersChannel = null;
@@ -124,6 +125,7 @@ let latestFinalStandings = [];
 let hostAnsweredPlayerIds = new Set();
 let hostWordCounts = {};
 let hostResultsShown = false;
+let hostActionLocked = false;
 let hostBrainstormIdeas = [];
 let hostBrainstormPhase = 'collecting';
 let hostBrainstormVotedPlayers = new Set();
@@ -147,6 +149,41 @@ let musicInterval = null;
 let isMusicPlaying = false;
 let musicMode = 'lobby';
 let musicStep = 0;
+
+function lockHostActionBriefly(btnId, durationMs = 650) {
+  if (hostActionLocked) return false;
+  hostActionLocked = true;
+  const btn = btnId ? document.getElementById(btnId) : null;
+  if (btn) btn.disabled = true;
+  setTimeout(() => {
+    hostActionLocked = false;
+    if (btn) btn.disabled = false;
+  }, durationMs);
+  return true;
+}
+
+function updateHostRealtimeStatusUI(state) {
+  const pill = document.getElementById('host-realtime-pill');
+  const dot = document.getElementById('host-realtime-dot');
+  const txt = document.getElementById('host-realtime-text');
+  if (!pill || !dot || !txt) return;
+
+  if (state === 'hidden') {
+    pill.classList.add('hidden');
+    return;
+  }
+
+  pill.classList.remove('hidden');
+  if (state === 'connected') {
+    pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold';
+    dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+    txt.textContent = 'Sala connectada';
+  } else {
+    pill.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-xs font-extrabold';
+    dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+    txt.textContent = 'Reconnectant sala...';
+  }
+}
 
 async function fetchSafeQuestionsForStudent(quizId) {
   const { data, error } = await sb.rpc('get_public_session_questions', { p_quiz_id: quizId });
@@ -211,6 +248,8 @@ function renderLocalQrCode(containerId, textUrl, sizePx) {
 function cleanupHostChannels() {
   clearInterval(hostTimerInterval);
   hostTimerInterval = null;
+  clearInterval(hostSyncInterval);
+  hostSyncInterval = null;
   if (activeAnsChannel) {
     sb.removeChannel(activeAnsChannel);
     activeAnsChannel = null;
@@ -223,6 +262,7 @@ function cleanupHostChannels() {
     sb.removeChannel(hostPlayersChannel);
     hostPlayersChannel = null;
   }
+  updateHostRealtimeStatusUI('hidden');
 }
 
 function enqueuePendingAnswer(record) {
@@ -248,6 +288,9 @@ async function flushPendingStudentAnswers() {
     if (item.rpcPayload) {
       const { data, error } = await sb.rpc('submit_student_answer', item.rpcPayload);
       if (error || !data?.ok) {
+        if (data?.error && data.error.includes('activa')) {
+          continue;
+        }
         remaining.push(item);
       }
     } else if (item.answerRow) {
@@ -820,6 +863,7 @@ function stopMusicCompletely() {
 function showView(viewId) {
   if (viewId !== 'view-teacher-host') {
     stopMusicCompletely();
+    updateHostRealtimeStatusUI('hidden');
   }
   document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
   const target = document.getElementById(viewId);
@@ -1132,6 +1176,7 @@ async function joinGame() {
   const pin = document.getElementById('input-pin').value.trim();
   const nickname = document.getElementById('input-nickname').value.trim();
   const errEl = document.getElementById('join-error');
+  const joinBtn = document.getElementById('btn-join-game');
   errEl.classList.add('hidden');
 
   if (!pin || !nickname) {
@@ -1139,6 +1184,8 @@ async function joinGame() {
     errEl.classList.remove('hidden');
     return;
   }
+
+  if (joinBtn) joinBtn.disabled = true;
 
   const { data: session, error } = await sb
     .from('game_sessions')
@@ -1148,12 +1195,14 @@ async function joinGame() {
     .single();
 
   if (error || !session) {
+    if (joinBtn) joinBtn.disabled = false;
     errEl.textContent = "Codi incorrecte o la sessió ja ha començat.";
     errEl.classList.remove('hidden');
     return;
   }
 
   if (session.is_locked) {
+    if (joinBtn) joinBtn.disabled = false;
     errEl.textContent = "Aquesta sala està bloquejada pel/per la mestre/a.";
     errEl.classList.remove('hidden');
     return;
@@ -1161,6 +1210,7 @@ async function joinGame() {
 
   const modeStr = session.mode || 'individual';
   if (modeStr.startsWith('teams:')) {
+    if (joinBtn) joinBtn.disabled = false;
     const teamCount = parseInt(modeStr.split(':')[1] || '4');
     pendingJoinSession = session;
     pendingJoinNickname = nickname;
@@ -1179,6 +1229,7 @@ async function joinGame() {
   }
 
   await finalizeJoinGame(session, nickname, null);
+  if (joinBtn) joinBtn.disabled = false;
 }
 
 async function finalizeJoinGame(session, nickname, teamName) {
@@ -1194,7 +1245,7 @@ async function finalizeJoinGame(session, nickname, teamName) {
     if (pError.code === '23505') {
       errEl.textContent = "Aquest nom ja el fa servir un/a altre/a company/a.";
     } else if (pError.code === '42501') {
-      errEl.textContent = "La sala s'ha bloquejat o ja ha començat.";
+      errEl.textContent = "La sala s'ha bloquejat, està plena o ja ha començat.";
     } else {
       errEl.textContent = `No s'ha pogut entrar a la sala: ${pError.message}`;
     }
@@ -1843,6 +1894,10 @@ async function submitAndEvaluateViaServer(question, answerVal, isOpinion) {
   const { data, error } = await sb.rpc('submit_student_answer', rpcPayload);
 
   if (error || !data?.ok) {
+    if (data?.error && data.error.includes('activa')) {
+      showStudentWaitingFeedback(false, 0, true, '');
+      return;
+    }
     enqueuePendingAnswer({
       session_id: currentSession.id,
       question_id: question.id,
@@ -3767,6 +3822,7 @@ function renderHostBrainstormRankedResults() {
 
 function startBrainstormVotingPhase() {
   if (hostBrainstormPhase === 'voting') return;
+  if (!lockHostActionBriefly('btn-start-brainstorm-vote', 700)) return;
   hostBrainstormPhase = 'voting';
   hostBrainstormVotedPlayers = new Set();
 
@@ -3801,15 +3857,8 @@ function startBrainstormVotingPhase() {
   }
 }
 
-function handleHostIncomingAnswer(q, playerId, answerValue) {
-  if (!currentSession || currentSession.status !== 'question_active' || hostResultsShown) return;
-  if (q.type === 'brainstorm' && hostBrainstormPhase === 'voting') return;
-  if (playerId && hostAnsweredPlayerIds.has(playerId)) return;
-  if (playerId) hostAnsweredPlayerIds.add(playerId);
-
-  const isPoll = sessionKind === 'poll' || q.type === 'poll';
+function updateHostAnswersCounterUI(answersCount, isPoll) {
   const totalPlayers = hostPlayersList.length;
-  const answersCount = hostAnsweredPlayerIds.size;
   const counterPrefix = isPoll ? 'Vots' : 'Respostes';
 
   const countBadge = document.getElementById('host-answers-count');
@@ -3821,6 +3870,19 @@ function handleHostIncomingAnswer(q, playerId, answerValue) {
   if (bigSaCounter) {
     bigSaCounter.innerHTML = `${answersCount} <span class="text-2xl text-slate-400 font-bold">/ ${totalPlayers}</span>`;
   }
+}
+
+function handleHostIncomingAnswer(q, playerId, answerValue) {
+  if (!currentSession || currentSession.status !== 'question_active' || hostResultsShown) return;
+  if (q.type === 'brainstorm' && hostBrainstormPhase === 'voting') return;
+  if (playerId && hostAnsweredPlayerIds.has(playerId)) return;
+  if (playerId) hostAnsweredPlayerIds.add(playerId);
+
+  const isPoll = sessionKind === 'poll' || q.type === 'poll';
+  const totalPlayers = hostPlayersList.length;
+  const answersCount = hostAnsweredPlayerIds.size;
+
+  updateHostAnswersCounterUI(answersCount, isPoll);
 
   if ((q.type === 'word_cloud' || q.type === 'brainstorm') && answerValue?.text) {
     appendWordToHostCloud(answerValue.text);
@@ -3834,6 +3896,23 @@ function handleHostIncomingAnswer(q, playerId, answerValue) {
     hostResultsShown = true;
     setTimeout(() => showQuestionResults(), 350);
   }
+}
+
+async function reconcileHostQuestionAnswers() {
+  if (!currentSession || currentSession.status !== 'question_active' || hostResultsShown) return;
+  const q = sessionQuestions[currentSession.current_question_index];
+  if (!q || q.type === 'slide') return;
+
+  const { data: rows } = await sb
+    .from('answers')
+    .select('player_id, answer_value')
+    .eq('session_id', currentSession.id)
+    .eq('question_id', q.id);
+
+  if (!rows) return;
+  rows.forEach(r => {
+    handleHostIncomingAnswer(q, r.player_id, r.answer_value);
+  });
 }
 
 async function toggleRoomLock() {
@@ -3939,10 +4018,11 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   }
 
   const startBtn = document.getElementById('btn-host-start');
+  startBtn.disabled = false;
   startBtn.textContent = isPoll ? 'Començar enquesta' : 'Començar partida';
   startBtn.className = isPoll
-    ? 'px-10 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-amber-200 transition'
-    : 'px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition';
+    ? 'px-10 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-amber-200 transition disabled:opacity-50'
+    : 'px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-2xl shadow-xl shadow-emerald-200 transition disabled:opacity-50';
 
   const lbCol = document.getElementById('host-leaderboard-col');
   const visCol = document.getElementById('host-visual-col');
@@ -3998,7 +4078,14 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
         setTimeout(() => showQuestionResults(), 350);
       }
     })
-    .subscribe();
+    .subscribe((status) => {
+      if (!currentSession || currentSession.status === 'finished') return;
+      if (status === 'SUBSCRIBED') {
+        updateHostRealtimeStatusUI('connected');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        updateHostRealtimeStatusUI('reconnecting');
+      }
+    });
 
   hostPlayersChannel = sb.channel('host-players-' + session.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'players', filter: `session_id=eq.${session.id}` }, payload => {
@@ -4018,6 +4105,16 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
       if (!isPoll) refreshLiveLeaderboard();
     })
     .subscribe();
+
+  hostSyncInterval = setInterval(() => {
+    if (!currentSession || currentSession.status === 'finished') {
+      clearInterval(hostSyncInterval);
+      return;
+    }
+    if (currentSession.status === 'question_active' && !hostResultsShown) {
+      reconcileHostQuestionAnswers();
+    }
+  }, 3500);
 }
 
 function broadcastRoomState(status, questionIndex, ranksMap = null, standingsList = null, questionsOrder = null, ideasList = null) {
@@ -4141,6 +4238,7 @@ async function startGame() {
     await domandeAlert("Aquesta activitat no té cap pregunta.", "Activitat buida", "📝");
     return;
   }
+  if (!lockHostActionBriefly('btn-host-start', 900)) return;
   document.getElementById('btn-lock-room').classList.add('hidden');
   const { data: latestPlayers } = await sb
     .from('players')
@@ -4175,6 +4273,7 @@ async function launchQuestion(index) {
     broadcastRoomState('finished', index, ranksMap, list);
     await sb.from('game_sessions').update({ status: 'finished' }).eq('id', currentSession.id);
     currentSession.status = 'finished';
+    cleanupHostChannels();
     if (sessionKind === 'poll') {
       setMusicMode('lobby');
       document.getElementById('host-question-screen').classList.add('hidden');
@@ -4261,7 +4360,9 @@ async function launchQuestion(index) {
   setMusicMode('action');
   document.getElementById('host-timer-box').classList.remove('hidden');
   document.getElementById('host-answers-count').classList.remove('hidden');
-  document.getElementById('btn-show-results').classList.remove('hidden');
+  const showResBtn = document.getElementById('btn-show-results');
+  showResBtn.classList.remove('hidden');
+  showResBtn.disabled = false;
 
   const totalPlayers = hostPlayersList.length;
   const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
@@ -4284,7 +4385,9 @@ async function launchQuestion(index) {
       ? "Fase 1 · recollint idees de la classe"
       : "Núvol de paraules en construcció";
     if (q.type === 'brainstorm') {
-      document.getElementById('btn-start-brainstorm-vote').classList.remove('hidden');
+      const bVoteBtn = document.getElementById('btn-start-brainstorm-vote');
+      bVoteBtn.classList.remove('hidden');
+      bVoteBtn.disabled = false;
     }
   } else if (q.type === 'nps_scale' || q.type === 'puzzle') {
     optDisplay.classList.add('hidden');
@@ -4313,8 +4416,7 @@ async function launchQuestion(index) {
     });
   }
 
-  const counterPrefix = isPoll ? 'Vots' : 'Respostes';
-  document.getElementById('host-answers-count').textContent = `${counterPrefix}: 0 / ${totalPlayers}`;
+  updateHostAnswersCounterUI(0, isPoll);
 
   activeAnsChannel = sb.channel('answers-' + q.id + '-' + Date.now())
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers', filter: `question_id=eq.${q.id}` }, payload => {
@@ -4355,6 +4457,7 @@ async function launchQuestion(index) {
 }
 
 async function showQuestionResults() {
+  if (!lockHostActionBriefly('btn-show-results', 700) && !hostResultsShown) return;
   hostResultsShown = true;
   clearInterval(hostTimerInterval);
   if (activeAnsChannel) {
@@ -4364,11 +4467,16 @@ async function showQuestionResults() {
 
   setMusicMode('lobby');
   document.getElementById('btn-start-brainstorm-vote').classList.add('hidden');
-  document.getElementById('btn-next-question').classList.remove('hidden');
+  document.getElementById('btn-show-results').classList.add('hidden');
+  const nextBtn = document.getElementById('btn-next-question');
+  nextBtn.classList.remove('hidden');
+  nextBtn.disabled = false;
 
   const isLast = currentSession.current_question_index >= sessionQuestions.length - 1;
   if (sessionKind !== 'poll' && !isLast) {
-    document.getElementById('btn-partial-podium').classList.remove('hidden');
+    const partBtn = document.getElementById('btn-partial-podium');
+    partBtn.classList.remove('hidden');
+    partBtn.disabled = false;
   }
 
   const q = sessionQuestions[currentSession.current_question_index];
@@ -4387,6 +4495,8 @@ async function showQuestionResults() {
 
   const ansList = qAnswers || [];
   const totalVotes = ansList.length;
+  updateHostAnswersCounterUI(totalVotes, isPoll);
+
   const saDisplay = document.getElementById('host-shortanswer-display');
   const validOptions = (q.options || []).filter(o => (o.text || '').trim() !== '' || (o.visual || '').trim() !== '');
 
@@ -4464,6 +4574,7 @@ async function showQuestionResults() {
 }
 
 async function showPartialPodium() {
+  if (!lockHostActionBriefly('btn-partial-podium', 700)) return;
   document.getElementById('host-question-screen').classList.add('hidden');
   document.getElementById('host-partial-podium-screen').classList.remove('hidden');
 
@@ -4558,6 +4669,9 @@ async function showHostPodium(preloadedList = null) {
 }
 
 function nextQuestion() {
+  if (!lockHostActionBriefly('btn-next-question', 800)) return;
+  const contBtn = document.getElementById('btn-partial-continue');
+  if (contBtn) contBtn.disabled = true;
   launchQuestion(currentSession.current_question_index + 1);
 }
 
