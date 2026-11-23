@@ -4,6 +4,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STUDENT_STORAGE_KEY = 'domande_active_student_v1';
 const PENDING_ANSWERS_KEY = 'domande_pending_answers_v1';
+const EDITOR_DRAFT_KEY = 'domande_editor_draft_v1';
 
 const AVATARS = [
   '🦊', '🐼', '🦁', '🐸', '🦄', '🚀', '🐙', '🐯', '🦉', '🐢', '🦖', '🐝',
@@ -82,6 +83,10 @@ let sessionKind = 'quiz';
 let sessionMode = 'individual';
 let editorKind = 'quiz';
 let editingQuizId = null;
+let editorDraftTimeout = null;
+let previewQuestionsList = [];
+let previewCurrentIdx = 0;
+let previewQuizTitle = '';
 let hostTimerInterval = null;
 let activeAnsChannel = null;
 let hostBroadcastChannel = null;
@@ -142,6 +147,19 @@ let musicInterval = null;
 let isMusicPlaying = false;
 let musicMode = 'lobby';
 let musicStep = 0;
+
+async function fetchSafeQuestionsForStudent(quizId) {
+  const { data, error } = await sb.rpc('get_public_session_questions', { p_quiz_id: quizId });
+  if (!error && Array.isArray(data) && data.length > 0) {
+    return data;
+  }
+  const fallback = await sb
+    .from('questions')
+    .select('id, quiz_id, order_index, type, question_text, media_url, time_limit, points_multiplier, options')
+    .eq('quiz_id', quizId)
+    .order('order_index', { ascending: true });
+  return fallback.data || [];
+}
 
 async function requestScreenWakeLock() {
   try {
@@ -227,11 +245,16 @@ async function flushPendingStudentAnswers() {
 
   const remaining = [];
   for (const item of list) {
-    const { error } = await sb.from('answers').insert(item.answerRow);
-    if (error && error.code !== '23505') {
-      remaining.push(item);
-    } else if (item.updateScore && typeof item.newScore === 'number') {
-      await sb.from('players').update({ score: item.newScore }).eq('id', item.answerRow.player_id);
+    if (item.rpcPayload) {
+      const { data, error } = await sb.rpc('submit_student_answer', item.rpcPayload);
+      if (error || !data?.ok) {
+        remaining.push(item);
+      }
+    } else if (item.answerRow) {
+      const { error } = await sb.from('answers').insert(item.answerRow);
+      if (error && error.code !== '23505') {
+        remaining.push(item);
+      }
     }
   }
 
@@ -300,12 +323,7 @@ async function tryRestoreStudentSession() {
 
   let qs = Array.isArray(saved.questionsOrder) && saved.questionsOrder.length > 0 ? saved.questionsOrder : null;
   if (!qs) {
-    const { data: fetchedQs } = await sb
-      .from('questions')
-      .select('*')
-      .eq('quiz_id', session.quiz_id)
-      .order('order_index', { ascending: true });
-    qs = fetchedQs || [];
+    qs = await fetchSafeQuestionsForStudent(session.quiz_id);
   }
 
   isStudyMode = false;
@@ -378,6 +396,55 @@ async function tryRestoreStudentSession() {
   }
 
   return true;
+}
+
+function scheduleEditorDraftSave() {
+  clearTimeout(editorDraftTimeout);
+  editorDraftTimeout = setTimeout(() => {
+    saveEditorDraftToStorage();
+  }, 500);
+}
+
+function saveEditorDraftToStorage() {
+  try {
+    const blocks = [...document.querySelectorAll('.q-block')].map(b => extractBlockData(b));
+    const draft = {
+      editingQuizId,
+      editorKind,
+      title: document.getElementById('editor-title')?.value || '',
+      tag: document.getElementById('editor-tag')?.value || '',
+      sharedEmails: document.getElementById('editor-shared-emails')?.value || '',
+      questions: blocks,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
+    const pill = document.getElementById('editor-autosave-pill');
+    if (pill) {
+      pill.classList.remove('hidden');
+      setTimeout(() => pill.classList.add('hidden'), 1800);
+    }
+  } catch (e) {}
+}
+
+function clearEditorDraftStorage() {
+  try {
+    localStorage.removeItem(EDITOR_DRAFT_KEY);
+  } catch (e) {}
+}
+
+function getSavedEditorDraft() {
+  try {
+    const raw = localStorage.getItem(EDITOR_DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function cancelQuizEditor() {
+  clearEditorDraftStorage();
+  showView('view-teacher-dash');
 }
 
 function parseEmailsList(rawStr) {
@@ -471,6 +538,7 @@ function renderEmojiGrid(filterTerm) {
         const previewSpan = container.querySelector('.opt-visual-preview');
         if (hiddenInput) hiddenInput.value = item.e;
         if (previewSpan) previewSpan.textContent = item.e;
+        scheduleEditorDraftSave();
       }
       closeEmojiPickerModal();
     };
@@ -485,6 +553,7 @@ function clearPickedEmoji() {
     const previewSpan = container.querySelector('.opt-visual-preview');
     if (hiddenInput) hiddenInput.value = '';
     if (previewSpan) previewSpan.textContent = '➕';
+    scheduleEditorDraftSave();
   }
   closeEmojiPickerModal();
 }
@@ -547,21 +616,6 @@ function normalizeText(str) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
-}
-
-function evaluateShortAnswer(userText, question) {
-  const userNorm = normalizeText(userText);
-  if (!userNorm) return false;
-  const opts = question.options || [];
-  return opts.some(o => {
-    if (!o.is_correct) return false;
-    const mode = o.match_mode || 'exact';
-    const rawList = (o.text || '').split(',').map(s => normalizeText(s)).filter(Boolean);
-    if (mode === 'contains') {
-      return rawList.some(target => userNorm.includes(target));
-    }
-    return rawList.includes(userNorm);
-  });
 }
 
 function setConnectionWarning(isLost) {
@@ -881,12 +935,12 @@ function notifyHostStudentAnswered(questionId, answerValue, isCorrect, pointsAwa
 }
 
 async function prepareStudyEntry(quizId) {
-  const [quizRes, qsRes] = await Promise.all([
-    sb.from('quizzes').select('*').eq('id', quizId).single(),
-    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  const [quizRes, safeQs] = await Promise.all([
+    sb.from('quizzes').select('id, title, kind, teacher_id').eq('id', quizId).single(),
+    fetchSafeQuestionsForStudent(quizId)
   ]);
 
-  if (!quizRes.data || !qsRes.data || qsRes.data.length === 0) {
+  if (!quizRes.data || !safeQs || safeQs.length === 0) {
     await domandeAlert("Aquesta activitat no està disponible o no té preguntes.", "Activitat no disponible", "📚");
     return resetToPinScreen();
   }
@@ -898,7 +952,7 @@ async function prepareStudyEntry(quizId) {
 
   isStudyMode = true;
   studyQuizMeta = quizRes.data;
-  sessionQuestions = qsRes.data;
+  sessionQuestions = safeQs;
   sessionKind = 'quiz';
   studentLifelinesEnabled = false;
 
@@ -928,6 +982,7 @@ async function beginRegisteredStudy() {
     .from('game_sessions')
     .insert({
       quiz_id: studyQuizMeta.id,
+      quiz_title_snapshot: studyQuizMeta.title,
       teacher_id: studyQuizMeta.teacher_id,
       pin: studyPin,
       status: 'question_active',
@@ -1147,15 +1202,11 @@ async function finalizeJoinGame(session, nickname, teamName) {
     return;
   }
 
-  const { data: qs } = await sb
-    .from('questions')
-    .select('*')
-    .eq('quiz_id', session.quiz_id)
-    .order('order_index', { ascending: true });
+  const safeQs = await fetchSafeQuestionsForStudent(session.quiz_id);
 
   isStudyMode = false;
   currentSession = session;
-  sessionQuestions = qs || [];
+  sessionQuestions = safeQs;
   const interactiveQs = sessionQuestions.filter(q => q.type !== 'slide');
   const isPollActivity = interactiveQs.length > 0 && interactiveQs.every(q => ['poll', 'nps_scale'].includes(q.type) || q.points_multiplier === 0);
   sessionKind = isPollActivity ? 'poll' : 'quiz';
@@ -1336,17 +1387,13 @@ function hideAllStudentInputs() {
 }
 
 function activate5050() {
-  if (studentUsed5050) return;
-  const wrongIndices = [];
-  studentDisplayedOptions.forEach((opt, idx) => {
-    if (!opt.is_correct) wrongIndices.push(idx);
-  });
-  if (wrongIndices.length < 2) return;
-
+  if (studentUsed5050 || studentDisplayedOptions.length < 3) return;
   studentUsed5050 = true;
   studentActive5050 = true;
   saveStudentSessionSnapshot();
-  const toHide = shuffleArrayCopy(wrongIndices).slice(0, 2);
+
+  const candidates = studentDisplayedOptions.map((_, idx) => idx);
+  const toHide = shuffleArrayCopy(candidates).slice(0, 2);
   const gridBtns = document.getElementById('student-options-grid').children;
   toHide.forEach(idx => {
     if (gridBtns[idx]) {
@@ -1618,10 +1665,13 @@ function renderStudentQuestion(qIndex) {
 
   document.getElementById('student-q-text').textContent = q.question_text;
   const stImg = document.getElementById('student-q-image');
+  const stLoader = document.getElementById('student-q-img-loader');
   if (q.media_url && isStudyMode) {
+    stLoader.classList.remove('hidden');
     stImg.src = q.media_url;
     stImg.classList.remove('hidden');
   } else {
+    stLoader.classList.add('hidden');
     stImg.classList.add('hidden');
   }
 
@@ -1772,79 +1822,54 @@ function registerStudentOutcome(isCorrect) {
   }
 }
 
-function getCorrectSolutionText(q) {
-  if (!q) return '';
-  if (q.type === 'puzzle') return (q.options || []).filter(o => (o.text || '').trim()).map(o => o.text).join(' → ');
-  return (q.options || []).filter(o => o.is_correct).map(o => o.text).join(', ');
-}
-
-function calculateGamifiedPoints(question, isCorrect) {
-  if (sessionKind === 'poll') return 0;
-  const isCoopMode = (currentSession?.mode || '').startsWith('coop:');
-  const effectiveMultiplier = (isCoopMode && question.points_multiplier === 0) ? 1 : question.points_multiplier;
-  if (effectiveMultiplier === 0) return 0;
-
-  let ratio = 1;
-  if (question.time_limit > 0) {
-    const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
-    ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
-  }
-
-  const streakBonus = isCorrect ? studentStreak * 100 : 0;
-  let base = Math.round((1000 * ratio + streakBonus) * effectiveMultiplier);
-
-  if (studentActive5050) {
-    base = Math.round(base * 0.5);
-  }
-  if (studentActiveDouble) {
-    return isCorrect ? base * 2 : -base;
-  }
-  return isCorrect ? base : 0;
-}
-
-async function persistStudentAnswerAndScore(questionId, answerVal, isCorrect, points) {
+async function submitAndEvaluateViaServer(question, answerVal, isOpinion) {
   if (!currentSession || !currentPlayer) return;
-  saveStudentSessionSnapshot();
+  const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
 
-  const answerRow = {
-    session_id: currentSession.id,
-    question_id: questionId,
-    player_id: currentPlayer.id,
-    answer_value: answerVal,
-    is_correct: isCorrect,
-    points_awarded: points
+  const rpcPayload = {
+    p_session_id: currentSession.id,
+    p_question_id: question.id,
+    p_player_id: currentPlayer.id,
+    p_answer_value: answerVal,
+    p_elapsed_sec: elapsedSec,
+    p_used_5050: studentActive5050,
+    p_used_double: studentActiveDouble
   };
 
-  const shouldUpdateScore = sessionKind !== 'poll';
-  const { error } = await sb.from('answers').insert(answerRow);
+  if (!isStudyMode) {
+    notifyHostStudentAnswered(question.id, answerVal, false, 0);
+  }
 
-  if (error) {
+  const { data, error } = await sb.rpc('submit_student_answer', rpcPayload);
+
+  if (error || !data?.ok) {
     enqueuePendingAnswer({
       session_id: currentSession.id,
-      question_id: questionId,
+      question_id: question.id,
       player_id: currentPlayer.id,
-      answerRow,
-      updateScore: shouldUpdateScore,
-      newScore: studentScore
+      rpcPayload
     });
     if (!isStudyMode) setConnectionWarning(true);
+    showStudentWaitingFeedback(false, 0, true, '');
     return;
   }
 
-  if (shouldUpdateScore) {
-    const { error: pErr } = await sb.from('players').update({ score: studentScore }).eq('id', currentPlayer.id);
-    if (pErr) {
-      enqueuePendingAnswer({
-        session_id: currentSession.id,
-        question_id: questionId,
-        player_id: currentPlayer.id,
-        answerRow,
-        updateScore: true,
-        newScore: studentScore
-      });
-    } else if (!isStudyMode) {
-      updateStudentLivePosition();
-    }
+  const isCorrect = Boolean(data.is_correct);
+  const points = Number(data.points_awarded || 0);
+  const newScore = Number(data.new_score ?? studentScore);
+  const solutionText = data.solution_text || '';
+
+  if (!isOpinion) {
+    registerStudentOutcome(isCorrect);
+    studentScore = newScore;
+    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
+  }
+
+  saveStudentSessionSnapshot();
+  showStudentWaitingFeedback(isCorrect, points, isOpinion, solutionText);
+
+  if (!isStudyMode && !isOpinion) {
+    updateStudentLivePosition();
   }
 }
 
@@ -1854,18 +1879,9 @@ async function submitPuzzleAnswer() {
   studentAnsweredCurrentIndex = qIndex;
 
   const q = sessionQuestions[qIndex];
-  const isCorrect = studentPuzzleOrder.every((item, idx) => item.origIdx === idx);
   const userSequenceText = studentPuzzleOrder.map(i => i.text).join(' → ');
   const answerVal = { text: userSequenceText };
-
-  registerStudentOutcome(isCorrect);
-  const points = calculateGamifiedPoints(q, isCorrect);
-  studentScore = Math.max(0, studentScore + points);
-  document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-  showStudentWaitingFeedback(isCorrect, points, false, q);
-
-  if (!isStudyMode) notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
-  await persistStudentAnswerAndScore(q.id, answerVal, isCorrect, points);
+  await submitAndEvaluateViaServer(q, answerVal, false);
 }
 
 async function submitNpsAnswer(question, val) {
@@ -1874,9 +1890,7 @@ async function submitNpsAnswer(question, val) {
   studentAnsweredCurrentIndex = qIndex;
 
   const answerVal = { index: val, text: `${val} / 10` };
-  showStudentWaitingFeedback(false, 0, true, question);
-  if (!isStudyMode) notifyHostStudentAnswered(question.id, answerVal, false, 0);
-  await persistStudentAnswerAndScore(question.id, answerVal, false, 0);
+  await submitAndEvaluateViaServer(question, answerVal, true);
 }
 
 async function submitOptionAnswer(question, displayIndex) {
@@ -1888,22 +1902,8 @@ async function submitOptionAnswer(question, displayIndex) {
   if (!chosen) return;
 
   const isPoll = sessionKind === 'poll' || question.type === 'poll';
-  const isCorrect = isPoll ? false : Boolean(chosen.is_correct);
   const answerVal = { index: chosen.origIdx, text: chosen.text || chosen.visual || '' };
-  
-  if (!isPoll) {
-    registerStudentOutcome(isCorrect);
-  }
-
-  const points = calculateGamifiedPoints(question, isCorrect);
-  studentScore = Math.max(0, studentScore + points);
-  if (!isPoll) {
-    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-  }
-  showStudentWaitingFeedback(isCorrect, points, isPoll, question);
-
-  if (!isStudyMode) notifyHostStudentAnswered(question.id, answerVal, isCorrect, points);
-  await persistStudentAnswerAndScore(question.id, answerVal, isCorrect, points);
+  await submitAndEvaluateViaServer(question, answerVal, isPoll);
 }
 
 async function submitTextAnswer() {
@@ -1916,28 +1916,10 @@ async function submitTextAnswer() {
   const q = sessionQuestions[qIndex];
   const isOpinion = sessionKind === 'poll' || q.type === 'word_cloud' || q.type === 'brainstorm';
   const answerVal = { text: val };
-  
-  let isCorrect = false;
-  if (!isOpinion && (q.type === 'type_answer' || q.type === 'cloze')) {
-    isCorrect = evaluateShortAnswer(val, q);
-  }
-
-  if (!isOpinion) {
-    registerStudentOutcome(isCorrect);
-  }
-
-  const points = calculateGamifiedPoints(q, isCorrect);
-  studentScore = Math.max(0, studentScore + points);
-  if (!isOpinion) {
-    document.getElementById('student-score-pill').textContent = `${studentScore} punts`;
-  }
-  showStudentWaitingFeedback(isCorrect, points, isOpinion, q);
-
-  if (!isStudyMode) notifyHostStudentAnswered(q.id, answerVal, isCorrect, points);
-  await persistStudentAnswerAndScore(q.id, answerVal, isCorrect, points);
+  await submitAndEvaluateViaServer(q, answerVal, isOpinion);
 }
 
-function showStudentWaitingFeedback(isCorrect, points, isOpinion, questionObj = null) {
+function showStudentWaitingFeedback(isCorrect, points, isOpinion, solutionText = '') {
   hideAllStudentInputs();
   const fb = document.getElementById('student-feedback');
   const ptsEl = document.getElementById('feedback-points');
@@ -1994,14 +1976,9 @@ function showStudentWaitingFeedback(isCorrect, points, isOpinion, questionObj = 
     ptsEl.classList.remove('hidden');
     streakEl.classList.add('hidden');
     streakPill.classList.add('hidden');
-    if (isStudyMode && questionObj) {
-      const sol = getCorrectSolutionText(questionObj);
-      if (sol) {
-        revealEl.textContent = `Resposta correcta: ${sol}`;
-        revealEl.classList.remove('hidden');
-      } else {
-        revealEl.classList.add('hidden');
-      }
+    if (isStudyMode && solutionText) {
+      revealEl.textContent = `Resposta correcta: ${solutionText}`;
+      revealEl.classList.remove('hidden');
     } else {
       revealEl.classList.add('hidden');
     }
@@ -2087,11 +2064,11 @@ async function loadTeacherDashboard(user) {
 
   let myQuizzesRes = await sb
     .from('quizzes')
-    .select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at')
+    .select('id, title, kind, tag, shared_with, author_email, teacher_id, is_archived, created_at')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
 
-  if (myQuizzesRes.error && myQuizzesRes.error.message && myQuizzesRes.error.message.includes('shared_with')) {
+  if (myQuizzesRes.error) {
     myQuizzesRes = await sb
       .from('quizzes')
       .select('id, title, kind, tag, is_shared, teacher_id, created_at')
@@ -2101,7 +2078,7 @@ async function loadTeacherDashboard(user) {
 
   let sharedWithMeRes = await sb
     .from('quizzes')
-    .select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at')
+    .select('id, title, kind, tag, shared_with, author_email, teacher_id, is_archived, created_at')
     .contains('shared_with', [userEmailLower])
     .order('created_at', { ascending: false });
 
@@ -2111,7 +2088,7 @@ async function loadTeacherDashboard(user) {
 
   const sessionsRes = await sb
     .from('game_sessions')
-    .select('id, pin, status, mode, is_study, created_at, quiz_id')
+    .select('id, pin, status, mode, is_study, created_at, quiz_id, quiz_title_snapshot')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -2120,8 +2097,8 @@ async function loadTeacherDashboard(user) {
     return;
   }
 
-  cachedTeacherQuizzes = myQuizzesRes.data || [];
-  cachedSchoolQuizzes = sharedWithMeRes.data || [];
+  cachedTeacherQuizzes = (myQuizzesRes.data || []).filter(q => !q.is_archived);
+  cachedSchoolQuizzes = (sharedWithMeRes.data || []).filter(q => !q.is_archived);
   cachedSessionsList = sessionsRes.data || [];
 
   const qBadge = document.getElementById('badge-count-quizzes');
@@ -2157,6 +2134,25 @@ async function loadTeacherDashboard(user) {
 
   renderTagFilters();
   renderFilteredQuizzes();
+
+  const pendingDraft = getSavedEditorDraft();
+  if (pendingDraft && pendingDraft.questions && pendingDraft.questions.length > 0) {
+    const restore = await domandeConfirm(
+      `Tens un esborrany sense guardar ("${pendingDraft.title || 'Sense títol'}"). Vols recuperar-lo ara?`,
+      "Esborrany detectat",
+      false
+    );
+    if (restore) {
+      openQuizEditor(
+        pendingDraft.editorKind || 'quiz',
+        pendingDraft.editingQuizId ? { id: pendingDraft.editingQuizId, title: pendingDraft.title, tag: pendingDraft.tag, shared_with: parseEmailsList(pendingDraft.sharedEmails) } : null,
+        pendingDraft.questions,
+        true
+      );
+    } else {
+      clearEditorDraftStorage();
+    }
+  }
 }
 
 function renderTagFilters() {
@@ -2220,10 +2216,13 @@ function renderFilteredQuizzes() {
     card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-slate-200/80 shadow-sm hover:shadow-md transition";
     card.innerHTML = `
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
-          ${sharedList.length > 0 ? `<span title="Compartit amb: ${sharedList.join(', ')}" class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit (${sharedList.length})</span>` : ''}
-          ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
+            ${sharedList.length > 0 ? `<span title="Compartit amb: ${sharedList.join(', ')}" class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit (${sharedList.length})</span>` : ''}
+            ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
+          </div>
+          <button onclick="openPreviewQuiz('${q.id}')" title="Previsualitzar preguntes" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 text-xs font-extrabold transition">👁️ Veure</button>
         </div>
         <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
         <p class="text-xs text-slate-400">Creat el ${formatDateTime(q.created_at)}</p>
@@ -2286,10 +2285,12 @@ function renderSchoolQuizzes() {
     card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-teal-200/80 shadow-sm hover:shadow-md transition";
     card.innerHTML = `
       <div class="space-y-2">
-        <div class="flex flex-wrap items-center gap-1.5">
-          <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
-          <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit per: ${authorDisplay}</span>
-          ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
+        <div class="flex flex-wrap items-center justify-between gap-1.5">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
+            <span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit per: ${authorDisplay}</span>
+          </div>
+          <button onclick="openPreviewQuiz('${q.id}')" title="Previsualitzar preguntes" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 text-xs font-extrabold transition">👁️ Veure</button>
         </div>
         <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
         <p class="text-xs text-slate-400">Compartit el ${formatDateTime(q.created_at)}</p>
@@ -2316,6 +2317,74 @@ function renderSchoolQuizzes() {
     `;
     list.appendChild(card);
   });
+}
+
+async function openPreviewQuiz(quizId) {
+  const [quizRes, qRes] = await Promise.all([
+    sb.from('quizzes').select('title, kind').eq('id', quizId).single(),
+    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+  ]);
+  if (!quizRes.data || !qRes.data || qRes.data.length === 0) {
+    await domandeAlert("Aquesta activitat no té preguntes per previsualitzar.", "Sense preguntes", "📝");
+    return;
+  }
+  previewQuizTitle = quizRes.data.title;
+  previewQuestionsList = qRes.data;
+  previewCurrentIdx = 0;
+  document.getElementById('preview-modal-title').textContent = previewQuizTitle;
+  renderPreviewStep();
+  document.getElementById('preview-quiz-modal').classList.remove('hidden');
+}
+
+function closePreviewModal() {
+  document.getElementById('preview-quiz-modal').classList.add('hidden');
+}
+
+function stepPreviewQuestion(dir) {
+  const next = previewCurrentIdx + dir;
+  if (next < 0 || next >= previewQuestionsList.length) return;
+  previewCurrentIdx = next;
+  renderPreviewStep();
+}
+
+function renderPreviewStep() {
+  const q = previewQuestionsList[previewCurrentIdx];
+  if (!q) return;
+  document.getElementById('preview-counter-badge').textContent = `Element ${previewCurrentIdx + 1} de ${previewQuestionsList.length} · ${q.time_limit === 0 ? 'Sense temps' : q.time_limit + 's'}`;
+  document.getElementById('btn-prev-preview').disabled = previewCurrentIdx === 0;
+  document.getElementById('btn-next-preview').disabled = previewCurrentIdx === previewQuestionsList.length - 1;
+
+  const box = document.getElementById('preview-content-box');
+  let optsHTML = '';
+  const opts = q.options || [];
+
+  if (q.type === 'slide') {
+    optsHTML = `<div class="bg-indigo-50 p-4 rounded-2xl text-sm text-indigo-900">${opts[0]?.text || ''}</div>`;
+  } else if (q.type === 'cloze') {
+    optsHTML = `
+      <div class="bg-slate-50 p-4 rounded-2xl text-base font-bold text-slate-800">${formatClozeDisplayHTML(opts[0]?.sentence || '')}</div>
+      <div class="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-extrabold text-emerald-800">Solució acceptada: ${opts[0]?.text || '-'}</div>
+    `;
+  } else if (q.type === 'type_answer') {
+    optsHTML = `<div class="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-extrabold text-emerald-800">Respostes acceptades: ${opts[0]?.text || '-'}</div>`;
+  } else if (q.type === 'puzzle') {
+    optsHTML = `<div class="space-y-2">${opts.map((o, i) => `<div class="bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm font-bold"><span class="text-indigo-600 font-black mr-2">${i + 1}.</span>${o.text}</div>`).join('')}</div>`;
+  } else if (q.type === 'word_cloud' || q.type === 'brainstorm' || q.type === 'nps_scale') {
+    optsHTML = `<div class="bg-sky-50 p-4 rounded-2xl text-xs font-bold text-sky-800">Activitat oberta interactiva (${q.type})</div>`;
+  } else {
+    optsHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">${opts.map(o => `
+      <div class="p-3.5 rounded-2xl border-2 ${o.is_correct ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-200 bg-slate-50 text-slate-700'} font-bold text-sm flex items-center justify-between gap-2">
+        <span>${o.visual ? o.visual + ' ' : ''}${o.text}</span>
+        ${o.is_correct ? '<span class="text-emerald-600 font-black">✓</span>' : ''}
+      </div>
+    `).join('')}</div>`;
+  }
+
+  box.innerHTML = `
+    <h4 class="text-xl font-extrabold text-slate-900">${q.question_text}</h4>
+    ${q.media_url ? `<img src="${q.media_url}" class="max-h-40 mx-auto rounded-xl object-contain">` : ''}
+    ${optsHTML}
+  `;
 }
 
 function selectLaunchMode(mode) {
@@ -2474,12 +2543,13 @@ async function duplicateQuiz(quizId) {
       kind: origQuiz.kind || 'quiz',
       tag: origQuiz.tag || '',
       shared_with: [],
+      is_archived: false,
       author_email: user.email || ''
     })
     .select()
     .single();
 
-  if (error && error.message && error.message.includes('shared_with')) {
+  if (error) {
     const retry = await sb
       .from('quizzes')
       .insert({
@@ -2524,14 +2594,24 @@ async function deleteQuiz(quizId, title) {
     await domandeAlert("Només l'autor/a original pot eliminar aquesta activitat.", "Accés denegat", "🔒");
     return;
   }
-  const ok = await domandeConfirm(`Segur que vols eliminar "${title}" i totes les seves preguntes?`, "Eliminar activitat");
+  const ok = await domandeConfirm(`Segur que vols treure "${title}" del teu panell? Els informes de resultats anteriors es conservaran intactes.`, "Eliminar activitat");
   if (!ok) return;
-  await sb.from('game_sessions').delete().eq('quiz_id', quizId).eq('teacher_id', user.id);
-  const { error } = await sb.from('quizzes').delete().eq('id', quizId).eq('teacher_id', user.id);
-  if (error) {
-    await domandeAlert("No s'ha pogut esborrar: " + error.message, "Error", "⚠️");
-    return;
+
+  const { error: archErr } = await sb
+    .from('quizzes')
+    .update({ is_archived: true, shared_with: [], is_shared: false })
+    .eq('id', quizId)
+    .eq('teacher_id', user.id);
+
+  if (archErr) {
+    await sb.from('game_sessions').delete().eq('quiz_id', quizId).eq('teacher_id', user.id);
+    const { error } = await sb.from('quizzes').delete().eq('id', quizId).eq('teacher_id', user.id);
+    if (error) {
+      await domandeAlert("No s'ha pogut esborrar: " + error.message, "Error", "⚠️");
+      return;
+    }
   }
+
   loadTeacherDashboard(user);
 }
 
@@ -2584,12 +2664,13 @@ async function importQuizJSON(event) {
         kind: parsed.kind === 'poll' ? 'poll' : 'quiz',
         tag: parsed.tag || '',
         shared_with: [],
+        is_archived: false,
         author_email: user.email || ''
       })
       .select()
       .single();
 
-    if (error && error.message && error.message.includes('shared_with')) {
+    if (error) {
       const retry = await sb
         .from('quizzes')
         .insert({
@@ -2665,7 +2746,7 @@ function renderSessionsList(sessions) {
   const searchTerm = normalizeText(document.getElementById('search-results-history')?.value || '');
   const filteredSessions = sessions.filter(s => {
     const qInfo = quizMap[s.quiz_id] || {};
-    const title = qInfo.title || 'Activitat';
+    const title = qInfo.title || s.quiz_title_snapshot || 'Activitat';
     const tag = qInfo.tag || '';
     return !searchTerm ||
       normalizeText(title).includes(searchTerm) ||
@@ -2681,7 +2762,7 @@ function renderSessionsList(sessions) {
   container.innerHTML = '';
   filteredSessions.forEach(s => {
     const qInfo = quizMap[s.quiz_id] || {};
-    const title = qInfo.title || 'Activitat';
+    const title = qInfo.title || s.quiz_title_snapshot || 'Activitat';
     const isPoll = qInfo.kind === 'poll';
     const isStudy = Boolean(s.is_study) || s.mode === 'study';
     const dateStr = formatDateTime(s.created_at);
@@ -2732,7 +2813,7 @@ async function loadSessionsHistory() {
 
   const { data: sessions, error } = await sb
     .from('game_sessions')
-    .select('id, pin, status, mode, is_study, created_at, quiz_id')
+    .select('id, pin, status, mode, is_study, created_at, quiz_id, quiz_title_snapshot')
     .eq('teacher_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -2740,6 +2821,33 @@ async function loadSessionsHistory() {
     cachedSessionsList = sessions;
     renderSessionsList(cachedSessionsList);
   }
+}
+
+async function cleanupOldSessions(daysOld = 30) {
+  const cutoffMs = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
+  const oldSessions = cachedSessionsList.filter(s => new Date(s.created_at).getTime() < cutoffMs);
+  if (oldSessions.length === 0) {
+    await domandeAlert(`No hi ha cap sessió amb més de ${daysOld} dies d'antiguitat.`, "Tot al dia", "✅");
+    return;
+  }
+
+  const confirmed = await domandeConfirm(
+    `S'han trobat ${oldSessions.length} sessions amb més de ${daysOld} dies d'antiguitat. Vols eliminar-les permanentment per complir amb la protecció de dades?`,
+    "Neteja RGPD"
+  );
+  if (!confirmed) return;
+
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+
+  const ids = oldSessions.map(s => s.id);
+  await sb.from('answers').delete().in('session_id', ids);
+  await sb.from('players').delete().in('session_id', ids);
+  await sb.from('game_sessions').delete().in('id', ids).eq('teacher_id', user.id);
+
+  cachedSessionsList = cachedSessionsList.filter(s => !ids.includes(s.id));
+  renderSessionsList(cachedSessionsList);
+  await domandeAlert(`S'han eliminat ${ids.length} registres antics correctament.`, "Neteja completada", "🧹");
 }
 
 async function deleteSessionResult(sessionId, title) {
@@ -2774,7 +2882,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   if (!sessionMeta) {
     const { data: fetchedSession } = await sb
       .from('game_sessions')
-      .select('id, quiz_id, teacher_id, is_study, mode')
+      .select('id, quiz_id, quiz_title_snapshot, teacher_id, is_study, mode')
       .eq('id', sessionId)
       .eq('teacher_id', user.id)
       .single();
@@ -2787,7 +2895,7 @@ async function openSessionReport(sessionId, quizTitle, dateStr) {
   }
 
   const cachedQuiz = cachedTeacherQuizzes.find(q => q.id === sessionMeta.quiz_id) || cachedSchoolQuizzes.find(q => q.id === sessionMeta.quiz_id);
-  const resolvedTitle = cachedQuiz?.title || quizTitle;
+  const resolvedTitle = cachedQuiz?.title || sessionMeta.quiz_title_snapshot || quizTitle;
   const isPoll = cachedQuiz?.kind === 'poll';
   const isStudy = Boolean(sessionMeta.is_study) || sessionMeta.mode === 'study';
 
@@ -3039,7 +3147,7 @@ function openLatestReport() {
   openSessionReport(currentSession.id, 'Resultats de la sessió', dateStr);
 }
 
-function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = []) {
+function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = [], fromDraft = false) {
   editorKind = kind;
   editingQuizId = existingQuiz ? existingQuiz.id : null;
   const isPoll = kind === 'poll';
@@ -3102,6 +3210,9 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
     addQuestionBlock('quiz');
   }
 
+  if (!fromDraft) {
+    clearEditorDraftStorage();
+  }
   showView('view-quiz-editor');
 }
 
@@ -3137,6 +3248,7 @@ function moveEditorBlock(btn, dir) {
     container.insertBefore(block.nextElementSibling, block);
   }
   updateEditorBlockNumbers();
+  scheduleEditorDraftSave();
 }
 
 function duplicateEditorBlock(btn) {
@@ -3150,6 +3262,7 @@ function duplicateEditorBlock(btn) {
     container.insertBefore(newlyCreated, block.nextElementSibling);
   }
   updateEditorBlockNumbers();
+  scheduleEditorDraftSave();
 }
 
 function extractBlockData(b) {
@@ -3245,13 +3358,13 @@ function addQuestionBlock(type, prefill = null) {
         <div class="opt-card-box flex items-center gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
           ${isPoll
             ? `<span class="w-4 h-4 rounded-full ${optColors[i]} shrink-0"></span>`
-            : `<input type="checkbox" ${optChk} class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer shrink-0" title="Marca si és correcta">`
+            : `<input type="checkbox" ${optChk} onchange="scheduleEditorDraftSave()" class="opt-correct w-5 h-5 accent-emerald-600 cursor-pointer shrink-0" title="Marca si és correcta">`
           }
           <button type="button" onclick="openEmojiPickerForOption(this)" title="Tria una icona visual" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-indigo-50 border border-slate-200 flex items-center justify-center text-xl shrink-0 transition">
             <span class="opt-visual-preview">${optVis || '➕'}</span>
           </button>
           <input type="hidden" value="${optVis.replace(/"/g, '&quot;')}" class="opt-visual">
-          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
+          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" oninput="scheduleEditorDraftSave()" placeholder="Opció ${i+1}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
         </div>
       `;
     }).join('');
@@ -3261,7 +3374,7 @@ function addQuestionBlock(type, prefill = null) {
       return `
         <div class="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200">
           <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-black flex items-center justify-center shrink-0">${i + 1}</span>
-          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" placeholder="Posició ${i+1}${i >= 2 ? ' (opcional)' : ''}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
+          <input type="text" value="${optVal.replace(/"/g, '&quot;')}" oninput="scheduleEditorDraftSave()" placeholder="Posició ${i+1}${i >= 2 ? ' (opcional)' : ''}" class="opt-text flex-1 p-1 text-sm font-semibold text-slate-800 outline-none">
         </div>
       `;
     }).join('');
@@ -3270,8 +3383,8 @@ function addQuestionBlock(type, prefill = null) {
     optionsHTML = isPoll
       ? `<div class="col-span-full bg-white p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600">Opcions de votació automàtiques: Sí / No</div>`
       : `<div class="flex gap-4 col-span-full bg-white p-3 rounded-xl border border-slate-200">
-          <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}-${Date.now()}" value="0" ${isFirstTrue ? 'checked' : ''} class="opt-correct accent-indigo-600"> Vertader</label>
-          <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}-${Date.now()}" value="1" ${!isFirstTrue ? 'checked' : ''} class="opt-correct accent-indigo-600"> Fals</label>
+          <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}-${Date.now()}" value="0" ${isFirstTrue ? 'checked' : ''} onchange="scheduleEditorDraftSave()" class="opt-correct accent-indigo-600"> Vertader</label>
+          <label class="flex items-center gap-2 font-bold text-sm text-slate-700 cursor-pointer"><input type="radio" name="tf-${idx}-${Date.now()}" value="1" ${!isFirstTrue ? 'checked' : ''} onchange="scheduleEditorDraftSave()" class="opt-correct accent-indigo-600"> Fals</label>
         </div>`;
   } else if (type === 'type_answer') {
     const ansVal = existingOpts[0]?.text || '';
@@ -3280,12 +3393,12 @@ function addQuestionBlock(type, prefill = null) {
       <div class="col-span-full bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
         <div class="flex flex-wrap justify-between items-center gap-2">
           <span class="text-xs font-bold text-slate-600">Respostes acceptades (separa diferents opcions amb comes):</span>
-          <select class="opt-match-mode bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+          <select onchange="scheduleEditorDraftSave()" class="opt-match-mode bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
             <option value="exact" ${matchMode === 'exact' ? 'selected' : ''}>Coincidència exacta (sense majúscules ni accents)</option>
             <option value="contains" ${matchMode === 'contains' ? 'selected' : ''}>Conté alguna de les paraules clau</option>
           </select>
         </div>
-        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Ex: Barcelona, barna, BCN" class="opt-text w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
+        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" oninput="scheduleEditorDraftSave()" placeholder="Ex: Barcelona, barna, BCN" class="opt-text w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
       </div>
     `;
   } else if (type === 'cloze') {
@@ -3294,8 +3407,8 @@ function addQuestionBlock(type, prefill = null) {
     optionsHTML = `
       <div class="col-span-full bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
         <span class="text-xs font-bold text-slate-600 block">Escriu la frase posant <code class="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded">[...]</code> on va el buit:</span>
-        <input type="text" value="${sentenceVal.replace(/"/g, '&quot;')}" placeholder="Ex: La capital de França és [...] i hi passa el riu Sena." class="opt-cloze-sentence w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
-        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" placeholder="Paraula correcta del buit (separa sinònims amb comes, ex: París, Paris)" class="opt-text w-full p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200 text-sm font-bold text-slate-900 outline-none">
+        <input type="text" value="${sentenceVal.replace(/"/g, '&quot;')}" oninput="scheduleEditorDraftSave()" placeholder="Ex: La capital de França és [...] i hi passa el riu Sena." class="opt-cloze-sentence w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 outline-none">
+        <input type="text" value="${ansVal.replace(/"/g, '&quot;')}" oninput="scheduleEditorDraftSave()" placeholder="Paraula correcta del buit (separa sinònims amb comes, ex: París, Paris)" class="opt-text w-full p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-200 text-sm font-bold text-slate-900 outline-none">
       </div>
     `;
   } else if (type === 'word_cloud') {
@@ -3306,7 +3419,7 @@ function addQuestionBlock(type, prefill = null) {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els/les alumnes votaran un número del 0 al 10 i es calcularà la mitjana del grup.</p>`;
   } else if (type === 'slide') {
     const slideBody = existingOpts[0]?.text || '';
-    optionsHTML = `<textarea placeholder="Escriu aquí el text explicatiu de la diapositiva..." rows="3" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-800 outline-none">${slideBody}</textarea>`;
+    optionsHTML = `<textarea oninput="scheduleEditorDraftSave()" placeholder="Escriu aquí el text explicatiu de la diapositiva..." rows="3" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-800 outline-none">${slideBody}</textarea>`;
   }
 
   const timeVal = typeof prefill?.time_limit === 'number' ? prefill.time_limit : 20;
@@ -3323,7 +3436,7 @@ function addQuestionBlock(type, prefill = null) {
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
         ${type === 'slide' ? '' : `
-          <select class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+          <select onchange="scheduleEditorDraftSave()" class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
             <option value="0" ${timeVal === 0 ? 'selected' : ''}>∞ Sense límit de temps</option>
             <option value="5" ${timeVal === 5 ? 'selected' : ''}>⚡ 5 segons (llampec)</option>
             <option value="7" ${timeVal === 7 ? 'selected' : ''}>⚡ 7 segons (llampec)</option>
@@ -3334,21 +3447,64 @@ function addQuestionBlock(type, prefill = null) {
           </select>
         `}
         ${(isPoll || type === 'slide') ? '' : `
-          <select class="q-points bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+          <select onchange="scheduleEditorDraftSave()" class="q-points bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
             <option value="1" ${ptsVal === 1 ? 'selected' : ''}>Punts normals</option>
             <option value="2" ${ptsVal === 2 ? 'selected' : ''}>Doble puntuació</option>
             <option value="0" ${ptsVal === 0 ? 'selected' : ''}>Sense punts</option>
           </select>
         `}
         <button type="button" onclick="duplicateEditorBlock(this)" class="text-xs font-bold text-indigo-600 bg-white border border-slate-200 hover:bg-indigo-50 px-2.5 py-1.5 rounded-lg transition">Duplicar</button>
-        <button type="button" onclick="this.closest('.q-block').remove(); updateEditorBlockNumbers();" class="text-xs font-bold text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition">Treure</button>
+        <button type="button" onclick="this.closest('.q-block').remove(); updateEditorBlockNumbers(); scheduleEditorDraftSave();" class="text-xs font-bold text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition">Treure</button>
       </div>
     </div>
-    <input type="text" value="${titleVal}" placeholder="${type === 'slide' ? 'Títol de la diapositiva...' : 'Escriu l\'enunciat de la pregunta...'}" class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
-    <input type="url" value="${mediaVal}" placeholder="Enllaç d'imatge principal opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
+    <input type="text" value="${titleVal}" oninput="scheduleEditorDraftSave()" placeholder="${type === 'slide' ? 'Títol de la diapositiva...' : 'Escriu l\'enunciat de la pregunta...'}" class="q-title w-full p-3 rounded-xl bg-white border border-slate-200 font-bold text-slate-900 outline-none">
+    <input type="url" value="${mediaVal}" oninput="scheduleEditorDraftSave()" placeholder="Enllaç d'imatge principal opcional (https://...)" class="q-media w-full p-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-600 outline-none">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${optionsHTML}</div>
   `;
   container.appendChild(div);
+  scheduleEditorDraftSave();
+}
+
+function validateEditorBlocks(blocks, isPoll) {
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    const data = extractBlockData(b);
+    const num = i + 1;
+
+    if (!data.question_text) {
+      return `L'element ${num} no té cap enunciat o títol escrit.`;
+    }
+
+    if (!isPoll && (data.type === 'quiz' || data.type === 'true_false')) {
+      if (data.options.length < 2) {
+        return `La pregunta ${num} necessita com a mínim dues opcions de resposta.`;
+      }
+      const hasCorrect = data.options.some(o => o.is_correct);
+      if (!hasCorrect) {
+        return `La pregunta ${num} no té cap resposta correcta marcada.`;
+      }
+    }
+
+    if (data.type === 'type_answer' && (!data.options[0] || !data.options[0].text)) {
+      return `La pregunta ${num} (resposta curta) no té definida quina és la resposta correcta.`;
+    }
+
+    if (data.type === 'cloze') {
+      const s = data.options[0]?.sentence || '';
+      const a = data.options[0]?.text || '';
+      if (!s.includes('[...]')) {
+        return `La pregunta ${num} (omplir buits) ha d'incloure [...] dins la frase per indicar el buit.`;
+      }
+      if (!a) {
+        return `La pregunta ${num} (omplir buits) no té escrita la paraula correcta del buit.`;
+      }
+    }
+
+    if (data.type === 'puzzle' && data.options.length < 2) {
+      return `La pregunta ${num} (ordenar) ha de tenir com a mínim 2 elements per ordenar.`;
+    }
+  }
+  return null;
 }
 
 async function saveQuiz() {
@@ -3370,6 +3526,13 @@ async function saveQuiz() {
   const blocks = document.querySelectorAll('.q-block');
   if (blocks.length === 0) {
     errEl.textContent = "Afegeix com a mínim una pregunta.";
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const validationError = validateEditorBlocks(blocks, isPoll);
+  if (validationError) {
+    errEl.textContent = validationError;
     errEl.classList.remove('hidden');
     return;
   }
@@ -3466,6 +3629,7 @@ async function saveQuiz() {
       await sb.from('questions').delete().in('id', toDelete);
     }
 
+    clearEditorDraftStorage();
     saveBtn.disabled = false;
     saveBtn.textContent = "Actualitzar canvis";
     loadTeacherDashboard(activeUser);
@@ -3481,6 +3645,7 @@ async function saveQuiz() {
       tag,
       shared_with: sharedEmails,
       is_shared: sharedEmails.length > 0,
+      is_archived: false,
       author_email: activeUser.email || ''
     })
     .select()
@@ -3539,6 +3704,7 @@ async function saveQuiz() {
     return;
   }
 
+  clearEditorDraftStorage();
   loadTeacherDashboard(activeUser);
 }
 
@@ -3703,9 +3869,12 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   const isCoop = mode.startsWith('coop:');
   hostPlayersList = [];
 
+  const cachedMeta = cachedTeacherQuizzes.find(q => q.id === quizId) || cachedSchoolQuizzes.find(q => q.id === quizId);
+
   const [sessionRes, qsRes] = await Promise.all([
     sb.from('game_sessions').insert({
       quiz_id: quizId,
+      quiz_title_snapshot: cachedMeta?.title || 'Activitat',
       teacher_id: user.id,
       pin,
       status: 'waiting',
@@ -3726,6 +3895,11 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   currentSession = session;
   const rawQuestions = qsRes.data || [];
   sessionQuestions = (!isPoll && shuffleQuestions) ? shuffleArrayCopy(rawQuestions) : rawQuestions;
+  const safeStudentQuestions = sessionQuestions.map(q => ({
+    ...q,
+    options: (q.options || []).map(o => ({ text: o.text || '', visual: o.visual || '', sentence: o.sentence || '' }))
+  }));
+  currentSession._safeStudentQuestions = safeStudentQuestions;
 
   currentHostJoinUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
   renderLocalQrCode('host-qr-box', currentHostJoinUrl, 136);
@@ -4018,7 +4192,7 @@ async function launchQuestion(index) {
   currentSession.current_question_index = index;
   currentSession.status = 'question_active';
 
-  broadcastRoomState('question_active', index, null, null, index === 0 ? sessionQuestions : null);
+  broadcastRoomState('question_active', index, null, null, index === 0 ? (currentSession._safeStudentQuestions || null) : null);
 
   document.getElementById('host-lobby').classList.add('hidden');
   document.getElementById('host-partial-podium-screen').classList.add('hidden');
@@ -4033,10 +4207,13 @@ async function launchQuestion(index) {
 
   document.getElementById('host-q-text').textContent = q.question_text;
   const imgEl = document.getElementById('host-q-image');
+  const imgLoader = document.getElementById('host-q-img-loader');
   if (q.media_url) {
+    imgLoader.classList.remove('hidden');
     imgEl.src = q.media_url;
     imgEl.classList.remove('hidden');
   } else {
+    imgLoader.classList.add('hidden');
     imgEl.classList.add('hidden');
   }
 
