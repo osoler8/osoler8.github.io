@@ -249,7 +249,7 @@ async function tryRestoreStudentSession() {
       document.getElementById('feedback-title').textContent = 'Connexió recuperada!';
       document.getElementById('feedback-points').classList.add('hidden');
       document.getElementById('feedback-streak-badge').classList.add('hidden');
-      document.getElementById('feedback-sub').textContent = 'Ja havies enviat la resposta d\'aquesta pregunta.';
+      document.getElementById('feedback-sub').textContent = "Ja havies enviat la resposta d'aquesta pregunta.";
     } else {
       studentLastRenderedIndex = session.current_question_index;
       renderStudentQuestion(session.current_question_index);
@@ -1948,11 +1948,35 @@ async function loadTeacherDashboard(user) {
 
   const userEmailLower = (user.email || '').trim().toLowerCase();
 
-  const [myQuizzesRes, sharedWithMeRes, sessionsRes] = await Promise.all([
-    sb.from('quizzes').select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
-    sb.from('quizzes').select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at').contains('shared_with', [userEmailLower]).order('created_at', { ascending: false }),
-    sb.from('game_sessions').select('id, pin, status, mode, is_study, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
-  ]);
+  let myQuizzesRes = await sb
+    .from('quizzes')
+    .select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at')
+    .eq('teacher_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (myQuizzesRes.error && myQuizzesRes.error.message && myQuizzesRes.error.message.includes('shared_with')) {
+    myQuizzesRes = await sb
+      .from('quizzes')
+      .select('id, title, kind, tag, is_shared, teacher_id, created_at')
+      .eq('teacher_id', user.id)
+      .order('created_at', { ascending: false });
+  }
+
+  let sharedWithMeRes = await sb
+    .from('quizzes')
+    .select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at')
+    .contains('shared_with', [userEmailLower])
+    .order('created_at', { ascending: false });
+
+  if (sharedWithMeRes.error) {
+    sharedWithMeRes = { data: [], error: null };
+  }
+
+  const sessionsRes = await sb
+    .from('game_sessions')
+    .select('id, pin, status, mode, is_study, created_at, quiz_id')
+    .eq('teacher_id', user.id)
+    .order('created_at', { ascending: false });
 
   if (myQuizzesRes.error) {
     document.getElementById('dash-tab-quizzes').innerHTML = `<p class="text-rose-600 text-sm col-span-full">Error carregant activitats: ${myQuizzesRes.error.message}</p>`;
@@ -2267,17 +2291,32 @@ function confirmCreateRoom() {
 }
 
 async function editExistingQuiz(quizId) {
-  const { data: { user } } = await sb.auth.getUser();
-  const [quizRes, qRes] = await Promise.all([
-    sb.from('quizzes').select('*').eq('id', quizId).single(),
-    sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
-  ]);
-  if (!quizRes.data) return;
-  if (!user || quizRes.data.teacher_id !== user.id) {
-    await domandeAlert("Només l'autor/a original pot editar aquesta activitat. Pots clonar-la al teu espai per modificar-la.", "Només lectura", "🔒");
-    return;
+  try {
+    let activeUser = currentUser;
+    if (!activeUser) {
+      const { data: { user } } = await sb.auth.getUser();
+      activeUser = user;
+    }
+
+    const [quizRes, qRes] = await Promise.all([
+      sb.from('quizzes').select('*').eq('id', quizId).single(),
+      sb.from('questions').select('*').eq('quiz_id', quizId).order('order_index', { ascending: true })
+    ]);
+
+    if (quizRes.error || !quizRes.data) {
+      await domandeAlert(`No s'ha pogut carregar l'activitat: ${quizRes.error?.message || 'error desconegut'}`, "Error en obrir", "⚠️");
+      return;
+    }
+
+    if (activeUser && quizRes.data.teacher_id !== activeUser.id) {
+      await domandeAlert("Només l'autor/a original pot editar aquesta activitat. Pots clonar-la al teu espai per modificar-la.", "Només lectura", "🔒");
+      return;
+    }
+
+    openQuizEditor(quizRes.data.kind || 'quiz', quizRes.data, qRes.data || []);
+  } catch (err) {
+    await domandeAlert(`S'ha produït un error obrint l'editor: ${err.message}`, "Error", "⚠️");
   }
-  openQuizEditor(quizRes.data.kind || 'quiz', quizRes.data, qRes.data || []);
 }
 
 async function duplicateQuiz(quizId) {
@@ -2290,7 +2329,7 @@ async function duplicateQuiz(quizId) {
   const origQuestions = origQRes.data;
   if (!origQuiz || !user) return;
 
-  const { data: newQuiz, error } = await sb
+  let { data: newQuiz, error } = await sb
     .from('quizzes')
     .insert({
       teacher_id: user.id,
@@ -2302,6 +2341,22 @@ async function duplicateQuiz(quizId) {
     })
     .select()
     .single();
+
+  if (error && error.message && error.message.includes('shared_with')) {
+    const retry = await sb
+      .from('quizzes')
+      .insert({
+        teacher_id: user.id,
+        title: `${origQuiz.title} (còpia)`,
+        kind: origQuiz.kind || 'quiz',
+        tag: origQuiz.tag || '',
+        is_shared: false
+      })
+      .select()
+      .single();
+    newQuiz = retry.data;
+    error = retry.error;
+  }
 
   if (error || !newQuiz) {
     await domandeAlert("No s'ha pogut duplicar l'activitat.", "Error", "⚠️");
@@ -2384,7 +2439,7 @@ async function importQuizJSON(event) {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
 
-    const { data: newQuiz, error } = await sb
+    let { data: newQuiz, error } = await sb
       .from('quizzes')
       .insert({
         teacher_id: user.id,
@@ -2396,6 +2451,22 @@ async function importQuizJSON(event) {
       })
       .select()
       .single();
+
+    if (error && error.message && error.message.includes('shared_with')) {
+      const retry = await sb
+        .from('quizzes')
+        .insert({
+          teacher_id: user.id,
+          title: parsed.title,
+          kind: parsed.kind === 'poll' ? 'poll' : 'quiz',
+          tag: parsed.tag || '',
+          is_shared: false
+        })
+        .select()
+        .single();
+      newQuiz = retry.data;
+      error = retry.error;
+    }
 
     if (error || !newQuiz) {
       await domandeAlert("Error creant l'activitat importada.", "Error", "⚠️");
@@ -2851,7 +2922,8 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
   document.getElementById('editor-title').value = existingQuiz ? existingQuiz.title : '';
   document.getElementById('editor-tag').value = existingQuiz ? (existingQuiz.tag || '') : '';
   const sharedArr = Array.isArray(existingQuiz?.shared_with) ? existingQuiz.shared_with : [];
-  document.getElementById('editor-shared-emails').value = sharedArr.join(', ');
+  const sharedEl = document.getElementById('editor-shared-emails');
+  if (sharedEl) sharedEl.value = sharedArr.join(', ');
   document.getElementById('editor-questions-container').innerHTML = '';
   document.getElementById('editor-error').classList.add('hidden');
 
@@ -3144,7 +3216,8 @@ function addQuestionBlock(type, prefill = null) {
 async function saveQuiz() {
   const title = document.getElementById('editor-title').value.trim();
   const tag = document.getElementById('editor-tag').value.trim();
-  const sharedEmails = parseEmailsList(document.getElementById('editor-shared-emails').value);
+  const sharedInputEl = document.getElementById('editor-shared-emails');
+  const sharedEmails = sharedInputEl ? parseEmailsList(sharedInputEl.value) : [];
   const errEl = document.getElementById('editor-error');
   const saveBtn = document.getElementById('btn-save-quiz');
   const isPoll = editorKind === 'poll';
@@ -3166,8 +3239,14 @@ async function saveQuiz() {
   saveBtn.disabled = true;
   saveBtn.textContent = "Guardant...";
 
-  const { data: authData, error: authError } = await sb.auth.getUser();
-  if (authError || !authData?.user) {
+  let activeUser = currentUser;
+  const { data: authData } = await sb.auth.getUser();
+  if (authData?.user) {
+    activeUser = authData.user;
+    currentUser = activeUser;
+  }
+
+  if (!activeUser) {
     errEl.textContent = "La sessió ha caducat. Torna a iniciar sessió.";
     errEl.classList.remove('hidden');
     saveBtn.disabled = false;
@@ -3178,17 +3257,26 @@ async function saveQuiz() {
   let targetQuizId = editingQuizId;
 
   if (editingQuizId) {
-    const { error: updErr } = await sb
+    let { error: updErr } = await sb
       .from('quizzes')
       .update({
         title,
         tag,
         shared_with: sharedEmails,
         is_shared: sharedEmails.length > 0,
-        author_email: authData.user.email || ''
+        author_email: activeUser.email || ''
       })
       .eq('id', editingQuizId)
-      .eq('teacher_id', authData.user.id);
+      .eq('teacher_id', activeUser.id);
+
+    if (updErr && updErr.message && updErr.message.includes('shared_with')) {
+      const retry = await sb
+        .from('quizzes')
+        .update({ title, tag, is_shared: sharedEmails.length > 0 })
+        .eq('id', editingQuizId)
+        .eq('teacher_id', activeUser.id);
+      updErr = retry.error;
+    }
 
     if (updErr) {
       errEl.textContent = `No s'ha pogut actualitzar: ${updErr.message}`;
@@ -3232,23 +3320,39 @@ async function saveQuiz() {
 
     saveBtn.disabled = false;
     saveBtn.textContent = "Actualitzar canvis";
-    loadTeacherDashboard(authData.user);
+    loadTeacherDashboard(activeUser);
     return;
   }
 
-  const { data: quiz, error: quizError } = await sb
+  let { data: quiz, error: quizError } = await sb
     .from('quizzes')
     .insert({
-      teacher_id: authData.user.id,
+      teacher_id: activeUser.id,
       title,
       kind: editorKind,
       tag,
       shared_with: sharedEmails,
       is_shared: sharedEmails.length > 0,
-      author_email: authData.user.email || ''
+      author_email: activeUser.email || ''
     })
     .select()
     .single();
+
+  if (quizError && quizError.message && quizError.message.includes('shared_with')) {
+    const retryIns = await sb
+      .from('quizzes')
+      .insert({
+        teacher_id: activeUser.id,
+        title,
+        kind: editorKind,
+        tag,
+        is_shared: sharedEmails.length > 0
+      })
+      .select()
+      .single();
+    quiz = retryIns.data;
+    quizError = retryIns.error;
+  }
 
   if (quizError || !quiz) {
     errEl.textContent = `No s'ha pogut guardar: ${quizError?.message || 'revisa els permisos'}`;
@@ -3287,7 +3391,7 @@ async function saveQuiz() {
     return;
   }
 
-  loadTeacherDashboard(authData.user);
+  loadTeacherDashboard(activeUser);
 }
 
 function appendWordToHostCloud(rawWord) {
