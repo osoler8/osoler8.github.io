@@ -2,14 +2,17 @@
 <html lang="ca">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Domande - Dinamitza l'aula</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { touch-action: manipulation; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; overscroll-behavior-y: contain; }
+    input, textarea, select { font-size: 16px; }
     .btn-red { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); box-shadow: 0 6px 0 #be123c; }
     .btn-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 6px 0 #1d4ed8; }
     .btn-yellow { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 6px 0 #b45309; }
@@ -31,9 +34,10 @@
     .app-icon-slate { background: linear-gradient(145deg, #475569 0%, #1e293b 100%); box-shadow: 0 8px 16px -4px rgba(30, 41, 59, 0.35); }
     .app-icon-rose { background: linear-gradient(145deg, #f43f5e 0%, #be123c 100%); box-shadow: 0 8px 16px -4px rgba(225, 29, 72, 0.35); }
     .pdf-keep-together { break-inside: avoid; page-break-inside: avoid; }
+    .qr-canvas-box img, .qr-canvas-box canvas { width: 100% !important; height: 100% !important; object-fit: contain; border-radius: 0.75rem; }
   </style>
 </head>
-<body class="bg-pattern text-slate-800 min-h-screen flex flex-col select-none">
+<body class="bg-pattern text-slate-800 min-h-[100dvh] flex flex-col select-none">
 
   <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3.5 flex justify-between items-center sticky top-0 z-40">
     <div onclick="handleLogoClick()" class="flex items-center gap-3 cursor-pointer">
@@ -176,16 +180,16 @@
         <img id="student-q-image" src="" class="hidden max-h-48 mx-auto rounded-2xl object-contain">
       </div>
 
-      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 flex-1 min-h-[260px]">
+      <div id="student-options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 flex-1 min-h-[240px]">
       </div>
 
-      <div id="student-text-input-box" class="hidden bg-white p-6 rounded-3xl shadow-md border border-slate-100 space-y-4">
+      <div id="student-text-input-box" class="hidden bg-white p-5 sm:p-6 rounded-3xl shadow-md border border-slate-100 space-y-4">
         <div id="student-cloud-hint" class="hidden flex items-center justify-center gap-2 text-sky-600 font-bold text-sm">
           <span class="text-2xl">☁️</span>
           <span>Escriu una paraula o concepte breu per construir el núvol</span>
         </div>
-        <input id="student-text-answer" type="text" placeholder="Escriu aquí la teva resposta..." class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none text-xl font-bold text-center text-slate-900">
-        <button onclick="submitTextAnswer()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-xl shadow-lg shadow-indigo-200 transition">Enviar resposta</button>
+        <input id="student-text-answer" type="text" onfocus="scrollInputIntoCenter(this)" onkeydown="if(event.key==='Enter') submitTextAnswer()" placeholder="Escriu aquí la teva resposta..." class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-indigo-500 outline-none text-xl font-bold text-center text-slate-900">
+        <button id="btn-submit-text-answer" onclick="submitTextAnswer()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-xl shadow-lg shadow-indigo-200 transition">Enviar resposta</button>
       </div>
 
       <div id="student-brainstorm-vote-box" class="hidden bg-white p-5 sm:p-6 rounded-3xl shadow-md border border-slate-100 space-y-4">
@@ -298,7 +302,7 @@
       </div>
       <div class="space-y-3">
         <input id="login-email" type="email" placeholder="Correu electrònic de l'escola" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none">
-        <input id="login-password" type="password" placeholder="Contrasenya" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none">
+        <input id="login-password" type="password" onkeydown="if(event.key==='Enter') loginTeacher()" placeholder="Contrasenya" class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-indigo-500 outline-none">
       </div>
       <button onclick="loginTeacher()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition">Entrar al panell</button>
       <button onclick="showView('view-join')" class="w-full py-2 text-sm font-semibold text-slate-500 hover:text-slate-800">Tornar a l'entrada d'alumnes</button>
@@ -603,7 +607,7 @@
           </div>
 
           <div class="bg-slate-50 p-4 rounded-3xl border border-slate-200/80 flex flex-col items-center gap-2.5 shadow-sm">
-            <img id="host-qr-img" onclick="openQrModal()" src="" alt="Codi qr d'accés" class="w-36 h-36 rounded-xl bg-white p-1.5 border border-slate-100 cursor-pointer hover:scale-105 transition">
+            <div id="host-qr-box" onclick="openQrModal()" title="Clica per ampliar" class="qr-canvas-box w-36 h-36 rounded-xl bg-white p-2 border border-slate-100 cursor-pointer hover:scale-105 transition flex items-center justify-center"></div>
             <button type="button" onclick="openQrModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition">
               Ampliar qr
             </button>
@@ -643,7 +647,7 @@
           </div>
           <span id="host-answers-count" class="text-base font-extrabold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200">Respostes: 0 / 0</span>
           <div class="flex items-center gap-2">
-            <button id="btn-start-brainstorm-vote" onclick="startBrainstormVotingPhase()" class="hidden bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition">Obrir votació d'idees (20s)</button>
+            <button id="btn-start-brainstorm-vote" onclick="startBrainstormVotingPhase()" class="hidden bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm transition">Obrir votació d'idees</button>
             <button id="btn-show-results" onclick="showQuestionResults()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition">Veure resultats</button>
           </div>
         </div>
@@ -738,7 +742,7 @@
   </main>
 
   <div id="launch-mode-modal" onclick="closeLaunchModal()" class="hidden fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-7 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div onclick="event.stopPropagation()" class="bg-white p-6 sm:p-7 rounded-3xl max-w-lg w-full space-y-4 shadow-2xl max-h-[92dvh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Configura la sala</span>
         <button type="button" onclick="closeLaunchModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black transition">✕</button>
@@ -883,7 +887,7 @@
         <h3 class="text-xl font-extrabold text-slate-900">Enllaç per estudiar al seu ritme</h3>
         <p class="text-xs text-slate-500">L'alumne/a escriurà el seu nom i els seus resultats quedaran guardats al teu apartat de resultats</p>
       </div>
-      <img id="study-qr-img" src="" alt="Qr repàs" class="w-44 h-44 mx-auto rounded-2xl border border-slate-200 p-2 bg-white">
+      <div id="study-qr-box" class="qr-canvas-box w-44 h-44 mx-auto rounded-2xl border border-slate-200 p-2.5 bg-white flex items-center justify-center"></div>
       <div class="flex gap-2">
         <input id="study-share-url" type="text" readonly class="flex-1 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 outline-none">
         <button type="button" id="btn-copy-study" onclick="copyStudyUrl()" class="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs transition">Copiar</button>
@@ -897,7 +901,7 @@
         <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-extrabold">Accés ràpid a la sala</span>
         <button type="button" onclick="closeQrModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black">✕</button>
       </div>
-      <img id="modal-qr-img" src="" alt="Codi qr ampliat" class="w-72 h-72 sm:w-80 sm:h-80 mx-auto rounded-2xl border-2 border-slate-100 p-2 bg-white object-contain">
+      <div id="modal-qr-box" class="qr-canvas-box w-72 h-72 sm:w-80 sm:h-80 mx-auto rounded-2xl border-2 border-slate-100 p-3 bg-white flex items-center justify-center"></div>
       <div>
         <p class="text-xs font-bold text-slate-400">O entra manualment amb el codi PIN:</p>
         <p id="modal-qr-pin" class="text-4xl sm:text-5xl font-black tracking-widest text-indigo-600 mt-1">000000</p>
