@@ -340,8 +340,8 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Banc de centre</span>
-          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Compartit claustre</span>
+          <span class="font-extrabold text-xs sm:text-sm text-slate-900 leading-tight">Elements compartits</span>
+          <span class="text-[10px] font-medium text-slate-400 mt-0.5">Rebuts per correu</span>
           <span id="indicator-tab-school" class="w-6 h-1 rounded-full bg-transparent mt-2"></span>
         </button>
 
@@ -425,16 +425,25 @@
       </div>
 
       <div id="dash-quizzes-wrapper" class="space-y-4">
-        <div id="dash-tags-filter" class="flex flex-wrap items-center gap-2">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div class="relative flex-1">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+            <input id="search-my-quizzes" type="text" oninput="renderFilteredQuizzes()" placeholder="Cerca per títol o etiqueta a les meves activitats..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white text-sm font-semibold text-slate-800 outline-none transition">
+          </div>
+          <div id="dash-tags-filter" class="flex flex-wrap items-center gap-1.5">
+          </div>
         </div>
         <div id="dash-tab-quizzes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         </div>
       </div>
 
       <div id="dash-school-wrapper" class="hidden space-y-4">
-        <div class="bg-teal-50/80 border border-teal-200/80 p-4 rounded-2xl flex items-center gap-3 text-teal-900 text-xs sm:text-sm font-semibold">
-          <span class="text-xl">🏫</span>
-          <span>Aquí trobaràs els qüestionaris i enquestes compartits amb el centre. Pots obrir-los directament o clonar-los al teu espai per editar-los.</span>
+        <div class="bg-white p-3.5 rounded-2xl border border-teal-200/80 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div class="relative flex-1">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+            <input id="search-shared-quizzes" type="text" oninput="renderSchoolQuizzes()" placeholder="Cerca per títol, etiqueta o correu de qui ho comparteix..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-teal-500 focus:bg-white text-sm font-semibold text-slate-800 outline-none transition">
+          </div>
+          <span class="text-xs font-semibold text-teal-800 bg-teal-50 px-3 py-2 rounded-xl">Activitats compartides directament amb tu</span>
         </div>
         <div id="dash-tab-school" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         </div>
@@ -442,10 +451,14 @@
 
       <div id="dash-tab-results" class="hidden space-y-4">
         <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-          <div class="flex justify-between items-center">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 class="text-xl font-extrabold text-slate-900">Resultats</h3>
               <p class="text-xs text-slate-500">Historial privat dels teus qüestionaris, enquestes i repassos autònoms</p>
+            </div>
+            <div class="relative w-full sm:w-80">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+              <input id="search-results-history" type="text" oninput="renderSessionsList(cachedSessionsList)" placeholder="Cerca per activitat, etiqueta o PIN..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-violet-500 focus:bg-white text-sm font-semibold text-slate-800 outline-none transition">
             </div>
           </div>
           <div id="sessions-history-list" class="divide-y divide-slate-100">
@@ -535,13 +548,14 @@
         </div>
       </div>
 
-      <label class="flex items-center gap-3 bg-teal-50/70 border border-teal-200/80 p-3.5 rounded-2xl cursor-pointer">
-        <input id="editor-shared" type="checkbox" class="w-5 h-5 accent-teal-600 rounded cursor-pointer">
-        <div>
-          <span class="text-sm font-extrabold text-teal-900 block">Compartir amb el banc de centre</span>
-          <span class="text-xs text-teal-700">Si actives aquesta opció, tots els/les docents de l'escola podran veure i clonar aquesta activitat</span>
+      <div class="bg-teal-50/70 border border-teal-200/80 p-4 rounded-2xl space-y-2">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">✉️</span>
+          <label for="editor-shared-emails" class="text-sm font-extrabold text-teal-900">Compartir amb altres docents (opcional)</label>
         </div>
-      </label>
+        <p class="text-xs text-teal-700">Escriu els correus electrònics separats per comes de les persones amb qui vols compartir aquesta activitat</p>
+        <input id="editor-shared-emails" type="text" placeholder="Ex: maria@escola.cat, joan@escola.cat" class="w-full p-3 rounded-xl bg-white border border-teal-200 focus:border-teal-500 outline-none text-sm font-semibold text-slate-800">
+      </div>
       
       <div id="editor-questions-container" class="space-y-5"></div>
 
