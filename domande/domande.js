@@ -1477,7 +1477,7 @@ function renderStudentQuestion(qIndex) {
     cloudHint.classList.add('hidden');
   }
 
-  if (q.time_limit <= 7 && q.type !== 'slide') {
+  if (q.time_limit > 0 && q.time_limit <= 7 && q.type !== 'slide') {
     speedBadge.classList.remove('hidden');
   } else {
     speedBadge.classList.add('hidden');
@@ -1674,8 +1674,12 @@ function calculateGamifiedPoints(question, isCorrect) {
   const effectiveMultiplier = (isCoopMode && question.points_multiplier === 0) ? 1 : question.points_multiplier;
   if (effectiveMultiplier === 0) return 0;
 
-  const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
-  const ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
+  let ratio = 1;
+  if (question.time_limit > 0) {
+    const elapsedSec = Math.max(0, (Date.now() - questionStartTimeMs) / 1000);
+    ratio = Math.max(0.4, 1 - (elapsedSec / (question.time_limit * 1.5)));
+  }
+
   const streakBonus = isCorrect ? studentStreak * 100 : 0;
   let base = Math.round((1000 * ratio + streakBonus) * effectiveMultiplier);
 
@@ -2479,7 +2483,7 @@ async function importQuizJSON(event) {
       type: q.type || 'quiz',
       question_text: q.question_text || `Pregunta ${idx + 1}`,
       media_url: q.media_url || null,
-      time_limit: q.time_limit || 20,
+      time_limit: typeof q.time_limit === 'number' ? q.time_limit : 20,
       points_multiplier: typeof q.points_multiplier === 'number' ? q.points_multiplier : 1,
       options: Array.isArray(q.options) ? q.options : []
     }));
@@ -3164,7 +3168,7 @@ function addQuestionBlock(type, prefill = null) {
   } else if (type === 'word_cloud') {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">☁️ Els/les alumnes enviaran paraules lliures que aniran formant un núvol visual a la pantalla.</p>`;
   } else if (type === 'brainstorm') {
-    optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">💡 Fase 1: els/les alumnes proposen idees. Fase 2: s'obre una votació de 20 segons on cadascú vota les 3 millors propostes.</p>`;
+    optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">💡 Fase 1: els/les alumnes proposen idees. Fase 2: s'obre una votació on cadascú vota les 3 millors propostes.</p>`;
   } else if (type === 'nps_scale') {
     optionsHTML = `<p class="text-xs text-slate-500 col-span-full bg-white p-3 rounded-xl border border-slate-200">Els/les alumnes votaran un número del 0 al 10 i es calcularà la mitjana del grup.</p>`;
   } else if (type === 'slide') {
@@ -3172,7 +3176,7 @@ function addQuestionBlock(type, prefill = null) {
     optionsHTML = `<textarea placeholder="Escriu aquí el text explicatiu de la diapositiva..." rows="3" class="opt-text col-span-full w-full p-3 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-800 outline-none">${slideBody}</textarea>`;
   }
 
-  const timeVal = prefill?.time_limit || 20;
+  const timeVal = typeof prefill?.time_limit === 'number' ? prefill.time_limit : 20;
   const ptsVal = typeof prefill?.points_multiplier === 'number' ? prefill.points_multiplier : 1;
   const titleVal = (prefill?.question_text || '').replace(/"/g, '&quot;');
   const mediaVal = (prefill?.media_url || '').replace(/"/g, '&quot;');
@@ -3187,6 +3191,7 @@ function addQuestionBlock(type, prefill = null) {
       <div class="flex flex-wrap items-center gap-1.5">
         ${type === 'slide' ? '' : `
           <select class="q-time bg-white border border-slate-200 text-slate-700 font-bold text-xs p-1.5 rounded-lg outline-none">
+            <option value="0" ${timeVal === 0 ? 'selected' : ''}>∞ Sense límit de temps</option>
             <option value="5" ${timeVal === 5 ? 'selected' : ''}>⚡ 5 segons (llampec)</option>
             <option value="7" ${timeVal === 7 ? 'selected' : ''}>⚡ 7 segons (llampec)</option>
             <option value="10" ${timeVal === 10 ? 'selected' : ''}>10 segons</option>
@@ -3456,6 +3461,9 @@ function startBrainstormVotingPhase() {
   hostBrainstormPhase = 'voting';
   hostBrainstormVotedPlayers = new Set();
 
+  const currentQ = sessionQuestions[currentSession.current_question_index];
+  const isUnlimitedVote = currentQ && currentQ.time_limit === 0;
+
   document.getElementById('btn-start-brainstorm-vote').classList.add('hidden');
   document.getElementById('host-cloud-icon').textContent = '🗳️';
   document.getElementById('host-cloud-title').textContent = "Fase 2 · l'alumnat està votant les 3 millors idees";
@@ -3463,20 +3471,25 @@ function startBrainstormVotingPhase() {
 
   broadcastRoomState('brainstorm_voting', currentSession.current_question_index, null, null, null, hostBrainstormIdeas);
 
-  let voteTime = 20;
-  document.getElementById('host-timer').textContent = voteTime;
   clearInterval(hostTimerInterval);
-  hostTimerInterval = setInterval(() => {
-    voteTime--;
-    document.getElementById('host-timer').textContent = voteTime;
-    if (voteTime <= 0) {
-      clearInterval(hostTimerInterval);
-      if (!hostResultsShown) {
-        hostResultsShown = true;
-        showQuestionResults();
+  const timerEl = document.getElementById('host-timer');
+  if (isUnlimitedVote) {
+    timerEl.textContent = '∞';
+  } else {
+    let voteTime = 20;
+    timerEl.textContent = voteTime;
+    hostTimerInterval = setInterval(() => {
+      voteTime--;
+      timerEl.textContent = voteTime;
+      if (voteTime <= 0) {
+        clearInterval(hostTimerInterval);
+        if (!hostResultsShown) {
+          hostResultsShown = true;
+          showQuestionResults();
+        }
       }
-    }
-  }, 1000);
+    }, 1000);
+  }
 }
 
 function handleHostIncomingAnswer(q, playerId, answerValue) {
@@ -3885,7 +3898,7 @@ async function launchQuestion(index) {
   }
 
   const speedPill = document.getElementById('host-speed-pill');
-  if (q.time_limit <= 7 && !isSlide) {
+  if (q.time_limit > 0 && q.time_limit <= 7 && !isSlide) {
     speedPill.classList.remove('hidden');
   } else {
     speedPill.classList.add('hidden');
@@ -3990,24 +4003,29 @@ async function launchQuestion(index) {
     })
     .subscribe();
 
-  let timeLeft = q.time_limit;
-  document.getElementById('host-timer').textContent = timeLeft;
   clearInterval(hostTimerInterval);
-  hostTimerInterval = setInterval(() => {
-    timeLeft--;
-    document.getElementById('host-timer').textContent = timeLeft;
-    if (timeLeft <= 0) {
-      clearInterval(hostTimerInterval);
-      if (q.type === 'brainstorm' && hostBrainstormPhase === 'collecting') {
-        startBrainstormVotingPhase();
-        return;
+  const timerEl = document.getElementById('host-timer');
+  if (q.time_limit === 0) {
+    timerEl.textContent = '∞';
+  } else {
+    let timeLeft = q.time_limit;
+    timerEl.textContent = timeLeft;
+    hostTimerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(hostTimerInterval);
+        if (q.type === 'brainstorm' && hostBrainstormPhase === 'collecting') {
+          startBrainstormVotingPhase();
+          return;
+        }
+        if (!hostResultsShown) {
+          hostResultsShown = true;
+          showQuestionResults();
+        }
       }
-      if (!hostResultsShown) {
-        hostResultsShown = true;
-        showQuestionResults();
-      }
-    }
-  }, 1000);
+    }, 1000);
+  }
 
   sb.from('game_sessions').update({
     status: 'question_active',
