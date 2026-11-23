@@ -2,6 +2,8 @@ const SUPABASE_URL = 'https://wbngqwpwkbkokcjefyon.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_2GArEBXYf4ompZsqebhE-g_FMQ7mq1e';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const STUDENT_STORAGE_KEY = 'domande_active_student_v1';
+
 const AVATARS = [
   '🦊', '🐼', '🦁', '🐸', '🦄', '🚀', '🐙', '🐯', '🦉', '🐢', '🦖', '🐝',
   '🐧', '🐨', '🦋', '🐬', '🦩', '🦔', '🐶', '🐱', '🐵', '🐺', '🐲', '🌟'
@@ -136,6 +138,148 @@ let musicInterval = null;
 let isMusicPlaying = false;
 let musicMode = 'lobby';
 let musicStep = 0;
+
+function saveStudentSessionSnapshot() {
+  if (isStudyMode || !currentSession || !currentPlayer || currentSession.status === 'finished') return;
+  try {
+    const payload = {
+      sessionId: currentSession.id,
+      quizId: currentSession.quiz_id,
+      pin: currentSession.pin,
+      playerId: currentPlayer.id,
+      nickname: currentPlayer.nickname,
+      avatar: currentPlayer.avatar,
+      teamName: currentPlayer.team_name || null,
+      score: studentScore,
+      streak: studentStreak,
+      bestStreak: studentBestStreak,
+      correctCount: studentCorrectCount,
+      wrongCount: studentWrongCount,
+      used5050: studentUsed5050,
+      usedDouble: studentUsedDouble,
+      answeredIndex: studentAnsweredCurrentIndex,
+      lifelinesEnabled: studentLifelinesEnabled,
+      questionsOrder: sessionQuestions
+    };
+    sessionStorage.setItem(STUDENT_STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {}
+}
+
+function clearStudentSessionSnapshot() {
+  try {
+    sessionStorage.removeItem(STUDENT_STORAGE_KEY);
+  } catch (e) {}
+}
+
+async function tryRestoreStudentSession() {
+  let saved = null;
+  try {
+    const raw = sessionStorage.getItem(STUDENT_STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {}
+  if (!saved || !saved.sessionId || !saved.playerId) return false;
+
+  const [sessionRes, playerRes] = await Promise.all([
+    sb.from('game_sessions').select('*').eq('id', saved.sessionId).maybeSingle(),
+    sb.from('players').select('*').eq('id', saved.playerId).maybeSingle()
+  ]);
+
+  const session = sessionRes.data;
+  const player = playerRes.data;
+
+  if (!session || !player || session.status === 'finished' || session.status === 'closed_by_teacher') {
+    clearStudentSessionSnapshot();
+    return false;
+  }
+
+  let qs = Array.isArray(saved.questionsOrder) && saved.questionsOrder.length > 0 ? saved.questionsOrder : null;
+  if (!qs) {
+    const { data: fetchedQs } = await sb
+      .from('questions')
+      .select('*')
+      .eq('quiz_id', session.quiz_id)
+      .order('order_index', { ascending: true });
+    qs = fetchedQs || [];
+  }
+
+  isStudyMode = false;
+  currentSession = session;
+  sessionQuestions = qs;
+  const interactiveQs = sessionQuestions.filter(q => q.type !== 'slide');
+  const isPollActivity = interactiveQs.length > 0 && interactiveQs.every(q => ['poll', 'nps_scale'].includes(q.type) || q.points_multiplier === 0);
+  sessionKind = isPollActivity ? 'poll' : 'quiz';
+  currentPlayer = player;
+  studentScore = Math.max(saved.score || 0, player.score || 0);
+  studentStreak = saved.streak || 0;
+  studentBestStreak = saved.bestStreak || 0;
+  studentCorrectCount = saved.correctCount || 0;
+  studentWrongCount = saved.wrongCount || 0;
+  studentUsed5050 = Boolean(saved.used5050);
+  studentUsedDouble = Boolean(saved.usedDouble);
+  studentLifelinesEnabled = typeof saved.lifelinesEnabled === 'boolean' ? saved.lifelinesEnabled : true;
+  studentAnsweredCurrentIndex = typeof saved.answeredIndex === 'number' ? saved.answeredIndex : -1;
+  studentLastRenderedIndex = -1;
+  studentFinalShown = false;
+
+  document.getElementById('student-badge').textContent = player.avatar || selectedAvatar;
+  document.getElementById('student-display-name').textContent = player.nickname;
+  const teamBadge = document.getElementById('student-team-badge');
+  if (player.team_name) {
+    teamBadge.textContent = player.team_name;
+    teamBadge.classList.remove('hidden');
+  } else {
+    teamBadge.classList.add('hidden');
+  }
+
+  setupStudentRealtimeChannel(session, player);
+  startStudentWatchdog();
+
+  if (session.status === 'waiting') {
+    showView('view-student-lobby');
+  } else if (session.status === 'question_active') {
+    if (studentAnsweredCurrentIndex === session.current_question_index) {
+      studentLastRenderedIndex = session.current_question_index;
+      showView('view-student-play');
+      document.getElementById('student-q-counter').textContent = `Pregunta ${session.current_question_index + 1} de ${sessionQuestions.length}`;
+      document.getElementById('student-score-pill').textContent = sessionKind === 'poll' ? 'Enquesta' : `${studentScore} punts`;
+      document.getElementById('student-q-text').textContent = sessionQuestions[session.current_question_index]?.question_text || '';
+      hideAllStudentInputs();
+      document.getElementById('student-feedback').classList.remove('hidden');
+      document.getElementById('feedback-icon').textContent = '✅';
+      document.getElementById('feedback-title').textContent = 'Connexió recuperada!';
+      document.getElementById('feedback-points').classList.add('hidden');
+      document.getElementById('feedback-streak-badge').classList.add('hidden');
+      document.getElementById('feedback-sub').textContent = 'Ja havies enviat la resposta d\'aquesta pregunta.';
+    } else {
+      studentLastRenderedIndex = session.current_question_index;
+      renderStudentQuestion(session.current_question_index);
+    }
+  } else if (session.status === 'question_results') {
+    studentLastRenderedIndex = session.current_question_index;
+    showView('view-student-play');
+    document.getElementById('student-q-counter').textContent = `Pregunta ${session.current_question_index + 1} de ${sessionQuestions.length}`;
+    document.getElementById('student-score-pill').textContent = sessionKind === 'poll' ? 'Enquesta' : `${studentScore} punts`;
+    hideAllStudentInputs();
+    document.getElementById('student-feedback').classList.remove('hidden');
+    document.getElementById('feedback-icon').textContent = '🔄';
+    document.getElementById('feedback-title').textContent = 'Connexió recuperada!';
+    document.getElementById('feedback-points').classList.add('hidden');
+    document.getElementById('feedback-streak-badge').classList.add('hidden');
+    document.getElementById('feedback-sub').textContent = 'Mira la pissarra per veure els resultats.';
+    updateStudentLivePosition();
+  }
+
+  return true;
+}
+
+function parseEmailsList(rawStr) {
+  return [...new Set(
+    (rawStr || '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(s => s.includes('@'))
+  )];
+}
 
 function formatAuthorLabel(emailStr) {
   if (!emailStr) return 'Docent del centre';
@@ -526,6 +670,7 @@ function stopStudentWatchdog() {
 
 function resetToPinScreen() {
   stopStudentWatchdog();
+  clearStudentSessionSnapshot();
   setConnectionWarning(false);
   if (studentRoomChannel) {
     sb.removeChannel(studentRoomChannel);
@@ -562,6 +707,7 @@ function resetToPinScreen() {
 }
 
 function showStudentSessionClosed(reasonText) {
+  clearStudentSessionSnapshot();
   if (studentFinalShown) return;
   stopStudentWatchdog();
   setConnectionWarning(false);
@@ -770,6 +916,56 @@ function copyStudyUrl() {
   document.getElementById('btn-copy-study').textContent = 'Copiat!';
 }
 
+function setupStudentRealtimeChannel(session, player) {
+  if (studentRoomChannel) {
+    sb.removeChannel(studentRoomChannel);
+  }
+
+  studentRoomChannel = sb.channel('live-session-' + session.id, {
+    config: { broadcast: { self: false } }
+  })
+    .on('broadcast', { event: 'state' }, ({ payload }) => {
+      setConnectionWarning(false);
+      if (typeof payload.lifelines_enabled === 'boolean') {
+        studentLifelinesEnabled = payload.lifelines_enabled;
+      }
+      if (payload.questions_order && Array.isArray(payload.questions_order)) {
+        sessionQuestions = payload.questions_order;
+      }
+      if (payload.ranks) {
+        latestRanksMap = payload.ranks;
+      }
+      if (payload.standings) {
+        latestFinalStandings = payload.standings;
+      }
+      saveStudentSessionSnapshot();
+      if (payload.status === 'brainstorm_voting') {
+        renderStudentBrainstormVoting(payload.ideas || []);
+        return;
+      }
+      handleSessionStateChange({
+        ...currentSession,
+        status: payload.status,
+        current_question_index: payload.current_question_index
+      });
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
+      setConnectionWarning(false);
+      handleSessionStateChange(payload.new);
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'players', filter: `id=eq.${player.id}` }, () => {
+      showStudentSessionClosed("El/la mestre/a t'ha desconnectat de la sala.");
+    })
+    .subscribe((status) => {
+      if (!currentPlayer || !currentSession || currentSession.status === 'finished' || studentFinalShown) return;
+      if (status === 'SUBSCRIBED') {
+        setConnectionWarning(false);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        setConnectionWarning(true);
+      }
+    });
+}
+
 async function joinGame() {
   const pin = document.getElementById('input-pin').value.trim();
   const nickname = document.getElementById('input-nickname').value.trim();
@@ -873,6 +1069,8 @@ async function finalizeJoinGame(session, nickname, teamName) {
   latestRanksMap = {};
   latestFinalStandings = [];
 
+  saveStudentSessionSnapshot();
+
   document.getElementById('student-badge').textContent = selectedAvatar;
   document.getElementById('student-display-name').textContent = nickname;
   const teamBadge = document.getElementById('student-team-badge');
@@ -884,53 +1082,7 @@ async function finalizeJoinGame(session, nickname, teamName) {
   }
   showView('view-student-lobby');
 
-  if (studentRoomChannel) {
-    sb.removeChannel(studentRoomChannel);
-  }
-
-  studentRoomChannel = sb.channel('live-session-' + session.id, {
-    config: { broadcast: { self: false } }
-  })
-    .on('broadcast', { event: 'state' }, ({ payload }) => {
-      setConnectionWarning(false);
-      if (typeof payload.lifelines_enabled === 'boolean') {
-        studentLifelinesEnabled = payload.lifelines_enabled;
-      }
-      if (payload.questions_order && Array.isArray(payload.questions_order)) {
-        sessionQuestions = payload.questions_order;
-      }
-      if (payload.ranks) {
-        latestRanksMap = payload.ranks;
-      }
-      if (payload.standings) {
-        latestFinalStandings = payload.standings;
-      }
-      if (payload.status === 'brainstorm_voting') {
-        renderStudentBrainstormVoting(payload.ideas || []);
-        return;
-      }
-      handleSessionStateChange({
-        ...currentSession,
-        status: payload.status,
-        current_question_index: payload.current_question_index
-      });
-    })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, payload => {
-      setConnectionWarning(false);
-      handleSessionStateChange(payload.new);
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'players', filter: `id=eq.${player.id}` }, () => {
-      showStudentSessionClosed("El/la mestre/a t'ha desconnectat de la sala.");
-    })
-    .subscribe((status) => {
-      if (!currentPlayer || !currentSession || currentSession.status === 'finished' || studentFinalShown) return;
-      if (status === 'SUBSCRIBED') {
-        setConnectionWarning(false);
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        setConnectionWarning(true);
-      }
-    });
-
+  setupStudentRealtimeChannel(session, player);
   startStudentWatchdog();
 }
 
@@ -1034,6 +1186,7 @@ function handleSessionStateChange(session) {
       if (!isOpinion && q) {
         studentWrongCount++;
         studentStreak = 0;
+        saveStudentSessionSnapshot();
       }
       hideAllStudentInputs();
       document.getElementById('student-feedback').classList.remove('hidden');
@@ -1052,6 +1205,7 @@ function handleSessionStateChange(session) {
     document.getElementById('feedback-sub').textContent = "Mira la pissarra per veure els resultats.";
   } else if (session.status === 'finished') {
     stopStudentWatchdog();
+    clearStudentSessionSnapshot();
     setConnectionWarning(false);
     if (sessionKind === 'poll') {
       showStudentPollFinished();
@@ -1081,6 +1235,7 @@ function activate5050() {
 
   studentUsed5050 = true;
   studentActive5050 = true;
+  saveStudentSessionSnapshot();
   const toHide = shuffleArrayCopy(wrongIndices).slice(0, 2);
   const gridBtns = document.getElementById('student-options-grid').children;
   toHide.forEach(idx => {
@@ -1100,6 +1255,7 @@ function activateDoubleOrNothing() {
   if (studentUsedDouble) return;
   studentUsedDouble = true;
   studentActiveDouble = true;
+  saveStudentSessionSnapshot();
   const btn = document.getElementById('btn-lifeline-double');
   btn.disabled = true;
   btn.textContent = '⚡ Doble o res actiu!';
@@ -1534,6 +1690,7 @@ function calculateGamifiedPoints(question, isCorrect) {
 
 async function persistStudentAnswerAndScore(questionId, answerVal, isCorrect, points) {
   if (!currentSession || !currentPlayer) return;
+  saveStudentSessionSnapshot();
   const { error } = await sb.from('answers').insert({
     session_id: currentSession.id,
     question_id: questionId,
@@ -1789,9 +1946,11 @@ async function loadTeacherDashboard(user) {
   showView('view-teacher-dash');
   switchDashTab('quizzes');
 
-  const [myQuizzesRes, schoolQuizzesRes, sessionsRes] = await Promise.all([
-    sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
-    sb.from('quizzes').select('id, title, kind, tag, is_shared, author_email, teacher_id, created_at').eq('is_shared', true).order('created_at', { ascending: false }),
+  const userEmailLower = (user.email || '').trim().toLowerCase();
+
+  const [myQuizzesRes, sharedWithMeRes, sessionsRes] = await Promise.all([
+    sb.from('quizzes').select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at').eq('teacher_id', user.id).order('created_at', { ascending: false }),
+    sb.from('quizzes').select('id, title, kind, tag, shared_with, author_email, teacher_id, created_at').contains('shared_with', [userEmailLower]).order('created_at', { ascending: false }),
     sb.from('game_sessions').select('id, pin, status, mode, is_study, created_at, quiz_id').eq('teacher_id', user.id).order('created_at', { ascending: false })
   ]);
 
@@ -1801,7 +1960,7 @@ async function loadTeacherDashboard(user) {
   }
 
   cachedTeacherQuizzes = myQuizzesRes.data || [];
-  cachedSchoolQuizzes = schoolQuizzesRes.data || [];
+  cachedSchoolQuizzes = sharedWithMeRes.data || [];
   cachedSessionsList = sessionsRes.data || [];
 
   const qBadge = document.getElementById('badge-count-quizzes');
@@ -1828,6 +1987,13 @@ async function loadTeacherDashboard(user) {
   }
 
   selectedTagFilter = 'all';
+  const sMy = document.getElementById('search-my-quizzes');
+  const sSh = document.getElementById('search-shared-quizzes');
+  const sRe = document.getElementById('search-results-history');
+  if (sMy) sMy.value = '';
+  if (sSh) sSh.value = '';
+  if (sRe) sRe.value = '';
+
   renderTagFilters();
   renderFilteredQuizzes();
 }
@@ -1840,10 +2006,10 @@ function renderTagFilters() {
   if (tags.length === 0) return;
 
   const allBtn = document.createElement('button');
-  allBtn.textContent = 'Totes les etiquetes';
+  allBtn.textContent = 'Totes';
   allBtn.className = selectedTagFilter === 'all'
-    ? 'px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold transition'
-    : 'px-3.5 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 text-xs font-bold transition';
+    ? 'px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold transition'
+    : 'px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 text-xs font-bold transition';
   allBtn.onclick = () => {
     selectedTagFilter = 'all';
     renderTagFilters();
@@ -1855,8 +2021,8 @@ function renderTagFilters() {
     const btn = document.createElement('button');
     btn.textContent = tag;
     btn.className = selectedTagFilter === tag
-      ? 'px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold transition'
-      : 'px-3.5 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 text-xs font-bold transition';
+      ? 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold transition'
+      : 'px-3 py-1.5 rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 text-xs font-bold transition';
     btn.onclick = () => {
       selectedTagFilter = tag;
       renderTagFilters();
@@ -1870,17 +2036,24 @@ function renderFilteredQuizzes() {
   const list = document.getElementById('dash-tab-quizzes');
   list.innerHTML = '';
 
-  const filtered = selectedTagFilter === 'all'
-    ? cachedTeacherQuizzes
-    : cachedTeacherQuizzes.filter(q => (q.tag || '').trim() === selectedTagFilter);
+  const searchTerm = normalizeText(document.getElementById('search-my-quizzes')?.value || '');
+
+  const filtered = cachedTeacherQuizzes.filter(q => {
+    const matchesTag = selectedTagFilter === 'all' || (q.tag || '').trim() === selectedTagFilter;
+    const matchesSearch = !searchTerm ||
+      normalizeText(q.title).includes(searchTerm) ||
+      normalizeText(q.tag || '').includes(searchTerm);
+    return matchesTag && matchesSearch;
+  });
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no hi ha activitats en aquesta secció.</div>`;
+    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Cap activitat coincideix amb la cerca o filtre actual.</div>`;
     return;
   }
 
   filtered.forEach(q => {
     const isPoll = q.kind === 'poll';
+    const sharedList = Array.isArray(q.shared_with) ? q.shared_with : [];
     const safeTitle = q.title.replace(/'/g, "\\'");
     const card = document.createElement('div');
     card.className = "bg-white p-6 rounded-3xl flex flex-col justify-between gap-4 border border-slate-200/80 shadow-sm hover:shadow-md transition";
@@ -1888,7 +2061,7 @@ function renderFilteredQuizzes() {
       <div class="space-y-2">
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="px-2.5 py-1 ${isPoll ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'} rounded-lg text-xs font-bold">${isPoll ? 'Enquesta' : 'Qüestionari'}</span>
-          ${q.is_shared ? `<span class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit</span>` : ''}
+          ${sharedList.length > 0 ? `<span title="Compartit amb: ${sharedList.join(', ')}" class="px-2.5 py-1 bg-teal-50 text-teal-700 rounded-lg text-xs font-bold">Compartit (${sharedList.length})</span>` : ''}
           ${q.tag ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">${q.tag}</span>` : ''}
         </div>
         <h3 class="font-extrabold text-xl text-slate-900">${q.title}</h3>
@@ -1926,14 +2099,22 @@ function renderSchoolQuizzes() {
   const list = document.getElementById('dash-tab-school');
   list.innerHTML = '';
 
-  if (cachedSchoolQuizzes.length === 0) {
-    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">Encara no hi ha activitats compartides al banc de centre.</div>`;
+  const searchTerm = normalizeText(document.getElementById('search-shared-quizzes')?.value || '');
+  const filtered = cachedSchoolQuizzes.filter(q => {
+    return !searchTerm ||
+      normalizeText(q.title).includes(searchTerm) ||
+      normalizeText(q.tag || '').includes(searchTerm) ||
+      normalizeText(q.author_email || '').includes(searchTerm);
+  });
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="col-span-full bg-white p-10 rounded-3xl text-center border border-slate-200 text-slate-500">No hi ha cap element compartit amb el teu correu electrònic.</div>`;
     return;
   }
 
   const myIds = new Set(cachedTeacherQuizzes.map(item => item.id));
 
-  cachedSchoolQuizzes.forEach(q => {
+  filtered.forEach(q => {
     const isPoll = q.kind === 'poll';
     const isMine = myIds.has(q.id) || (currentUser && q.teacher_id === currentUser.id);
     const authorDisplay = isMine
@@ -2116,7 +2297,7 @@ async function duplicateQuiz(quizId) {
       title: `${origQuiz.title} (còpia)`,
       kind: origQuiz.kind || 'quiz',
       tag: origQuiz.tag || '',
-      is_shared: false,
+      shared_with: [],
       author_email: user.email || ''
     })
     .select()
@@ -2210,7 +2391,7 @@ async function importQuizJSON(event) {
         title: parsed.title,
         kind: parsed.kind === 'poll' ? 'poll' : 'quiz',
         tag: parsed.tag || '',
-        is_shared: false,
+        shared_with: [],
         author_email: user.email || ''
       })
       .select()
@@ -2273,8 +2454,24 @@ function renderSessionsList(sessions) {
   cachedTeacherQuizzes.forEach(q => { quizMap[q.id] = q; });
   cachedSchoolQuizzes.forEach(q => { quizMap[q.id] = q; });
 
+  const searchTerm = normalizeText(document.getElementById('search-results-history')?.value || '');
+  const filteredSessions = sessions.filter(s => {
+    const qInfo = quizMap[s.quiz_id] || {};
+    const title = qInfo.title || 'Activitat';
+    const tag = qInfo.tag || '';
+    return !searchTerm ||
+      normalizeText(title).includes(searchTerm) ||
+      normalizeText(tag).includes(searchTerm) ||
+      normalizeText(s.pin || '').includes(searchTerm);
+  });
+
+  if (filteredSessions.length === 0) {
+    container.innerHTML = '<p class="text-sm text-slate-500 py-6 text-center">Cap resultat coincideix amb la cerca.</p>';
+    return;
+  }
+
   container.innerHTML = '';
-  sessions.forEach(s => {
+  filteredSessions.forEach(s => {
     const qInfo = quizMap[s.quiz_id] || {};
     const title = qInfo.title || 'Activitat';
     const isPoll = qInfo.kind === 'poll';
@@ -2296,6 +2493,7 @@ function renderSessionsList(sessions) {
         <div class="flex items-center gap-2">
           <p class="text-xs font-extrabold text-indigo-600">${dateStr}</p>
           ${typeBadge}
+          ${qInfo.tag ? `<span class="px-2 py-0.5 rounded-md text-xs font-bold bg-slate-100 text-slate-600">${qInfo.tag}</span>` : ''}
         </div>
         <h4 class="text-base font-extrabold text-slate-900 mt-0.5">${title}</h4>
         <p class="text-xs text-slate-400">${isStudy ? 'Sessió individual des de casa/aula' : `PIN: ${s.pin}`}</p>
@@ -2652,7 +2850,8 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
   document.getElementById('editor-title').placeholder = isPoll ? "Ex: on volem anar de colònies?" : "Ex: el sistema solar i els planetes";
   document.getElementById('editor-title').value = existingQuiz ? existingQuiz.title : '';
   document.getElementById('editor-tag').value = existingQuiz ? (existingQuiz.tag || '') : '';
-  document.getElementById('editor-shared').checked = existingQuiz ? Boolean(existingQuiz.is_shared) : false;
+  const sharedArr = Array.isArray(existingQuiz?.shared_with) ? existingQuiz.shared_with : [];
+  document.getElementById('editor-shared-emails').value = sharedArr.join(', ');
   document.getElementById('editor-questions-container').innerHTML = '';
   document.getElementById('editor-error').classList.add('hidden');
 
@@ -2945,7 +3144,7 @@ function addQuestionBlock(type, prefill = null) {
 async function saveQuiz() {
   const title = document.getElementById('editor-title').value.trim();
   const tag = document.getElementById('editor-tag').value.trim();
-  const isShared = document.getElementById('editor-shared').checked;
+  const sharedEmails = parseEmailsList(document.getElementById('editor-shared-emails').value);
   const errEl = document.getElementById('editor-error');
   const saveBtn = document.getElementById('btn-save-quiz');
   const isPoll = editorKind === 'poll';
@@ -2981,7 +3180,13 @@ async function saveQuiz() {
   if (editingQuizId) {
     const { error: updErr } = await sb
       .from('quizzes')
-      .update({ title, tag, is_shared: isShared, author_email: authData.user.email || '' })
+      .update({
+        title,
+        tag,
+        shared_with: sharedEmails,
+        is_shared: sharedEmails.length > 0,
+        author_email: authData.user.email || ''
+      })
       .eq('id', editingQuizId)
       .eq('teacher_id', authData.user.id);
 
@@ -3038,7 +3243,8 @@ async function saveQuiz() {
       title,
       kind: editorKind,
       tag,
-      is_shared: isShared,
+      shared_with: sharedEmails,
+      is_shared: sharedEmails.length > 0,
       author_email: authData.user.email || ''
     })
     .select()
@@ -3918,9 +4124,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const studyId = params.get('study');
   if (studyId) {
+    clearStudentSessionSnapshot();
     prepareStudyEntry(studyId);
     return;
   }
+
+  const restored = await tryRestoreStudentSession();
+  if (restored) return;
 
   const urlPin = params.get('pin');
   if (urlPin) {
