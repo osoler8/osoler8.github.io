@@ -3,17 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Botiga dels Percentatges | Pissarra d'Aula</title>
+  <title>La Botiga dels percentatges</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Tipografies arrodonides d'alta llegibilitat per a projector -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Confetti per a la gamificació -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <script>
@@ -48,7 +45,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Patrons ratllats per als segments de descompte/augment */
     .bg-striped-coral {
       background-color: #F43F5E;
       background-image: repeating-linear-gradient(
@@ -71,14 +67,12 @@
       );
     }
 
-    /* Vora dentada compacta per al tiquet */
     .receipt-edge {
       background-image: radial-gradient(circle at 8px 0, transparent 5px, #ffffff 5.5px);
       background-size: 16px 10px;
       background-repeat: repeat-x;
     }
 
-    /* Range slider compacte */
     input[type=range] {
       -webkit-appearance: none;
       background: transparent;
@@ -102,14 +96,12 @@
       border-radius: 999px;
     }
 
-    /* Mini quadrícula 10x10 compacta */
     .grid-100 {
       display: grid;
       grid-template-columns: repeat(10, minmax(0, 1fr));
       gap: 2px;
     }
 
-    /* Scrollbar molt discret si en pantalles molt petites fes falta */
     ::-webkit-scrollbar {
       width: 5px;
       height: 5px;
@@ -130,9 +122,6 @@
 </head>
 <body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col p-2 sm:p-3 gap-2.5 select-none">
 
-  <!-- ========================================================= -->
-  <!-- BARRA SUPERIOR INTEGRADA ULTRA-COMPACTA (52px)             -->
-  <!-- ========================================================= -->
   <header class="bg-white rounded-2xl px-3.5 py-2 shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
     <!-- Marca -->
     <div class="flex items-center gap-2.5">
@@ -160,9 +149,6 @@
     </div>
   </header>
 
-  <!-- ========================================================= -->
-  <!-- VISTA 1: EXPLICACIÓ A L'AULA (RESPONSIVE PANORÀMIC)       -->
-  <!-- ========================================================= -->
   <main id="view-aula" class="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5 animate-pop overflow-y-auto">
     <!-- COLUMNA ESQUERRA (7 cols ~58%): APARADOR PROTAGONISTA + CARTELLS DE PERCENTATGE -->
     <section class="lg:col-span-7 bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/80 flex flex-col justify-between gap-2.5">
