@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Botiga dels Percentatges | Pissarra d'Aula</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tipografies arrodonides d'alta llegibilitat per a projector -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Confetti per a la gamificació -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            display: ['Fredoka', 'Nunito', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              purple: '#584CF4',
+              purpleLight: '#EEF0FF',
+              purpleDark: '#3F34C9',
+              coral: '#F43F5E',
+              coralLight: '#FFF1F2',
+              coralBorder: '#FDA4AF',
+              slateDark: '#1E293B',
+              bgSoft: '#F4F6FB'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #F4F6FB;
+      color: #1E293B;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Patrons ratllats per als segments de descompte/augment */
+    .bg-striped-coral {
+      background-color: #F43F5E;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.2) 7px,
+        transparent 7px,
+        transparent 14px
+      );
+    }
+
+    .bg-striped-amber {
+      background-color: #F59E0B;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.24),
+        rgba(255, 255, 255, 0.24) 7px,
+        transparent 7px,
+        transparent 14px
+      );
+    }
+
+    /* Vora dentada compacta per al tiquet */
+    .receipt-edge {
+      background-image: radial-gradient(circle at 8px 0, transparent 5px, #ffffff 5.5px);
+      background-size: 16px 10px;
+      background-repeat: repeat-x;
+    }
+
+    /* Range slider compacte */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #584CF4;
+      cursor: pointer;
+      margin-top: -7px;
+      box-shadow: 0 2px 5px rgba(88, 76, 244, 0.45);
+      border: 2.5px solid white;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #CBD5E1;
+      border-radius: 999px;
+    }
+
+    /* Mini quadrícula 10x10 compacta */
+    .grid-100 {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 2px;
+    }
+
+    /* Scrollbar molt discret si en pantalles molt petites fes falta */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 99px;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.96); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.2s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col p-2 sm:p-3 gap-2.5 select-none">
+
+  <!-- ========================================================= -->
+  <!-- BARRA SUPERIOR INTEGRADA ULTRA-COMPACTA (52px)             -->
+  <!-- ========================================================= -->
+  <header class="bg-white rounded-2xl px-3.5 py-2 shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
+    <!-- Marca -->
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-brand-purple text-white flex items-center justify-center text-xl shadow-sm">
+        🛍️
+      </div>
+      <div class="flex items-baseline gap-2.5">
+        <h1 class="font-display text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+          La botiga dels percentatges
+        </h1>
+      </div>
+    </div>
+
+    <!-- Controls centrals: Mode Aula vs Mode Joc -->
+    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+      <button id="tab-aula" onclick="switchMainMode('aula')"
+        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm">
+        <span>🏫</span>
+        <span>Explicació a l'aula</span>
+      </button>
+      <button id="tab-joc" onclick="switchMainMode('joc')"
+        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900">
+        <span>🎮</span>
+        <span>Joc del caixer/a</span>
+        <span id="nav-badge-points" class="ml-0.5 px-2 py-0.2 text-[11px] rounded-full bg-amber-100 text-amber-800 font-black">0 pts</span>
+      </button>
+    </div>
+
+    <!-- Espai d'equilibri dreta -->
+    <div class="hidden sm:flex items-center gap-1.5">
+      <span class="px-3 py-1 rounded-xl bg-indigo-50 text-brand-purple font-extrabold text-xs">
+        🧮 Matemàtiques aplicades
+      </span>
+    </div>
+  </header>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 1: EXPLICACIÓ A L'AULA (PANELL DUAL PANORÀMIC)      -->
+  <!-- ========================================================= -->
+  <main id="view-aula" class="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5">
+    
+    <!-- COLUMNA ESQUERRA (7 cols ~58%): APARADOR + CARTELLS DE PERCENTATGE -->
+    <section class="lg:col-span-7 bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-0 gap-3">
+      
+      <!-- BLOC 1: APARADOR DE PRODUCTES -->
+      <div class="flex flex-col min-h-0 flex-grow">
+        <!-- Capçalera Aparador + Filtres de categoria + Preu lliure -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg">🛒</span>
+            <h2 class="font-display text-base sm:text-lg font-bold text-slate-800">1. Tria un article:</h2>
+          </div>
+
+          <!-- Filtres ràpids per categoria -->
+          <div class="flex flex-wrap items-center gap-1">
+            <button onclick="setCategoryFilter('all')" id="cat-btn-all"
+              class="cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-brand-purple text-white transition-all">
+              Tot (16)
+            </button>
+            <button onclick="setCategoryFilter('moda')" id="cat-btn-moda"
+              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+              👕 Moda
+            </button>
+            <button onclick="setCategoryFilter('tech')" id="cat-btn-tech"
+              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+              🎮 Tech
+            </button>
+            <button onclick="setCategoryFilter('esport')" id="cat-btn-esport"
+              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+              ⚽ Esport
+            </button>
+            <button onclick="setCategoryFilter('escola')" id="cat-btn-escola"
+              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+              ✏️ Escola
+            </button>
+            <button onclick="toggleCustomBar()"
+              class="ml-1 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 transition-all">
+              + Preu lliure
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra inline per posar preu personalitzat a l'instant -->
+        <div id="custom-inline-bar" class="hidden mb-2 p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 shrink-0 animate-pop">
+          <span class="text-sm font-extrabold text-amber-800 shrink-0">🏷️ Article:</span>
+          <input id="custom-name-input" type="text" value="Article personalitzat"
+            class="px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-xs font-bold text-slate-800 flex-grow min-w-0 focus:outline-none focus:border-brand-purple" />
+          <div class="relative flex items-center shrink-0">
+            <input id="custom-price-input" type="number" min="1" max="9999" value="80"
+              onkeydown="if(event.key==='Enter') applyCustomProduct()"
+              class="w-24 px-2.5 py-1 pr-6 rounded-lg border border-amber-300 bg-white text-xs font-black text-brand-purple focus:outline-none focus:border-brand-purple" />
+            <span class="absolute right-2 text-xs font-black text-brand-purple">€</span>
+          </div>
+          <button onclick="applyCustomProduct()"
+            class="px-3 py-1 rounded-lg bg-brand-purple text-white text-xs font-extrabold hover:bg-brand-purpleDark shrink-0">
+            Posar
+          </button>
+        </div>
+
+        <!-- Graella compacta de 4x4 (16 productes visibles d'una tirada en pantalla gran) -->
+        <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 overflow-y-auto pr-0.5 flex-grow content-start">
+          <!-- Omplert per JS -->
+        </div>
+      </div>
+
+      <!-- BLOC 2: CARTELLS DE PERCENTATGE (ETIQUETES + LLISCADOR INLINE) -->
+      <div class="pt-2.5 border-t border-slate-100 shrink-0 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-lg">🏷️</span>
+            <h2 id="step2-title" class="font-display text-base sm:text-lg font-bold text-slate-800">2. Tria el cartell de descompte:</h2>
+          </div>
+
+          <!-- Commutador Rebaixes vs IVA/Augment -->
+          <div class="inline-flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            <button id="btn-op-discount" onclick="setOperationType('discount')"
+              class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all bg-brand-coral text-white shadow-sm">
+              🏷️ Rebaixes (-%)
+            </button>
+            <button id="btn-op-increase" onclick="setOperationType('increase')"
+              class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all text-slate-600 hover:text-slate-900">
+              🧾 IVA / Augment (+%)
+            </button>
+          </div>
+        </div>
+
+        <!-- Etiquetes predefinides + Slider en la mateixa fila compacta -->
+        <div class="flex flex-wrap items-center gap-1.5" id="discount-pills-container">
+          <!-- Omplert per JS -->
+        </div>
+
+        <!-- Lliscador ràpid 1% - 95% -->
+        <div class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
+          <span class="text-xs font-extrabold text-slate-600 shrink-0">🎚️ Qualsevol %:</span>
+          <input id="percent-slider" type="range" min="1" max="95" value="25" oninput="handleSliderChange(this.value)" class="flex-grow" />
+          <span id="slider-badge" class="px-2.5 py-0.5 rounded-lg font-display font-bold text-sm bg-brand-coral text-white min-w-[64px] text-center shadow-sm">
+            -25%
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUMNA DRETA (5 cols ~42%): PISSARRA VISUAL + 3 PASSOS + TIQUET GEGANT -->
+    <section class="lg:col-span-5 flex flex-col justify-between min-h-0 gap-2.5">
+      
+      <!-- TARGETA SUPERIOR: GRÀFIC PROPORCIONAL + QUADRÍCULA 10x10 -->
+      <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 space-y-2.5 shrink-0">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-display text-base font-bold text-slate-800 flex items-center gap-1.5">
+            <span>📊</span>
+            <span>Visualització gràfica</span>
+          </span>
+          <span id="visual-fraction-pill" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-purpleLight text-brand-purple">
+            -25% = 1/4 part del preu
+          </span>
+        </div>
+
+        <!-- Barra de progrés gegant amb els euros dins -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-xs font-extrabold">
+            <span id="bar-label-left" class="text-brand-purple">Pagues: 75%</span>
+            <span id="bar-label-right" class="text-brand-coral">Descompte: 25%</span>
+          </div>
+          <div class="h-10 w-full bg-slate-100 rounded-xl overflow-hidden flex p-1 border border-slate-200">
+            <div id="bar-pay-segment" style="width: 75%;"
+              class="h-full bg-brand-purple rounded-lg flex items-center justify-center text-white font-black text-xs sm:text-sm transition-all duration-300 overflow-hidden whitespace-nowrap px-1.5">
+              30,00 €
+            </div>
+            <div id="bar-diff-segment" style="width: 25%;"
+              class="h-full bg-striped-coral rounded-lg ml-1 flex items-center justify-center text-white font-black text-xs sm:text-sm transition-all duration-300 overflow-hidden whitespace-nowrap px-1.5">
+              -10,00 €
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini-quadrícula 10x10 + Explicació 1% = X € -->
+        <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200/70">
+          <div id="hundred-grid" class="grid-100 w-24 h-24 shrink-0 bg-white p-1.5 rounded-lg border border-slate-200 shadow-xs">
+            <!-- 100 quadrets -->
+          </div>
+          <div class="space-y-1 text-xs leading-snug">
+            <div class="font-extrabold text-slate-800">
+              100 quadrets = <span id="grid-total-euro" class="text-brand-purple">40,00 €</span>
+            </div>
+            <div class="inline-block px-2 py-0.5 rounded-md bg-white border border-slate-200 font-black text-brand-purple">
+              1 quadret (1%) = <span id="one-square-value">0,40 €</span>
+            </div>
+            <p id="grid-summary-text" class="text-slate-600 font-bold">
+              Agafem <strong class="text-brand-coral">25 quadrets</strong> → 25 × 0,40 € = <strong class="text-brand-coral">10,00 €</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARGETA CENTRAL: ELS 3 PASSOS ULTRA-CLARS AMB FLETXES -->
+      <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 space-y-2 shrink-0">
+        <div class="font-display text-sm font-bold text-slate-500 uppercase tracking-wider">
+          🧠 Com es calcula?
+        </div>
+
+        <!-- Pas 1 -->
+        <div class="flex items-center justify-between gap-2 bg-rose-50/70 border border-rose-200/80 px-3 py-2 rounded-xl" id="step1-box">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-6 h-6 rounded-lg bg-brand-coral text-white font-black text-xs flex items-center justify-center shrink-0" id="step1-badge">1</span>
+            <div class="truncate">
+              <span id="step1-formula" class="font-extrabold text-xs sm:text-sm text-slate-800 block truncate">25% de 40 € = 40 × 25 ÷ 100</span>
+              <span id="step1-trick" class="text-[11px] font-bold text-brand-coral block truncate">💡 Truc: la quarta part (40 ÷ 4)</span>
+            </div>
+          </div>
+          <span id="step1-result" class="font-display font-bold text-base sm:text-lg text-brand-coral shrink-0">10,00 €</span>
+        </div>
+
+        <!-- Pas 2 -->
+        <div class="flex items-center justify-between gap-2 bg-indigo-50/70 border border-indigo-200/80 px-3 py-2 rounded-xl">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-6 h-6 rounded-lg bg-brand-purple text-white font-black text-xs flex items-center justify-center shrink-0">2</span>
+            <span id="step2-formula" class="font-extrabold text-xs sm:text-sm text-slate-800 truncate">40,00 € − 10,00 €</span>
+          </div>
+          <span id="step2-result" class="font-display font-bold text-base sm:text-lg text-brand-purple shrink-0">30,00 €</span>
+        </div>
+
+        <!-- Drecera directa -->
+        <div class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="px-1.5 py-0.5 rounded bg-slate-700 text-white font-black text-[10px] uppercase shrink-0">⚡ Drecera</span>
+            <span id="step3-formula" class="font-mono font-bold text-xs sm:text-sm text-slate-700 truncate">40 × 0,75</span>
+          </div>
+          <span id="step3-result" class="font-display font-bold text-sm sm:text-base text-slate-800 shrink-0">= 30,00 €</span>
+        </div>
+      </div>
+
+      <!-- TARGETA INFERIOR: TIQUET DE CAIXA GEGANT PER AL FONS DE L'AULA -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col justify-between flex-grow min-h-0">
+        <div class="bg-slate-800 text-white px-4 py-1.5 flex items-center justify-between text-xs font-extrabold">
+          <span>🧾 TIQUET DE CAIXA</span>
+          <span class="text-slate-300" id="receipt-pct-tag">REBAIXA -25%</span>
+        </div>
+
+        <div class="px-4 py-2.5 flex items-center justify-between gap-3 flex-grow">
+          <!-- Info Producte + Preu ratllat -->
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span id="receipt-icon" class="text-2xl">🧥</span>
+              <span id="receipt-name" class="font-extrabold text-slate-800 text-sm sm:text-base truncate">Dessuadora esportiva</span>
+            </div>
+            <div class="flex items-center gap-2 mt-1 text-xs sm:text-sm font-bold">
+              <span class="text-slate-400 line-through" id="receipt-orig-price">40,00 €</span>
+              <span id="receipt-diff-badge" class="px-2 py-0.5 rounded-md bg-brand-coralLight text-brand-coral font-black">
+                Estalvies 10,00 €
+              </span>
+            </div>
+          </div>
+
+          <!-- PREU FINAL GEGANT -->
+          <div class="text-right shrink-0">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Total a pagar</span>
+            <span id="receipt-final-price" class="font-display text-3xl sm:text-4xl font-bold text-brand-purple leading-none">
+              30,00 €
+            </span>
+          </div>
+        </div>
+
+        <div class="h-2.5 bg-slate-100 receipt-edge shrink-0"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- VISTA 2: JOC DEL CAIXER/A (10 NIVELLS GUIATS)             -->
+  <!-- ========================================================= -->
+  <main id="view-joc" class="hidden flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5 animate-pop">
+    
+    <!-- COLUMNA ESQUERRA (8 cols): SELECTOR DE 10 NIVELLS + REPTE GUIAT -->
+    <section class="lg:col-span-8 bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-0 gap-2.5 overflow-y-auto">
+      
+      <!-- Selector de 10 nivells progressius -->
+      <div class="space-y-1.5 pb-2 border-b border-slate-100 shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-400">Tria el nivell (1-10):</span>
+            <span id="level-short-desc" class="text-xs font-extrabold text-brand-purple bg-brand-purpleLight px-2.5 py-0.5 rounded-full">
+              Nivell 1: Descomptes fàcils
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="btn-toggle-guided-hint" onclick="toggleGuidedHint()"
+              class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-brand-purple border border-indigo-200 hover:bg-indigo-100 transition-all">
+              🧭 Mostra la pista guiada
+            </button>
+            <button id="btn-toggle-visual-aid" onclick="toggleGameVisualAid()"
+              class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-all">
+              👁️ Gràfic: sí
+            </button>
+            <button onclick="generateNewChallenge()"
+              class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+              ⏭️ Nou
+            </button>
+          </div>
+        </div>
+
+        <!-- Graella compacta dels 10 nivells -->
+        <div id="levels-grid" class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+          <!-- Omplert dinàmicament per JS -->
+        </div>
+      </div>
+
+      <!-- Escena del client i producte a la cinta -->
+      <div class="flex flex-col sm:flex-row items-center gap-3 bg-slate-50 p-3 sm:p-3.5 rounded-2xl border border-slate-200/80 shrink-0">
+        <div class="flex items-center gap-3 flex-grow min-w-0">
+          <div id="customer-avatar" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-2xl sm:text-3xl shadow-xs shrink-0">
+            🧑🏽‍🎓
+          </div>
+          <div class="min-w-0">
+            <span id="challenge-badge" class="inline-block px-2.5 py-0.5 rounded-md bg-brand-purpleLight text-brand-purple font-black text-[11px] mb-1">
+              Nivell 1 • Estalvi directe
+            </span>
+            <p id="challenge-prompt" class="font-extrabold text-slate-800 text-xs sm:text-sm md:text-base leading-snug">
+              "Hola! Aquest article de 40 € té un 25% de descompte. Quants euros m'estalvio?"
+            </p>
+          </div>
+        </div>
+
+        <!-- Producte + Etiqueta -->
+        <div class="flex items-center gap-2.5 bg-white px-3.5 py-2.5 rounded-2xl border-2 border-indigo-100 shrink-0 shadow-xs">
+          <span id="challenge-item-icon" class="text-3xl sm:text-4xl">🎒</span>
+          <div>
+            <div id="challenge-item-name" class="font-extrabold text-slate-800 text-xs sm:text-sm">Motxilla</div>
+            <div id="challenge-item-orig" class="font-display font-bold text-brand-purple text-base sm:text-lg">40 €</div>
+          </div>
+          <div id="challenge-tag-pill" class="ml-1 px-3 py-1.5 rounded-xl bg-brand-coral text-white font-display font-bold text-base sm:text-lg shadow-sm">
+            -25%
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra visual d'ajuda adaptada al tipus de repte -->
+      <div id="game-visual-aid-box" class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-2.5 space-y-1.5 shrink-0">
+        <div class="flex justify-between text-xs font-extrabold">
+          <span id="game-aid-left" class="text-brand-purple">Pagues: 75%</span>
+          <span id="game-aid-center" class="text-slate-500 hidden"></span>
+          <span id="game-aid-right" class="text-brand-coral">Descompte: 25%</span>
+        </div>
+        <div id="game-aid-bar-container" class="h-6 w-full bg-slate-200 rounded-lg overflow-hidden flex p-0.5">
+          <div id="game-aid-bar-pay" style="width: 75%;" class="h-full bg-brand-purple rounded-md flex items-center justify-center text-white font-black text-xs transition-all">75%</div>
+          <div id="game-aid-bar-mid" style="width: 0%;" class="hidden h-full bg-amber-500 rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all"></div>
+          <div id="game-aid-bar-diff" style="width: 25%;" class="h-full bg-striped-coral rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all">-25%</div>
+        </div>
+      </div>
+
+      <!-- Panell d'Ajuda guiada pas a pas (desplegable amb les dades reals del repte) -->
+      <div id="guided-hint-box" class="hidden bg-amber-50/90 border-2 border-amber-200 rounded-xl p-3 space-y-1.5 shrink-0 animate-pop">
+        <div class="flex items-center justify-between">
+          <span class="font-display font-bold text-xs sm:text-sm text-amber-900 flex items-center gap-1.5">
+            <span>🧭</span>
+            <span>Ajuda guiada pas a pas</span>
+          </span>
+          <span class="text-[11px] font-extrabold text-amber-700">Segueix els passos per resoldre-ho</span>
+        </div>
+        <ol id="guided-steps-list" class="space-y-1 text-xs font-bold text-slate-800 list-decimal list-inside">
+          <!-- Omplert dinàmicament amb els passos reals -->
+        </ol>
+      </div>
+
+      <!-- Zona de resposta (4 botons gegants o input numèric) -->
+      <div class="flex-grow flex flex-col justify-center space-y-2">
+        <div class="flex items-center justify-between">
+          <span id="challenge-question-label" class="font-extrabold text-slate-700 text-xs sm:text-sm">Tria o escriu la resposta correcta:</span>
+          <button onclick="toggleGameInputMode()" id="btn-toggle-input-mode" class="text-xs font-extrabold text-brand-purple hover:underline">
+            ⌨️ Canviar a teclat numèric
+          </button>
+        </div>
+
+        <!-- 4 botons gegants d'opció múltiple -->
+        <div id="game-mc-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <!-- Omplert per JS -->
+        </div>
+
+        <!-- Caixa d'entrada numèrica alternativa -->
+        <div id="game-num-box" class="hidden flex items-center gap-2.5">
+          <div class="relative flex-grow">
+            <input id="game-answer-input" type="number" step="0.01" placeholder="Escriu el resultat..."
+              onkeydown="if(event.key==='Enter') checkNumericAnswer()"
+              class="w-full px-4 py-2.5 pr-10 rounded-xl border-2 border-slate-200 text-lg font-black text-slate-800 focus:outline-none focus:border-brand-purple" />
+            <span id="game-answer-unit" class="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-black text-slate-400">€</span>
+          </div>
+          <button onclick="checkNumericAnswer()"
+            class="px-6 py-2.5 rounded-xl bg-brand-purple hover:bg-brand-purpleDark text-white font-extrabold text-base shadow-sm">
+            Cobrar ✓
+          </button>
+        </div>
+      </div>
+
+      <!-- Feedback immediat -->
+      <div id="game-feedback-banner" class="hidden rounded-xl px-3.5 py-2.5 border-2 flex items-center justify-between gap-3 shrink-0 animate-pop">
+        <!-- Omplert per JS -->
+      </div>
+    </section>
+
+    <!-- COLUMNA DRETA (4 cols): MARCADOR, MEDALLES I AJUDA RÀPIDA PEL CAIXER/A -->
+    <section class="lg:col-span-4 flex flex-col justify-between min-h-0 gap-2.5">
+      
+      <!-- Marcador i medalles -->
+      <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 space-y-2.5 shrink-0">
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-amber-50 border border-amber-200 p-2 rounded-xl">
+            <span class="text-[10px] font-black uppercase text-amber-700 block">Punts</span>
+            <span id="game-score" class="font-display text-xl sm:text-2xl font-bold text-amber-600">0</span>
+          </div>
+          <div class="bg-rose-50 border border-rose-200 p-2 rounded-xl">
+            <span class="text-[10px] font-black uppercase text-rose-700 block">Ratxa 🔥</span>
+            <span id="game-streak" class="font-display text-xl sm:text-2xl font-bold text-brand-coral">0</span>
+          </div>
+          <div class="bg-indigo-50 border border-indigo-200 p-2 rounded-xl">
+            <span class="text-[10px] font-black uppercase text-indigo-700 block">Encerts</span>
+            <span id="game-accuracy" class="font-display text-xl sm:text-2xl font-bold text-brand-purple">0/0</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-xs font-extrabold text-slate-500 block mb-1">🏅 Insígnies de la botiga:</span>
+          <div id="badges-row" class="flex flex-wrap gap-1.5">
+            <!-- Omplert per JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Ajuda ràpida pel caixer/a -->
+      <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 flex-grow flex flex-col justify-between min-h-0 overflow-y-auto">
+        <div>
+          <h3 class="font-display text-base font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+            <span>⚡</span>
+            <span>Ajuda ràpida pel caixer/a</span>
+          </h3>
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="font-display font-bold text-brand-coral text-sm block">50% i 25%</span>
+              <span class="font-bold text-slate-600">Meitat (÷ 2) i quart (÷ 4)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="font-display font-bold text-brand-coral text-sm block">10% i 20%</span>
+              <span class="font-bold text-slate-600">Divideix ÷ 10 (i × 2)</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="font-display font-bold text-amber-600 text-sm block">+21% IVA</span>
+              <span class="font-bold text-slate-600">Multiplica el preu × 1,21</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+              <span class="font-display font-bold text-brand-purple text-sm block">Preu original</span>
+              <span class="font-bold text-slate-600">Preu final ÷ % pagat</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 col-span-2">
+              <span class="font-display font-bold text-slate-800 text-xs block">⚠️ Rebaixes encadenades (-20% i -10%)</span>
+              <span class="font-bold text-slate-600">No és -30%! Primer aplica el -20% i sobre el nou preu aplica el -10%.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 p-2 rounded-xl bg-brand-purpleLight text-brand-purple text-xs font-extrabold text-center">
+          🧭 Tens dubtes? Prem «Mostra la pista guiada» per veure els passos!
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ========================================================= -->
+  <!-- LÒGICA JAVASCRIPT COMPLETA                                -->
+  <!-- ========================================================= -->
+  <script>
+    // ---------------------------------------------------------
+    // 1. CATÀLEG AMPLIAT DE 16 PRODUCTES PER CATEGORIES
+    // ---------------------------------------------------------
+    const PRODUCTS = [
+      { id: 1,  name: "Dessuadora",     price: 40,  icon: "🧥", cat: "moda" },
+      { id: 2,  name: "Videojoc",       price: 60,  icon: "🎮", cat: "tech" },
+      { id: 3,  name: "Patinet elèctric",price: 120, icon: "🛴", cat: "esport" },
+      { id: 4,  name: "Llibre",         price: 20,  icon: "📚", cat: "escola" },
+      { id: 5,  name: "Motxilla",       price: 30,  icon: "🎒", cat: "escola" },
+      { id: 6,  name: "Auriculars",     price: 50,  icon: "🎧", cat: "tech" },
+      { id: 7,  name: "Vambes running", price: 80,  icon: "👟", cat: "esport" },
+      { id: 8,  name: "Samarreta",      price: 15,  icon: "👕", cat: "moda" },
+      { id: 9,  name: "Pilota futbol",  price: 25,  icon: "⚽", cat: "esport" },
+      { id: 10, name: "Smartwatch",     price: 100, icon: "⌚", cat: "tech" },
+      { id: 11, name: "Teclat gaming",  price: 45,  icon: "⌨️", cat: "tech" },
+      { id: 12, name: "Ampolla tèrmica",price: 18,  icon: "🍶", cat: "escola" },
+      { id: 13, name: "Ulleres de sol", price: 35,  icon: "🕶️", cat: "moda" },
+      { id: 14, name: "Bicicleta MTB",  price: 240, icon: "🚲", cat: "esport" },
+      { id: 15, name: "Estoig complet", price: 12,  icon: "✏️", cat: "escola" },
+      { id: 16, name: "Càmera fotos",   price: 90,  icon: "📸", cat: "moda" }
+    ];
+
+    const DISCOUNT_PRESETS = [
+      { value: 10, label: "-10%" },
+      { value: 15, label: "-15%" },
+      { value: 20, label: "-20%" },
+      { value: 25, label: "-25%" },
+      { value: 30, label: "-30%" },
+      { value: 50, label: "-50% Oferta" },
+      { value: 75, label: "-75%" }
+    ];
+
+    const INCREASE_PRESETS = [
+      { value: 4,  label: "+4% IVA" },
+      { value: 10, label: "+10% IVA" },
+      { value: 21, label: "+21% IVA General" },
+      { value: 50, label: "+50% Recàrrec" }
+    ];
+
+    let aulaState = {
+      category: 'all',
+      selectedProduct: { ...PRODUCTS[0] },
+      operationType: 'discount',
+      percent: 25
+    };
+
+    function formatEuro(num) {
+      return num.toLocaleString('ca-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + ' €';
+    }
+
+    function formatClean(num) {
+      return Number.isInteger(num)
+        ? num.toString()
+        : num.toLocaleString('ca-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // ---------------------------------------------------------
+    // 2. CANVI DE VISTA & PANTALLA COMPLETA
+    // ---------------------------------------------------------
+    function switchMainMode(mode) {
+      const viewAula = document.getElementById('view-aula');
+      const viewJoc = document.getElementById('view-joc');
+      const tabAula = document.getElementById('tab-aula');
+      const tabJoc = document.getElementById('tab-joc');
+
+      if (mode === 'aula') {
+        viewAula.classList.remove('hidden');
+        viewJoc.classList.add('hidden');
+        tabAula.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
+        tabJoc.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
+      } else {
+        viewAula.classList.add('hidden');
+        viewJoc.classList.remove('hidden');
+        tabJoc.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
+        tabAula.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
+        if (!gameState.currentChallenge) generateNewChallenge();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // ---------------------------------------------------------
+    // 3. APARADOR DE PRODUCTES COMPACTE (MODE AULA)
+    // ---------------------------------------------------------
+    function setCategoryFilter(cat) {
+      aulaState.category = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.className = "cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all";
+      });
+      const activeBtn = document.getElementById(`cat-btn-${cat}`);
+      if (activeBtn) {
+        activeBtn.className = "cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-brand-purple text-white transition-all shadow-xs";
+      }
+      renderProductsGrid();
+    }
+
+    function renderProductsGrid() {
+      const grid = document.getElementById('products-grid');
+      const filtered = aulaState.category === 'all'
+        ? PRODUCTS
+        : PRODUCTS.filter(p => p.cat === aulaState.category);
+
+      grid.innerHTML = filtered.map(item => {
+        const isSelected = aulaState.selectedProduct.id === item.id;
+        return `
+          <button onclick="selectProduct(${item.id})"
+            class="group relative flex flex-col items-center justify-center p-2.5 rounded-2xl border-2 transition-all duration-150 text-center bg-white
+            ${isSelected
+              ? 'border-brand-purple bg-indigo-50/25 shadow-sm scale-[1.01]'
+              : 'border-slate-200/90 hover:border-indigo-300'
+            }">
+            ${isSelected ? `<span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-brand-purple text-white text-[10px] flex items-center justify-center font-black">✓</span>` : ''}
+            <div class="text-2xl sm:text-3xl mb-1 transition-transform group-hover:scale-110">${item.icon}</div>
+            <div class="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-tight truncate w-full px-1">${item.name}</div>
+            <div class="font-display font-bold text-brand-purple text-sm sm:text-base mt-0.5">${item.price} €</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectProduct(id) {
+      const found = PRODUCTS.find(p => p.id === id);
+      if (found) {
+        aulaState.selectedProduct = { ...found };
+        renderProductsGrid();
+        updateAulaCalculations();
+      }
+    }
+
+    function toggleCustomBar() {
+      document.getElementById('custom-inline-bar').classList.toggle('hidden');
+    }
+
+    function applyCustomProduct() {
+      const name = document.getElementById('custom-name-input').value.trim() || "Article";
+      const price = parseFloat(document.getElementById('custom-price-input').value);
+      if (isNaN(price) || price <= 0) return;
+
+      aulaState.selectedProduct = { id: 'custom', name, price, icon: "🏷️" };
+      renderProductsGrid();
+      updateAulaCalculations();
+    }
+
+    function setOperationType(type) {
+      aulaState.operationType = type;
+      const btnDisc = document.getElementById('btn-op-discount');
+      const btnInc = document.getElementById('btn-op-increase');
+      const title = document.getElementById('step2-title');
+
+      if (type === 'discount') {
+        btnDisc.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all bg-brand-coral text-white shadow-sm";
+        btnInc.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all text-slate-600 hover:text-slate-900";
+        title.textContent = "2. Tria el cartell de descompte:";
+        if (aulaState.percent === 21 || aulaState.percent === 4) aulaState.percent = 25;
+      } else {
+        btnInc.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all bg-amber-500 text-white shadow-sm";
+        btnDisc.className = "px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all text-slate-600 hover:text-slate-900";
+        title.textContent = "2. Tria el cartell d'IVA / augment:";
+        if (![4, 10, 21, 50].includes(aulaState.percent)) aulaState.percent = 21;
+      }
+
+      document.getElementById('percent-slider').value = aulaState.percent;
+      renderDiscountPills();
+      updateAulaCalculations();
+    }
+
+    function renderDiscountPills() {
+      const container = document.getElementById('discount-pills-container');
+      const isDisc = aulaState.operationType === 'discount';
+      const presets = isDisc ? DISCOUNT_PRESETS : INCREASE_PRESETS;
+
+      container.innerHTML = presets.map(p => {
+        const active = aulaState.percent === p.value;
+        if (isDisc) {
+          return `
+            <button onclick="setPercent(${p.value})"
+              class="px-3.5 py-1.5 rounded-xl font-display font-bold text-sm sm:text-base border transition-all
+              ${active
+                ? 'bg-brand-coral text-white border-brand-coral shadow-sm scale-105'
+                : 'bg-brand-coralLight text-brand-coral border-brand-coralBorder hover:bg-rose-100'
+              }">
+              ${p.label}
+            </button>
+          `;
+        } else {
+          return `
+            <button onclick="setPercent(${p.value})"
+              class="px-3.5 py-1.5 rounded-xl font-display font-bold text-sm sm:text-base border transition-all
+              ${active
+                ? 'bg-amber-500 text-white border-amber-500 shadow-sm scale-105'
+                : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+              }">
+              ${p.label}
+            </button>
+          `;
+        }
+      }).join('');
+    }
+
+    function setPercent(val) {
+      aulaState.percent = Number(val);
+      document.getElementById('percent-slider').value = aulaState.percent;
+      renderDiscountPills();
+      updateAulaCalculations();
+    }
+
+    function handleSliderChange(val) {
+      aulaState.percent = Number(val);
+      renderDiscountPills();
+      updateAulaCalculations();
+    }
+
+    // ---------------------------------------------------------
+    // 4. ACTUALITZACIÓ GRÀFICA EN TEMPS REAL (COLUMNA DRETA)
+    // ---------------------------------------------------------
+    function getFractionOrTrickHint(pct, price, isDisc) {
+      if (pct === 50) return `La meitat (${formatClean(price)} ÷ 2)`;
+      if (pct === 25) return `La quarta part (${formatClean(price)} ÷ 4)`;
+      if (pct === 10) return `Moure la coma (${formatClean(price)} ÷ 10)`;
+      if (pct === 20) return `El doble del 10% (${formatClean(price * 0.1)} × 2)`;
+      if (pct === 75) return `3 quartes parts del preu`;
+      if (pct === 30) return `3 vegades el 10% (${formatClean(price * 0.1)} × 3)`;
+      if (pct === 21 && !isDisc) return `20% (${formatClean(price * 0.2)} €) + 1% (${formatClean(price * 0.01)} €)`;
+      return `Cada 1% val ${formatEuro(price / 100)}`;
+    }
+
+    function getFractionBadgeText(pct, isDisc) {
+      const sign = isDisc ? '-' : '+';
+      if (pct === 50) return `${sign}50% = 1/2 (la meitat)`;
+      if (pct === 25) return `${sign}25% = 1/4 part`;
+      if (pct === 75) return `${sign}75% = 3/4 parts`;
+      if (pct === 10) return `${sign}10% = 1/10 part`;
+      if (pct === 20) return `${sign}20% = 1/5 part`;
+      return `${sign}${pct} de cada 100 €`;
+    }
+
+    function updateAulaCalculations() {
+      const price = aulaState.selectedProduct.price;
+      const pct = aulaState.percent;
+      const isDisc = aulaState.operationType === 'discount';
+
+      const diffAmount = +(price * (pct / 100)).toFixed(2);
+      const finalPrice = isDisc ? +(price - diffAmount).toFixed(2) : +(price + diffAmount).toFixed(2);
+      const payPct = isDisc ? (100 - pct) : (100 + pct);
+
+      // Slider badge
+      const sliderBadge = document.getElementById('slider-badge');
+      sliderBadge.textContent = `${isDisc ? '-' : '+'}${pct}%`;
+      sliderBadge.className = `px-2.5 py-0.5 rounded-lg font-display font-bold text-sm text-white min-w-[64px] text-center shadow-sm ${isDisc ? 'bg-brand-coral' : 'bg-amber-500'}`;
+
+      // Etiqueta fracció visual
+      document.getElementById('visual-fraction-pill').textContent = getFractionBadgeText(pct, isDisc);
+
+      // Barra de progrés amb imports
+      const barLeft = document.getElementById('bar-label-left');
+      const barRight = document.getElementById('bar-label-right');
+      const segPay = document.getElementById('bar-pay-segment');
+      const segDiff = document.getElementById('bar-diff-segment');
+
+      if (isDisc) {
+        barLeft.textContent = `Pagues: ${payPct}%`;
+        barRight.textContent = `Descompte: ${pct}%`;
+        barRight.className = "text-brand-coral";
+
+        segPay.style.width = `${Math.max(payPct, 12)}%`;
+        segPay.textContent = payPct >= 18 ? formatEuro(finalPrice) : `${payPct}%`;
+
+        segDiff.style.width = `${Math.max(pct, 12)}%`;
+        segDiff.className = "h-full bg-striped-coral rounded-lg ml-1 flex items-center justify-center text-white font-black text-xs sm:text-sm transition-all duration-300 overflow-hidden whitespace-nowrap px-1.5";
+        segDiff.textContent = pct >= 18 ? `-${formatEuro(diffAmount)}` : `-${pct}%`;
+      } else {
+        const baseW = Math.round((100 / (100 + pct)) * 100);
+        const extraW = 100 - baseW;
+
+        barLeft.textContent = `Base: 100%`;
+        barRight.textContent = `Augment: +${pct}%`;
+        barRight.className = "text-amber-600";
+
+        segPay.style.width = `${baseW}%`;
+        segPay.textContent = formatEuro(price);
+
+        segDiff.style.width = `${Math.max(extraW, 14)}%`;
+        segDiff.className = "h-full bg-striped-amber rounded-lg ml-1 flex items-center justify-center text-white font-black text-xs sm:text-sm transition-all duration-300 overflow-hidden whitespace-nowrap px-1.5";
+        segDiff.textContent = extraW >= 18 ? `+${formatEuro(diffAmount)}` : `+${pct}%`;
+      }
+
+      // Mini-quadrícula 10x10
+      const gridEl = document.getElementById('hundred-grid');
+      let cells = '';
+      for (let i = 1; i <= 100; i++) {
+        if (isDisc) {
+          const isCut = i > (100 - pct);
+          cells += `<div class="rounded-[2px] ${isCut ? 'bg-brand-coral' : 'bg-brand-purple'}"></div>`;
+        } else {
+          const isAdd = i <= pct;
+          cells += `<div class="rounded-[2px] ${isAdd ? 'bg-amber-500' : 'bg-brand-purple/85'}"></div>`;
+        }
+      }
+      gridEl.innerHTML = cells;
+
+      document.getElementById('grid-total-euro').textContent = formatEuro(price);
+      document.getElementById('one-square-value').textContent = formatEuro(price / 100);
+      document.getElementById('grid-summary-text').innerHTML = isDisc
+        ? `Traiem <strong class="text-brand-coral">${pct} quadrets</strong> → ${pct} × ${formatEuro(price / 100)} = <strong class="text-brand-coral">${formatEuro(diffAmount)}</strong>`
+        : `Sumem <strong class="text-amber-600">${pct} quadrets</strong> → ${pct} × ${formatEuro(price / 100)} = <strong class="text-amber-600">+${formatEuro(diffAmount)}</strong>`;
+
+      // Els 3 passos visuals
+      const step1Box = document.getElementById('step1-box');
+      const step1Badge = document.getElementById('step1-badge');
+      const step1Trick = document.getElementById('step1-trick');
+      const step1Result = document.getElementById('step1-result');
+
+      if (isDisc) {
+        step1Box.className = "flex items-center justify-between gap-2 bg-rose-50/70 border border-rose-200/80 px-3 py-2 rounded-xl";
+        step1Badge.className = "w-6 h-6 rounded-lg bg-brand-coral text-white font-black text-xs flex items-center justify-center shrink-0";
+        step1Trick.className = "text-[11px] font-bold text-brand-coral block truncate";
+        step1Result.className = "font-display font-bold text-base sm:text-lg text-brand-coral shrink-0";
+      } else {
+        step1Box.className = "flex items-center justify-between gap-2 bg-amber-50/80 border border-amber-200 px-3 py-2 rounded-xl";
+        step1Badge.className = "w-6 h-6 rounded-lg bg-amber-500 text-white font-black text-xs flex items-center justify-center shrink-0";
+        step1Trick.className = "text-[11px] font-bold text-amber-700 block truncate";
+        step1Result.className = "font-display font-bold text-base sm:text-lg text-amber-600 shrink-0";
+      }
+
+      document.getElementById('step1-formula').textContent = `${pct}% de ${formatClean(price)} € = ${formatClean(price)} × ${pct} ÷ 100`;
+      step1Trick.textContent = `💡 ${getFractionOrTrickHint(pct, price, isDisc)}`;
+      step1Result.textContent = `${isDisc ? '-' : '+'}${formatEuro(diffAmount)}`;
+
+      document.getElementById('step2-formula').textContent = `${formatEuro(price)} ${isDisc ? '−' : '+'} ${formatEuro(diffAmount)}`;
+      document.getElementById('step2-result').textContent = formatEuro(finalPrice);
+
+      const factor = (payPct / 100).toLocaleString('ca-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('step3-formula').textContent = `${formatClean(price)} € × ${factor}`;
+      document.getElementById('step3-result').textContent = `= ${formatEuro(finalPrice)}`;
+
+      // Tiquet de caixa
+      document.getElementById('receipt-icon').textContent = aulaState.selectedProduct.icon;
+      document.getElementById('receipt-name').textContent = aulaState.selectedProduct.name;
+      document.getElementById('receipt-orig-price').textContent = formatEuro(price);
+      document.getElementById('receipt-pct-tag').textContent = isDisc ? `REBAIXA -${pct}%` : `AUGMENT +${pct}%`;
+
+      const diffBadge = document.getElementById('receipt-diff-badge');
+      if (isDisc) {
+        diffBadge.className = "px-2 py-0.5 rounded-md bg-brand-coralLight text-brand-coral font-black";
+        diffBadge.textContent = `Estalvies ${formatEuro(diffAmount)}`;
+      } else {
+        diffBadge.className = "px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-black";
+        diffBadge.textContent = `+${formatEuro(diffAmount)} d'IVA`;
+      }
+
+      document.getElementById('receipt-final-price').textContent = formatEuro(finalPrice);
+    }
+
+    // ---------------------------------------------------------
+    // 5. MODE GAMIFICAT: JOC DEL CAIXER/A (10 NIVELLS GUIATS)
+    // ---------------------------------------------------------
+    const LEVEL_DEFINITIONS = [
+      { num: 1, title: "Nivell 1: Descomptes fàcils (estalvi en €)" },
+      { num: 2, title: "Nivell 2: Preu final rebaixat (10%, 20%, 25%, 50%)" },
+      { num: 3, title: "Nivell 3: Càlcul amb l'IVA (+4%, +10%, +21%)" },
+      { num: 4, title: "Nivell 4: Percentatges variats (15%, 30%, 35%, 40%, 75%)" },
+      { num: 5, title: "Nivell 5: Quin percentatge m'han aplicat?" },
+      { num: 6, title: "Nivell 6: Preu original amagat (càlcul invers)" },
+      { num: 7, title: "Nivell 7: Quina botiga és més barata?" },
+      { num: 8, title: "Nivell 8: Rebaixa sobre rebaixa (descomptes encadenats)" },
+      { num: 9, title: "Nivell 9: Black Friday + IVA (doble pas)" },
+      { num: 10, title: "Nivell 10: Repte extrem del cap de botiga" }
+    ];
+
+    const BADGES = [
+      { id: 'first', icon: '🌟', name: 'Primera venda', unlocked: false },
+      { id: 'streak3', icon: '🔥', name: 'Ratxa x3', unlocked: false },
+      { id: 'mid', icon: '🧭', name: 'Nivell 5+', unlocked: false },
+      { id: 'extreme', icon: '👑', name: 'Cap de botiga (N10)', unlocked: false },
+      { id: 'pts150', icon: '💎', name: '150 punts', unlocked: false }
+    ];
+
+    const AVATARS = ["🧑🏽‍🎓", "👩🏻‍🏫", "🧔🏻‍♂️", "👵🏼", "🧑🏾‍💻", "👧🏼", "👨🏽‍🍳", "🦸🏻‍♀️"];
+
+    let gameState = {
+      level: 1,
+      completedLevels: new Set(),
+      score: 0,
+      streak: 0,
+      correctCount: 0,
+      totalAttempts: 0,
+      visualAidOn: true,
+      guidedHintOn: false,
+      useNumericInput: false,
+      currentChallenge: null,
+      answered: false
+    };
+
+    function renderLevelSelector() {
+      const grid = document.getElementById('levels-grid');
+      const descEl = document.getElementById('level-short-desc');
+      const currentDef = LEVEL_DEFINITIONS[gameState.level - 1];
+      if (descEl && currentDef) {
+        descEl.textContent = currentDef.title;
+      }
+
+      grid.innerHTML = LEVEL_DEFINITIONS.map(lvl => {
+        const isCurrent = gameState.level === lvl.num;
+        const isDone = gameState.completedLevels.has(lvl.num);
+        const isExtreme = lvl.num >= 8;
+
+        let cls = "py-1.5 px-1 rounded-xl font-display font-bold text-xs sm:text-sm border-2 transition-all flex items-center justify-center gap-0.5 ";
+        if (isCurrent) {
+          cls += "border-brand-purple bg-brand-purple text-white shadow-sm scale-105";
+        } else if (isDone) {
+          cls += "border-emerald-300 bg-emerald-50 text-emerald-800 hover:border-emerald-400";
+        } else if (isExtreme) {
+          cls += "border-rose-200 bg-rose-50/60 text-brand-coral hover:border-brand-coral";
+        } else {
+          cls += "border-slate-200 bg-white text-slate-700 hover:border-indigo-300";
+        }
+
+        return `
+          <button onclick="setGameLevel(${lvl.num})" title="${lvl.title}" class="${cls}">
+            <span>${lvl.num}</span>
+            ${isDone ? '<span class="text-[10px]">✓</span>' : (lvl.num === 10 ? '<span class="text-[10px]">👑</span>' : '')}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setGameLevel(lvl) {
+      gameState.level = lvl;
+      renderLevelSelector();
+      generateNewChallenge();
+    }
+
+    function toggleGuidedHint() {
+      gameState.guidedHintOn = !gameState.guidedHintOn;
+      const box = document.getElementById('guided-hint-box');
+      const btn = document.getElementById('btn-toggle-guided-hint');
+      if (gameState.guidedHintOn) {
+        box.classList.remove('hidden');
+        btn.textContent = "🧭 Amaga la pista guiada";
+        btn.className = "px-2.5 py-1 rounded-xl text-xs font-extrabold bg-brand-purple text-white border border-brand-purple transition-all";
+      } else {
+        box.classList.add('hidden');
+        btn.textContent = "🧭 Mostra la pista guiada";
+        btn.className = "px-2.5 py-1 rounded-xl text-xs font-extrabold bg-indigo-50 text-brand-purple border border-indigo-200 hover:bg-indigo-100 transition-all";
+      }
+    }
+
+    function toggleGameVisualAid() {
+      gameState.visualAidOn = !gameState.visualAidOn;
+      const box = document.getElementById('game-visual-aid-box');
+      const btn = document.getElementById('btn-toggle-visual-aid');
+      if (gameState.visualAidOn) {
+        box.classList.remove('hidden');
+        btn.textContent = "👁️ Gràfic: sí";
+        btn.className = "px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-all";
+      } else {
+        box.classList.add('hidden');
+        btn.textContent = "🙈 Gràfic: no";
+        btn.className = "px-2.5 py-1 rounded-xl text-xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-all";
+      }
+    }
+
+    function toggleGameInputMode() {
+      gameState.useNumericInput = !gameState.useNumericInput;
+      const mcGrid = document.getElementById('game-mc-grid');
+      const numBox = document.getElementById('game-num-box');
+      const btn = document.getElementById('btn-toggle-input-mode');
+
+      if (gameState.useNumericInput) {
+        mcGrid.classList.add('hidden');
+        numBox.classList.remove('hidden');
+        btn.textContent = "🔘 Canviar a 4 opcions tàctils";
+      } else {
+        mcGrid.classList.remove('hidden');
+        numBox.classList.add('hidden');
+        btn.textContent = "⌨️ Canviar a teclat numèric";
+      }
+    }
+
+    function renderBadges() {
+      document.getElementById('badges-row').innerHTML = BADGES.map(b => `
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-extrabold
+          ${b.unlocked ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}">
+          <span>${b.icon}</span>
+          <span>${b.name}</span>
+        </span>
+      `).join('');
+    }
+
+    function updateGameStats() {
+      document.getElementById('game-score').textContent = gameState.score;
+      document.getElementById('nav-badge-points').textContent = `${gameState.score} pts`;
+      document.getElementById('game-streak').textContent = gameState.streak;
+      document.getElementById('game-accuracy').textContent = `${gameState.correctCount}/${gameState.totalAttempts}`;
+
+      let unlock = false;
+      if (gameState.correctCount >= 1 && !BADGES[0].unlocked) { BADGES[0].unlocked = true; unlock = true; }
+      if (gameState.streak >= 3 && !BADGES[1].unlocked) { BADGES[1].unlocked = true; unlock = true; }
+      if (gameState.level >= 5 && gameState.completedLevels.has(gameState.level) && !BADGES[2].unlocked) { BADGES[2].unlocked = true; unlock = true; }
+      if (gameState.completedLevels.has(10) && !BADGES[3].unlocked) { BADGES[3].unlocked = true; unlock = true; }
+      if (gameState.score >= 150 && !BADGES[4].unlocked) { BADGES[4].unlocked = true; unlock = true; }
+
+      if (unlock && typeof confetti === 'function') {
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.7 } });
+      }
+      renderBadges();
+      renderLevelSelector();
+    }
+
+    function buildNumericOptions(correctVal, unit, extraDistractors = []) {
+      const set = new Set([+correctVal.toFixed(2)]);
+      const defaults = [
+        +(correctVal + 5).toFixed(2),
+        +(Math.max(1, correctVal - 5)).toFixed(2),
+        +(correctVal + 10).toFixed(2),
+        +(Math.max(1, correctVal - 10)).toFixed(2),
+        +(correctVal * 1.1).toFixed(2),
+        +(Math.max(1, correctVal * 0.9)).toFixed(2)
+      ];
+
+      for (const d of [...extraDistractors, ...defaults]) {
+        const rounded = +d.toFixed(2);
+        if (set.size < 4 && rounded > 0 && Math.abs(rounded - correctVal) > 0.05) {
+          set.add(rounded);
+        }
+      }
+      while (set.size < 4) {
+        set.add(+(correctVal + set.size * 4).toFixed(2));
+      }
+      return Array.from(set).sort(() => Math.random() - 0.5).map(val => ({
+        value: val,
+        label: `${formatClean(val)} ${unit}`
+      }));
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateNewChallenge() {
+      gameState.answered = false;
+      document.getElementById('game-feedback-banner').classList.add('hidden');
+      document.getElementById('game-answer-input').value = '';
+      document.getElementById('customer-avatar').textContent = pick(AVATARS);
+
+      // En nivells extrems (8, 9, 10) activem automàticament la pista guiada si l'usuari no l'ha tancada expressament, o la deixem ben accessible
+      const item = pick(PRODUCTS);
+      const lvl = gameState.level;
+      let c = {};
+
+      if (lvl === 1) {
+        // Nivell 1: Descomptes fàcils — Troba l'estalvi en euros
+        const price = pick([20, 40, 50, 60, 80, 100, 120]);
+        let pct = pick([10, 20, 25, 50]);
+        if (pct === 25 && price % 4 !== 0) pct = 50;
+        const saved = +(price * (pct / 100)).toFixed(2);
+
+        c = {
+          badge: "Nivell 1 • Estalvi directe",
+          prompt: `"Aquest article de ${price} € té un ${pct}% de descompte. Quants euros m'estalvio?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} €`,
+          tagText: `-${pct}%`,
+          tagBg: "bg-brand-coral",
+          answer: saved,
+          unit: "€",
+          options: buildNumericOptions(saved, "€", [price - saved, price / 10, price / 2]),
+          barMode: "discount",
+          payPct: 100 - pct,
+          diffPct: pct,
+          steps: [
+            `Identifica el preu inicial (${price} €) i el descompte (${pct}%).`,
+            `Calcula el ${pct}% de ${price} €: (${price} × ${pct}) ÷ 100.`,
+            `L'estalvi directe és de ${formatEuro(saved)}.`
+          ],
+          explanation: `El ${pct}% de ${price} € són ${formatEuro(saved)} d'estalvi.`
+        };
+      } else if (lvl === 2) {
+        // Nivell 2: Preu final rebaixat (10%, 20%, 25%, 50%)
+        const price = pick([20, 40, 50, 60, 80, 100, 120]);
+        let pct = pick([10, 20, 25, 50]);
+        if (pct === 25 && price % 4 !== 0) pct = 20;
+        const saved = +(price * (pct / 100)).toFixed(2);
+        const finalP = +(price - saved).toFixed(2);
+
+        c = {
+          badge: "Nivell 2 • Preu final rebaixat",
+          prompt: `"Vull comprar aquest article de ${price} € amb un ${pct}% de descompte. Quant pago al final?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} €`,
+          tagText: `-${pct}%`,
+          tagBg: "bg-brand-coral",
+          answer: finalP,
+          unit: "€",
+          options: buildNumericOptions(finalP, "€", [saved, price + saved, price - 10]),
+          barMode: "discount",
+          payPct: 100 - pct,
+          diffPct: pct,
+          steps: [
+            `Calcula primer el descompte: ${pct}% de ${price} € = ${formatEuro(saved)}.`,
+            `Resta l'estalvi al preu inicial: ${price} € − ${formatEuro(saved)}.`,
+            `El preu final a pagar és ${formatEuro(finalP)} (pagues el ${100 - pct}%).`
+          ],
+          explanation: `${price} € − ${formatEuro(saved)} (${pct}%) = ${formatEuro(finalP)}.`
+        };
+      } else if (lvl === 3) {
+        // Nivell 3: Càlcul amb l'IVA (+4%, +10%, +21%)
+        const price = pick([25, 40, 50, 80, 100, 150, 200]);
+        const pct = pick([4, 10, 21]);
+        const iva = +(price * (pct / 100)).toFixed(2);
+        const total = +(price + iva).toFixed(2);
+
+        c = {
+          badge: `Nivell 3 • Suma l'IVA (+${pct}%)`,
+          prompt: `"El preu sense impostos és de ${price} €. Si hi sumem el ${pct}% d'IVA, quant costa en total?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} € + IVA`,
+          tagText: `+${pct}%`,
+          tagBg: "bg-amber-500",
+          answer: total,
+          unit: "€",
+          options: buildNumericOptions(total, "€", [iva, price - iva, price + pct]),
+          barMode: "increase",
+          payPct: 100,
+          diffPct: pct,
+          steps: [
+            `Calcula l'import de l'IVA: ${pct}% de ${price} € = (${price} × ${pct}) ÷ 100 = ${formatEuro(iva)}.`,
+            `Com que és un impost, se suma al preu base: ${price} € + ${formatEuro(iva)}.`,
+            `Total amb IVA inclòs: ${formatEuro(total)}.`
+          ],
+          explanation: `El ${pct}% de ${price} € són ${formatEuro(iva)}. ${price} € + ${formatEuro(iva)} = ${formatEuro(total)}.`
+        };
+      } else if (lvl === 4) {
+        // Nivell 4: Percentatges variats (15%, 30%, 35%, 40%, 75%)
+        const price = pick([40, 60, 80, 100, 120, 200]);
+        const pct = pick([15, 30, 35, 40, 75]);
+        const saved = +(price * (pct / 100)).toFixed(2);
+        const finalP = +(price - saved).toFixed(2);
+
+        c = {
+          badge: "Nivell 4 • Percentatges variats",
+          prompt: `"Aquest producte de ${price} € té una etiqueta del -${pct}%. Quin és el preu rebaixat?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} €`,
+          tagText: `-${pct}%`,
+          tagBg: "bg-brand-coral",
+          answer: finalP,
+          unit: "€",
+          options: buildNumericOptions(finalP, "€", [saved, price - pct, price + saved]),
+          barMode: "discount",
+          payPct: 100 - pct,
+          diffPct: pct,
+          steps: [
+            `Troba l'1% dividint entre 100: ${price} € ÷ 100 = ${formatEuro(price / 100)}.`,
+            `Multiplica per ${pct} per saber el descompte: ${pct} × ${formatEuro(price / 100)} = ${formatEuro(saved)}.`,
+            `Resta-ho del preu inicial: ${price} € − ${formatEuro(saved)} = ${formatEuro(finalP)}.`
+          ],
+          explanation: `El ${pct}% de ${price} € és ${formatEuro(saved)}. ${price} € − ${formatEuro(saved)} = ${formatEuro(finalP)}.`
+        };
+      } else if (lvl === 5) {
+        // Nivell 5: Quin percentatge m'han aplicat?
+        const cases = [
+          { orig: 80, final: 60, pct: 25 },
+          { orig: 50, final: 40, pct: 20 },
+          { orig: 100, final: 65, pct: 35 },
+          { orig: 40, final: 30, pct: 25 },
+          { orig: 60, final: 30, pct: 50 },
+          { orig: 200, final: 140, pct: 30 },
+          { orig: 80, final: 68, pct: 15 }
+        ];
+        const ch = pick(cases);
+        const saved = ch.orig - ch.final;
+
+        c = {
+          badge: "Nivell 5 • Detectiu de percentatges",
+          prompt: `"Abans costava ${ch.orig} € i ara el venen per ${ch.final} €. Quin percentatge de descompte han aplicat?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${ch.orig}€ → ${ch.final}€`,
+          tagText: "-?%",
+          tagBg: "bg-brand-purple",
+          answer: ch.pct,
+          unit: "%",
+          options: buildNumericOptions(ch.pct, "%", [saved, 100 - ch.pct, ch.pct + 10]),
+          barMode: "discount",
+          payPct: 100 - ch.pct,
+          diffPct: ch.pct,
+          steps: [
+            `Calcula quants euros t'han rebaixat: ${ch.orig} € − ${ch.final} € = ${saved} € d'estalvi.`,
+            `Divideix l'estalvi entre el preu original: ${saved} ÷ ${ch.orig} = ${(saved / ch.orig).toFixed(2)}.`,
+            `Multiplica per 100 per passar-ho a percentatge: ${(saved / ch.orig).toFixed(2)} × 100 = ${ch.pct}%.`
+          ],
+          explanation: `Han rebaixat ${saved} € sobre ${ch.orig} € (${saved}/${ch.orig} = ${ch.pct}%).`
+        };
+      } else if (lvl === 6) {
+        // Nivell 6: Preu original amagat (càlcul invers)
+        const cases = [
+          { orig: 80, pct: 25, final: 60 },
+          { orig: 50, pct: 20, final: 40 },
+          { orig: 100, pct: 30, final: 70 },
+          { orig: 60, pct: 50, final: 30 },
+          { orig: 120, pct: 25, final: 90 },
+          { orig: 200, pct: 40, final: 120 }
+        ];
+        const ch = pick(cases);
+        const paidPct = 100 - ch.pct;
+
+        c = {
+          badge: "Nivell 6 • Preu original amagat",
+          prompt: `"Ja li han aplicat un -${ch.pct}% i ara val ${ch.final} €. Quant valia abans de les rebaixes?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `? € → ${ch.final} €`,
+          tagText: `-${ch.pct}%`,
+          tagBg: "bg-brand-purple",
+          answer: ch.orig,
+          unit: "€",
+          options: buildNumericOptions(ch.orig, "€", [ch.final + ch.pct, +(ch.final * (1 + ch.pct / 100)).toFixed(2), ch.final + 10]),
+          barMode: "discount",
+          payPct: paidPct,
+          diffPct: ch.pct,
+          steps: [
+            `Atenció! Si han rebaixat un ${ch.pct}%, els ${ch.final} € que pagues representen el ${paidPct}% del preu original.`,
+            `Troba quant val l'1%: ${ch.final} € ÷ ${paidPct} = ${formatEuro(ch.final / paidPct)}.`,
+            `Multiplica per 100 per recuperar el 100% inicial: ${formatEuro(ch.final / paidPct)} × 100 = ${ch.orig} €.`
+          ],
+          explanation: `${ch.final} € és el ${paidPct}% del preu original. ${ch.final} ÷ ${(paidPct / 100).toFixed(2)} = ${ch.orig} €.`
+        };
+      } else if (lvl === 7) {
+        // Nivell 7: Quina botiga és més barata? (Comparador de dues ofertes)
+        const offers = [
+          { pA: 80, dA: 25, fA: 60, pB: 75, dB: 20, fB: 60, tie: false, pA2: 80, dA2: 25, fA2: 60, pB2: 90, dB2: 30, fB2: 63 },
+          { pA2: 100, dA2: 30, fA2: 70, pB2: 90, dB2: 20, fB2: 72 },
+          { pA2: 60, dA2: 25, fA2: 45, pB2: 50, dB2: 10, fB2: 45 },
+          { pA2: 120, dA2: 25, fA2: 90, pB2: 100, dB2: 15, fB2: 85 },
+          { pA2: 50, dA2: 20, fA2: 40, pB2: 60, dB2: 30, fB2: 42 }
+        ];
+        // Fem sempre una comparació amb guanyador clar
+        const scenarios = [
+          { pA: 80, dA: 25, fA: 60, pB: 90, dB: 30, fB: 63 },
+          { pA: 100, dA: 30, fA: 70, pB: 90, dB: 20, fB: 72 },
+          { pA: 120, dA: 25, fA: 90, pB: 100, dB: 15, fB: 85 },
+          { pA: 50, dA: 20, fA: 40, pB: 60, dB: 30, fB: 42 },
+          { pA: 200, dA: 40, fA: 120, pB: 150, dB: 20, fB: 120 }
+        ].slice(0, 4);
+
+        const s = pick(scenarios);
+        const cheaperPrice = Math.min(s.fA, s.fB);
+        const winnerName = s.fA < s.fB ? "Botiga A" : "Botiga B";
+
+        c = {
+          badge: "Nivell 7 • Comparador d'ofertes",
+          prompt: `"A la Botiga A val ${s.pA} € (-${s.dA}%) i a la Botiga B val ${s.pB} € (-${s.dB}%). Quin és el preu més barat de les dues?"`,
+          itemName: `${item.name} (A vs B)`,
+          itemIcon: item.icon,
+          origText: `A: ${s.pA}€ | B: ${s.pB}€`,
+          tagText: `-${s.dA}% vs -${s.dB}%`,
+          tagBg: "bg-brand-purple",
+          answer: cheaperPrice,
+          unit: "€",
+          options: buildNumericOptions(cheaperPrice, "€", [Math.max(s.fA, s.fB), s.pA - s.dA, s.pB - s.dB]),
+          barMode: "compare",
+          payPct: Math.round((s.fA / Math.max(s.pA, s.pB)) * 100),
+          diffPct: Math.round((s.fB / Math.max(s.pA, s.pB)) * 100),
+          leftText: `Botiga A: ${s.pA} € (-${s.dA}%)`,
+          rightText: `Botiga B: ${s.pB} € (-${s.dB}%)`,
+          steps: [
+            `Calcula la Botiga A: ${s.pA} € menys el ${s.dA}% (${s.pA - s.fA} €) = ${s.fA} €.`,
+            `Calcula la Botiga B: ${s.pB} € menys el ${s.dB}% (${s.pB - s.fB} €) = ${s.fB} €.`,
+            `Compara els dos resultats: la més barata és la ${winnerName} amb ${cheaperPrice} €.`
+          ],
+          explanation: `Botiga A = ${s.fA} € i Botiga B = ${s.fB} €. La millor oferta és ${cheaperPrice} € (${winnerName}).`
+        };
+      } else if (lvl === 8) {
+        // Nivell 8: Rebaixa sobre rebaixa (descomptes encadenats)
+        const price = pick([50, 80, 100, 120, 200]);
+        const d1 = pick([20, 25, 50]);
+        const d2 = pick([10, 20]);
+        const afterFirst = +(price * (1 - d1 / 100)).toFixed(2);
+        const finalP = +(afterFirst * (1 - d2 / 100)).toFixed(2);
+        const trapWrong = +(price * (1 - (d1 + d2) / 100)).toFixed(2);
+
+        c = {
+          badge: "Nivell 8 • Descomptes encadenats",
+          prompt: `"Té un -${d1}% de rebaixa i a caixa fan un -${d2}% EXTRA sobre el preu rebaixat! Si valia ${price} €, quant pagues?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} €`,
+          tagText: `-${d1}% i -${d2}%`,
+          tagBg: "bg-brand-coral",
+          answer: finalP,
+          unit: "€",
+          options: buildNumericOptions(finalP, "€", [trapWrong, afterFirst, price - afterFirst]),
+          barMode: "chained",
+          payPct: Math.round((finalP / price) * 100),
+          midPct: Math.round(((afterFirst - finalP) / price) * 100),
+          diffPct: d1,
+          steps: [
+            `⚠️ Compte: -${d1}% i -${d2}% NO és -${d1 + d2}%! S'apliquen d'un en un.`,
+            `Pas 1 (primer descompte -${d1}%): ${price} € − ${formatEuro(price - afterFirst)} = ${formatEuro(afterFirst)}.`,
+            `Pas 2 (aplica el -${d2}% sobre ${formatEuro(afterFirst)}): ${formatEuro(afterFirst)} − ${formatEuro(afterFirst - finalP)} = ${formatEuro(finalP)}.`
+          ],
+          explanation: `Primer -${d1}% dona ${formatEuro(afterFirst)}, i després -${d2}% sobre ${formatEuro(afterFirst)} dona ${formatEuro(finalP)} (no ${formatEuro(trapWrong)}!).`
+        };
+      } else if (lvl === 9) {
+        // Nivell 9: Black Friday + IVA (doble pas combinat)
+        const price = pick([50, 80, 100, 120, 200]);
+        const disc = pick([20, 25, 50]);
+        const discounted = +(price * (1 - disc / 100)).toFixed(2);
+        const iva = +(discounted * 0.21).toFixed(2);
+        const finalP = +(discounted + iva).toFixed(2);
+
+        c = {
+          badge: "Nivell 9 • Black Friday + 21% IVA",
+          prompt: `"Preu sense IVA: ${price} €. Apliquem un -${disc}% de Black Friday i després sumem el 21% d'IVA. Total a cobrar?"`,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: `${price} € (sense IVA)`,
+          tagText: `-${disc}% +21%`,
+          tagBg: "bg-amber-500",
+          answer: finalP,
+          unit: "€",
+          options: buildNumericOptions(finalP, "€", [discounted, +(price * 1.21).toFixed(2), +(discounted + 21).toFixed(2)]),
+          barMode: "chained",
+          payPct: Math.round((discounted / (price * 1.21)) * 100),
+          midPct: Math.round((iva / (price * 1.21)) * 100),
+          diffPct: disc,
+          steps: [
+            `Pas 1 (aplica el descompte del -${disc}%): ${price} € − ${formatEuro(price - discounted)} = ${formatEuro(discounted)}.`,
+            `Pas 2 (calcula el 21% d'IVA sobre ${formatEuro(discounted)}): ${formatEuro(discounted)} × 0,21 = ${formatEuro(iva)}.`,
+            `Pas 3 (suma-ho tot): ${formatEuro(discounted)} + ${formatEuro(iva)} = ${formatEuro(finalP)}.`
+          ],
+          explanation: `Amb el -${disc}% queda en ${formatEuro(discounted)}; en sumar el 21% d'IVA (${formatEuro(iva)}) fa ${formatEuro(finalP)}.`
+        };
+      } else {
+        // Nivell 10: Repte extrem del cap de botiga (preu sense IVA abans de rebaixa o marge complet)
+        const extremeCases = [
+          {
+            prompt: `"Tiquet d'auditoria: El client ha pagat 96,80 € amb el 21% d'IVA inclòs, després d'un descompte del 20%. Quin era el preu base original sense IVA ni descompte?"`,
+            origText: `? € → 96,80 €`,
+            tagText: "👑 Cap de botiga",
+            answer: 100,
+            unit: "€",
+            steps: [
+              `Pas 1 (treu el 21% d'IVA dividint entre 1,21): 96,80 € ÷ 1,21 = 80,00 € (preu rebaixat sense IVA).`,
+              `Pas 2 (recupera el preu abans del -20% dividint entre 0,80): 80,00 € ÷ 0,80 = 100,00 €.`,
+              `Comprovació: 100 € − 20% = 80 €; i 80 € + 21% d'IVA = 96,80 €!`
+            ],
+            explanation: `96,80 € ÷ 1,21 = 80 € (sense IVA), i 80 € ÷ 0,80 = 100 € era el preu inicial.`
+          },
+          {
+            prompt: `"Repte de marge: Comprem aquest article a fàbrica per 50 €, li pugem un +60% de marge comercial i després el rebaixem un -25% per rebaixes. A quin preu el venem?"`,
+            origText: `Cost: 50 €`,
+            tagText: "+60% i -25%",
+            answer: 60,
+            unit: "€",
+            steps: [
+              `Pas 1 (suma el +60% de marge al cost de 50 €): 50 € + 30 € = 80 € (preu d'aparador).`,
+              `Pas 2 (aplica el -25% de rebaixa sobre els 80 €): 80 € ÷ 4 = 20 € de descompte.`,
+              `Pas 3 (preu final de venda): 80 € − 20 € = 60 € (encara guanyem 10 € per unitat!).`
+            ],
+            explanation: `50 € + 60% = 80 € a l'aparador; 80 € − 25% = 60 € de preu final.`
+          },
+          {
+            prompt: `"Control de caixa: Un article de 150 € té un -20% de descompte, però en passar per caixa ens han cobrat 135 €. Quin % de descompte real ens han fet per error?"`,
+            origText: `150 € → 135 €`,
+            tagText: "Error de caixa",
+            answer: 10,
+            unit: "%",
+            steps: [
+              `Pas 1 (mira quants euros ens han descomptat realment): 150 € − 135 € = 15 €.`,
+              `Pas 2 (compara 15 € respecte al preu inicial de 150 €): 15 ÷ 150 = 0,10.`,
+              `Pas 3 (passa-ho a %): 0,10 × 100 = 10% (ens falten 15 € més de rebaixa!).`
+            ],
+            explanation: `De 150 € a 135 € només han rebaixat 15 €, que és un 10% (en lloc del 20%).`
+          }
+        ];
+
+        const ex = pick(extremeCases);
+        c = {
+          badge: "Nivell 10 • Repte extrem del cap de botiga",
+          prompt: ex.prompt,
+          itemName: item.name,
+          itemIcon: item.icon,
+          origText: ex.origText,
+          tagText: ex.tagText,
+          tagBg: "bg-slate-800",
+          answer: ex.answer,
+          unit: ex.unit,
+          options: buildNumericOptions(ex.answer, ex.unit, [ex.answer + 20, Math.max(5, ex.answer - 15), ex.answer + 8]),
+          barMode: "discount",
+          payPct: 75,
+          diffPct: 25,
+          steps: ex.steps,
+          explanation: ex.explanation
+        };
+      }
+
+      gameState.currentChallenge = c;
+
+      // Pintar UI del repte
+      document.getElementById('challenge-badge').textContent = c.badge;
+      document.getElementById('challenge-prompt').textContent = c.prompt;
+      document.getElementById('challenge-item-icon').textContent = c.itemIcon;
+      document.getElementById('challenge-item-name').textContent = c.itemName;
+      document.getElementById('challenge-item-orig').textContent = c.origText;
+
+      const tagEl = document.getElementById('challenge-tag-pill');
+      tagEl.textContent = c.tagText;
+      tagEl.className = `ml-1 px-3 py-1.5 rounded-xl text-white font-display font-bold text-base sm:text-lg shadow-sm ${c.tagBg}`;
+
+      // Pintar l'ajuda guiada pas a pas amb les dades d'aquest repte
+      const stepsList = document.getElementById('guided-steps-list');
+      stepsList.innerHTML = c.steps.map(st => `<li>${st}</li>`).join('');
+
+      // Barra visual d'ajuda adaptada
+      const leftLbl = document.getElementById('game-aid-left');
+      const centerLbl = document.getElementById('game-aid-center');
+      const rightLbl = document.getElementById('game-aid-right');
+      const payBar = document.getElementById('game-aid-bar-pay');
+      const midBar = document.getElementById('game-aid-bar-mid');
+      const diffBar = document.getElementById('game-aid-bar-diff');
+
+      centerLbl.classList.add('hidden');
+      midBar.classList.add('hidden');
+
+      if (c.barMode === 'discount') {
+        leftLbl.textContent = `Pagues: ${c.payPct}%`;
+        rightLbl.textContent = `Descompte: ${c.diffPct}%`;
+        payBar.style.width = `${Math.max(c.payPct, 12)}%`;
+        payBar.textContent = `${c.payPct}%`;
+        diffBar.style.width = `${Math.max(c.diffPct, 12)}%`;
+        diffBar.className = "h-full bg-striped-coral rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all";
+        diffBar.textContent = `-${c.diffPct}%`;
+      } else if (c.barMode === 'increase') {
+        leftLbl.textContent = `Preu base: 100%`;
+        rightLbl.textContent = `IVA afegit: +${c.diffPct}%`;
+        payBar.style.width = `80%`;
+        payBar.textContent = `100%`;
+        diffBar.style.width = `20%`;
+        diffBar.className = "h-full bg-striped-amber rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all";
+        diffBar.textContent = `+${c.diffPct}%`;
+      } else if (c.barMode === 'compare') {
+        leftLbl.textContent = c.leftText;
+        rightLbl.textContent = c.rightText;
+        payBar.style.width = `50%`;
+        payBar.textContent = `Oferta A`;
+        diffBar.style.width = `50%`;
+        diffBar.className = "h-full bg-brand-purple/80 rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all";
+        diffBar.textContent = `Oferta B`;
+      } else if (c.barMode === 'chained') {
+        leftLbl.textContent = `Part final`;
+        centerLbl.textContent = `Pas 2`;
+        centerLbl.classList.remove('hidden');
+        rightLbl.textContent = `Pas 1 (-${c.diffPct}%)`;
+        payBar.style.width = `${Math.max(c.payPct, 25)}%`;
+        payBar.textContent = `Final`;
+        midBar.classList.remove('hidden');
+        midBar.style.width = `${Math.max(c.midPct || 15, 18)}%`;
+        midBar.textContent = `Pas 2`;
+        diffBar.style.width = `${Math.max(c.diffPct, 20)}%`;
+        diffBar.className = "h-full bg-striped-coral rounded-md ml-0.5 flex items-center justify-center text-white font-black text-xs transition-all";
+        diffBar.textContent = `-${c.diffPct}%`;
+      }
+
+      document.getElementById('game-answer-unit').textContent = c.unit;
+
+      // Generar 4 botons gegants d'opció múltiple
+      document.getElementById('game-mc-grid').innerHTML = c.options.map(opt => `
+        <button onclick="submitGameAnswer(${opt.value})"
+          class="py-3 sm:py-3.5 px-3 rounded-2xl border-2 border-slate-200 hover:border-brand-purple bg-white hover:bg-indigo-50/40 font-display font-bold text-lg sm:text-xl text-slate-800 hover:text-brand-purple transition-all shadow-xs active:scale-95">
+          ${opt.label}
+        </button>
+      `).join('');
+    }
+
+    function checkNumericAnswer() {
+      const val = parseFloat(document.getElementById('game-answer-input').value.replace(',', '.'));
+      if (isNaN(val)) return;
+      submitGameAnswer(val);
+    }
+
+    function submitGameAnswer(chosenVal) {
+      if (gameState.answered || !gameState.currentChallenge) return;
+      gameState.answered = true;
+      gameState.totalAttempts++;
+
+      const c = gameState.currentChallenge;
+      const isCorrect = Math.abs(chosenVal - c.answer) < 0.06;
+      const banner = document.getElementById('game-feedback-banner');
+
+      if (isCorrect) {
+        gameState.correctCount++;
+        gameState.streak++;
+        gameState.completedLevels.add(gameState.level);
+
+        const pts = gameState.level * 10 + (gameState.streak >= 3 ? 5 : 0);
+        gameState.score += pts;
+
+        if (typeof confetti === 'function' && (gameState.streak % 3 === 0 || gameState.level === 10)) {
+          confetti({ particleCount: 55, spread: 55, origin: { y: 0.75 } });
+        }
+
+        const hasNextLevel = gameState.level < 10;
+        banner.className = "rounded-xl px-3.5 py-2.5 border-2 border-emerald-300 bg-emerald-50 flex flex-wrap items-center justify-between gap-2 shrink-0 animate-pop";
+        banner.innerHTML = `
+          <div class="text-xs sm:text-sm font-extrabold text-emerald-900 flex-grow">
+            <span class="text-base">🎉 Correcte (+${pts} pts)!</span> ${c.explanation}
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="generateNewChallenge()"
+              class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-100 text-emerald-800 font-extrabold text-xs">
+              Un altre igual
+            </button>
+            ${hasNextLevel ? `
+              <button onclick="setGameLevel(${gameState.level + 1})"
+                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
+                Nivell ${gameState.level + 1} ➔
+              </button>
+            ` : `
+              <button onclick="generateNewChallenge()"
+                class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs">
+                Nou repte 👑
+              </button>
+            `}
+          </div>
+        `;
+      } else {
+        gameState.streak = 0;
+        // Obrim automàticament la pista guiada quan hi ha un error per aprendre-hi
+        if (!gameState.guidedHintOn) {
+          toggleGuidedHint();
+        }
+        banner.className = "rounded-xl px-3.5 py-2.5 border-2 border-rose-300 bg-rose-50 flex items-center justify-between gap-3 shrink-0 animate-pop";
+        banner.innerHTML = `
+          <div class="text-xs sm:text-sm font-extrabold text-rose-900">
+            <span class="text-base">🧐 Era ${formatClean(c.answer)} ${c.unit}.</span> ${c.explanation}
+          </div>
+          <button onclick="generateNewChallenge()"
+            class="px-3.5 py-1.5 rounded-xl bg-brand-coral hover:bg-rose-600 text-white font-extrabold text-xs shrink-0 shadow-xs">
+            Torna-ho a provar ➔
+          </button>
+        `;
+      }
+
+      banner.classList.remove('hidden');
+      updateGameStats();
+    }
+
+    // ---------------------------------------------------------
+    // 6. INICIALITZACIÓ
+    // ---------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      renderProductsGrid();
+      renderDiscountPills();
+      updateAulaCalculations();
+      renderLevelSelector();
+      renderBadges();
+    });
+  </script>
+</body>
+</html>
