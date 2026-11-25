@@ -136,139 +136,154 @@
   <header class="bg-white rounded-2xl px-3.5 py-2 shadow-sm border border-slate-200/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
     <!-- Marca -->
     <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 rounded-xl bg-brand-purple text-white flex items-center justify-center text-xl shadow-sm">
+      <div class="w-9 h-9 rounded-xl bg-brand-purple text-white flex items-center justify-center text-xl shadow-sm shrink-0">
         🛍️
       </div>
-      <div class="flex items-baseline gap-2.5">
-        <h1 class="font-display text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
-          La botiga dels percentatges
-        </h1>
-      </div>
+      <h1 class="font-display text-base sm:text-xl font-bold text-slate-800 tracking-tight">
+        La botiga dels percentatges
+      </h1>
     </div>
 
     <!-- Controls centrals: Mode Aula vs Mode Joc -->
-    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+    <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto justify-center">
       <button id="tab-aula" onclick="switchMainMode('aula')"
-        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm">
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm">
         <span>🏫</span>
         <span>Explicació a l'aula</span>
       </button>
       <button id="tab-joc" onclick="switchMainMode('joc')"
-        class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900">
+        class="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900">
         <span>🎮</span>
         <span>Joc del caixer/a</span>
-        <span id="nav-badge-points" class="ml-0.5 px-2 py-0.2 text-[11px] rounded-full bg-amber-100 text-amber-800 font-black">0 pts</span>
+        <span id="nav-badge-points" class="ml-1 px-2 py-0.5 text-[11px] rounded-full bg-amber-100 text-amber-800 font-black">0 pts</span>
       </button>
-    </div>
-
-    <!-- Espai d'equilibri dreta -->
-    <div class="hidden sm:flex items-center gap-1.5">
-      <span class="px-3 py-1 rounded-xl bg-indigo-50 text-brand-purple font-extrabold text-xs">
-        🧮 Matemàtiques aplicades
-      </span>
     </div>
   </header>
 
   <!-- ========================================================= -->
-  <!-- VISTA 1: EXPLICACIÓ A L'AULA (PANELL DUAL PANORÀMIC)      -->
+  <!-- VISTA 1: EXPLICACIÓ A L'AULA (RESPONSIVE PANORÀMIC)       -->
   <!-- ========================================================= -->
-  <main id="view-aula" class="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5">
-    
-    <!-- COLUMNA ESQUERRA (7 cols ~58%): APARADOR + CARTELLS DE PERCENTATGE -->
-    <section class="lg:col-span-7 bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-0 gap-3">
+  <main id="view-aula" class="flex-grow min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-2.5 animate-pop overflow-y-auto lg:overflow-hidden">
+    <!-- COLUMNA ESQUERRA (7 cols ~58%): APARADOR PROTAGONISTA + CARTELLS DE PERCENTATGE -->
+    <section class="lg:col-span-7 bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-slate-200/80 flex flex-col justify-between min-h-0 gap-3">
       
-      <!-- BLOC 1: APARADOR DE PRODUCTES -->
-      <div class="flex flex-col min-h-0 flex-grow">
-        <!-- Capçalera Aparador + Filtres de categoria + Preu lliure -->
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 shrink-0">
+      <!-- BLOC 1: UN SOL ARTICLE PROTAGONISTA MOLT GRAN -->
+      <div class="flex flex-col min-h-0 flex-grow justify-between gap-2.5">
+        <!-- Capçalera Aparador + Selector desplegable + Aleatori + Preu lliure -->
+        <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
           <div class="flex items-center gap-1.5">
-            <span class="text-lg">🛒</span>
-            <h2 class="font-display text-base sm:text-lg font-bold text-slate-800">1. Tria un article:</h2>
+            <span class="text-xl">🛒</span>
+            <h2 class="font-display text-base sm:text-xl font-bold text-slate-800">1. Article seleccionat:</h2>
           </div>
 
-          <!-- Filtres ràpids per categoria -->
-          <div class="flex flex-wrap items-center gap-1">
-            <button onclick="setCategoryFilter('all')" id="cat-btn-all"
-              class="cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-brand-purple text-white transition-all">
-              Tot (16)
+          <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+            <!-- Selector ràpid entre els 16 productes -->
+            <select id="product-quick-select" onchange="selectProduct(Number(this.value))"
+              class="flex-grow sm:flex-initial px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-slate-100 text-slate-700 border border-slate-200 focus:outline-none focus:border-brand-purple cursor-pointer">
+              <!-- Omplert per JS -->
+            </select>
+
+            <button onclick="pickRandomAulaProduct()" title="Canvia a un article a l'atzar"
+              class="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-brand-purpleLight text-brand-purple hover:bg-indigo-100 border border-indigo-200 transition-all shrink-0">
+              🎲 Aleatori
             </button>
-            <button onclick="setCategoryFilter('moda')" id="cat-btn-moda"
-              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-              👕 Moda
-            </button>
-            <button onclick="setCategoryFilter('tech')" id="cat-btn-tech"
-              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-              🎮 Tech
-            </button>
-            <button onclick="setCategoryFilter('esport')" id="cat-btn-esport"
-              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-              ⚽ Esport
-            </button>
-            <button onclick="setCategoryFilter('escola')" id="cat-btn-escola"
-              class="cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-              ✏️ Escola
-            </button>
+
             <button onclick="toggleCustomBar()"
-              class="ml-1 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 transition-all">
-              + Preu lliure
+              class="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 transition-all shrink-0">
+              ✏️ Preu lliure
             </button>
           </div>
         </div>
 
         <!-- Barra inline per posar preu personalitzat a l'instant -->
-        <div id="custom-inline-bar" class="hidden mb-2 p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2 shrink-0 animate-pop">
-          <span class="text-sm font-extrabold text-amber-800 shrink-0">🏷️ Article:</span>
+        <div id="custom-inline-bar" class="hidden p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0 animate-pop">
+          <span class="text-xs sm:text-sm font-extrabold text-amber-800 shrink-0">🏷️ Article:</span>
           <input id="custom-name-input" type="text" value="Article personalitzat"
-            class="px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-xs font-bold text-slate-800 flex-grow min-w-0 focus:outline-none focus:border-brand-purple" />
-          <div class="relative flex items-center shrink-0">
-            <input id="custom-price-input" type="number" min="1" max="9999" value="80"
-              onkeydown="if(event.key==='Enter') applyCustomProduct()"
-              class="w-24 px-2.5 py-1 pr-6 rounded-lg border border-amber-300 bg-white text-xs font-black text-brand-purple focus:outline-none focus:border-brand-purple" />
-            <span class="absolute right-2 text-xs font-black text-brand-purple">€</span>
+            class="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white text-xs sm:text-sm font-bold text-slate-800 flex-grow min-w-[120px] focus:outline-none focus:border-brand-purple" />
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div class="relative flex items-center shrink-0">
+              <input id="custom-price-input" type="number" min="1" max="9999" value="80"
+                onkeydown="if(event.key==='Enter') applyCustomProduct()"
+                class="w-24 px-2.5 py-1.5 pr-6 rounded-lg border border-amber-300 bg-white text-xs sm:text-sm font-black text-brand-purple focus:outline-none focus:border-brand-purple" />
+              <span class="absolute right-2 text-xs sm:text-sm font-black text-brand-purple">€</span>
+            </div>
+            <button onclick="applyCustomProduct()"
+              class="px-3.5 py-1.5 rounded-lg bg-brand-purple text-white text-xs sm:text-sm font-extrabold hover:bg-brand-purpleDark shrink-0">
+              Posar
+            </button>
           </div>
-          <button onclick="applyCustomProduct()"
-            class="px-3 py-1 rounded-lg bg-brand-purple text-white text-xs font-extrabold hover:bg-brand-purpleDark shrink-0">
-            Posar
-          </button>
         </div>
 
-        <!-- Graella compacta de 4x4 (16 productes visibles d'una tirada en pantalla gran) -->
-        <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 overflow-y-auto pr-0.5 flex-grow content-start">
-          <!-- Omplert per JS -->
+        <!-- Targeta gegant d'un sol article amb fletxes Anterior / Següent -->
+        <div class="flex-grow flex items-center justify-between gap-2 sm:gap-5 bg-gradient-to-br from-slate-50 to-indigo-50/40 rounded-3xl border-2 border-brand-purple/25 p-3 sm:p-6 shadow-xs min-h-0">
+          <button onclick="cycleAulaProduct(-1)" aria-label="Article anterior"
+            class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-white hover:bg-brand-purple hover:text-white text-slate-700 border-2 border-slate-200 hover:border-brand-purple font-display font-bold text-lg sm:text-2xl flex items-center justify-center shadow-xs transition-all shrink-0 active:scale-95">
+            ◀
+          </button>
+
+          <div id="featured-product-card" class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-7 text-center sm:text-left flex-grow min-w-0">
+            <div id="featured-product-icon" class="w-20 h-20 sm:w-28 sm:h-28 xl:w-32 xl:h-32 rounded-3xl bg-white border-2 border-indigo-100 shadow-sm flex items-center justify-center text-5xl sm:text-6xl xl:text-7xl shrink-0 transition-transform">
+              🧥
+            </div>
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                <span id="featured-product-counter" class="px-2.5 py-0.5 rounded-full bg-brand-purpleLight text-brand-purple font-black text-xs">
+                  Article 1 de 16
+                </span>
+                <span id="featured-product-cat" class="px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-500 font-extrabold text-xs">
+                  👕 Moda
+                </span>
+              </div>
+              <h3 id="featured-product-name" class="font-display text-2xl sm:text-3xl xl:text-4xl font-bold text-slate-800 leading-tight truncate">
+                Dessuadora
+              </h3>
+              <div class="flex items-baseline justify-center sm:justify-start gap-2 pt-0.5">
+                <span class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-400">Preu inicial:</span>
+                <span id="featured-product-price" class="font-display text-3xl sm:text-4xl xl:text-5xl font-bold text-brand-purple leading-none">
+                  40 €
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="cycleAulaProduct(1)" aria-label="Article següent"
+            class="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl bg-white hover:bg-brand-purple hover:text-white text-slate-700 border-2 border-slate-200 hover:border-brand-purple font-display font-bold text-lg sm:text-2xl flex items-center justify-center shadow-xs transition-all shrink-0 active:scale-95">
+            ▶
+          </button>
         </div>
       </div>
 
       <!-- BLOC 2: CARTELLS DE PERCENTATGE (ETIQUETES + LLISCADOR INLINE) -->
-      <div class="pt-2.5 border-t border-slate-100 shrink-0 space-y-2">
+      <div class="pt-3 border-t border-slate-100 shrink-0 space-y-2.5">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-1.5">
-            <span class="text-lg">🏷️</span>
-            <h2 id="step2-title" class="font-display text-base sm:text-lg font-bold text-slate-800">2. Tria el cartell de descompte:</h2>
+            <span class="text-xl">🏷️</span>
+            <h2 id="step2-title" class="font-display text-base sm:text-xl font-bold text-slate-800">2. Tria el cartell de descompte:</h2>
           </div>
 
           <!-- Commutador Rebaixes vs IVA/Augment -->
-          <div class="inline-flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+          <div class="inline-flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button id="btn-op-discount" onclick="setOperationType('discount')"
-              class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all bg-brand-coral text-white shadow-sm">
+              class="px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-extrabold transition-all bg-brand-coral text-white shadow-sm">
               🏷️ Rebaixes (-%)
             </button>
             <button id="btn-op-increase" onclick="setOperationType('increase')"
-              class="px-2.5 py-1 rounded-lg text-xs font-extrabold transition-all text-slate-600 hover:text-slate-900">
+              class="px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-extrabold transition-all text-slate-600 hover:text-slate-900">
               🧾 IVA / Augment (+%)
             </button>
           </div>
         </div>
 
-        <!-- Etiquetes predefinides + Slider en la mateixa fila compacta -->
-        <div class="flex flex-wrap items-center gap-1.5" id="discount-pills-container">
+        <!-- Etiquetes predefinides ben grans -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2" id="discount-pills-container">
           <!-- Omplert per JS -->
         </div>
 
         <!-- Lliscador ràpid 1% - 95% -->
-        <div class="flex items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80">
-          <span class="text-xs font-extrabold text-slate-600 shrink-0">🎚️ Qualsevol %:</span>
-          <input id="percent-slider" type="range" min="1" max="95" value="25" oninput="handleSliderChange(this.value)" class="flex-grow" />
-          <span id="slider-badge" class="px-2.5 py-0.5 rounded-lg font-display font-bold text-sm bg-brand-coral text-white min-w-[64px] text-center shadow-sm">
+        <div class="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/80">
+          <span class="text-xs sm:text-sm font-extrabold text-slate-600 shrink-0">🎚️ Qualsevol %:</span>
+          <input id="percent-slider" type="range" min="1" max="95" value="25" oninput="handleSliderChange(this.value)" class="flex-grow min-w-0" />
+          <span id="slider-badge" class="px-3 py-1 rounded-lg font-display font-bold text-sm sm:text-base bg-brand-coral text-white min-w-[68px] text-center shadow-sm shrink-0">
             -25%
           </span>
         </div>
@@ -276,21 +291,17 @@
     </section>
 
     <!-- COLUMNA DRETA (5 cols ~42%): PISSARRA VISUAL + 3 PASSOS + TIQUET GEGANT -->
-    <section class="lg:col-span-5 flex flex-col justify-between min-h-0 gap-2.5">
+    <section class="lg:col-span-5 flex flex-col justify-between min-h-0 gap-2.5 overflow-y-auto lg:overflow-hidden">
       
-      <!-- TARGETA SUPERIOR: GRÀFIC PROPORCIONAL + QUADRÍCULA 10x10 -->
+      <!-- TARGETA SUPERIOR: BARRA VISUAL + MINI-QUADRÍCULA 100 -->
       <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200/80 space-y-2.5 shrink-0">
         <div class="flex items-center justify-between gap-2">
-          <span class="font-display text-base font-bold text-slate-800 flex items-center gap-1.5">
-            <span>📊</span>
-            <span>Visualització gràfica</span>
-          </span>
-          <span id="visual-fraction-pill" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-brand-purpleLight text-brand-purple">
-            -25% = 1/4 part del preu
+          <span class="font-display text-sm font-bold text-slate-500 uppercase tracking-wider">📊 Representació visual</span>
+          <span id="visual-fraction-pill" class="px-2.5 py-0.5 rounded-full bg-brand-purpleLight text-brand-purple font-black text-xs">
+            -25% = 1/4 part
           </span>
         </div>
 
-        <!-- Barra de progrés gegant amb els euros dins -->
         <div class="space-y-1">
           <div class="flex justify-between text-xs font-extrabold">
             <span id="bar-label-left" class="text-brand-purple">Pagues: 75%</span>
@@ -605,25 +616,32 @@
   <!-- ========================================================= -->
   <script>
     // ---------------------------------------------------------
-    // 1. CATÀLEG AMPLIAT DE 16 PRODUCTES PER CATEGORIES
+    // 1. CATÀLEG DELS 16 PRODUCTES, ETIQUETES I ESTAT INICIAL
     // ---------------------------------------------------------
+    const CATEGORY_LABELS = {
+      moda: "👕 Moda",
+      tech: "🎮 Tecnologia",
+      esport: "⚽ Esport",
+      escola: "✏️ Escola i lectura"
+    };
+
     const PRODUCTS = [
-      { id: 1,  name: "Dessuadora",     price: 40,  icon: "🧥", cat: "moda" },
-      { id: 2,  name: "Videojoc",       price: 60,  icon: "🎮", cat: "tech" },
-      { id: 3,  name: "Patinet elèctric",price: 120, icon: "🛴", cat: "esport" },
-      { id: 4,  name: "Llibre",         price: 20,  icon: "📚", cat: "escola" },
-      { id: 5,  name: "Motxilla",       price: 30,  icon: "🎒", cat: "escola" },
-      { id: 6,  name: "Auriculars",     price: 50,  icon: "🎧", cat: "tech" },
-      { id: 7,  name: "Vambes running", price: 80,  icon: "👟", cat: "esport" },
-      { id: 8,  name: "Samarreta",      price: 15,  icon: "👕", cat: "moda" },
-      { id: 9,  name: "Pilota futbol",  price: 25,  icon: "⚽", cat: "esport" },
-      { id: 10, name: "Smartwatch",     price: 100, icon: "⌚", cat: "tech" },
-      { id: 11, name: "Teclat gaming",  price: 45,  icon: "⌨️", cat: "tech" },
-      { id: 12, name: "Ampolla tèrmica",price: 18,  icon: "🍶", cat: "escola" },
-      { id: 13, name: "Ulleres de sol", price: 35,  icon: "🕶️", cat: "moda" },
-      { id: 14, name: "Bicicleta MTB",  price: 240, icon: "🚲", cat: "esport" },
-      { id: 15, name: "Estoig complet", price: 12,  icon: "✏️", cat: "escola" },
-      { id: 16, name: "Càmera fotos",   price: 90,  icon: "📸", cat: "moda" }
+      { id: 1, name: "Dessuadora esportiva", price: 40, icon: "🧥", cat: "moda" },
+      { id: 2, name: "Videojoc d'aventures", price: 60, icon: "🎮", cat: "tech" },
+      { id: 3, name: "Patinet elèctric", price: 120, icon: "🛴", cat: "esport" },
+      { id: 4, name: "Llibre d'aventures", price: 20, icon: "📚", cat: "escola" },
+      { id: 5, name: "Motxilla escolar", price: 30, icon: "🎒", cat: "escola" },
+      { id: 6, name: "Auriculars sense fil", price: 50, icon: "🎧", cat: "tech" },
+      { id: 7, name: "Vambes de córrer", price: 80, icon: "👟", cat: "esport" },
+      { id: 8, name: "Samarreta estampada", price: 25, icon: "👕", cat: "moda" },
+      { id: 9, name: "Pilota de futbol", price: 35, icon: "⚽", cat: "esport" },
+      { id: 10, name: "Rellotge intel·ligent", price: 90, icon: "⌚", cat: "tech" },
+      { id: 11, name: "Teclat mecànic", price: 70, icon: "⌨️", cat: "tech" },
+      { id: 12, name: "Ampolla tèrmica", price: 15, icon: "🧴", cat: "esport" },
+      { id: 13, name: "Ulleres de sol", price: 45, icon: "🕶️", cat: "moda" },
+      { id: 14, name: "Bicicleta de muntanya", price: 200, icon: "🚲", cat: "esport" },
+      { id: 15, name: "Estoig complet", price: 18, icon: "✏️", cat: "escola" },
+      { id: 16, name: "Càmera de fotos", price: 150, icon: "📷", cat: "tech" }
     ];
 
     const DISCOUNT_PRESETS = [
@@ -632,39 +650,39 @@
       { value: 20, label: "-20%" },
       { value: 25, label: "-25%" },
       { value: 30, label: "-30%" },
-      { value: 50, label: "-50% Oferta" },
+      { value: 50, label: "-50%" },
       { value: 75, label: "-75%" }
     ];
 
     const INCREASE_PRESETS = [
-      { value: 4,  label: "+4% IVA" },
+      { value: 4, label: "+4% IVA" },
       { value: 10, label: "+10% IVA" },
-      { value: 21, label: "+21% IVA General" },
-      { value: 50, label: "+50% Recàrrec" }
+      { value: 21, label: "+21% IVA" },
+      { value: 50, label: "+50%" }
     ];
 
     let aulaState = {
-      category: 'all',
       selectedProduct: { ...PRODUCTS[0] },
       operationType: 'discount',
       percent: 25
     };
 
-    function formatEuro(num) {
-      return num.toLocaleString('ca-ES', {
-        minimumFractionDigits: 2,
+    function formatClean(num) {
+      return Number(num).toLocaleString('ca-ES', {
+        minimumFractionDigits: Number.isInteger(num) ? 0 : 2,
         maximumFractionDigits: 2
-      }) + ' €';
+      });
     }
 
-    function formatClean(num) {
-      return Number.isInteger(num)
-        ? num.toString()
-        : num.toLocaleString('ca-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function formatEuro(num) {
+      return `${Number(num).toLocaleString('ca-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })} €`;
     }
 
     // ---------------------------------------------------------
-    // 2. CANVI DE VISTA & PANTALLA COMPLETA
+    // 2. CANVI DE VISTA PRINCIPAL (AULA VS JOC)
     // ---------------------------------------------------------
     function switchMainMode(mode) {
       const viewAula = document.getElementById('view-aula');
@@ -675,69 +693,82 @@
       if (mode === 'aula') {
         viewAula.classList.remove('hidden');
         viewJoc.classList.add('hidden');
-        tabAula.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
-        tabJoc.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
+        tabAula.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
+        tabJoc.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
       } else {
         viewAula.classList.add('hidden');
         viewJoc.classList.remove('hidden');
-        tabJoc.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
-        tabAula.className = "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
-        if (!gameState.currentChallenge) generateNewChallenge();
+        tabJoc.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all bg-white text-brand-purple shadow-sm";
+        tabAula.className = "flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg font-extrabold text-xs sm:text-sm transition-all text-slate-600 hover:text-slate-900";
+        if (!gameState.currentChallenge) {
+          generateNewChallenge();
+        }
       }
     }
 
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    // ---------------------------------------------------------
+    // 3. APARADOR D'UN SOL PRODUCTE PROTAGONISTA (MODE AULA)
+    // ---------------------------------------------------------
+    function populateQuickProductSelect() {
+      const sel = document.getElementById('product-quick-select');
+      if (!sel) return;
+      sel.innerHTML = PRODUCTS.map(p => `
+        <option value="${p.id}" ${aulaState.selectedProduct.id === p.id ? 'selected' : ''}>
+          ${p.icon} ${p.name} (${p.price} €)
+        </option>
+      `).join('');
+      if (aulaState.selectedProduct.id === 'custom') {
+        sel.innerHTML += `<option value="custom" selected>🏷️ ${aulaState.selectedProduct.name} (${aulaState.selectedProduct.price} €)</option>`;
+      }
+    }
+
+    function renderFeaturedProduct() {
+      const p = aulaState.selectedProduct;
+      const idx = PRODUCTS.findIndex(item => item.id === p.id);
+
+      document.getElementById('featured-product-icon').textContent = p.icon;
+      document.getElementById('featured-product-name').textContent = p.name;
+      document.getElementById('featured-product-price').textContent = `${formatClean(p.price)} €`;
+
+      const counterEl = document.getElementById('featured-product-counter');
+      const catEl = document.getElementById('featured-product-cat');
+
+      if (idx !== -1) {
+        counterEl.textContent = `Article ${idx + 1} de ${PRODUCTS.length}`;
+        catEl.textContent = CATEGORY_LABELS[p.cat] || "🛍️ Botiga";
       } else {
-        document.exitFullscreen().catch(() => {});
+        counterEl.textContent = "Preu lliure";
+        catEl.textContent = "✏️ Personalitzat";
       }
+
+      populateQuickProductSelect();
     }
 
-    // ---------------------------------------------------------
-    // 3. APARADOR DE PRODUCTES COMPACTE (MODE AULA)
-    // ---------------------------------------------------------
-    function setCategoryFilter(cat) {
-      aulaState.category = cat;
-      document.querySelectorAll('.cat-btn').forEach(btn => {
-        btn.className = "cat-btn px-2 py-1 rounded-lg text-xs font-extrabold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all";
-      });
-      const activeBtn = document.getElementById(`cat-btn-${cat}`);
-      if (activeBtn) {
-        activeBtn.className = "cat-btn px-2.5 py-1 rounded-lg text-xs font-extrabold bg-brand-purple text-white transition-all shadow-xs";
-      }
-      renderProductsGrid();
+    function cycleAulaProduct(step) {
+      const currentIdx = PRODUCTS.findIndex(p => p.id === aulaState.selectedProduct.id);
+      const baseIdx = currentIdx === -1 ? 0 : currentIdx;
+      const nextIdx = (baseIdx + step + PRODUCTS.length) % PRODUCTS.length;
+      aulaState.selectedProduct = { ...PRODUCTS[nextIdx] };
+      renderFeaturedProduct();
+      updateAulaCalculations();
     }
 
-    function renderProductsGrid() {
-      const grid = document.getElementById('products-grid');
-      const filtered = aulaState.category === 'all'
-        ? PRODUCTS
-        : PRODUCTS.filter(p => p.cat === aulaState.category);
-
-      grid.innerHTML = filtered.map(item => {
-        const isSelected = aulaState.selectedProduct.id === item.id;
-        return `
-          <button onclick="selectProduct(${item.id})"
-            class="group relative flex flex-col items-center justify-center p-2.5 rounded-2xl border-2 transition-all duration-150 text-center bg-white
-            ${isSelected
-              ? 'border-brand-purple bg-indigo-50/25 shadow-sm scale-[1.01]'
-              : 'border-slate-200/90 hover:border-indigo-300'
-            }">
-            ${isSelected ? `<span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-brand-purple text-white text-[10px] flex items-center justify-center font-black">✓</span>` : ''}
-            <div class="text-2xl sm:text-3xl mb-1 transition-transform group-hover:scale-110">${item.icon}</div>
-            <div class="font-extrabold text-slate-800 text-xs sm:text-[13px] leading-tight truncate w-full px-1">${item.name}</div>
-            <div class="font-display font-bold text-brand-purple text-sm sm:text-base mt-0.5">${item.price} €</div>
-          </button>
-        `;
-      }).join('');
+    function pickRandomAulaProduct() {
+      if (PRODUCTS.length <= 1) return;
+      let candidate;
+      do {
+        candidate = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+      } while (candidate.id === aulaState.selectedProduct.id);
+      aulaState.selectedProduct = { ...candidate };
+      renderFeaturedProduct();
+      updateAulaCalculations();
     }
 
     function selectProduct(id) {
       const found = PRODUCTS.find(p => p.id === id);
       if (found) {
         aulaState.selectedProduct = { ...found };
-        renderProductsGrid();
+        renderFeaturedProduct();
         updateAulaCalculations();
       }
     }
@@ -752,7 +783,7 @@
       if (isNaN(price) || price <= 0) return;
 
       aulaState.selectedProduct = { id: 'custom', name, price, icon: "🏷️" };
-      renderProductsGrid();
+      renderFeaturedProduct();
       updateAulaCalculations();
     }
 
@@ -1670,7 +1701,7 @@
     // 6. INICIALITZACIÓ
     // ---------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
-      renderProductsGrid();
+      renderFeaturedProduct();
       renderDiscountPills();
       updateAulaCalculations();
       renderLevelSelector();
