@@ -376,37 +376,37 @@
       </div>
 
       <!-- TARGETA INFERIOR: TIQUET DE CAIXA GEGANT PER AL FONS DE L'AULA -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col justify-between flex-grow min-h-0">
-        <div class="bg-slate-800 text-white px-4 py-1.5 flex items-center justify-between text-xs font-extrabold">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col justify-between shrink-0">
+        <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between text-xs sm:text-sm font-extrabold">
           <span>🧾 TIQUET DE CAIXA</span>
           <span class="text-slate-300" id="receipt-pct-tag">REBAIXA -25%</span>
         </div>
 
-        <div class="px-4 py-2.5 flex items-center justify-between gap-3 flex-grow">
+        <div class="p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <!-- Info Producte + Preu ratllat -->
-          <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span id="receipt-icon" class="text-2xl">🧥</span>
-              <span id="receipt-name" class="font-extrabold text-slate-800 text-sm sm:text-base truncate">Dessuadora esportiva</span>
+          <div class="min-w-0 text-center sm:text-left">
+            <div class="flex items-center justify-center sm:justify-start gap-2">
+              <span id="receipt-icon" class="text-3xl">🧥</span>
+              <span id="receipt-name" class="font-extrabold text-slate-800 text-base sm:text-lg truncate">Dessuadora esportiva</span>
             </div>
-            <div class="flex items-center gap-2 mt-1 text-xs sm:text-sm font-bold">
+            <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1.5 text-sm sm:text-base font-bold">
               <span class="text-slate-400 line-through" id="receipt-orig-price">40,00 €</span>
-              <span id="receipt-diff-badge" class="px-2 py-0.5 rounded-md bg-brand-coralLight text-brand-coral font-black">
+              <span id="receipt-diff-badge" class="px-2.5 py-0.5 rounded-lg bg-brand-coralLight text-brand-coral font-black">
                 Estalvies 10,00 €
               </span>
             </div>
           </div>
 
-          <!-- PREU FINAL GEGANT -->
-          <div class="text-right shrink-0">
-            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Total a pagar</span>
-            <span id="receipt-final-price" class="font-display text-3xl sm:text-4xl font-bold text-brand-purple leading-none">
+          <!-- CAIXA CENTRADA DEL PREU FINAL GEGANT -->
+          <div class="w-full sm:w-auto min-w-[165px] bg-brand-purpleLight/70 border-2 border-brand-purple/25 rounded-2xl px-5 py-2.5 flex flex-col items-center justify-center text-center shrink-0">
+            <span class="text-[11px] font-black uppercase tracking-wider text-brand-purple/80 block mb-0.5">Total a pagar</span>
+            <span id="receipt-final-price" class="font-display text-4xl sm:text-5xl font-bold text-brand-purple leading-none">
               30,00 €
             </span>
           </div>
         </div>
 
-        <div class="h-2.5 bg-slate-100 receipt-edge shrink-0"></div>
+        <div class="h-3 bg-slate-100 receipt-edge shrink-0"></div>
       </div>
 
     </section>
