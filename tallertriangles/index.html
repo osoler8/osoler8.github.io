@@ -1,0 +1,2542 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El taller dels triangles · Primària</title>
+    <!-- Tipografies amigables i clares per a Primària -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-top: #eff6ff;
+            --bg-bottom: #fefce8;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+
+            --side-blue: #2563eb;
+            --side-blue-bg: #eff6ff;
+            --side-blue-border: #93c5fd;
+
+            --side-green: #16a34a;
+            --side-green-bg: #f0fdf4;
+            --side-green-border: #86efac;
+
+            --side-orange: #ea580c;
+            --side-orange-bg: #fff7ed;
+            --side-orange-border: #fdba74;
+
+            --angle-acute: #16a34a;
+            --angle-right: #eab308;
+            --angle-obtuse: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(180deg, var(--bg-top) 0%, #f8fafc 45%, var(--bg-bottom) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 3.5rem;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            letter-spacing: 0.01em;
+        }
+
+        /* Capçalera */
+        header {
+            background: #ffffff;
+            border-bottom: 4px solid #bfdbfe;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+        }
+
+        .header-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 #4338ca;
+            flex-shrink: 0;
+        }
+
+        .brand h1 {
+            font-size: clamp(1.35rem, 3vw, 1.85rem);
+            color: #0f172a;
+            line-height: 1.15;
+        }
+
+        .brand p {
+            font-size: 0.94rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .badge-header {
+            background: #fef08a;
+            color: #854d0e;
+            border: 2px solid #facc15;
+            padding: 0.4rem 0.95rem;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        /* Contenidor principal */
+        main {
+            max-width: 1120px;
+            margin: 1.5rem auto 0;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 26px;
+            border: 3px solid #e2e8f0;
+            padding: 1.25rem;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Graella principal: Visualitzador SVG + Controls */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        @media (max-width: 880px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .canvas-card {
+            border-color: #bfdbfe;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.95rem;
+        }
+
+        .svg-stage {
+            position: relative;
+            background-color: #f8fbff;
+            background-image:
+                linear-gradient(to right, rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 3px solid #93c5fd;
+            border-radius: 22px;
+            min-height: 335px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #triangle-svg {
+            width: 100%;
+            height: 340px;
+            display: block;
+        }
+
+        .btn-magic {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #ffffff;
+            border: none;
+            padding: 0.7rem 1.35rem;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #9a3412;
+            transition: transform 0.12s;
+        }
+
+        .btn-magic:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-magic:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #9a3412;
+        }
+
+        .broken-overlay-btn {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .broken-overlay-btn.visible {
+            display: inline-block;
+        }
+
+        .broken-overlay-btn:hover {
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .broken-overlay-btn:active {
+            transform: translateX(-50%) translateY(2px);
+        }
+
+        /* Llegenda visual d'angles */
+        .legend-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.65rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 0.6rem 0.95rem;
+            border-radius: 16px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .legend-dots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.85rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Dues píndoles netes sota el dibuix */
+        .summary-pills {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .pill-box {
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 0.6rem 0.85rem;
+            text-align: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Botó d'ampliació i explicació */
+        .btn-explain {
+            width: 100%;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.08rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #ffffff;
+            border: none;
+            padding: 0.82rem 1.2rem;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1d4ed8;
+            transition: transform 0.12s, box-shadow 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-explain:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-explain:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #1d4ed8;
+        }
+
+        .btn-explain.warning-mode {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            box-shadow: 0 4px 0 #9a3412;
+        }
+
+        /* Controls dels 3 costats */
+        .controls-card {
+            border-color: #ddd6fe;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .controls-card h2 {
+            font-size: 1.32rem;
+            color: #312e81;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .side-control {
+            border-radius: 20px;
+            padding: 0.9rem 1rem;
+            border: 2px solid transparent;
+        }
+
+        .side-blue {
+            background: var(--side-blue-bg);
+            border-color: var(--side-blue-border);
+        }
+
+        .side-green {
+            background: var(--side-green-bg);
+            border-color: var(--side-green-border);
+        }
+
+        .side-orange {
+            background: var(--side-orange-bg);
+            border-color: var(--side-orange-border);
+        }
+
+        .side-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .side-name {
+            font-weight: 800;
+            font-size: 1.02rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .side-blue .side-name { color: #1d4ed8; }
+        .side-green .side-name { color: #15803d; }
+        .side-orange .side-name { color: #c2410c; }
+
+        .side-value-badge {
+            background: #ffffff;
+            padding: 0.25rem 0.85rem;
+            border-radius: 14px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .side-blue .side-value-badge { color: var(--side-blue); }
+        .side-green .side-value-badge { color: var(--side-green); }
+        .side-orange .side-value-badge { color: var(--side-orange); }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .step-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            border: none;
+            background: #ffffff;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.14);
+            transition: transform 0.1s;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .step-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
+        }
+
+        .side-blue .step-btn { color: var(--side-blue); }
+        .side-green .step-btn { color: var(--side-green); }
+        .side-orange .step-btn { color: var(--side-orange); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 2px solid rgba(0, 0, 0, 0.09);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            margin-top: -9px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+            transition: transform 0.15s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .side-blue input[type="range"]::-webkit-slider-thumb { background: var(--side-blue); }
+        .side-green input[type="range"]::-webkit-slider-thumb { background: var(--side-green); }
+        .side-orange input[type="range"]::-webkit-slider-thumb { background: var(--side-orange); }
+
+        .tip-box {
+            background: #f5f3ff;
+            border: 2px solid #ddd6fe;
+            border-radius: 16px;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #4c1d95;
+            line-height: 1.4;
+        }
+
+        /* Targeta interactiva de classificació manual */
+        .classify-card {
+            border-color: #c7d2fe;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .classify-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .classify-header h2 {
+            font-size: 1.45rem;
+            color: #1e1b4b;
+        }
+
+        .classify-sub {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .classify-groups {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 780px) {
+            .classify-groups {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .group-box {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 22px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .group-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.12rem;
+            color: #1e293b;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        @media (max-width: 460px) {
+            .choice-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .choice-btn {
+            font-family: 'Nunito', sans-serif;
+            background: #f8fafc;
+            border: 3px solid #cbd5e1;
+            border-radius: 18px;
+            padding: 0.68rem 0.45rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            text-align: center;
+            transition: transform 0.12s, border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-2px);
+            border-color: #94a3b8;
+            background: #ffffff;
+        }
+
+        .choice-btn.selected {
+            background: #eef2ff;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .choice-label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        .choice-btn.selected .choice-label {
+            color: #3730a3;
+        }
+
+        .btn-check {
+            width: 100%;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.18rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #ffffff;
+            border: none;
+            padding: 0.92rem 1.25rem;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #15803d;
+            transition: transform 0.12s, box-shadow 0.12s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-check:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #15803d;
+        }
+
+        .feedback-box {
+            display: none;
+            border-radius: 18px;
+            padding: 0.95rem 1.15rem;
+            font-weight: 800;
+            font-size: 0.97rem;
+            line-height: 1.45;
+            border: 3px solid transparent;
+            animation: popIn 0.25s ease-out;
+        }
+
+        .feedback-box.visible {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .feedback-box.success {
+            background: #ecfdf5;
+            border-color: #34d399;
+            color: #065f46;
+        }
+
+        .feedback-box.warning {
+            background: #fffbeb;
+            border-color: #fbbf24;
+            color: #92400e;
+        }
+
+        .feedback-box.info {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .feedback-icon {
+            font-size: 1.45rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        /* Àlbum interactiu de 7 cromos */
+        .album-card {
+            border-color: #fde047;
+            background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%);
+        }
+
+        .album-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .album-header h2 {
+            font-size: 1.45rem;
+            color: #854d0e;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .count-bubble {
+            background: #facc15;
+            color: #713f12;
+            padding: 0.26rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.96rem;
+            font-weight: 800;
+        }
+
+        .progress-wrapper {
+            background: #fef9c3;
+            border: 2px solid #fde047;
+            border-radius: 999px;
+            height: 16px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 1.15rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59e0b, #eab308, #22c55e);
+            border-radius: 999px;
+            transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-clear {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 0.88rem;
+            background: #ffe4e6;
+            color: #be123c;
+            border: 2px solid #fda4af;
+            padding: 0.48rem 0.95rem;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-1px);
+        }
+
+        .stickers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .sticker {
+            border-radius: 22px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .sticker.locked {
+            background: #f1f5f9;
+            border: 3px dashed #94a3b8;
+            color: #475569;
+        }
+
+        .sticker-top {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sticker-silhouette {
+            width: 84px;
+            height: 64px;
+            border-radius: 14px;
+            background: #e2e8f0;
+            border: 2px solid #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .sticker-lock-badge {
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            background: #475569;
+            color: #ffffff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 0.76rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .sticker-locked-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.12rem;
+            font-weight: 600;
+            color: #334155;
+            line-height: 1.2;
+        }
+
+        .sticker-locked-sub {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .btn-hint {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 0.84rem;
+            background: #ffffff;
+            color: #0369a1;
+            border: 2px solid #bae6fd;
+            padding: 0.42rem 0.75rem;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s;
+        }
+
+        .btn-hint:hover {
+            background: #e0f2fe;
+        }
+
+        .hint-box {
+            background: #fef9c3;
+            border: 2px solid #fde047;
+            color: #854d0e;
+            border-radius: 12px;
+            padding: 0.55rem 0.7rem;
+            font-size: 0.83rem;
+            font-weight: 700;
+            line-height: 1.38;
+        }
+
+        .sticker.unlocked {
+            background: #ffffff;
+            border: 3px solid #facc15;
+            box-shadow: 0 6px 16px rgba(234, 179, 8, 0.18);
+            cursor: pointer;
+        }
+
+        .sticker.unlocked:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 22px rgba(234, 179, 8, 0.26);
+        }
+
+        .sticker.just-unlocked {
+            animation: flipUnlock 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes flipUnlock {
+            0% { transform: scale(0.75) rotateY(90deg); opacity: 0.4; }
+            60% { transform: scale(1.06) rotateY(-8deg); opacity: 1; }
+            100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+        }
+
+        .sticker-star {
+            position: absolute;
+            top: -10px;
+            right: -8px;
+            background: linear-gradient(135deg, #fde047, #f59e0b);
+            color: #78350f;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .sticker-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .tag-pill {
+            display: inline-block;
+            padding: 0.24rem 0.65rem;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            font-weight: 800;
+            width: fit-content;
+        }
+
+        .sticker-details {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 0.5rem 0.7rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+            display: flex;
+            justify-content: space-between;
+            border: 1px solid #e2e8f0;
+        }
+
+        .sticker-load-tip {
+            font-size: 0.77rem;
+            font-weight: 800;
+            color: #4f46e5;
+            text-align: center;
+        }
+
+        /* Diploma final */
+        .diploma-banner {
+            display: none;
+            margin-bottom: 1.25rem;
+            background: linear-gradient(135deg, #fef08a 0%, #fde047 50%, #fed7aa 100%);
+            border: 4px solid #f59e0b;
+            border-radius: 24px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.25);
+            animation: popIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .diploma-banner.visible {
+            display: block;
+        }
+
+        .diploma-banner h3 {
+            font-size: 1.55rem;
+            color: #78350f;
+            margin-bottom: 0.35rem;
+        }
+
+        .diploma-banner p {
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #92400e;
+        }
+
+        /* Modal d'ampliació i explicació cas a cas */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 180;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border: 4px solid #93c5fd;
+            border-radius: 28px;
+            max-width: 960px;
+            width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 1.35rem;
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.28);
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+            animation: popIn 0.25s ease-out;
+        }
+
+        .modal-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.75rem;
+        }
+
+        .modal-top h2 {
+            font-size: 1.4rem;
+            color: #1e3a8a;
+        }
+
+        .btn-close-modal {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #334155;
+            border: 2px solid #cbd5e1;
+            padding: 0.45rem 0.95rem;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+
+        .btn-close-modal:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-body-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+
+        @media (max-width: 820px) {
+            .modal-body-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-svg-box {
+            background-color: #f8fbff;
+            background-image:
+                linear-gradient(to right, rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border: 3px solid #bfdbfe;
+            border-radius: 22px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 340px;
+        }
+
+        #zoom-svg {
+            width: 100%;
+            height: 340px;
+            display: block;
+        }
+
+        .walkthrough-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.9rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 22px;
+            padding: 1rem;
+        }
+
+        .step-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.4rem;
+        }
+
+        @media (max-width: 480px) {
+            .step-tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .step-tab {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #ffffff;
+            color: #475569;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 0.48rem 0.4rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .step-tab.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #1d4ed8;
+        }
+
+        .step-content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .explain-card {
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 0.85rem 1rem;
+        }
+
+        .explain-card h3 {
+            font-size: 1.08rem;
+            color: #0f172a;
+            margin-bottom: 0.35rem;
+        }
+
+        .explain-card p {
+            font-size: 0.93rem;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1.45;
+        }
+
+        .walkthrough-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.6rem;
+        }
+
+        .btn-nav-step {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: #ffffff;
+            color: #1e3a8a;
+            border: 2px solid #93c5fd;
+            border-radius: 14px;
+            padding: 0.5rem 0.9rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .btn-nav-step:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.88); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Confeti */
+        #confetti-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 220;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            top: -20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            animation: confettiFall 2.1s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(95vh) rotate(720deg) scale(0.7); opacity: 0; }
+        }
+
+        /* Notificació flotant */
+        #toast {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            background: #1e293b;
+            color: #ffffff;
+            padding: 0.85rem 1.3rem;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.22);
+            z-index: 160;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="confetti-layer" aria-hidden="true"></div>
+
+    <!-- Capçalera -->
+    <header>
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-logo" aria-hidden="true">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 3 21 19 3 19"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h1>El taller dels triangles</h1>
+                    <p>Modela triangles mil·límetre a mil·límetre, classifica'ls i completa l'àlbum!</p>
+                </div>
+            </div>
+            <span class="badge-header">📐 Geometria · Primària</span>
+        </div>
+    </header>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <main>
+        <!-- Zona central: Visualitzador SVG + Controls -->
+        <div class="workspace-grid">
+            <!-- Visualitzador SVG -->
+            <section class="card canvas-card" aria-label="Visualitzador del triangle">
+                <div class="svg-stage">
+                    <svg id="triangle-svg" viewBox="0 0 520 340" role="img" aria-label="Representació visual del triangle"></svg>
+                    <button type="button" id="btn-fix" class="btn-magic broken-overlay-btn">✨ Arregla'l màgicament!</button>
+                </div>
+
+                <!-- Llegenda visual d'angles -->
+                <div class="legend-bar">
+                    <div class="legend-dots">
+                        <span class="legend-item"><span class="dot" style="background:#16a34a;"></span> Agut (&lt; 90°)</span>
+                        <span class="legend-item"><span class="dot" style="background:#eab308;"></span> Recte (= 90°)</span>
+                        <span class="legend-item"><span class="dot" style="background:#dc2626;"></span> Obtús (&gt; 90°)</span>
+                    </div>
+                    <span>📐 Angles mesurats en graus</span>
+                </div>
+
+                <!-- Dues píndoles netes sota el dibuix -->
+                <div class="summary-pills">
+                    <div class="pill-box" id="pill-perimeter">Perímetre: 21,0 cm</div>
+                    <div class="pill-box" id="pill-angles-sum">Suma dels angles: 180°</div>
+                </div>
+
+                <!-- Botó d'ampliació i explicació cas a cas -->
+                <button type="button" id="btn-explain" class="btn-explain">
+                    🔍 Amplia i explica aquest triangle
+                </button>
+            </section>
+
+            <!-- Controls dels 3 costats -->
+            <section class="card controls-card" aria-label="Controls dels tres costats">
+                <h2>🎛️ Tria la mida dels 3 costats</h2>
+
+                <!-- Costat blau (a) -->
+                <div class="side-control side-blue">
+                    <div class="side-header">
+                        <span class="side-name">🔵 Costat blau</span>
+                        <span class="side-value-badge"><span id="val-a">7,0</span> cm</span>
+                    </div>
+                    <div class="slider-row">
+                        <button type="button" class="step-btn" data-side="a" data-delta="-0.1" aria-label="Resta 0,1 cm al costat blau">−</button>
+                        <input type="range" id="slider-a" min="2.0" max="15.0" step="0.1" value="7.0" aria-label="Lliscador costat blau">
+                        <button type="button" class="step-btn" data-side="a" data-delta="0.1" aria-label="Suma 0,1 cm al costat blau">+</button>
+                    </div>
+                </div>
+
+                <!-- Costat verd (b) -->
+                <div class="side-control side-green">
+                    <div class="side-header">
+                        <span class="side-name">🟢 Costat verd</span>
+                        <span class="side-value-badge"><span id="val-b">7,0</span> cm</span>
+                    </div>
+                    <div class="slider-row">
+                        <button type="button" class="step-btn" data-side="b" data-delta="-0.1" aria-label="Resta 0,1 cm al costat verd">−</button>
+                        <input type="range" id="slider-b" min="2.0" max="15.0" step="0.1" value="7.0" aria-label="Lliscador costat verd">
+                        <button type="button" class="step-btn" data-side="b" data-delta="0.1" aria-label="Suma 0,1 cm al costat verd">+</button>
+                    </div>
+                </div>
+
+                <!-- Costat taronja (c) -->
+                <div class="side-control side-orange">
+                    <div class="side-header">
+                        <span class="side-name">🟠 Costat taronja (base)</span>
+                        <span class="side-value-badge"><span id="val-c">7,0</span> cm</span>
+                    </div>
+                    <div class="slider-row">
+                        <button type="button" class="step-btn" data-side="c" data-delta="-0.1" aria-label="Resta 0,1 cm al costat taronja">−</button>
+                        <input type="range" id="slider-c" min="2.0" max="15.0" step="0.1" value="7.0" aria-label="Lliscador costat taronja">
+                        <button type="button" class="step-btn" data-side="c" data-delta="0.1" aria-label="Suma 0,1 cm al costat taronja">+</button>
+                    </div>
+                </div>
+
+                <div class="tip-box">
+                    💡 <strong>Consell:</strong> Cada toc als botons <strong>−</strong> i <strong>+</strong> canvia 1 mil·límetre (0,1 cm). Fixa't en les ratlletes dels costats iguals i en els graus de cada cantonada!
+                </div>
+            </section>
+        </div>
+
+        <!-- Classificació manual per part de l'alumnat -->
+        <section class="card classify-card" aria-label="Classifica el teu triangle">
+            <div class="classify-header">
+                <h2>🧠 Classifica el teu triangle!</h2>
+                <span class="classify-sub">Observa el dibuix de dalt, selecciona les dues opcions i comprova-ho.</span>
+            </div>
+
+            <div class="classify-groups">
+                <!-- Grup 1: Segons els costats -->
+                <div class="group-box">
+                    <div class="group-title">1. Segons els costats:</div>
+                    <div class="choice-grid" id="group-sides">
+                        <button type="button" class="choice-btn" data-side-choice="equilateral">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="32,6 54,48 10,48" fill="#d1fae5" stroke="#059669" stroke-width="3.5" stroke-linejoin="round"/>
+                                <line x1="18" y1="25" x2="24" y2="29" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="46" y1="25" x2="40" y2="29" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="32" y1="44" x2="32" y2="52" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                            <span class="choice-label">Equilàter</span>
+                        </button>
+                        <button type="button" class="choice-btn" data-side-choice="isosceles">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="32,6 48,50 16,50" fill="#dbeafe" stroke="#2563eb" stroke-width="3.5" stroke-linejoin="round"/>
+                                <line x1="20" y1="27" x2="27" y2="30" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+                                <line x1="44" y1="27" x2="37" y2="30" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                            <span class="choice-label">Isòsceles</span>
+                        </button>
+                        <button type="button" class="choice-btn" data-side-choice="scalene">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="18,10 56,48 10,48" fill="#f3e8ff" stroke="#7c3aed" stroke-width="3.5" stroke-linejoin="round"/>
+                                <circle cx="14" cy="29" r="2.6" fill="#7c3aed"/>
+                                <circle cx="38" cy="28" r="2.6" fill="#7c3aed"/>
+                                <circle cx="33" cy="48" r="2.6" fill="#7c3aed"/>
+                            </svg>
+                            <span class="choice-label">Escalè</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grup 2: Segons els angles -->
+                <div class="group-box">
+                    <div class="group-title">2. Segons els angles:</div>
+                    <div class="choice-grid" id="group-angles">
+                        <button type="button" class="choice-btn" data-angle-choice="acute">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="32,8 52,48 12,48" fill="#d1fae5" stroke="#16a34a" stroke-width="3.5" stroke-linejoin="round"/>
+                                <path d="M 27 18 A 10 10 0 0 0 37 18" fill="none" stroke="#16a34a" stroke-width="3"/>
+                            </svg>
+                            <span class="choice-label">Acutangle (agut)</span>
+                        </button>
+                        <button type="button" class="choice-btn" data-angle-choice="right">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="14,8 14,48 54,48" fill="#fef3c7" stroke="#eab308" stroke-width="3.5" stroke-linejoin="round"/>
+                                <polyline points="14,36 26,36 26,48" fill="none" stroke="#ca8a04" stroke-width="3"/>
+                            </svg>
+                            <span class="choice-label">Rectangle (recte)</span>
+                        </button>
+                        <button type="button" class="choice-btn" data-angle-choice="obtuse">
+                            <svg width="46" height="40" viewBox="0 0 64 56" aria-hidden="true">
+                                <polygon points="10,20 22,48 56,48" fill="#ffe4e6" stroke="#dc2626" stroke-width="3.5" stroke-linejoin="round"/>
+                                <path d="M 18 38 A 10 10 0 0 1 31 48" fill="none" stroke="#dc2626" stroke-width="3"/>
+                            </svg>
+                            <span class="choice-label">Obtusangle (obtús)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="btn-check" class="btn-check">
+                ✅ Comprova i enganxa el cromo!
+            </button>
+
+            <div id="feedback-box" class="feedback-box" role="status" aria-live="polite">
+                <span id="feedback-icon" class="feedback-icon"></span>
+                <div id="feedback-text"></div>
+            </div>
+        </section>
+
+        <!-- Àlbum interactiu de 7 cromos -->
+        <section class="card album-card" aria-label="El meu àlbum de cromos">
+            <div class="album-header">
+                <h2>🏆 El meu àlbum de cromos <span id="album-count" class="count-bubble">Cromos aconseguits: 0 / 7 ⭐</span></h2>
+                <button type="button" id="btn-reset-album" class="btn-clear">🔄 Reinicia l'àlbum</button>
+            </div>
+
+            <!-- Barra de progrés -->
+            <div class="progress-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0" id="album-progressbar">
+                <div id="album-progress-fill" class="progress-fill" style="width: 0%;"></div>
+            </div>
+
+            <!-- Diploma final -->
+            <div id="diploma-banner" class="diploma-banner" role="alert">
+                <h3>🏅 Enhorabona! Has completat tot l'àlbum! 🎉</h3>
+                <p>Has aconseguit modelar i classificar les 7 combinacions possibles de triangles!</p>
+            </div>
+
+            <!-- Graella dels 7 cromos -->
+            <div id="stickers-grid" class="stickers-grid"></div>
+        </section>
+    </main>
+
+    <!-- Modal ampliat d'explicació cas a cas -->
+    <div id="explain-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <div class="modal-top">
+                <h2 id="modal-title">🔍 Mirem aquest triangle amb lupa</h2>
+                <button type="button" id="btn-close-modal" class="btn-close-modal">✕ Tanca</button>
+            </div>
+
+            <div class="modal-body-grid">
+                <div class="modal-svg-box">
+                    <svg id="zoom-svg" viewBox="0 0 520 340" role="img" aria-label="Còpia ampliada del triangle actual"></svg>
+                </div>
+
+                <div class="walkthrough-panel">
+                    <div class="step-tabs" id="walkthrough-tabs">
+                        <button type="button" class="step-tab active" data-step="1">Pas 1: Costats</button>
+                        <button type="button" class="step-tab" data-step="2">Pas 2: Angles</button>
+                        <button type="button" class="step-tab" data-step="3">Pas 3: Resum</button>
+                        <button type="button" class="step-tab" data-step="all">Mostra-ho tot</button>
+                    </div>
+
+                    <div id="walkthrough-content" class="step-content-area"></div>
+
+                    <div class="walkthrough-nav" id="walkthrough-nav">
+                        <button type="button" id="btn-prev-step" class="btn-nav-step">⬅️ Anterior</button>
+                        <button type="button" id="btn-next-step" class="btn-nav-step">Següent ➡️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const SVG_NS = 'http://www.w3.org/2000/svg';
+            const STORAGE_KEY = 'taller_triangles_album_v1';
+
+            // Les 7 combinacions matemàticament possibles de triangles
+            const ALBUM_CATALOG = [
+                {
+                    id: 'equilateral-acute',
+                    title: 'Equilàter agut',
+                    sideKey: 'equilateral',
+                    angleKey: 'acute',
+                    silhouettePts: '42,10 68,54 16,54',
+                    hint: 'Posa els 3 costats exactament amb la mateixa mida (per exemple: 7,0 cm, 7,0 cm i 7,0 cm).'
+                },
+                {
+                    id: 'isosceles-acute',
+                    title: 'Isòsceles agut',
+                    sideKey: 'isosceles',
+                    angleKey: 'acute',
+                    silhouettePts: '42,8 59,54 25,54',
+                    hint: 'Fes 2 costats iguals i una base més curta perquè tots els angles siguin més petits de 90° (ex: 8,0 / 8,0 / 5,0 cm).'
+                },
+                {
+                    id: 'isosceles-right',
+                    title: 'Isòsceles recte',
+                    sideKey: 'isosceles',
+                    angleKey: 'right',
+                    silhouettePts: '20,10 20,54 64,54',
+                    hint: 'Fes 2 costats iguals de 5,0 cm i ajusta el tercer costat a 7,1 cm perquè es formi una cantonada de 90°!'
+                },
+                {
+                    id: 'isosceles-obtuse',
+                    title: 'Isòsceles obtús',
+                    sideKey: 'isosceles',
+                    angleKey: 'obtuse',
+                    silhouettePts: '42,32 74,54 10,54',
+                    hint: 'Fes 2 costats iguals i una base ben llarga com una teulada oberta (ex: 6,0 / 6,0 / 10,5 cm).'
+                },
+                {
+                    id: 'scalene-acute',
+                    title: 'Escalè agut',
+                    sideKey: 'scalene',
+                    angleKey: 'acute',
+                    silhouettePts: '32,10 68,54 14,54',
+                    hint: 'Tria 3 mides diferents que s\'assemblin bastant entre elles (per exemple: 6,0 cm, 7,0 cm i 8,0 cm).'
+                },
+                {
+                    id: 'scalene-right',
+                    title: 'Escalè recte',
+                    sideKey: 'scalene',
+                    angleKey: 'right',
+                    silhouettePts: '18,12 18,54 70,54',
+                    hint: 'Prova una escala clàssica de Pitàgores amb 3 costats diferents: 3,0 cm, 4,0 cm i 5,0 cm (o 6,0 / 8,0 / 10,0 cm).'
+                },
+                {
+                    id: 'scalene-obtuse',
+                    title: 'Escalè obtús',
+                    sideKey: 'scalene',
+                    angleKey: 'obtuse',
+                    silhouettePts: '22,30 72,54 12,54',
+                    hint: 'Tria 3 costats diferents amb un costat molt més llarg que els altres dos (per exemple: 4,0 cm, 6,0 cm i 9,0 cm).'
+                }
+            ];
+
+            // Estat central (inicia sempre a 0 / 7 cromos)
+            const state = {
+                a: 7.0,
+                b: 7.0,
+                c: 7.0,
+                selectedSide: null,
+                selectedAngle: null,
+                walkthroughStep: '1',
+                unlocked: {},
+                openHints: {},
+                lastUnlockedId: null
+            };
+
+            // Referències segures al DOM
+            const dom = {
+                sliderA: document.getElementById('slider-a'),
+                sliderB: document.getElementById('slider-b'),
+                sliderC: document.getElementById('slider-c'),
+                valA: document.getElementById('val-a'),
+                valB: document.getElementById('val-b'),
+                valC: document.getElementById('val-c'),
+                triangleSvg: document.getElementById('triangle-svg'),
+                btnFix: document.getElementById('btn-fix'),
+                pillPerimeter: document.getElementById('pill-perimeter'),
+                pillAnglesSum: document.getElementById('pill-angles-sum'),
+                btnExplain: document.getElementById('btn-explain'),
+                btnCheck: document.getElementById('btn-check'),
+                feedbackBox: document.getElementById('feedback-box'),
+                feedbackIcon: document.getElementById('feedback-icon'),
+                feedbackText: document.getElementById('feedback-text'),
+                stickersGrid: document.getElementById('stickers-grid'),
+                albumCount: document.getElementById('album-count'),
+                albumProgressFill: document.getElementById('album-progress-fill'),
+                albumProgressbar: document.getElementById('album-progressbar'),
+                diplomaBanner: document.getElementById('diploma-banner'),
+                btnResetAlbum: document.getElementById('btn-reset-album'),
+                explainModal: document.getElementById('explain-modal'),
+                btnCloseModal: document.getElementById('btn-close-modal'),
+                modalTitle: document.getElementById('modal-title'),
+                zoomSvg: document.getElementById('zoom-svg'),
+                walkthroughTabs: document.getElementById('walkthrough-tabs'),
+                walkthroughContent: document.getElementById('walkthrough-content'),
+                walkthroughNav: document.getElementById('walkthrough-nav'),
+                btnPrevStep: document.getElementById('btn-prev-step'),
+                btnNextStep: document.getElementById('btn-next-step'),
+                toast: document.getElementById('toast'),
+                confettiLayer: document.getElementById('confetti-layer')
+            };
+
+            // Utilitats matemàtiques i de format en català
+            function round1(val) {
+                return Math.round(val * 10) / 10;
+            }
+
+            function formatDecimal(val) {
+                return round1(val).toFixed(1).replace('.', ',');
+            }
+
+            function canCloseTriangle(a, b, c) {
+                return (a + b > c + 0.001) && (a + c > b + 0.001) && (b + c > a + 0.001);
+            }
+
+            function createSvgEl(tag, attrs) {
+                const el = document.createElementNS(SVG_NS, tag);
+                if (attrs) {
+                    Object.keys(attrs).forEach(function (key) {
+                        el.setAttribute(key, String(attrs[key]));
+                    });
+                }
+                return el;
+            }
+
+            // Persistència opcional a localStorage (comença buida en iniciar la sessió)
+            function saveAlbumToStorage() {
+                try {
+                    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.unlocked));
+                } catch (err) {
+                    // Ignora si el navegador bloqueja localStorage
+                }
+            }
+
+            function clearAlbumStorage() {
+                try {
+                    window.localStorage.removeItem(STORAGE_KEY);
+                } catch (err) {
+                    // Ignora si el navegador bloqueja localStorage
+                }
+            }
+
+            // Càlcul geomètric complet del triangle i classificació
+            function analyzeTriangle(a, b, c) {
+                const cosA = Math.max(-1, Math.min(1, (b * b + c * c - a * a) / (2 * b * c)));
+                const cosB = Math.max(-1, Math.min(1, (a * a + c * c - b * b) / (2 * a * c)));
+                const cosC = Math.max(-1, Math.min(1, (a * a + b * b - c * c) / (2 * a * b)));
+
+                const degA = Math.acos(cosA) * (180 / Math.PI);
+                const degB = Math.acos(cosB) * (180 / Math.PI);
+                const degC = Math.acos(cosC) * (180 / Math.PI);
+
+                // Detecció d'angle recte (90°) adaptada a passos de 0,1 cm (incloent 3-4-5 o 5-5-7,1)
+                const isRightA = Math.abs(degA - 90) <= 0.7 || Math.abs(b * b + c * c - a * a) <= 0.45;
+                const isRightB = Math.abs(degB - 90) <= 0.7 || Math.abs(a * a + c * c - b * b) <= 0.45;
+                const isRightC = Math.abs(degC - 90) <= 0.7 || Math.abs(a * a + b * b - c * c) <= 0.45;
+
+                let alpha = Math.round(degA);
+                let beta = Math.round(degB);
+                let gamma = Math.round(degC);
+
+                // Garantim que un angle recte es mostri com a 90° exacte i que la suma dels 3 enters sigui sempre 180°
+                if (isRightA) {
+                    alpha = 90;
+                    beta = Math.round(degB);
+                    gamma = 180 - 90 - beta;
+                } else if (isRightB) {
+                    beta = 90;
+                    alpha = Math.round(degA);
+                    gamma = 180 - 90 - alpha;
+                } else if (isRightC) {
+                    gamma = 90;
+                    alpha = Math.round(degA);
+                    beta = 180 - 90 - alpha;
+                } else {
+                    const diff = 180 - (alpha + beta + gamma);
+                    if (diff !== 0) {
+                        if (alpha >= beta && alpha >= gamma) {
+                            alpha += diff;
+                        } else if (beta >= alpha && beta >= gamma) {
+                            beta += diff;
+                        } else {
+                            gamma += diff;
+                        }
+                    }
+                }
+
+                // Classificació segons els costats
+                const eqAB = Math.abs(a - b) < 0.05;
+                const eqBC = Math.abs(b - c) < 0.05;
+                const eqAC = Math.abs(a - c) < 0.05;
+
+                let sideKey = 'scalene';
+                let sideShort = 'Escalè';
+                let sideTheme = { bg: '#f3e8ff', border: '#c4b5fd', text: '#6d28d9' };
+
+                if (eqAB && eqBC) {
+                    sideKey = 'equilateral';
+                    sideShort = 'Equilàter';
+                    sideTheme = { bg: '#d1fae5', border: '#6ee7b7', text: '#047857' };
+                } else if (eqAB || eqBC || eqAC) {
+                    sideKey = 'isosceles';
+                    sideShort = 'Isòsceles';
+                    sideTheme = { bg: '#dbeafe', border: '#93c5fd', text: '#1d4ed8' };
+                }
+
+                // Classificació segons els angles
+                const maxAngle = Math.max(alpha, beta, gamma);
+                let angleKey = 'acute';
+                let angleShort = 'agut';
+                let angleTitle = 'Acutangle (agut)';
+                let angleTheme = { bg: '#dcfce7', border: '#86efac', text: '#15803d' };
+
+                if (alpha === 90 || beta === 90 || gamma === 90) {
+                    angleKey = 'right';
+                    angleShort = 'recte';
+                    angleTitle = 'Rectangle (recte)';
+                    angleTheme = { bg: '#fef9c3', border: '#fde047', text: '#a16207' };
+                } else if (maxAngle > 90) {
+                    angleKey = 'obtuse';
+                    angleShort = 'obtús';
+                    angleTitle = 'Obtusangle (obtús)';
+                    angleTheme = { bg: '#fee2e2', border: '#fca5a5', text: '#b91c1c' };
+                }
+
+                // Coordenades reals del triangle amb base c horitzontal (A a l'esquerra, B a la dreta, C a dalt)
+                const rawA = { x: 0, y: 0 };
+                const rawB = { x: c, y: 0 };
+                const cx = (b * b + c * c - a * a) / (2 * c);
+                const cy = Math.sqrt(Math.max(0, b * b - cx * cx));
+                const rawC = { x: cx, y: cy };
+
+                return {
+                    a: a,
+                    b: b,
+                    c: c,
+                    alpha: alpha,
+                    beta: beta,
+                    gamma: gamma,
+                    perimeter: round1(a + b + c),
+                    sideKey: sideKey,
+                    sideShort: sideShort,
+                    sideTheme: sideTheme,
+                    angleKey: angleKey,
+                    angleShort: angleShort,
+                    angleTitle: angleTitle,
+                    angleTheme: angleTheme,
+                    comboId: sideKey + '-' + angleKey,
+                    eqAB: eqAB,
+                    eqBC: eqBC,
+                    eqAC: eqAC,
+                    rawPts: { A: rawA, B: rawB, C: rawC }
+                };
+            }
+
+            // Dibuixa un triangle vàlid dins d'un element SVG (520x340)
+            function renderValidTriangleIntoSvg(targetSvg, info) {
+                targetSvg.innerHTML = '';
+
+                const rawA = info.rawPts.A;
+                const rawB = info.rawPts.B;
+                const rawC = info.rawPts.C;
+
+                const minX = Math.min(rawA.x, rawB.x, rawC.x);
+                const maxX = Math.max(rawA.x, rawB.x, rawC.x);
+                const minY = Math.min(rawA.y, rawB.y, rawC.y);
+                const maxY = Math.max(rawA.y, rawB.y, rawC.y);
+
+                const padX = 95;
+                const padTop = 58;
+                const padBottom = 64;
+                const availW = 520 - padX * 2;
+                const availH = 340 - padTop - padBottom;
+
+                const spanX = Math.max(maxX - minX, 0.1);
+                const spanY = Math.max(maxY - minY, 0.1);
+                const scale = Math.min(availW / spanX, availH / spanY);
+
+                const drawW = (maxX - minX) * scale;
+                const drawH = (maxY - minY) * scale;
+                const offX = padX + (availW - drawW) / 2;
+                const baseY = padTop + (availH + drawH) / 2;
+
+                function mapPt(pt) {
+                    return {
+                        x: offX + (pt.x - minX) * scale,
+                        y: baseY - (pt.y - minY) * scale
+                    };
+                }
+
+                const pA = mapPt(rawA);
+                const pB = mapPt(rawB);
+                const pC = mapPt(rawC);
+
+                // Farciment suau interior
+                targetSvg.appendChild(createSvgEl('polygon', {
+                    points: pA.x + ',' + pA.y + ' ' + pB.x + ',' + pB.y + ' ' + pC.x + ',' + pC.y,
+                    fill: 'rgba(99, 102, 241, 0.10)'
+                }));
+
+                // Sectors d'angles
+                function drawAngleSector(v, p1, p2, deg) {
+                    const isRight = deg === 90;
+                    const isObtuse = deg > 90;
+                    const strokeCol = isRight ? '#ca8a04' : (isObtuse ? '#dc2626' : '#16a34a');
+                    const fillCol = isRight ? 'rgba(234, 179, 8, 0.30)' : (isObtuse ? 'rgba(220, 38, 38, 0.24)' : 'rgba(22, 163, 74, 0.22)');
+
+                    const a1 = Math.atan2(p1.y - v.y, p1.x - v.x);
+                    const a2 = Math.atan2(p2.y - v.y, p2.x - v.x);
+
+                    if (isRight) {
+                        const s = 18;
+                        const u1 = { x: Math.cos(a1) * s, y: Math.sin(a1) * s };
+                        const u2 = { x: Math.cos(a2) * s, y: Math.sin(a2) * s };
+                        targetSvg.appendChild(createSvgEl('path', {
+                            d: 'M ' + v.x + ' ' + v.y +
+                               ' L ' + (v.x + u1.x) + ' ' + (v.y + u1.y) +
+                               ' L ' + (v.x + u1.x + u2.x) + ' ' + (v.y + u1.y + u2.y) +
+                               ' L ' + (v.x + u2.x) + ' ' + (v.y + u2.y) + ' Z',
+                            fill: fillCol,
+                            stroke: strokeCol,
+                            'stroke-width': 2.6
+                        }));
+                    } else {
+                        const r = 26;
+                        let diff = a2 - a1;
+                        while (diff <= -Math.PI) diff += 2 * Math.PI;
+                        while (diff > Math.PI) diff -= 2 * Math.PI;
+                        const sweep = diff >= 0 ? 1 : 0;
+
+                        targetSvg.appendChild(createSvgEl('path', {
+                            d: 'M ' + v.x + ' ' + v.y +
+                               ' L ' + (v.x + r * Math.cos(a1)) + ' ' + (v.y + r * Math.sin(a1)) +
+                               ' A ' + r + ' ' + r + ' 0 0 ' + sweep + ' ' + (v.x + r * Math.cos(a2)) + ' ' + (v.y + r * Math.sin(a2)) + ' Z',
+                            fill: fillCol,
+                            stroke: strokeCol,
+                            'stroke-width': 2.3
+                        }));
+                    }
+                }
+
+                drawAngleSector(pA, pB, pC, info.alpha);
+                drawAngleSector(pB, pA, pC, info.beta);
+                drawAngleSector(pC, pA, pB, info.gamma);
+
+                // Costats amb els seus 3 colors
+                // Costat c (taronja): A - B
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: pA.x, y1: pA.y, x2: pB.x, y2: pB.y,
+                    stroke: '#ea580c', 'stroke-width': 6.5, 'stroke-linecap': 'round'
+                }));
+                // Costat b (verd): A - C
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: pA.x, y1: pA.y, x2: pC.x, y2: pC.y,
+                    stroke: '#16a34a', 'stroke-width': 6.5, 'stroke-linecap': 'round'
+                }));
+                // Costat a (blau): B - C
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: pB.x, y1: pB.y, x2: pC.x, y2: pC.y,
+                    stroke: '#2563eb', 'stroke-width': 6.5, 'stroke-linecap': 'round'
+                }));
+
+                // Ratlletes d'igualtat quan dos o tres costats són iguals
+                function drawCongruenceTicks(p1, p2, count, color) {
+                    if (count <= 0) return;
+                    const mx = (p1.x + p2.x) / 2;
+                    const my = (p1.y + p2.y) / 2;
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const len = Math.hypot(dx, dy) || 1;
+                    const ux = dx / len;
+                    const uy = dy / len;
+                    const nx = -uy;
+                    const ny = ux;
+
+                    const offsets = count === 1 ? [0] : [-4.5, 4.5];
+                    offsets.forEach(function (off) {
+                        const cx = mx + ux * off;
+                        const cy = my + uy * off;
+                        targetSvg.appendChild(createSvgEl('line', {
+                            x1: cx - nx * 8,
+                            y1: cy - ny * 8,
+                            x2: cx + nx * 8,
+                            y2: cy + ny * 8,
+                            stroke: color,
+                            'stroke-width': 3.2,
+                            'stroke-linecap': 'round'
+                        }));
+                    });
+                }
+
+                if (info.sideKey === 'equilateral') {
+                    drawCongruenceTicks(pB, pC, 1, '#2563eb');
+                    drawCongruenceTicks(pA, pC, 1, '#16a34a');
+                    drawCongruenceTicks(pA, pB, 1, '#ea580c');
+                } else if (info.sideKey === 'isosceles') {
+                    if (info.eqAB) {
+                        drawCongruenceTicks(pB, pC, 1, '#2563eb');
+                        drawCongruenceTicks(pA, pC, 1, '#16a34a');
+                    } else if (info.eqBC) {
+                        drawCongruenceTicks(pA, pC, 1, '#16a34a');
+                        drawCongruenceTicks(pA, pB, 1, '#ea580c');
+                    } else if (info.eqAC) {
+                        drawCongruenceTicks(pB, pC, 1, '#2563eb');
+                        drawCongruenceTicks(pA, pB, 1, '#ea580c');
+                    }
+                }
+
+                // Vèrtexs blancs amb contorn fosc
+                [pA, pB, pC].forEach(function (pt) {
+                    targetSvg.appendChild(createSvgEl('circle', {
+                        cx: pt.x, cy: pt.y, r: 6,
+                        fill: '#ffffff', stroke: '#1e293b', 'stroke-width': 2.8
+                    }));
+                });
+
+                // Etiquetes d'angles en graus (enter)
+                function drawAngleLabel(v, p1, p2, deg) {
+                    const isRight = deg === 90;
+                    const isObtuse = deg > 90;
+                    const col = isRight ? '#a16207' : (isObtuse ? '#dc2626' : '#15803d');
+
+                    const a1 = Math.atan2(p1.y - v.y, p1.x - v.x);
+                    const a2 = Math.atan2(p2.y - v.y, p2.x - v.x);
+                    const bx = Math.cos(a1) + Math.cos(a2);
+                    const by = Math.sin(a1) + Math.sin(a2);
+                    const blen = Math.hypot(bx, by) || 1;
+                    const dist = deg < 30 ? 48 : 38;
+
+                    const lx = Math.max(24, Math.min(496, v.x + (bx / blen) * dist));
+                    const ly = Math.max(20, Math.min(324, v.y + (by / blen) * dist + 5));
+
+                    const txt = createSvgEl('text', {
+                        x: lx,
+                        y: ly,
+                        'text-anchor': 'middle',
+                        fill: col,
+                        'font-family': 'Fredoka, sans-serif',
+                        'font-size': '14',
+                        'font-weight': '700'
+                    });
+                    txt.textContent = deg + '°';
+                    targetSvg.appendChild(txt);
+                }
+
+                drawAngleLabel(pA, pB, pC, info.alpha);
+                drawAngleLabel(pB, pA, pC, info.beta);
+                drawAngleLabel(pC, pA, pB, info.gamma);
+
+                // Etiquetes blanques arrodonides amb la mesura exacta en cm
+                const centroid = {
+                    x: (pA.x + pB.x + pC.x) / 3,
+                    y: (pA.y + pB.y + pC.y) / 3
+                };
+
+                function drawSideBadge(p1, p2, textLabel, borderCol) {
+                    const mx = (p1.x + p2.x) / 2;
+                    const my = (p1.y + p2.y) / 2;
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const len = Math.hypot(dx, dy) || 1;
+                    let nx = -dy / len;
+                    let ny = dx / len;
+
+                    const dPlus = Math.hypot((mx + nx * 15) - centroid.x, (my + ny * 15) - centroid.y);
+                    const dMinus = Math.hypot((mx - nx * 15) - centroid.x, (my - ny * 15) - centroid.y);
+                    if (dPlus < dMinus) {
+                        nx = -nx;
+                        ny = -ny;
+                    }
+
+                    const bx = Math.max(46, Math.min(474, mx + nx * 24));
+                    const by = Math.max(20, Math.min(320, my + ny * 24));
+
+                    const g = createSvgEl('g', { transform: 'translate(' + bx + ',' + by + ')' });
+                    g.appendChild(createSvgEl('rect', {
+                        x: -38, y: -13, width: 76, height: 26, rx: 13,
+                        fill: '#ffffff', stroke: borderCol, 'stroke-width': 2.4
+                    }));
+                    const t = createSvgEl('text', {
+                        x: 0, y: 5,
+                        'text-anchor': 'middle',
+                        fill: borderCol,
+                        'font-family': 'Fredoka, sans-serif',
+                        'font-size': '13.5',
+                        'font-weight': '700'
+                    });
+                    t.textContent = textLabel;
+                    g.appendChild(t);
+                    targetSvg.appendChild(g);
+                }
+
+                drawSideBadge(pB, pC, formatDecimal(info.a) + ' cm', '#2563eb');
+                drawSideBadge(pA, pC, formatDecimal(info.b) + ' cm', '#16a34a');
+                drawSideBadge(pA, pB, formatDecimal(info.c) + ' cm', '#ea580c');
+            }
+
+            // Dibuixa l'estat quan els costats no arriben a tocar-se dins un SVG (520x340)
+            function renderBrokenIntoSvg(targetSvg, a, b, c) {
+                targetSvg.innerHTML = '';
+
+                const baseX1 = 85;
+                const baseX2 = 435;
+                const baseY = 235;
+                const basePx = baseX2 - baseX1;
+
+                // Base taronja (costat c)
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: baseX1, y1: baseY, x2: baseX2, y2: baseY,
+                    stroke: '#ea580c', 'stroke-width': 7, 'stroke-linecap': 'round'
+                }));
+
+                // Escala proporcional dels altres dos costats aixecats sense tocar-se
+                const maxRef = Math.max(c, a + b, 1);
+                const scale = (basePx / maxRef) * 0.92;
+                const lenB = Math.max(45, Math.min(165, b * scale));
+                const lenA = Math.max(45, Math.min(165, a * scale));
+
+                const liftAngle = 0.34;
+                const pLeftEnd = {
+                    x: baseX1 + Math.cos(liftAngle) * lenB,
+                    y: baseY - Math.sin(liftAngle) * lenB
+                };
+                const pRightEnd = {
+                    x: baseX2 - Math.cos(liftAngle) * lenA,
+                    y: baseY - Math.sin(liftAngle) * lenA
+                };
+
+                // Costat verd aixecat a l'esquerra
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: baseX1, y1: baseY, x2: pLeftEnd.x, y2: pLeftEnd.y,
+                    stroke: '#16a34a', 'stroke-width': 7, 'stroke-linecap': 'round'
+                }));
+
+                // Costat blau aixecat a la dreta
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: baseX2, y1: baseY, x2: pRightEnd.x, y2: pRightEnd.y,
+                    stroke: '#2563eb', 'stroke-width': 7, 'stroke-linecap': 'round'
+                }));
+
+                // Línia discontínua vermella entre puntes separades
+                targetSvg.appendChild(createSvgEl('line', {
+                    x1: pLeftEnd.x, y1: pLeftEnd.y, x2: pRightEnd.x, y2: pRightEnd.y,
+                    stroke: '#dc2626', 'stroke-width': 3, 'stroke-dasharray': '6 5'
+                }));
+
+                // Punts extrems
+                [
+                    { x: baseX1, y: baseY, col: '#1e293b' },
+                    { x: baseX2, y: baseY, col: '#1e293b' },
+                    { x: pLeftEnd.x, y: pLeftEnd.y, col: '#16a34a' },
+                    { x: pRightEnd.x, y: pRightEnd.y, col: '#2563eb' }
+                ].forEach(function (pt) {
+                    targetSvg.appendChild(createSvgEl('circle', {
+                        cx: pt.x, cy: pt.y, r: 5.5,
+                        fill: '#ffffff', stroke: pt.col, 'stroke-width': 2.8
+                    }));
+                });
+
+                // Icona i text d'avís explicant que no es poden donar la mà
+                const warnBg = createSvgEl('rect', {
+                    x: 80, y: 26, width: 360, height: 64, rx: 18,
+                    fill: '#fff7ed', stroke: '#fb923c', 'stroke-width': 2.5
+                });
+                targetSvg.appendChild(warnBg);
+
+                const warnTitle = createSvgEl('text', {
+                    x: 260, y: 52, 'text-anchor': 'middle',
+                    fill: '#c2410c', 'font-family': 'Fredoka, sans-serif',
+                    'font-size': '16', 'font-weight': '700'
+                });
+                warnTitle.textContent = '⚠️ Els costats no es poden donar la mà!';
+                targetSvg.appendChild(warnTitle);
+
+                const warnSub = createSvgEl('text', {
+                    x: 260, y: 74, 'text-anchor': 'middle',
+                    fill: '#7c2d12', 'font-family': 'Nunito, sans-serif',
+                    'font-size': '13', 'font-weight': '800'
+                });
+                warnSub.textContent = 'Els dos costats petits han de sumar més que el costat llarg.';
+                targetSvg.appendChild(warnSub);
+
+                // Etiquetes dels 3 costats
+                const lblGreen = createSvgEl('text', {
+                    x: baseX1 + 28, y: baseY - 46, 'text-anchor': 'middle',
+                    fill: '#15803d', 'font-family': 'Fredoka, sans-serif',
+                    'font-size': '13.5', 'font-weight': '700'
+                });
+                lblGreen.textContent = formatDecimal(b) + ' cm';
+                targetSvg.appendChild(lblGreen);
+
+                const lblBlue = createSvgEl('text', {
+                    x: baseX2 - 28, y: baseY - 46, 'text-anchor': 'middle',
+                    fill: '#1d4ed8', 'font-family': 'Fredoka, sans-serif',
+                    'font-size': '13.5', 'font-weight': '700'
+                });
+                lblBlue.textContent = formatDecimal(a) + ' cm';
+                targetSvg.appendChild(lblBlue);
+
+                const lblOrange = createSvgEl('text', {
+                    x: 260, y: baseY + 26, 'text-anchor': 'middle',
+                    fill: '#c2410c', 'font-family': 'Fredoka, sans-serif',
+                    'font-size': '14', 'font-weight': '700'
+                });
+                lblOrange.textContent = 'Base taronja: ' + formatDecimal(c) + ' cm';
+                targetSvg.appendChild(lblOrange);
+            }
+
+            // Gestió dels missatges de retroacció de la classificació manual
+            function clearFeedback() {
+                dom.feedbackBox.className = 'feedback-box';
+                dom.feedbackIcon.textContent = '';
+                dom.feedbackText.innerHTML = '';
+            }
+
+            function showFeedback(type, icon, htmlContent) {
+                dom.feedbackBox.className = 'feedback-box visible ' + type;
+                dom.feedbackIcon.textContent = icon;
+                dom.feedbackText.innerHTML = htmlContent;
+            }
+
+            function syncChoiceButtons() {
+                document.querySelectorAll('[data-side-choice]').forEach(function (btn) {
+                    btn.classList.toggle('selected', btn.getAttribute('data-side-choice') === state.selectedSide);
+                });
+                document.querySelectorAll('[data-angle-choice]').forEach(function (btn) {
+                    btn.classList.toggle('selected', btn.getAttribute('data-angle-choice') === state.selectedAngle);
+                });
+            }
+
+            // Actualització principal (sense revelar automàticament la classificació)
+            function updateWorkspace(a, b, c, resetChoices) {
+                state.a = Math.max(2.0, Math.min(15.0, round1(a)));
+                state.b = Math.max(2.0, Math.min(15.0, round1(b)));
+                state.c = Math.max(2.0, Math.min(15.0, round1(c)));
+
+                if (resetChoices) {
+                    state.selectedSide = null;
+                    state.selectedAngle = null;
+                }
+                clearFeedback();
+                syncChoiceButtons();
+
+                dom.sliderA.value = state.a.toFixed(1);
+                dom.sliderB.value = state.b.toFixed(1);
+                dom.sliderC.value = state.c.toFixed(1);
+
+                dom.valA.textContent = formatDecimal(state.a);
+                dom.valB.textContent = formatDecimal(state.b);
+                dom.valC.textContent = formatDecimal(state.c);
+
+                const valid = canCloseTriangle(state.a, state.b, state.c);
+
+                if (!valid) {
+                    renderBrokenIntoSvg(dom.triangleSvg, state.a, state.b, state.c);
+                    dom.btnFix.classList.add('visible');
+                    dom.pillPerimeter.textContent = 'Perímetre: —';
+                    dom.pillAnglesSum.textContent = 'Suma dels angles: —';
+                    dom.btnExplain.textContent = '🔍 Per què no tanca aquest triangle?';
+                    dom.btnExplain.classList.add('warning-mode');
+                    return;
+                }
+
+                dom.btnFix.classList.remove('visible');
+                dom.btnExplain.textContent = '🔍 Amplia i explica aquest triangle';
+                dom.btnExplain.classList.remove('warning-mode');
+
+                const info = analyzeTriangle(state.a, state.b, state.c);
+                renderValidTriangleIntoSvg(dom.triangleSvg, info);
+
+                dom.pillPerimeter.textContent = 'Perímetre: ' + formatDecimal(info.perimeter) + ' cm';
+                dom.pillAnglesSum.textContent = 'Suma dels angles: ' + (info.alpha + info.beta + info.gamma) + '°';
+            }
+
+            // Contingut dinàmic del modal d'ampliació i explicació pas a pas
+            function getRealWorldExample(comboId) {
+                const map = {
+                    'equilateral-acute': 'un senyal de trànsit de perill o una porció de formatge totalment simètrica.',
+                    'isosceles-acute': 'el barret d\'un pallasso, una tenda de campanya o una porció de pizza.',
+                    'isosceles-right': 'una esquadra de dibuix o un entrepà quadrat tallat per la meitat.',
+                    'isosceles-obtuse': 'la teulada d\'una caseta o un penjador de roba.',
+                    'scalene-acute': 'la vela d\'un vaixell o l\'aleta d\'un tauró.',
+                    'scalene-right': 'un cartabó de dibuix o una rampa per pujar un esglaó.',
+                    'scalene-obtuse': 'una gandula de platja inclinada o una rampa molt suau.'
+                };
+                return map[comboId] || 'una figura geomètrica de tres costats.';
+            }
+
+            function renderExplainModal() {
+                const valid = canCloseTriangle(state.a, state.b, state.c);
+
+                if (!valid) {
+                    dom.modalTitle.textContent = '🔍 Per què no tanca aquest triangle?';
+                    dom.walkthroughTabs.style.display = 'none';
+                    dom.walkthroughNav.style.display = 'none';
+                    renderBrokenIntoSvg(dom.zoomSvg, state.a, state.b, state.c);
+
+                    const ordered = [
+                        { name: 'blau', val: state.a },
+                        { name: 'verd', val: state.b },
+                        { name: 'taronja', val: state.c }
+                    ].sort(function (x, y) { return y.val - x.val; });
+
+                    const sumSmall = round1(ordered[1].val + ordered[2].val);
+
+                    dom.walkthroughContent.innerHTML =
+                        '<div class="explain-card" style="border-color:#fdba74;background:#fff7ed;">' +
+                            '<h3>📏 La regla dels dos costats petits</h3>' +
+                            '<p>Perquè tres costats es puguin donar la mà i tancar un triangle, la suma dels <strong>dos costats més curts</strong> sempre ha de ser <strong>més gran</strong> que el costat més llarg.</p>' +
+                        '</div>' +
+                        '<div class="explain-card">' +
+                            '<h3>🔎 Mirem les teves mesures d\'ara:</h3>' +
+                            '<p>• El costat més llarg és el <strong>' + ordered[0].name + ' (' + formatDecimal(ordered[0].val) + ' cm)</strong>.<br>' +
+                            '• Els altres dos junts sumen: <strong>' + formatDecimal(ordered[1].val) + ' + ' + formatDecimal(ordered[2].val) + ' = ' + formatDecimal(sumSmall) + ' cm</strong>.<br>' +
+                            '• Com que <strong>' + formatDecimal(sumSmall) + ' cm</strong> no supera <strong>' + formatDecimal(ordered[0].val) + ' cm</strong>, les puntes queden separades!</p>' +
+                        '</div>';
+                    return;
+                }
+
+                const info = analyzeTriangle(state.a, state.b, state.c);
+                dom.modalTitle.textContent = '🔍 Explicació pas a pas d\'aquest triangle';
+                dom.walkthroughTabs.style.display = 'grid';
+                dom.walkthroughNav.style.display = 'flex';
+                renderValidTriangleIntoSvg(dom.zoomSvg, info);
+
+                document.querySelectorAll('.step-tab').forEach(function (tab) {
+                    tab.classList.toggle('active', tab.getAttribute('data-step') === state.walkthroughStep);
+                });
+
+                // Pas 1: Costats
+                let sideText = '';
+                if (info.sideKey === 'equilateral') {
+                    sideText = 'Els tres costats mesuren exactament <strong>' + formatDecimal(info.a) + ' cm</strong> (blau, verd i taronja són iguals). Quan els 3 costats tenen la mateixa llargada, és un triangle <strong>equilàter</strong>.';
+                } else if (info.sideKey === 'isosceles') {
+                    let pairDesc = '';
+                    if (info.eqAB) {
+                        pairDesc = 'el costat blau (' + formatDecimal(info.a) + ' cm) i el verd (' + formatDecimal(info.b) + ' cm) són iguals, i el taronja (' + formatDecimal(info.c) + ' cm) és diferent';
+                    } else if (info.eqBC) {
+                        pairDesc = 'el costat verd (' + formatDecimal(info.b) + ' cm) i el taronja (' + formatDecimal(info.c) + ' cm) són iguals, i el blau (' + formatDecimal(info.a) + ' cm) és diferent';
+                    } else {
+                        pairDesc = 'el costat blau (' + formatDecimal(info.a) + ' cm) i el taronja (' + formatDecimal(info.c) + ' cm) són iguals, i el verd (' + formatDecimal(info.b) + ' cm) és diferent';
+                    }
+                    sideText = 'En aquesta figura, ' + pairDesc + '. Com que té 2 costats iguals i 1 de diferent, és un triangle <strong>isòsceles</strong>.';
+                } else {
+                    sideText = 'El costat blau fa <strong>' + formatDecimal(info.a) + ' cm</strong>, el verd fa <strong>' + formatDecimal(info.b) + ' cm</strong> i el taronja fa <strong>' + formatDecimal(info.c) + ' cm</strong>. Tots tres són diferents! Per això és <strong>escalè</strong>.';
+                }
+
+                const card1 =
+                    '<div class="explain-card" style="border-color:' + info.sideTheme.border + ';background:' + info.sideTheme.bg + ';">' +
+                        '<h3>Pas 1: Mirem els costats (' + info.sideShort.toLowerCase() + ')</h3>' +
+                        '<p>' + sideText + '</p>' +
+                    '</div>';
+
+                // Pas 2: Angles
+                const sortedAngles = [info.alpha, info.beta, info.gamma].sort(function (x, y) { return y - x; });
+                const biggestAngle = sortedAngles[0];
+                let angleText = 'Les tres cantonades mesuren <strong>' + info.alpha + '°</strong>, <strong>' + info.beta + '°</strong> i <strong>' + info.gamma + '°</strong> (sumen 180°). ';
+
+                if (info.angleKey === 'right') {
+                    angleText += 'Hi ha un angle que fa exactament <strong>90°</strong> (marcat amb el quadrat groc en L). Per això és <strong>rectangle (recte)</strong>.';
+                } else if (info.angleKey === 'obtuse') {
+                    angleText += 'L\'angle més obert fa <strong>' + biggestAngle + '°</strong>, que és més gran que una cantonada de 90° (marcat en vermell). Per això és <strong>obtusangle (obtús)</strong>.';
+                } else {
+                    angleText += 'Fins i tot l\'angle més gran (<strong>' + biggestAngle + '°</strong>) és més petit que 90°. Com que tots tres són aguts (verds), és <strong>acutangle (agut)</strong>.';
+                }
+
+                const card2 =
+                    '<div class="explain-card" style="border-color:' + info.angleTheme.border + ';background:' + info.angleTheme.bg + ';">' +
+                        '<h3>Pas 2: Mirem els angles (' + info.angleTitle.toLowerCase() + ')</h3>' +
+                        '<p>' + angleText + '</p>' +
+                    '</div>';
+
+                // Pas 3: Resum
+                const card3 =
+                    '<div class="explain-card" style="border-color:#c4b5fd;background:#f5f3ff;">' +
+                        '<h3>Pas 3: Resum d\'aquest triangle</h3>' +
+                        '<p>Aquest triangle és <strong>' + info.sideShort.toLowerCase() + ' ' + info.angleShort + '</strong>.<br>' +
+                        '💡 <em>S\'assembla a:</em> ' + getRealWorldExample(info.comboId) + '</p>' +
+                    '</div>';
+
+                if (state.walkthroughStep === '1') {
+                    dom.walkthroughContent.innerHTML = card1;
+                    dom.btnPrevStep.disabled = true;
+                    dom.btnNextStep.disabled = false;
+                } else if (state.walkthroughStep === '2') {
+                    dom.walkthroughContent.innerHTML = card2;
+                    dom.btnPrevStep.disabled = false;
+                    dom.btnNextStep.disabled = false;
+                } else if (state.walkthroughStep === '3') {
+                    dom.walkthroughContent.innerHTML = card3;
+                    dom.btnPrevStep.disabled = false;
+                    dom.btnNextStep.disabled = true;
+                } else {
+                    dom.walkthroughContent.innerHTML = card1 + card2 + card3;
+                    dom.btnPrevStep.disabled = false;
+                    dom.btnNextStep.disabled = true;
+                }
+            }
+
+            // Miniatura SVG en color per als cromos aconseguits
+            function buildMiniStickerSvg(item) {
+                const rawA = item.rawPts.A;
+                const rawB = item.rawPts.B;
+                const rawC = item.rawPts.C;
+                const minX = Math.min(rawA.x, rawB.x, rawC.x);
+                const maxX = Math.max(rawA.x, rawB.x, rawC.x);
+                const minY = Math.min(rawA.y, rawB.y, rawC.y);
+                const maxY = Math.max(rawA.y, rawB.y, rawC.y);
+
+                const scale = Math.min(64 / Math.max(maxX - minX, 0.1), 44 / Math.max(maxY - minY, 0.1));
+                const offX = 10 + (64 - (maxX - minX) * scale) / 2;
+                const baseY = 10 + (44 + (maxY - minY) * scale) / 2;
+
+                function mp(pt) {
+                    return {
+                        x: (offX + (pt.x - minX) * scale).toFixed(1),
+                        y: (baseY - (pt.y - minY) * scale).toFixed(1)
+                    };
+                }
+
+                const pA = mp(rawA);
+                const pB = mp(rawB);
+                const pC = mp(rawC);
+
+                return '<svg width="84" height="64" viewBox="0 0 84 64" style="background:#f8fbff;border-radius:14px;border:2px solid #cbd5e1;flex-shrink:0;" aria-hidden="true">' +
+                    '<polygon points="' + pA.x + ',' + pA.y + ' ' + pB.x + ',' + pB.y + ' ' + pC.x + ',' + pC.y + '" fill="rgba(99,102,241,0.14)" />' +
+                    '<line x1="' + pA.x + '" y1="' + pA.y + '" x2="' + pB.x + '" y2="' + pB.y + '" stroke="#ea580c" stroke-width="3.5" stroke-linecap="round" />' +
+                    '<line x1="' + pA.x + '" y1="' + pA.y + '" x2="' + pC.x + '" y2="' + pC.y + '" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" />' +
+                    '<line x1="' + pB.x + '" y1="' + pB.y + '" x2="' + pC.x + '" y2="' + pC.y + '" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" />' +
+                '</svg>';
+            }
+
+            // Renderitza l'àlbum interactiu de 7 cromos
+            function renderAlbum() {
+                const unlockedCount = Object.keys(state.unlocked).length;
+                dom.albumCount.textContent = 'Cromos aconseguits: ' + unlockedCount + ' / 7 ⭐';
+
+                const pct = Math.round((unlockedCount / 7) * 100);
+                dom.albumProgressFill.style.width = pct + '%';
+                dom.albumProgressbar.setAttribute('aria-valuenow', String(unlockedCount));
+
+                if (unlockedCount === 7) {
+                    dom.diplomaBanner.classList.add('visible');
+                } else {
+                    dom.diplomaBanner.classList.remove('visible');
+                }
+
+                dom.stickersGrid.innerHTML = '';
+
+                ALBUM_CATALOG.forEach(function (entry) {
+                    const saved = state.unlocked[entry.id];
+                    const card = document.createElement('div');
+
+                    if (!saved) {
+                        card.className = 'sticker locked';
+                        const isHintOpen = Boolean(state.openHints[entry.id]);
+
+                        card.innerHTML =
+                            '<div class="sticker-top">' +
+                                '<div class="sticker-silhouette">' +
+                                    '<svg width="84" height="64" viewBox="0 0 84 64" aria-hidden="true">' +
+                                        '<polygon points="' + entry.silhouettePts + '" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2.5" stroke-linejoin="round" />' +
+                                    '</svg>' +
+                                    '<span class="sticker-lock-badge" aria-hidden="true">🔒</span>' +
+                                '</div>' +
+                                '<div>' +
+                                    '<div class="sticker-locked-title">' + entry.title + '</div>' +
+                                    '<div class="sticker-locked-sub">Encara per aconseguir</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<button type="button" class="btn-hint" data-hint-id="' + entry.id + '">' +
+                                (isHintOpen ? '🙈 Amaga la pista' : '💡 Pista') +
+                            '</button>' +
+                            (isHintOpen ? '<div class="hint-box">' + entry.hint + '</div>' : '');
+                    } else {
+                        const isNew = state.lastUnlockedId === entry.id;
+                        card.className = 'sticker unlocked' + (isNew ? ' just-unlocked' : '');
+                        card.setAttribute('data-load-id', entry.id);
+                        card.setAttribute('title', 'Fes clic per carregar aquest triangle al taller');
+
+                        card.innerHTML =
+                            '<span class="sticker-star">⭐ Aconseguit!</span>' +
+                            '<div class="sticker-top">' +
+                                buildMiniStickerSvg(saved) +
+                                '<div class="sticker-badges">' +
+                                    '<span class="tag-pill" style="background:' + saved.sideTheme.bg + ';color:' + saved.sideTheme.text + ';border:1px solid ' + saved.sideTheme.border + ';">' + saved.sideShort + '</span>' +
+                                    '<span class="tag-pill" style="background:' + saved.angleTheme.bg + ';color:' + saved.angleTheme.text + ';border:1px solid ' + saved.angleTheme.border + ';">' + saved.angleTitle + '</span>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="sticker-details">' +
+                                '<span>📏 ' + formatDecimal(saved.a) + ' / ' + formatDecimal(saved.b) + ' / ' + formatDecimal(saved.c) + ' cm</span>' +
+                                '<span>📐 ' + saved.alpha + '° · ' + saved.beta + '° · ' + saved.gamma + '°</span>' +
+                            '</div>' +
+                            '<div class="sticker-load-tip">👆 Toca per tornar-lo a posar al taller</div>';
+                    }
+
+                    dom.stickersGrid.appendChild(card);
+                });
+
+                state.lastUnlockedId = null;
+            }
+
+            // Celebració amb confeti i notificació flotant
+            let toastTimer = null;
+            function showToast(msg) {
+                dom.toast.textContent = msg;
+                dom.toast.style.display = 'block';
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(function () {
+                    dom.toast.style.display = 'none';
+                }, 3400);
+            }
+
+            function launchConfetti() {
+                const colors = ['#facc15', '#3b82f6', '#22c55e', '#f97316', '#ec4899', '#8b5cf6'];
+                for (let i = 0; i < 38; i++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'confetti-piece';
+                    piece.style.left = (Math.random() * 100) + 'vw';
+                    piece.style.backgroundColor = colors[i % colors.length];
+                    piece.style.animationDelay = (Math.random() * 0.35) + 's';
+                    piece.style.width = (8 + Math.random() * 8) + 'px';
+                    piece.style.height = (8 + Math.random() * 8) + 'px';
+                    dom.confettiLayer.appendChild(piece);
+                    setTimeout(function () {
+                        piece.remove();
+                    }, 2500);
+                }
+            }
+
+            // Esdeveniments dels lliscadors i botons - / +
+            dom.sliderA.addEventListener('input', function () {
+                updateWorkspace(parseFloat(dom.sliderA.value), state.b, state.c, false);
+            });
+
+            dom.sliderB.addEventListener('input', function () {
+                updateWorkspace(state.a, parseFloat(dom.sliderB.value), state.c, false);
+            });
+
+            dom.sliderC.addEventListener('input', function () {
+                updateWorkspace(state.a, state.b, parseFloat(dom.sliderC.value), false);
+            });
+
+            document.querySelectorAll('.step-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const side = btn.getAttribute('data-side');
+                    const delta = parseFloat(btn.getAttribute('data-delta'));
+                    if (side === 'a') {
+                        updateWorkspace(state.a + delta, state.b, state.c, false);
+                    } else if (side === 'b') {
+                        updateWorkspace(state.a, state.b + delta, state.c, false);
+                    } else if (side === 'c') {
+                        updateWorkspace(state.a, state.b, state.c + delta, false);
+                    }
+                });
+            });
+
+            // Botó màgic per arreglar el triangle quan no tanca
+            dom.btnFix.addEventListener('click', function () {
+                const longest = Math.max(state.a, state.b, state.c);
+                const adjusted = Math.min(15.0, Math.max(4.0, round1(longest * 0.7)));
+                updateWorkspace(adjusted, adjusted, longest, true);
+                showToast('✨ Fet! Els costats ja es donen la mà!');
+            });
+
+            // Selecció manual dels botons de classificació
+            document.querySelectorAll('[data-side-choice]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    state.selectedSide = btn.getAttribute('data-side-choice');
+                    clearFeedback();
+                    syncChoiceButtons();
+                });
+            });
+
+            document.querySelectorAll('[data-angle-choice]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    state.selectedAngle = btn.getAttribute('data-angle-choice');
+                    clearFeedback();
+                    syncChoiceButtons();
+                });
+            });
+
+            // Comprovació manual i desbloqueig de cromos
+            dom.btnCheck.addEventListener('click', function () {
+                if (!canCloseTriangle(state.a, state.b, state.c)) {
+                    showFeedback(
+                        'warning',
+                        '⚠️',
+                        '<strong>Primer has de tancar el triangle!</strong> Els tres costats encara no arriben a tocar-se. Mou els lliscadors o prem el botó taronja per arreglar-lo.'
+                    );
+                    return;
+                }
+
+                if (!state.selectedSide || !state.selectedAngle) {
+                    showFeedback(
+                        'info',
+                        '👆',
+                        '<strong>Falta triar alguna opció!</strong> Selecciona primer una etiqueta del grup <em>1. Segons els costats</em> i una del grup <em>2. Segons els angles</em>.'
+                    );
+                    return;
+                }
+
+                const info = analyzeTriangle(state.a, state.b, state.c);
+                const sideCorrect = state.selectedSide === info.sideKey;
+                const angleCorrect = state.selectedAngle === info.angleKey;
+
+                if (sideCorrect && angleCorrect) {
+                    const isFirstTime = !state.unlocked[info.comboId];
+                    state.unlocked[info.comboId] = info;
+                    state.lastUnlockedId = info.comboId;
+                    saveAlbumToStorage();
+                    renderAlbum();
+                    launchConfetti();
+
+                    if (isFirstTime) {
+                        const total = Object.keys(state.unlocked).length;
+                        showToast('🎉 Nou cromo aconseguit (' + total + '/7): ' + info.sideShort + ' ' + info.angleShort + '!');
+                        showFeedback(
+                            'success',
+                            '🎉',
+                            '<strong>Molt bé! Ho has encertat!</strong> Aquest triangle és <strong>' + info.sideShort.toLowerCase() + ' ' + info.angleShort + '</strong>. Ja tens el cromo enganxat al teu àlbum!'
+                        );
+                    } else {
+                        showToast('⭐ Cromo «' + info.sideShort + ' ' + info.angleShort + '» actualitzat!');
+                        showFeedback(
+                            'success',
+                            '⭐',
+                            '<strong>Correcte!</strong> És un triangle <strong>' + info.sideShort.toLowerCase() + ' ' + info.angleShort + '</strong>. Hem actualitzat les noves mides d\'aquest cromo al teu àlbum!'
+                        );
+                    }
+                    return;
+                }
+
+                // Pistes constructives sense revelar la resposta directa
+                if (!sideCorrect && !angleCorrect) {
+                    showFeedback(
+                        'warning',
+                        '🤔',
+                        '<strong>Gairebé! Torna-ho a observar amb calma:</strong><br>' +
+                        '• Revisa els costats: fixa\'t en les ratlletes d\'igualtat i compara els centímetres dels tres costats.<br>' +
+                        '• Revisa els angles: compara les cantonades amb un angle recte de 90°.'
+                    );
+                } else if (!sideCorrect) {
+                    showFeedback(
+                        'warning',
+                        '📏',
+                        '<strong>Has encertat els angles, però revisa els costats!</strong><br>' +
+                        'Fixa\'t en les ratlletes d\'igualtat i compara les mesures en cm del costat blau, el verd i el taronja.'
+                    );
+                } else {
+                    showFeedback(
+                        'warning',
+                        '📐',
+                        '<strong>Has encertat els costats, però revisa els angles!</strong><br>' +
+                        'Compara els graus de les tres cantonades amb una cantonada recte de 90°.'
+                    );
+                }
+            });
+
+            // Modal d'ampliació i explicació cas a cas
+            dom.btnExplain.addEventListener('click', function () {
+                state.walkthroughStep = '1';
+                renderExplainModal();
+                dom.explainModal.classList.add('open');
+            });
+
+            dom.btnCloseModal.addEventListener('click', function () {
+                dom.explainModal.classList.remove('open');
+            });
+
+            dom.explainModal.addEventListener('click', function (e) {
+                if (e.target === dom.explainModal) {
+                    dom.explainModal.classList.remove('open');
+                }
+            });
+
+            dom.walkthroughTabs.addEventListener('click', function (e) {
+                const tab = e.target.closest('[data-step]');
+                if (!tab) return;
+                state.walkthroughStep = tab.getAttribute('data-step');
+                renderExplainModal();
+            });
+
+            dom.btnPrevStep.addEventListener('click', function () {
+                const order = ['1', '2', '3', 'all'];
+                const idx = order.indexOf(state.walkthroughStep);
+                if (idx > 0) {
+                    state.walkthroughStep = order[idx - 1];
+                    renderExplainModal();
+                }
+            });
+
+            dom.btnNextStep.addEventListener('click', function () {
+                const order = ['1', '2', '3', 'all'];
+                const idx = order.indexOf(state.walkthroughStep);
+                if (idx >= 0 && idx < order.length - 1) {
+                    state.walkthroughStep = order[idx + 1];
+                    renderExplainModal();
+                }
+            });
+
+            // Interacció amb l'àlbum (pistes i càrrega de triangles aconseguits)
+            dom.stickersGrid.addEventListener('click', function (e) {
+                const hintBtn = e.target.closest('[data-hint-id]');
+                if (hintBtn) {
+                    const id = hintBtn.getAttribute('data-hint-id');
+                    state.openHints[id] = !state.openHints[id];
+                    renderAlbum();
+                    return;
+                }
+
+                const stickerCard = e.target.closest('[data-load-id]');
+                if (stickerCard) {
+                    const id = stickerCard.getAttribute('data-load-id');
+                    const saved = state.unlocked[id];
+                    if (saved) {
+                        updateWorkspace(saved.a, saved.b, saved.c, true);
+                        showToast('📐 Triangle «' + saved.sideShort + ' ' + saved.angleShort + '» carregat al taller!');
+                    }
+                }
+            });
+
+            // Reinicia l'àlbum a 0 / 7
+            dom.btnResetAlbum.addEventListener('click', function () {
+                state.unlocked = {};
+                state.openHints = {};
+                state.lastUnlockedId = null;
+                clearAlbumStorage();
+                renderAlbum();
+                showToast('🔄 Àlbum reiniciat a 0 / 7 cromos!');
+            });
+
+            // Inicialització segura en carregar
+            function init() {
+                clearAlbumStorage();
+                state.unlocked = {};
+                updateWorkspace(7.0, 7.0, 7.0, true);
+                renderAlbum();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
