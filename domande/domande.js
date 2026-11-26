@@ -84,6 +84,7 @@ let sessionMode = 'individual';
 let editorKind = 'quiz';
 let editingQuizId = null;
 let editorDraftTimeout = null;
+let draftPromptDismissedInSession = false;
 let previewQuestionsList = [];
 let previewCurrentIdx = 0;
 let previewQuizTitle = '';
@@ -441,11 +442,29 @@ async function tryRestoreStudentSession() {
   return true;
 }
 
+function hasMeaningfulDraftContent(draft) {
+  if (!draft) return false;
+  if ((draft.title || '').trim().length > 0) return true;
+  if ((draft.tag || '').trim().length > 0) return true;
+  if ((draft.sharedEmails || '').trim().length > 0) return true;
+  const qs = Array.isArray(draft.questions) ? draft.questions : [];
+  return qs.some(q => {
+    if ((q.question_text || '').trim().length > 0) return true;
+    if ((q.media_url || '').trim().length > 0) return true;
+    const opts = Array.isArray(q.options) ? q.options : [];
+    return opts.some(o =>
+      (o.text || '').trim().length > 0 ||
+      (o.sentence || '').trim().length > 0 ||
+      (o.visual || '').trim().length > 0
+    );
+  });
+}
+
 function scheduleEditorDraftSave() {
   clearTimeout(editorDraftTimeout);
   editorDraftTimeout = setTimeout(() => {
     saveEditorDraftToStorage();
-  }, 500);
+  }, 250);
 }
 
 function saveEditorDraftToStorage() {
@@ -460,6 +479,13 @@ function saveEditorDraftToStorage() {
       questions: blocks,
       savedAt: Date.now()
     };
+
+    if (!hasMeaningfulDraftContent(draft)) {
+      clearEditorDraftStorage();
+      return;
+    }
+
+    draftPromptDismissedInSession = false;
     localStorage.setItem(EDITOR_DRAFT_KEY, JSON.stringify(draft));
     const pill = document.getElementById('editor-autosave-pill');
     if (pill) {
@@ -470,6 +496,7 @@ function saveEditorDraftToStorage() {
 }
 
 function clearEditorDraftStorage() {
+  clearTimeout(editorDraftTimeout);
   try {
     localStorage.removeItem(EDITOR_DRAFT_KEY);
   } catch (e) {}
@@ -479,7 +506,12 @@ function getSavedEditorDraft() {
   try {
     const raw = localStorage.getItem(EDITOR_DRAFT_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!hasMeaningfulDraftContent(parsed)) {
+      localStorage.removeItem(EDITOR_DRAFT_KEY);
+      return null;
+    }
+    return parsed;
   } catch (e) {
     return null;
   }
@@ -487,6 +519,7 @@ function getSavedEditorDraft() {
 
 function cancelQuizEditor() {
   clearEditorDraftStorage();
+  draftPromptDismissedInSession = true;
   showView('view-teacher-dash');
 }
 
@@ -610,10 +643,12 @@ function domandeAlert(message, title = 'Avís', icon = '💬') {
     const cancelBtn = document.getElementById('dialog-cancel-btn');
     const confirmBtn = document.getElementById('dialog-confirm-btn');
     cancelBtn.classList.add('hidden');
+    confirmBtn.disabled = false;
     confirmBtn.textContent = "D'acord";
     confirmBtn.className = "flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-indigo-200 transition";
     modal.classList.remove('hidden');
     confirmBtn.onclick = () => {
+      confirmBtn.disabled = true;
       modal.classList.add('hidden');
       resolve(true);
     };
@@ -629,19 +664,23 @@ function domandeConfirm(message, title = 'Confirmació', danger = true) {
     const cancelBtn = document.getElementById('dialog-cancel-btn');
     const confirmBtn = document.getElementById('dialog-confirm-btn');
     cancelBtn.classList.remove('hidden');
+    cancelBtn.disabled = false;
+    confirmBtn.disabled = false;
     confirmBtn.textContent = danger ? 'Sí, confirmar' : 'Acceptar';
     confirmBtn.className = danger
       ? "flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-rose-200 transition"
       : "flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-extrabold text-sm shadow-md shadow-indigo-200 transition";
     modal.classList.remove('hidden');
-    cancelBtn.onclick = () => {
+
+    const finish = (val) => {
+      cancelBtn.disabled = true;
+      confirmBtn.disabled = true;
       modal.classList.add('hidden');
-      resolve(false);
+      resolve(val);
     };
-    confirmBtn.onclick = () => {
-      modal.classList.add('hidden');
-      resolve(true);
-    };
+
+    cancelBtn.onclick = () => finish(false);
+    confirmBtn.onclick = () => finish(true);
   });
 }
 
@@ -2190,22 +2229,33 @@ async function loadTeacherDashboard(user) {
   renderTagFilters();
   renderFilteredQuizzes();
 
-  const pendingDraft = getSavedEditorDraft();
-  if (pendingDraft && pendingDraft.questions && pendingDraft.questions.length > 0) {
-    const restore = await domandeConfirm(
-      `Tens un esborrany sense guardar ("${pendingDraft.title || 'Sense títol'}"). Vols recuperar-lo ara?`,
-      "Esborrany detectat",
-      false
-    );
-    if (restore) {
-      openQuizEditor(
-        pendingDraft.editorKind || 'quiz',
-        pendingDraft.editingQuizId ? { id: pendingDraft.editingQuizId, title: pendingDraft.title, tag: pendingDraft.tag, shared_with: parseEmailsList(pendingDraft.sharedEmails) } : null,
-        pendingDraft.questions,
-        true
+  if (!draftPromptDismissedInSession) {
+    const pendingDraft = getSavedEditorDraft();
+    if (pendingDraft) {
+      const restore = await domandeConfirm(
+        `Tens un esborrany sense guardar ("${pendingDraft.title || 'Sense títol'}"). Vols recuperar-lo ara?`,
+        "Esborrany detectat",
+        false
       );
-    } else {
-      clearEditorDraftStorage();
+      if (restore) {
+        clearEditorDraftStorage();
+        openQuizEditor(
+          pendingDraft.editorKind || 'quiz',
+          pendingDraft.editingQuizId
+            ? {
+                id: pendingDraft.editingQuizId,
+                title: pendingDraft.title || '',
+                tag: pendingDraft.tag || '',
+                shared_with: parseEmailsList(pendingDraft.sharedEmails || '')
+              }
+            : null,
+          pendingDraft.questions || [],
+          true
+        );
+      } else {
+        clearEditorDraftStorage();
+        draftPromptDismissedInSession = true;
+      }
     }
   }
 }
@@ -4043,6 +4093,7 @@ async function createRoom(quizId, kind = 'quiz', mode = 'individual', shuffleQue
   document.getElementById('host-live-leaderboard').innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Esperant punts...</p>';
   requestScreenWakeLock();
   showView('view-teacher-host');
+  updateHostRealtimeStatusUI('reconnecting');
   setMusicMode('lobby');
   document.getElementById('host-lobby').classList.remove('hidden');
   document.getElementById('host-question-screen').classList.add('hidden');
