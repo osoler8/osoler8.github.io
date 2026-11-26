@@ -720,6 +720,10 @@ window.addEventListener('online', () => {
 });
 
 window.addEventListener('beforeunload', () => {
+  const editorView = document.getElementById('view-quiz-editor');
+  if (editorView && !editorView.classList.contains('hidden')) {
+    saveEditorDraftToStorage();
+  }
   if (!isStudyMode && currentSession && currentSession.status !== 'finished' && hostBroadcastChannel) {
     broadcastRoomState('closed_by_teacher', currentSession.current_question_index || 0);
   }
@@ -2241,14 +2245,12 @@ async function loadTeacherDashboard(user) {
         clearEditorDraftStorage();
         openQuizEditor(
           pendingDraft.editorKind || 'quiz',
-          pendingDraft.editingQuizId
-            ? {
-                id: pendingDraft.editingQuizId,
-                title: pendingDraft.title || '',
-                tag: pendingDraft.tag || '',
-                shared_with: parseEmailsList(pendingDraft.sharedEmails || '')
-              }
-            : null,
+          {
+            id: pendingDraft.editingQuizId || null,
+            title: pendingDraft.title || '',
+            tag: pendingDraft.tag || '',
+            shared_with: parseEmailsList(pendingDraft.sharedEmails || '')
+          },
           pendingDraft.questions || [],
           true
         );
@@ -3309,10 +3311,10 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
   if (existingQuestions && existingQuestions.length > 0) {
     existingQuestions.forEach(q => {
       const uiType = q.type === 'poll' ? 'quiz' : q.type;
-      addQuestionBlock(uiType, q);
+      addQuestionBlock(uiType, q, true);
     });
   } else {
-    addQuestionBlock('quiz');
+    addQuestionBlock('quiz', null, true);
   }
 
   if (!fromDraft) {
@@ -3429,7 +3431,7 @@ function extractBlockData(b) {
   return { type: rawType, question_text, media_url, time_limit, points_multiplier, options };
 }
 
-function addQuestionBlock(type, prefill = null) {
+function addQuestionBlock(type, prefill = null, skipDraftSave = false) {
   const container = document.getElementById('editor-questions-container');
   const idx = container.children.length + 1;
   const isPoll = editorKind === 'poll';
@@ -3567,7 +3569,9 @@ function addQuestionBlock(type, prefill = null) {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">${optionsHTML}</div>
   `;
   container.appendChild(div);
-  scheduleEditorDraftSave();
+  if (!skipDraftSave) {
+    scheduleEditorDraftSave();
+  }
 }
 
 function validateEditorBlocks(blocks, isPoll) {
