@@ -719,11 +719,16 @@ window.addEventListener('online', () => {
   flushPendingStudentAnswers();
 });
 
-window.addEventListener('beforeunload', () => {
+function flushEditorOnExit() {
   const editorView = document.getElementById('view-quiz-editor');
   if (editorView && !editorView.classList.contains('hidden')) {
     saveEditorDraftToStorage();
   }
+}
+
+window.addEventListener('pagehide', flushEditorOnExit);
+window.addEventListener('beforeunload', () => {
+  flushEditorOnExit();
   if (!isStudyMode && currentSession && currentSession.status !== 'finished' && hostBroadcastChannel) {
     broadcastRoomState('closed_by_teacher', currentSession.current_question_index || 0);
   }
@@ -978,6 +983,10 @@ function showStudentSessionClosed(reasonText) {
 }
 
 async function handleLogoClick() {
+  const editorView = document.getElementById('view-quiz-editor');
+  if (editorView && !editorView.classList.contains('hidden')) {
+    saveEditorDraftToStorage();
+  }
   const { data: { session } } = await sb.auth.getSession();
   if (session && !isStudyMode) {
     if (currentSession && currentSession.status !== 'finished') {
@@ -2242,7 +2251,6 @@ async function loadTeacherDashboard(user) {
         false
       );
       if (restore) {
-        clearEditorDraftStorage();
         openQuizEditor(
           pendingDraft.editorKind || 'quiz',
           {
@@ -2254,6 +2262,7 @@ async function loadTeacherDashboard(user) {
           pendingDraft.questions || [],
           true
         );
+        saveEditorDraftToStorage();
       } else {
         clearEditorDraftStorage();
         draftPromptDismissedInSession = true;
@@ -3259,7 +3268,7 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
   editingQuizId = existingQuiz ? existingQuiz.id : null;
   const isPoll = kind === 'poll';
 
-  document.getElementById('editor-heading').textContent = existingQuiz
+  document.getElementById('editor-heading').textContent = (existingQuiz && existingQuiz.id)
     ? (isPoll ? 'Editar enquesta' : 'Editar qüestionari')
     : (isPoll ? 'Nova enquesta' : 'Nou qüestionari');
 
@@ -3280,7 +3289,7 @@ function openQuizEditor(kind = 'quiz', existingQuiz = null, existingQuestions = 
   document.getElementById('editor-error').classList.add('hidden');
 
   const saveBtn = document.getElementById('btn-save-quiz');
-  saveBtn.textContent = existingQuiz ? 'Actualitzar canvis' : (isPoll ? 'Guardar enquesta' : 'Guardar qüestionari');
+  saveBtn.textContent = (existingQuiz && existingQuiz.id) ? 'Actualitzar canvis' : (isPoll ? 'Guardar enquesta' : 'Guardar qüestionari');
   saveBtn.className = isPoll
     ? 'w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-amber-200 transition'
     : 'w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-emerald-200 transition';
